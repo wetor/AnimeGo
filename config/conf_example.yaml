@@ -1,0 +1,13 @@
+feed:
+  rss:
+    # Mikan Project(mikanani.me)订阅信息，可选用名称："mikan", "Mikan", "mikanani"
+    mikan:
+      name: Mikan Project
+      url: https://mikanani.me/RSS/MyBangumi?token=xxxxxxxx
+client:
+  # qBittorrent客户端信息，可选用名称："qbittorrent", "qBittorrent", "qbt", "qBt"
+  qbittorrent:
+    url: http://localhost:8080
+    username: admin
+    password: admin
+
