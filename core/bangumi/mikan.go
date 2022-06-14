@@ -21,7 +21,6 @@ var MikanInfoUrl = func(id int) string {
 }
 
 type Mikan struct {
-	Info *model.Bangumi
 }
 
 func NewMikan() Bangumi {
@@ -29,24 +28,25 @@ func NewMikan() Bangumi {
 }
 
 func (b *Mikan) Parse(opt *model.BangumiParseOptions) *model.Bangumi {
-	b.Info = &model.Bangumi{
+	info := &model.Bangumi{
 		Name: opt.Name,
 	}
 	glog.V(3).Infof("获取「%s」信息开始...\n", opt.Name)
-	b.parseMikan1(opt.Url, b.Info)
-	b.parseMikan2(b.Info)
-	b.parseBangumi(b.Info)
-	glog.V(3).Infof("获取「%s」信息成功！更名为「%s」\n", opt.Name, b.Info.FullName())
-	return b.Info
+	b.parseMikan1(opt.Url, info)
+	b.parseMikan2(info)
+	b.parseBangumi(info)
+	b.parseThemoviedb(info)
+	glog.V(3).Infof("获取「%s」信息成功！更名为「%s」\n", opt.Name, info.FullName())
+	return info
 }
 
 // parseMikan1
 //  Description 解析mikan rss中的link页面，获取当前资源的mikan id
 //  Receiver b *Mikan
 //  Param url_ string
-//  Param bgm *model.Bangumi
+//  Param info *model.Bangumi
 //
-func (b *Mikan) parseMikan1(url_ string, bgm *model.Bangumi) {
+func (b *Mikan) parseMikan1(url_ string, info *model.Bangumi) {
 	glog.V(5).Infof("步骤1，解析Mikan，%s\n", url_)
 	doc, err := htmlquery.LoadURL(url_)
 	if err != nil {
@@ -67,17 +67,17 @@ func (b *Mikan) parseMikan1(url_ string, bgm *model.Bangumi) {
 			glog.Errorln(err)
 			return
 		}
-		bgm.SubID = id
+		info.SubID = id
 	}
 }
 
 // parseMikan2
 //  Description 通过mikan id解析mikan番剧信息页面，获取bgm.tv id
 //  Receiver b *Mikan
-//  Param bgm *model.Bangumi
+//  Param info *model.Bangumi
 //
-func (b *Mikan) parseMikan2(bgm *model.Bangumi) {
-	url_ := MikanInfoUrl(bgm.SubID)
+func (b *Mikan) parseMikan2(info *model.Bangumi) {
+	url_ := MikanInfoUrl(info.SubID)
 	glog.V(5).Infof("步骤2，解析Mikan，%s\n", url_)
 	doc, err := htmlquery.LoadURL(url_)
 	if err != nil {
@@ -94,21 +94,38 @@ func (b *Mikan) parseMikan2(bgm *model.Bangumi) {
 		glog.Errorln(err)
 		return
 	}
-	bgm.ID = bgmId
+	info.ID = bgmId
 }
 
 // parseBangumi
 //  Description 从bangumi网站获取信息
 //  Receiver b *Mikan
-//  Param bgm *model.Bangumi
+//  Param info *model.Bangumi
 //
-func (b *Mikan) parseBangumi(bgm *model.Bangumi) {
-	glog.V(5).Infof("步骤3，解析Bangumi，%d\n", bgm.ID)
+func (b *Mikan) parseBangumi(info *model.Bangumi) {
+	glog.V(5).Infof("步骤3，解析Bangumi，%d\n", info.ID)
 	bangumi := NewBgm()
 	newBgm := bangumi.Parse(&model.BangumiParseOptions{
-		ID: bgm.ID,
+		ID: info.ID,
 	})
-	newBgm.ID = bgm.ID
-	newBgm.SubID = bgm.SubID
-	bgm = newBgm
+	info.ID = newBgm.ID
+	info.Name = newBgm.Name
+	info.NameJp = newBgm.NameJp
+	info.Date = newBgm.Date
+	info.Eps = newBgm.Eps
+}
+
+// parseThemoviedb
+//  Description 从Themoviedb网站获取当前季度
+//  Receiver b *Mikan
+//  Param info *model.Bangumi
+//
+func (b *Mikan) parseThemoviedb(info *model.Bangumi) {
+	glog.V(5).Infof("步骤4，解析Themoviedb，%s\n", info.NameJp)
+	tmdb := NewThemoviedb()
+	newBgm := tmdb.Parse(&model.BangumiParseOptions{
+		Name: info.NameJp,
+		Date: info.Date,
+	})
+	info.Season = newBgm.Season
 }

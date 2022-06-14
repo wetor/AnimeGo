@@ -12,7 +12,7 @@ type Config struct {
 	}
 
 	Client map[string]*Client
-
+	Key    map[string]string
 	*Directory
 }
 
@@ -64,6 +64,15 @@ func Mikan() *Rss {
 		}
 	}
 	return nil
+}
+func TMDB() string {
+	nameList := []string{"themoviedb", "TheMovieDB", "tmdb", "TMDB"}
+	for _, name := range nameList {
+		if key, has := conf.Key[name]; has {
+			return key
+		}
+	}
+	return ""
 }
 func Dir() *Directory {
 	return conf.Directory

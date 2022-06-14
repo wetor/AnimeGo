@@ -45,4 +45,12 @@ type BangumiParseOptions struct {
 	Url  string
 	Name string
 	ID   int
+	Date string
+}
+
+// =========== Process ===========
+
+type ProcessBangumiOptions struct {
+	Url  string
+	Name string
 }

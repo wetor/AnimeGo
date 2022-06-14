@@ -19,6 +19,13 @@
   - [ ] ...
 
 ## 开发日志
+
+### 2022.6.14 2
+- 完成[Bangumi](https://bgm.tv) 信息获取
+- 完成[TheMovieDB](https://www.themoviedb.org/) 信息获取
+  - 搜索存在缺陷待修复
+- 增加process包来调用core下功能
+
 ### 2022.6.14
 - 完成Mikan Rss信息获取与解析
 

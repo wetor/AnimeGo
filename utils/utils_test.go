@@ -17,10 +17,3 @@ func TestConvertModel(t *testing.T) {
 	ConvertModel(src, dst)
 	fmt.Println(dst)
 }
-
-func TestHttpGet(t *testing.T) {
-	err := HttpGet("https://mikanani.me/RSS/MyBangumi?token=CE6CRA3j0Sf4hsGI6eH3Fg%3d%3d", "../data/cache/rss.xml")
-	if err != nil {
-		return
-	}
-}
