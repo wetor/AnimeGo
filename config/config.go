@@ -13,9 +13,7 @@ type Config struct {
 
 	Client map[string]*Client
 
-	Download struct {
-		Path string
-	}
+	*Directory
 }
 
 type Client struct {
@@ -26,6 +24,11 @@ type Client struct {
 type Rss struct {
 	Name string
 	Url  string
+}
+type Directory struct {
+	Download string
+	Data     string
+	Cache    string
 }
 
 var conf = &Config{}
@@ -61,4 +64,7 @@ func Mikan() *Rss {
 		}
 	}
 	return nil
+}
+func Dir() *Directory {
+	return conf.Directory
 }
