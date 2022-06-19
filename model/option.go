@@ -48,6 +48,13 @@ type BangumiParseOptions struct {
 	Date string
 }
 
+// =========== Parser ===========
+
+type ParseBangumiNameOptions struct {
+	Name      string
+	StartStep int
+}
+
 // =========== Process ===========
 
 type ProcessBangumiOptions struct {
