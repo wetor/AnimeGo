@@ -1,7 +1,7 @@
 package bangumi
 
 import (
-	"GoBangumi/model"
+	"GoBangumi/models"
 	"fmt"
 	"github.com/antchfx/htmlquery"
 	"net/url"
@@ -11,7 +11,7 @@ import (
 )
 
 func TestNewMikan(t *testing.T) {
-	bgm := model.Bangumi{}
+	bgm := models.Bangumi{}
 
 	// ------------  获取Mikan ID
 	filePath := "../../data/cache/1.html"

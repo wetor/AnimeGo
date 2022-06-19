@@ -2,8 +2,8 @@ package bangumi
 
 import (
 	"GoBangumi/config"
-	"GoBangumi/core/parser"
-	"GoBangumi/model"
+	"GoBangumi/models"
+	"GoBangumi/modules/parser"
 	"GoBangumi/utils"
 	"fmt"
 	"github.com/golang/glog"
@@ -34,7 +34,7 @@ type Themoviedb struct {
 func NewThemoviedb() Bangumi {
 	return &Themoviedb{}
 }
-func (b *Themoviedb) Parse(opt *model.BangumiParseOptions) *model.Bangumi {
+func (b *Themoviedb) Parse(opt *models.BangumiParseOptions) *models.Bangumi {
 
 	id := b.parseThemoviedb1(opt.Name)
 	bgm := b.parseThemoviedb2(id, opt.Date)
@@ -42,7 +42,7 @@ func (b *Themoviedb) Parse(opt *model.BangumiParseOptions) *model.Bangumi {
 }
 
 func (b *Themoviedb) parseThemoviedb1(name string) int {
-	resp := &model.ThemoviedbIdResponse{}
+	resp := &models.ThemoviedbIdResponse{}
 	nameParser := parser.NewBangumiName()
 	step := 0
 	for {
@@ -57,7 +57,7 @@ func (b *Themoviedb) parseThemoviedb1(name string) int {
 		}
 		if resp.TotalResults == 0 {
 			glog.Errorln("Themoviedb中未找到番剧：" + name)
-			result := nameParser.ParseBangumiName(&model.ParseBangumiNameOptions{
+			result := nameParser.ParseBangumiName(&models.ParseBangumiNameOptions{
 				Name:      name,
 				StartStep: step,
 			})
@@ -75,9 +75,9 @@ func (b *Themoviedb) parseThemoviedb1(name string) int {
 	}
 
 }
-func (b *Themoviedb) parseThemoviedb2(id int, date string) *model.Bangumi {
+func (b *Themoviedb) parseThemoviedb2(id int, date string) *models.Bangumi {
 
-	resp := &model.ThemoviedbResponse{}
+	resp := &models.ThemoviedbResponse{}
 	status, err := utils.ApiGet(ThemoviedbInfoApi(id), resp)
 	if err != nil {
 		glog.Errorln(err)
@@ -88,7 +88,7 @@ func (b *Themoviedb) parseThemoviedb2(id int, date string) *model.Bangumi {
 		return nil
 	}
 
-	bgm := &model.Bangumi{}
+	bgm := &models.Bangumi{}
 	if resp.Seasons == nil || len(resp.Seasons) == 0 {
 		bgm.Season = 1
 		return bgm

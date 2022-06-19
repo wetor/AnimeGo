@@ -1,7 +1,7 @@
 package bangumi
 
 import (
-	"GoBangumi/model"
+	"GoBangumi/models"
 	"fmt"
 	"github.com/antchfx/htmlquery"
 	"github.com/golang/glog"
@@ -27,8 +27,8 @@ func NewMikan() Bangumi {
 	return &Mikan{}
 }
 
-func (b *Mikan) Parse(opt *model.BangumiParseOptions) *model.Bangumi {
-	info := &model.Bangumi{
+func (b *Mikan) Parse(opt *models.BangumiParseOptions) *models.Bangumi {
+	info := &models.Bangumi{
 		Name: opt.Name,
 	}
 	glog.V(3).Infof("获取「%s」信息开始...\n", opt.Name)
@@ -52,9 +52,9 @@ func (b *Mikan) Parse(opt *model.BangumiParseOptions) *model.Bangumi {
 //  Description 解析mikan rss中的link页面，获取当前资源的mikan id
 //  Receiver b *Mikan
 //  Param url_ string
-//  Param info *model.Bangumi
+//  Param info *models.Bangumi
 //
-func (b *Mikan) parseMikan1(url_ string, info *model.Bangumi) {
+func (b *Mikan) parseMikan1(url_ string, info *models.Bangumi) {
 	glog.V(5).Infof("步骤1，解析Mikan，%s\n", url_)
 	doc, err := htmlquery.LoadURL(url_)
 	if err != nil {
@@ -82,9 +82,9 @@ func (b *Mikan) parseMikan1(url_ string, info *model.Bangumi) {
 // parseMikan2
 //  Description 通过mikan id解析mikan番剧信息页面，获取bgm.tv id
 //  Receiver b *Mikan
-//  Param info *model.Bangumi
+//  Param info *models.Bangumi
 //
-func (b *Mikan) parseMikan2(info *model.Bangumi) {
+func (b *Mikan) parseMikan2(info *models.Bangumi) {
 	url_ := MikanInfoUrl(info.SubID)
 	glog.V(5).Infof("步骤2，解析Mikan，%s\n", url_)
 	doc, err := htmlquery.LoadURL(url_)
@@ -108,12 +108,12 @@ func (b *Mikan) parseMikan2(info *model.Bangumi) {
 // parseBangumi
 //  Description 从bangumi网站获取信息
 //  Receiver b *Mikan
-//  Param info *model.Bangumi
+//  Param info *models.Bangumi
 //
-func (b *Mikan) parseBangumi(info *model.Bangumi) bool {
+func (b *Mikan) parseBangumi(info *models.Bangumi) bool {
 	glog.V(5).Infof("步骤3，解析Bangumi，%d\n", info.ID)
 	bangumi := NewBgm()
-	newBgm := bangumi.Parse(&model.BangumiParseOptions{
+	newBgm := bangumi.Parse(&models.BangumiParseOptions{
 		ID: info.ID,
 	})
 	if newBgm == nil {
@@ -130,12 +130,12 @@ func (b *Mikan) parseBangumi(info *model.Bangumi) bool {
 // parseThemoviedb
 //  Description 从Themoviedb网站获取当前季度
 //  Receiver b *Mikan
-//  Param info *model.Bangumi
+//  Param info *models.Bangumi
 //
-func (b *Mikan) parseThemoviedb(info *model.Bangumi) bool {
+func (b *Mikan) parseThemoviedb(info *models.Bangumi) bool {
 	glog.V(5).Infof("步骤4，解析Themoviedb，%s\n", info.NameJp)
 	tmdb := NewThemoviedb()
-	newBgm := tmdb.Parse(&model.BangumiParseOptions{
+	newBgm := tmdb.Parse(&models.BangumiParseOptions{
 		Name: info.NameJp,
 		Date: info.Date,
 	})

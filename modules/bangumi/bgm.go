@@ -2,7 +2,7 @@ package bangumi
 
 import (
 	"GoBangumi/bgm/res"
-	"GoBangumi/model"
+	"GoBangumi/models"
 	"GoBangumi/utils"
 	"fmt"
 	"github.com/golang/glog"
@@ -17,13 +17,13 @@ var BangumiInfoApi = func(id int) string {
 }
 
 type Bgm struct {
-	Info *model.Bangumi
+	Info *models.Bangumi
 }
 
 func NewBgm() Bangumi {
 	return &Bgm{}
 }
-func (b *Bgm) Parse(opt *model.BangumiParseOptions) *model.Bangumi {
+func (b *Bgm) Parse(opt *models.BangumiParseOptions) *models.Bangumi {
 	url_ := BangumiInfoApi(opt.ID)
 	resp := &res.SubjectV0{}
 	status, err := utils.ApiGet(url_, resp)
@@ -35,7 +35,7 @@ func (b *Bgm) Parse(opt *model.BangumiParseOptions) *model.Bangumi {
 		glog.Errorln("Status:", status)
 		return nil
 	}
-	b.Info = &model.Bangumi{
+	b.Info = &models.Bangumi{
 		ID:     int(resp.ID),
 		Name:   resp.NameCN,
 		NameJp: resp.Name,

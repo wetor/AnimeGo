@@ -2,9 +2,9 @@ package process
 
 import (
 	"GoBangumi/config"
-	"GoBangumi/core/bangumi"
-	"GoBangumi/core/feed"
-	"GoBangumi/model"
+	"GoBangumi/models"
+	"GoBangumi/modules/bangumi"
+	"GoBangumi/modules/feed"
 	"fmt"
 	"sync"
 )
@@ -20,7 +20,7 @@ func (p *Mikan) Run() {
 	rssConf := config.Mikan()
 
 	f := feed.NewRss()
-	items := f.Parse(&model.FeedParseOptions{
+	items := f.Parse(&models.FeedParseOptions{
 		Url:          rssConf.Url,
 		Name:         rssConf.Name,
 		RefreshCache: true,
@@ -32,12 +32,12 @@ func (p *Mikan) Run() {
 	}
 }
 
-func (p *Mikan) ParseBangumiAll(items []*model.FeedItem, bangumi bangumi.Bangumi) []*model.Bangumi {
-	bgms := make([]*model.Bangumi, len(items))
+func (p *Mikan) ParseBangumiAll(items []*models.FeedItem, bangumi bangumi.Bangumi) []*models.Bangumi {
+	bgms := make([]*models.Bangumi, len(items))
 	wg := sync.WaitGroup{}
 	for i, item := range items {
 		wg.Add(1)
-		go func(i_ int, item_ *model.FeedItem) {
+		go func(i_ int, item_ *models.FeedItem) {
 			defer wg.Done()
 			bgms[i_] = p.ParseBangumi(item_, bangumi)
 		}(i, item)
@@ -46,9 +46,9 @@ func (p *Mikan) ParseBangumiAll(items []*model.FeedItem, bangumi bangumi.Bangumi
 	wg.Wait()
 	return bgms
 }
-func (p *Mikan) ParseBangumi(item *model.FeedItem, bangumi bangumi.Bangumi) *model.Bangumi {
+func (p *Mikan) ParseBangumi(item *models.FeedItem, bangumi bangumi.Bangumi) *models.Bangumi {
 	// TODO: 读取缓存，若存在且不过期则直接返回
-	bgmInfo := bangumi.Parse(&model.BangumiParseOptions{
+	bgmInfo := bangumi.Parse(&models.BangumiParseOptions{
 		Url:  item.Url,
 		Name: item.Name,
 	})

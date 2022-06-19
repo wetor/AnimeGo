@@ -2,7 +2,7 @@ package bangumi
 
 import (
 	"GoBangumi/config"
-	"GoBangumi/model"
+	"GoBangumi/models"
 	"flag"
 	"fmt"
 	"github.com/golang/glog"
@@ -22,7 +22,7 @@ func TestMain(m *testing.M) {
 }
 func TestNewThemoviedb(t *testing.T) {
 	tmdb := NewThemoviedb()
-	b := tmdb.Parse(&model.BangumiParseOptions{
+	b := tmdb.Parse(&models.BangumiParseOptions{
 		Name: "カードファイト!! ヴァンガード will+Dress",
 		Date: "2022-07-04",
 	})

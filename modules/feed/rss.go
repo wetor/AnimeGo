@@ -2,7 +2,7 @@ package feed
 
 import (
 	"GoBangumi/config"
-	"GoBangumi/model"
+	"GoBangumi/models"
 	"GoBangumi/utils"
 	"github.com/golang/glog"
 	"github.com/mmcdole/gofeed"
@@ -20,9 +20,9 @@ func NewRss() Feed {
 // Parse
 //  Description 第一步，解析rss
 //  Receiver f *Rss
-//  Param opt *model.FeedParseOptions 若RefreshCache为false，则仅重新解析本地缓存rss
+//  Param opt *models.FeedParseOptions 若RefreshCache为false，则仅重新解析本地缓存rss
 //
-func (f *Rss) Parse(opt *model.FeedParseOptions) []*model.FeedItem {
+func (f *Rss) Parse(opt *models.FeedParseOptions) []*models.FeedItem {
 	if len(opt.Name) == 0 {
 		opt.Name = utils.Md5Str(opt.Url)
 	}
@@ -50,9 +50,9 @@ func (f *Rss) Parse(opt *model.FeedParseOptions) []*model.FeedItem {
 		glog.Errorln(err)
 		return nil
 	}
-	items := make([]*model.FeedItem, len(feed.Items))
+	items := make([]*models.FeedItem, len(feed.Items))
 	for i, item := range feed.Items {
-		items[i] = &model.FeedItem{
+		items[i] = &models.FeedItem{
 			Url:  item.Link,
 			Name: item.Title,
 		}

@@ -1,14 +1,14 @@
 package bangumi
 
 import (
-	"GoBangumi/model"
+	"GoBangumi/models"
 	"fmt"
 	"testing"
 )
 
 func TestNewBgm(t *testing.T) {
 	bgm := NewBgm()
-	b := bgm.Parse(&model.BangumiParseOptions{
+	b := bgm.Parse(&models.BangumiParseOptions{
 		ID: 317613,
 	})
 	fmt.Println(b)

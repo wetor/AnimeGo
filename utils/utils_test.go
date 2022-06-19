@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"GoBangumi/model"
+	"GoBangumi/models"
 	"fmt"
 	"github.com/xxxsen/qbapi"
 	"testing"
@@ -13,7 +13,7 @@ func TestConvertModel(t *testing.T) {
 		ContentPath: "1111111",
 	}
 
-	dst := &model.TorrentItem{}
+	dst := &models.TorrentItem{}
 	ConvertModel(src, dst)
 	fmt.Println(dst)
 }

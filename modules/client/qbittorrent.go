@@ -1,7 +1,7 @@
 package client
 
 import (
-	"GoBangumi/model"
+	"GoBangumi/models"
 	"GoBangumi/utils"
 	"fmt"
 	"github.com/golang/glog"
@@ -62,22 +62,22 @@ func (c *QBittorrent) Version() string {
 	}
 	return fmt.Sprintf("Client: %s, API: %s", clientResp.Version, apiResp.Version)
 }
-func (c *QBittorrent) Preferences() *model.Preferences {
+func (c *QBittorrent) Preferences() *models.Preferences {
 	resp, err := c.client.GetApplicationPreferences(context.Background(), &qbapi.GetApplicationPreferencesReq{})
 	if err != nil {
 		glog.Errorln(err)
 		return nil
 	}
-	retn := &model.Preferences{}
+	retn := &models.Preferences{}
 	utils.ConvertModel(resp, retn)
 	return retn
 }
 
-func (c *QBittorrent) SetPreferences(pref *model.Preferences) {
+func (c *QBittorrent) SetPreferences(pref *models.Preferences) {
 
 }
 
-func (c *QBittorrent) List(opt *model.ClientListOptions) []*model.TorrentItem {
+func (c *QBittorrent) List(opt *models.ClientListOptions) []*models.TorrentItem {
 	req := &qbapi.GetTorrentListReq{}
 	if opt.Status != string(QBtStatusAll) {
 		req.Filter = &opt.Status
@@ -94,15 +94,15 @@ func (c *QBittorrent) List(opt *model.ClientListOptions) []*model.TorrentItem {
 		glog.Errorln(err)
 		return nil
 	}
-	retn := make([]*model.TorrentItem, len(listResp.Items))
+	retn := make([]*models.TorrentItem, len(listResp.Items))
 	for i, _ := range retn {
-		retn[i] = &model.TorrentItem{}
+		retn[i] = &models.TorrentItem{}
 		utils.ConvertModel(listResp.Items[i], retn[i])
 	}
 	return retn
 }
 
-func (c *QBittorrent) Rename(opt *model.ClientRenameOptions) {
+func (c *QBittorrent) Rename(opt *models.ClientRenameOptions) {
 	_, err := c.client.RenameFile(context.Background(), &qbapi.RenameFileReq{
 		Hash:    opt.Hash,
 		OldPath: opt.OldPath,
@@ -112,7 +112,7 @@ func (c *QBittorrent) Rename(opt *model.ClientRenameOptions) {
 		glog.Errorln(err)
 	}
 }
-func (c *QBittorrent) Add(opt *model.ClientAddOptions) {
+func (c *QBittorrent) Add(opt *models.ClientAddOptions) {
 	_, err := c.client.AddNewLink(context.Background(), &qbapi.AddNewLinkReq{
 		Url: opt.Urls,
 		Meta: &qbapi.AddTorrentMeta{
@@ -127,7 +127,7 @@ func (c *QBittorrent) Add(opt *model.ClientAddOptions) {
 	}
 }
 
-func (c *QBittorrent) Delete(opt *model.ClientDeleteOptions) {
+func (c *QBittorrent) Delete(opt *models.ClientDeleteOptions) {
 	_, err := c.client.DeleteTorrents(context.Background(), &qbapi.DeleteTorrentsReq{
 		IsDeleteFile: opt.DeleteFile,
 		Hash:         opt.Hash,
@@ -137,7 +137,7 @@ func (c *QBittorrent) Delete(opt *model.ClientDeleteOptions) {
 	}
 }
 
-func (c *QBittorrent) Get(opt *model.ClientGetOptions) []*model.TorrentItem {
+func (c *QBittorrent) Get(opt *models.ClientGetOptions) []*models.TorrentItem {
 
 	contents, err := c.client.GetTorrentContents(context.Background(), &qbapi.GetTorrentContentsReq{
 		Hash: opt.Hash,

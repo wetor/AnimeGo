@@ -1,7 +1,7 @@
 package parser
 
 import (
-	"GoBangumi/model"
+	"GoBangumi/models"
 	"github.com/golang/glog"
 	"regexp"
 )
@@ -24,7 +24,7 @@ func NewBangumiName() Parser {
 	return &BangumiName{}
 }
 
-func (p *BangumiName) ParseBangumiName(opt *model.ParseBangumiNameOptions) *model.BangumiName {
+func (p *BangumiName) ParseBangumiName(opt *models.ParseBangumiNameOptions) *models.BangumiName {
 	if opt.StartStep < 0 {
 		return nil
 	}
@@ -46,7 +46,7 @@ func (p *BangumiName) ParseBangumiName(opt *model.ParseBangumiNameOptions) *mode
 		i = -1
 	}
 
-	return &model.BangumiName{
+	return &models.BangumiName{
 		Name:     str,
 		NextStep: i,
 	}

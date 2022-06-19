@@ -1,4 +1,4 @@
-package model
+package models
 
 type TorrentItem struct {
 	AddedOn           int     `json:"added_on"`

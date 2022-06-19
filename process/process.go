@@ -1,12 +1,12 @@
 package process
 
 import (
-	"GoBangumi/core/bangumi"
-	"GoBangumi/model"
+	"GoBangumi/models"
+	"GoBangumi/modules/bangumi"
 )
 
 type Process interface {
 	Run()
-	ParseBangumiAll(items []*model.FeedItem, bangumi bangumi.Bangumi) []*model.Bangumi
-	ParseBangumi(item *model.FeedItem, bangumi bangumi.Bangumi) *model.Bangumi
+	ParseBangumiAll(items []*models.FeedItem, bangumi bangumi.Bangumi) []*models.Bangumi
+	ParseBangumi(item *models.FeedItem, bangumi bangumi.Bangumi) *models.Bangumi
 }

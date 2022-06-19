@@ -2,7 +2,7 @@ package client
 
 import (
 	"GoBangumi/config"
-	"GoBangumi/model"
+	"GoBangumi/models"
 	"flag"
 	"fmt"
 	"github.com/golang/glog"
@@ -27,7 +27,7 @@ func TestMain(m *testing.M) {
 }
 
 func Test_QBittorrent(t *testing.T) {
-	list := qbt.List(&model.ClientListOptions{
+	list := qbt.List(&models.ClientListOptions{
 		Status:   QBtStatusAll,
 		Category: "test",
 	})
@@ -38,7 +38,7 @@ func Test_QBittorrent(t *testing.T) {
 
 }
 func TestQBittorrent_Add(t *testing.T) {
-	qbt.Add(&model.ClientAddOptions{
+	qbt.Add(&models.ClientAddOptions{
 		Urls: []string{
 			"https://mikanani.me/Download/20220612/4407d51f30f6033513cbe56cae0120881b0a7406.torrent",
 			"https://mikanani.me/Download/20220611/56e13c0c4788b77782722ee46d3c6f27233f676b.torrent",
@@ -53,7 +53,7 @@ func TestQBittorrent_Add(t *testing.T) {
 
 func TestQBittorrent_Delete(t *testing.T) {
 
-	qbt.Delete(&model.ClientDeleteOptions{
+	qbt.Delete(&models.ClientDeleteOptions{
 		Hash: []string{"4407d51f30f6033513cbe56cae0120881b0a7406"},
 	})
 
@@ -61,6 +61,6 @@ func TestQBittorrent_Delete(t *testing.T) {
 
 func TestQBittorrent_Get(t *testing.T) {
 
-	qbt.Get(&model.ClientGetOptions{Hash: "4407d51f30f6033513cbe56cae0120881b0a7406"})
+	qbt.Get(&models.ClientGetOptions{Hash: "4407d51f30f6033513cbe56cae0120881b0a7406"})
 
 }
