@@ -34,8 +34,16 @@ func (b *Mikan) Parse(opt *model.BangumiParseOptions) *model.Bangumi {
 	glog.V(3).Infof("获取「%s」信息开始...\n", opt.Name)
 	b.parseMikan1(opt.Url, info)
 	b.parseMikan2(info)
-	b.parseBangumi(info)
-	b.parseThemoviedb(info)
+	res := b.parseBangumi(info)
+	if !res {
+		glog.Errorln("获取Bangumi信息失败，结束此流程")
+		return nil
+	}
+	res = b.parseThemoviedb(info)
+	if !res {
+		glog.Errorln("获取Themoviedb季度信息失败，默认SE01")
+		info.Season = 1
+	}
 	glog.V(3).Infof("获取「%s」信息成功！更名为「%s」\n", opt.Name, info.FullName())
 	return info
 }
@@ -102,17 +110,21 @@ func (b *Mikan) parseMikan2(info *model.Bangumi) {
 //  Receiver b *Mikan
 //  Param info *model.Bangumi
 //
-func (b *Mikan) parseBangumi(info *model.Bangumi) {
+func (b *Mikan) parseBangumi(info *model.Bangumi) bool {
 	glog.V(5).Infof("步骤3，解析Bangumi，%d\n", info.ID)
 	bangumi := NewBgm()
 	newBgm := bangumi.Parse(&model.BangumiParseOptions{
 		ID: info.ID,
 	})
+	if newBgm == nil {
+		return false
+	}
 	info.ID = newBgm.ID
 	info.Name = newBgm.Name
 	info.NameJp = newBgm.NameJp
 	info.Date = newBgm.Date
 	info.Eps = newBgm.Eps
+	return true
 }
 
 // parseThemoviedb
@@ -120,12 +132,16 @@ func (b *Mikan) parseBangumi(info *model.Bangumi) {
 //  Receiver b *Mikan
 //  Param info *model.Bangumi
 //
-func (b *Mikan) parseThemoviedb(info *model.Bangumi) {
+func (b *Mikan) parseThemoviedb(info *model.Bangumi) bool {
 	glog.V(5).Infof("步骤4，解析Themoviedb，%s\n", info.NameJp)
 	tmdb := NewThemoviedb()
 	newBgm := tmdb.Parse(&model.BangumiParseOptions{
 		Name: info.NameJp,
 		Date: info.Date,
 	})
+	if newBgm == nil {
+		return false
+	}
 	info.Season = newBgm.Season
+	return true
 }
