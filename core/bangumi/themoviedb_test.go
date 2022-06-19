@@ -23,8 +23,8 @@ func TestMain(m *testing.M) {
 func TestNewThemoviedb(t *testing.T) {
 	tmdb := NewThemoviedb()
 	b := tmdb.Parse(&model.BangumiParseOptions{
-		Name: "本好きの下剋上～司書になるためには手段を選んでいられません～ 第3部",
-		Date: "2022-04-01",
+		Name: "カードファイト!! ヴァンガード will+Dress",
+		Date: "2022-07-04",
 	})
 	fmt.Println(b)
 }

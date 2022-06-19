@@ -2,6 +2,7 @@ package bangumi
 
 import (
 	"GoBangumi/config"
+	"GoBangumi/core/parser"
 	"GoBangumi/model"
 	"GoBangumi/utils"
 	"fmt"
@@ -42,23 +43,37 @@ func (b *Themoviedb) Parse(opt *model.BangumiParseOptions) *model.Bangumi {
 
 func (b *Themoviedb) parseThemoviedb1(name string) int {
 	resp := &model.ThemoviedbIdResponse{}
-	status, err := utils.ApiGet(ThemoviedbIdApi(name), resp)
-	if err != nil {
-		glog.Errorln(err)
-		return 0
-	}
-	if status != 200 {
-		glog.Errorf("Themoviedb查找错误，状态码：%d，%s\n", status, name)
-		// TODO: 重新查找
-		return 0
+	nameParser := parser.NewBangumiName()
+	step := 0
+	for {
+		status, err := utils.ApiGet(ThemoviedbIdApi(name), resp)
+		if err != nil {
+			glog.Errorln(err)
+			return 0
+		}
+		if status != 200 && resp == nil {
+			glog.Errorf("Themoviedb查找错误，状态码：%d，%s\n", status, name)
+			return 0
+		}
+		if resp.TotalResults == 0 {
+			glog.Errorln("Themoviedb中未找到番剧：" + name)
+			result := nameParser.ParseBangumiName(&model.ParseBangumiNameOptions{
+				Name:      name,
+				StartStep: step,
+			})
+			if result == nil {
+				return 0
+			}
+			step = result.NextStep
+			name = result.Name
+			glog.Errorln("Themoviedb重新查找番剧名：" + name)
+			continue
+
+		} else {
+			return resp.Result[0].ID
+		}
 	}
 
-	if resp.TotalResults == 0 {
-		glog.Errorln("Themoviedb中未找到番剧：" + name)
-		return 0
-	} else {
-		return resp.Result[0].ID
-	}
 }
 func (b *Themoviedb) parseThemoviedb2(id int, date string) *model.Bangumi {
 
@@ -88,6 +103,10 @@ func (b *Themoviedb) parseThemoviedb2(id int, date string) *model.Bangumi {
 			min = s
 			bgm.Season = r.SeasonNumber
 		}
+	}
+	if min > 90 {
+		glog.Errorln("Themoviedb匹配Seasons失败，可能此番剧未开播")
+		return nil
 	}
 	if bgm.Season == 0 {
 		glog.Errorln("Themoviedb匹配Seasons失败")

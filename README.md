@@ -20,6 +20,11 @@
 
 ## 开发日志
 
+### 2022.6.19
+- 完善[TheMovieDB](https://www.themoviedb.org/) 信息获取，多次查询
+  - 完成番剧别名处理
+- 完善部分错误处理
+
 ### 2022.6.14 2
 - 完成[Bangumi](https://bgm.tv) 信息获取
 - 完成[TheMovieDB](https://www.themoviedb.org/) 信息获取
