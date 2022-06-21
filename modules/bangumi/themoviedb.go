@@ -46,7 +46,7 @@ func (b *Themoviedb) parseThemoviedb1(name string) int {
 	nameParser := parser.NewBangumiName()
 	step := 0
 	for {
-		status, err := utils.ApiGet(ThemoviedbIdApi(name), resp)
+		status, err := utils.ApiGet(ThemoviedbIdApi(name), resp, config.Proxy())
 		if err != nil {
 			glog.Errorln(err)
 			return 0
@@ -78,7 +78,7 @@ func (b *Themoviedb) parseThemoviedb1(name string) int {
 func (b *Themoviedb) parseThemoviedb2(id int, date string) *models.Bangumi {
 
 	resp := &models.ThemoviedbResponse{}
-	status, err := utils.ApiGet(ThemoviedbInfoApi(id), resp)
+	status, err := utils.ApiGet(ThemoviedbInfoApi(id), resp, config.Proxy())
 	if err != nil {
 		glog.Errorln(err)
 		return nil

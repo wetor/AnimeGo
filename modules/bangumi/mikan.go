@@ -122,6 +122,7 @@ func (b *Mikan) parseBangumi(info *models.Bangumi) bool {
 	info.ID = newBgm.ID
 	info.Name = newBgm.Name
 	info.NameJp = newBgm.NameJp
+	info.AirDate = newBgm.AirDate
 	info.Date = newBgm.Date
 	info.Eps = newBgm.Eps
 	return true
@@ -137,7 +138,7 @@ func (b *Mikan) parseThemoviedb(info *models.Bangumi) bool {
 	tmdb := NewThemoviedb()
 	newBgm := tmdb.Parse(&models.BangumiParseOptions{
 		Name: info.NameJp,
-		Date: info.Date,
+		Date: info.AirDate,
 	})
 	if newBgm == nil {
 		return false

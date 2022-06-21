@@ -15,7 +15,7 @@
 package res
 
 import (
-	"GoBangumi/bgm/model"
+	"GoBangumi/models/bgm/model"
 	"time"
 )
 

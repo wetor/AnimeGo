@@ -2,7 +2,7 @@ package config
 
 import (
 	"github.com/golang/glog"
-	"gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v3"
 	"os"
 )
 
@@ -11,9 +11,13 @@ type Config struct {
 		Rss map[string]*Rss
 	}
 
-	Client map[string]*Client
-	Key    map[string]string
-	*Directory
+	Client    map[string]*Client
+	Key       map[string]string
+	*Settings `yaml:"setting"`
+	Proxy     struct {
+		Enable bool
+		Url    string
+	}
 }
 
 type Client struct {
@@ -24,11 +28,6 @@ type Client struct {
 type Rss struct {
 	Name string
 	Url  string
-}
-type Directory struct {
-	Download string
-	Data     string
-	Cache    string
 }
 
 var conf = &Config{}
@@ -74,6 +73,14 @@ func TMDB() string {
 	}
 	return ""
 }
-func Dir() *Directory {
-	return conf.Directory
+func Setting() *Settings {
+	return conf.Settings
+}
+
+func Proxy() string {
+	if conf.Proxy.Enable {
+		return conf.Proxy.Url
+	} else {
+		return ""
+	}
 }

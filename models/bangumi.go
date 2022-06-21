@@ -5,14 +5,15 @@ import (
 )
 
 type Bangumi struct {
-	ID     int    // bgm id
-	SubID  int    // 其他id，mikan id
-	Name   string // 名称，从bgm获取
-	NameJp string // 日文名，从bgm获取
-	Date   string // 播放日期，从bgm获取
-	Season int    // 当前季，从themoviedb获取
-	Ep     int    // 当前集，从下载文件名解析
-	Eps    int    // 总集数，从bgm获取
+	ID      int    // bgm id
+	SubID   int    // 其他id，mikan id
+	Name    string // 名称，从bgm获取
+	NameJp  string // 日文名，从bgm获取
+	AirDate string // 最初播放日期，从bgm获取
+	Date    string // 播放日期，从bgm获取
+	Season  int    // 当前季，从themoviedb获取
+	Ep      int    // 当前集，从下载文件名解析
+	Eps     int    // 总集数，从bgm获取
 }
 
 func (b *Bangumi) FullName() string {

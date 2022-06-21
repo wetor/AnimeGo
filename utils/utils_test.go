@@ -17,3 +17,8 @@ func TestConvertModel(t *testing.T) {
 	ConvertModel(src, dst)
 	fmt.Println(dst)
 }
+
+func TestApiGet(t *testing.T) {
+	n, e := ApiGet("https://google.com", nil, "socks5://127.0.0.1:7891")
+	fmt.Println(n, e)
+}

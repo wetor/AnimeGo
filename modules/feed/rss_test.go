@@ -26,9 +26,9 @@ func TestMain(m *testing.M) {
 func TestRss(t *testing.T) {
 	config.Init("../../data/config/conf.yaml")
 	rssConf := config.Mikan()
-	rssFile := path.Join(config.Dir().Cache, rssConf.Name+".xml")
+	rssFile := path.Join(config.Setting().CachePath, rssConf.Name+".xml")
 
-	err := utils.HttpGet(rssConf.Url, rssFile)
+	err := utils.HttpGet(rssConf.Url, rssFile, config.Proxy())
 	if err != nil {
 		panic(err)
 	}

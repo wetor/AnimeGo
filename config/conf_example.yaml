@@ -3,11 +3,39 @@ feed:
     # Mikan Project(mikanani.me)订阅信息，可选用名称："mikan", "Mikan", "mikanani"
     mikan:
       name: Mikan Project
-      url: https://mikanani.me/RSS/MyBangumi?token=xxxxxxxx
+      url: https://mikanani.me/RSS/MyBangumi?token=xxxx
 client:
   # qBittorrent客户端信息，可选用名称："qbittorrent", "qBittorrent", "qbt", "qBt"
   qbittorrent:
     url: http://localhost:8080
     username: admin
-    password: admin
+    password: adminadmin
+key:
+  # TheMovieDB APIkey，可选用名称："themoviedb", "TheMovieDB", "tmdb", "TMDB"
+  themoviedb: xxxxx
+proxy:
+  enable: true
+  # 支持http和socks5代理
+  url: http://127.0.0.1:7890
+setting:
+  # 额外数据存储路径
+  data_path: ./data
+  # 缓存数据存储路径
+  cache_path: ./data/cache
+  # 下载保存位置
+  save_path: ./data/download
+  # 分类名
+  category: test
+  # 标签表达式
+  # 可用通配符列表：
+  #   - {year} int 番剧更新年
+  #   - {quarter} int 番剧季度月号，取值为[4, 7, 10, 1]分别对应[春, 夏, 秋, 冬]季番剧
+  #   - {quarter_index} int 番剧季度序号，取值为[1, 2, 3, 4]分别对应春(4月)、夏(7月)、秋(10月)、冬(1月)季番剧
+  #   - {quarter_name} string 番剧季度名，取值为[春, 夏, 秋, 冬]
+  #   - {ep} int 番剧当前剧集序号，从1开始
+  #   - {week} int 番剧更新星期数，取值为[1, 2, 3, 4, 5, 6, 7]
+  #   - {week_name} string 番剧更新星期名，取值为[星期一, 星期二, 星期三, 星期四, 星期五, 星期六, 星期日]
+  tag: "{year}年{quarter}月新番"
+  # 下载完成后做种时间，单位分钟，为0则无限做种
+  seeding_time: 30
 

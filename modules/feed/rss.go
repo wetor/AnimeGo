@@ -26,11 +26,11 @@ func (f *Rss) Parse(opt *models.FeedParseOptions) []*models.FeedItem {
 	if len(opt.Name) == 0 {
 		opt.Name = utils.Md5Str(opt.Url)
 	}
-	filename := path.Join(config.Dir().Cache, opt.Name+".xml")
+	filename := path.Join(config.Setting().CachePath, opt.Name+".xml")
 	// --------- 是否重新下载rss.xml ---------
 	if opt.RefreshCache {
 		glog.V(3).Infoln("获取Rss数据开始...")
-		err := utils.HttpGet(opt.Url, filename)
+		err := utils.HttpGet(opt.Url, filename, config.Proxy())
 		if err != nil {
 			glog.Errorln(err)
 			return nil
@@ -53,8 +53,9 @@ func (f *Rss) Parse(opt *models.FeedParseOptions) []*models.FeedItem {
 	items := make([]*models.FeedItem, len(feed.Items))
 	for i, item := range feed.Items {
 		items[i] = &models.FeedItem{
-			Url:  item.Link,
-			Name: item.Title,
+			Url:     item.Link,
+			Name:    item.Title,
+			Torrent: item.Enclosures[0].URL,
 		}
 	}
 	return items
