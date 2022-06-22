@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/xxxsen/qbapi"
 	"testing"
+	"time"
 )
 
 func TestConvertModel(t *testing.T) {
@@ -21,4 +22,11 @@ func TestConvertModel(t *testing.T) {
 func TestApiGet(t *testing.T) {
 	n, e := ApiGet("https://google.com", nil, "socks5://127.0.0.1:7891")
 	fmt.Println(n, e)
+}
+
+func TestToBytes(t *testing.T) {
+	b := ToBytes("这是测试文本888", time.Now().Unix()+30)
+	fmt.Println(b)
+	v, e := ToValue(b)
+	fmt.Println(v, e)
 }

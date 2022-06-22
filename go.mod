@@ -7,6 +7,7 @@ require (
 	github.com/andybalholm/cascadia v1.1.0 // indirect
 	github.com/antchfx/htmlquery v1.2.5 // indirect
 	github.com/antchfx/xpath v1.2.1 // indirect
+	github.com/boltdb/bolt v1.3.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/golang/glog v1.0.0 // indirect
 	github.com/golang/groupcache v0.0.0-20200121045136-8c9f03a8e57e // indirect
@@ -20,6 +21,7 @@ require (
 	github.com/stretchr/testify v1.7.2 // indirect
 	github.com/xxxsen/qbapi v0.0.1 // indirect
 	golang.org/x/net v0.0.0-20211005215030-d2e5035098b3 // indirect
+	golang.org/x/sys v0.0.0-20210423082822-04245dca01da // indirect
 	golang.org/x/text v0.3.6 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
