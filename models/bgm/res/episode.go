@@ -32,3 +32,10 @@ type Episode struct {
 	Type        model.EpTypeType    `json:"type"`
 	Disc        uint8               `json:"disc"`
 }
+
+type Paged struct {
+	Data   []*Episode `json:"data"`
+	Total  int64      `json:"total"`
+	Limit  int        `json:"limit"`
+	Offset int        `json:"offset"`
+}

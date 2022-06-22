@@ -8,6 +8,7 @@ import (
 	"github.com/mmcdole/gofeed"
 	"os"
 	"path"
+	"regexp"
 )
 
 type Rss struct {
@@ -50,11 +51,21 @@ func (f *Rss) Parse(opt *models.FeedParseOptions) []*models.FeedItem {
 		glog.Errorln(err)
 		return nil
 	}
+	regx := regexp.MustCompile(`<pubDate>(.*?)T`)
+
+	var date string
 	items := make([]*models.FeedItem, len(feed.Items))
 	for i, item := range feed.Items {
+		strs := regx.FindStringSubmatch(item.Custom["torrent"])
+		if len(strs) < 2 {
+			date = ""
+		} else {
+			date = strs[1]
+		}
 		items[i] = &models.FeedItem{
 			Url:     item.Link,
 			Name:    item.Title,
+			Date:    date,
 			Torrent: item.Enclosures[0].URL,
 		}
 	}

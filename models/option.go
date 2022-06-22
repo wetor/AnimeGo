@@ -46,6 +46,7 @@ type BangumiParseOptions struct {
 	Name string
 	ID   int
 	Date string
+	Ep   int
 }
 
 // =========== Parser ===========

@@ -22,7 +22,7 @@ func (p *Mikan) Run() {
 	f := feed.NewRss()
 	items := f.Parse(&models.FeedParseOptions{
 		Url:          rssConf.Url,
-		Name:         rssConf.Name,
+		Name:         rssConf.Name, // 文件名
 		RefreshCache: true,
 	})
 	bgms := p.ParseBangumiAll(items, &bangumi.Mikan{})
@@ -51,6 +51,7 @@ func (p *Mikan) ParseBangumi(item *models.FeedItem, bangumi bangumi.Bangumi) *mo
 	bgmInfo := bangumi.Parse(&models.BangumiParseOptions{
 		Url:  item.Url,
 		Name: item.Name,
+		Date: item.Date,
 	})
 	// TODO: 写入缓存，需要线程安全
 	return bgmInfo

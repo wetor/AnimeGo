@@ -37,8 +37,10 @@ func NewThemoviedb() Bangumi {
 func (b *Themoviedb) Parse(opt *models.BangumiParseOptions) *models.Bangumi {
 
 	id := b.parseThemoviedb1(opt.Name)
-	bgm := b.parseThemoviedb2(id, opt.Date)
-	return bgm
+	season := b.parseThemoviedb2(id, opt.Date)
+	return &models.Bangumi{
+		BangumiSeason: season,
+	}
 }
 
 func (b *Themoviedb) parseThemoviedb1(name string) int {
@@ -75,7 +77,7 @@ func (b *Themoviedb) parseThemoviedb1(name string) int {
 	}
 
 }
-func (b *Themoviedb) parseThemoviedb2(id int, date string) *models.Bangumi {
+func (b *Themoviedb) parseThemoviedb2(id int, date string) *models.BangumiSeason {
 
 	resp := &models.ThemoviedbResponse{}
 	status, err := utils.ApiGet(ThemoviedbInfoApi(id), resp, config.Proxy())
@@ -87,30 +89,30 @@ func (b *Themoviedb) parseThemoviedb2(id int, date string) *models.Bangumi {
 		glog.Errorln("Status:", status)
 		return nil
 	}
-
-	bgm := &models.Bangumi{}
-	if resp.Seasons == nil || len(resp.Seasons) == 0 {
-		bgm.Season = 1
-		return bgm
+	season := &models.BangumiSeason{
+		Season: 1,
 	}
-	bgm.Season = resp.Seasons[0].SeasonNumber
+	if resp.Seasons == nil || len(resp.Seasons) == 0 {
+		return season
+	}
+	season.Season = resp.Seasons[0].SeasonNumber
 	min := 36500
 	for _, r := range resp.Seasons {
 		if r.SeasonNumber == 0 || r.Name == "Specials" {
 			continue
 		}
-		if s := utils.StrTimeSub(r.AirDate, date); s < min {
+		if s := utils.StrTimeSubAbs(r.AirDate, date); s < min {
 			min = s
-			bgm.Season = r.SeasonNumber
+			season.Season = r.SeasonNumber
 		}
 	}
 	if min > 90 {
 		glog.Errorln("Themoviedb匹配Seasons失败，可能此番剧未开播")
 		return nil
 	}
-	if bgm.Season == 0 {
+	if season.Season == 0 {
 		glog.Errorln("Themoviedb匹配Seasons失败")
 		return nil
 	}
-	return bgm
+	return season
 }

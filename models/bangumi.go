@@ -6,14 +6,32 @@ import (
 
 type Bangumi struct {
 	ID      int    // bgm id
-	SubID   int    // 其他id，mikan id
 	Name    string // 名称，从bgm获取
-	NameJp  string // 日文名，从bgm获取
+	NameCN  string // 中文名称，从bgm获取
 	AirDate string // 最初播放日期，从bgm获取
-	Date    string // 播放日期，从bgm获取
-	Season  int    // 当前季，从themoviedb获取
-	Ep      int    // 当前集，从下载文件名解析
-	Eps     int    // 总集数，从bgm获取
+	*BangumiSeason
+	*BangumiEp
+	*BangumiExtra
+}
+
+type BangumiSeason struct {
+	Season int // 当前季，从themoviedb获取
+}
+type BangumiEp struct {
+	Ep       int    // 当前集，从下载文件名解析
+	Date     string // 当前集播放日期，从bgm获取
+	Duration string // 当前集时长
+	EpDesc   string // 当前集简介
+	EpName   string // 当前集标题
+	EpNameCN string // 当前集中文标题
+	EpID     int    // 当前集bgm id
+	Eps      int    // 总集数，从bgm获取
+
+}
+type BangumiExtra struct {
+	SubID      int    // 其他id，mikan id
+	SubUrl     string // 其他url，mikan当前集的url
+	TorrentUrl string // 当前集种子链接
 }
 
 func (b *Bangumi) FullName() string {
