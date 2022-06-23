@@ -51,7 +51,7 @@ type BangumiParseOptions struct {
 
 // =========== Parser ===========
 
-type ParseBangumiNameOptions struct {
+type ParseNameOptions struct {
 	Name      string
 	StartStep int
 }

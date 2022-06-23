@@ -2,6 +2,7 @@ package bangumi
 
 import (
 	"GoBangumi/models"
+	"GoBangumi/modules/parser"
 	"fmt"
 	"github.com/antchfx/htmlquery"
 	"github.com/golang/glog"
@@ -29,19 +30,38 @@ func NewMikan() Bangumi {
 
 func (b *Mikan) Parse(opt *models.BangumiParseOptions) *models.Bangumi {
 	glog.V(3).Infof("获取「%s」信息开始...\n", opt.Name)
-	mikanID := b.parseMikan1(opt.Url)
-	bangumiID := b.parseMikan2(mikanID)
-	ep := 1
+	epParser := parser.NewBangumiEp()
+	ep := epParser.Parse(&models.ParseNameOptions{
+		Name: opt.Name,
+	})
+	if ep == nil {
+		glog.Errorln("解析ep信息失败，结束此流程")
+		return nil
+	}
 	// TODO: opt.Name为文件名，解析出ep数
-	info := b.parseBangumi(bangumiID, ep, opt.Date)
+	mikanID := b.parseMikan1(opt.Url)
+	if mikanID == 0 {
+		glog.Errorln("获取Mikan ID失败，结束此流程")
+		return nil
+	}
+	bangumiID := b.parseMikan2(mikanID)
+	if mikanID == 0 {
+		glog.Errorln("获取bangumi ID失败，结束此流程")
+		return nil
+	}
+	info := b.parseBangumi(bangumiID, ep.Ep, opt.Date)
 	if info == nil {
 		glog.Errorln("获取Bangumi信息失败，结束此流程")
 		return nil
 	}
 	info.BangumiSeason = b.parseThemoviedb(info.Name, info.AirDate)
-	if info.Season == 0 {
-		glog.Errorln("获取Themoviedb季度信息失败，默认SE01")
-		info.Season = 1
+	if info.BangumiSeason == nil || info.Season == 0 {
+		//glog.Errorln("获取Themoviedb季度信息失败，默认SE01")
+		//info.BangumiSeason = &models.BangumiSeason{
+		//	Season: 1,
+		//}
+		glog.Errorln("获取Themoviedb季度信息失败，结束此流程")
+		return nil
 	}
 	info.BangumiExtra = &models.BangumiExtra{
 		SubID:  mikanID,

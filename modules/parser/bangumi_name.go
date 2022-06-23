@@ -6,7 +6,7 @@ import (
 	"regexp"
 )
 
-var regStep = []*regexp.Regexp{
+var nameRegxStep = []*regexp.Regexp{
 	// 删除末尾 "第X季"或"X季"
 	regexp.MustCompile(`\s?第?(\d{1,2}|(一|二|三|四|五|伍|六|七|八|九|十))(期|部|季|篇|章|編)$`),
 	// 删除末尾 "1st Season"、"Xnd Season"或"Season X"或"X"
@@ -24,30 +24,32 @@ func NewBangumiName() Parser {
 	return &BangumiName{}
 }
 
-func (p *BangumiName) ParseBangumiName(opt *models.ParseBangumiNameOptions) *models.BangumiName {
+func (p *BangumiName) Parse(opt *models.ParseNameOptions) *models.ParseResult {
 	if opt.StartStep < 0 {
 		return nil
 	}
-	if opt.StartStep >= len(regStep) {
+	if opt.StartStep >= len(nameRegxStep) {
 		glog.Errorln("BangumiName Step错误")
 		return nil
 	}
 	str := opt.Name
 	i := opt.StartStep
-	for ; i < len(regStep); i++ {
-		has := regStep[i].MatchString(str)
+	for ; i < len(nameRegxStep); i++ {
+		has := nameRegxStep[i].MatchString(str)
 		if has {
-			str = regStep[i].ReplaceAllString(str, "")
+			str = nameRegxStep[i].ReplaceAllString(str, "")
 			break
 		}
 	}
 	i++ // 下一步
-	if i >= len(regStep) {
+	if i >= len(nameRegxStep) {
 		i = -1
 	}
 
-	return &models.BangumiName{
-		Name:     str,
+	return &models.ParseResult{
 		NextStep: i,
+		ParseNameResult: &models.ParseNameResult{
+			Name: str,
+		},
 	}
 }

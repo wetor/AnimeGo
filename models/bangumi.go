@@ -35,7 +35,7 @@ type BangumiExtra struct {
 }
 
 func (b *Bangumi) FullName() string {
-	str := fmt.Sprintf("%s[第%d季][第%d集]", b.Name, b.Season, b.Ep)
+	str := fmt.Sprintf("%s[第%d季][第%d集]", b.NameCN, b.Season, b.Ep)
 	return str
 }
 

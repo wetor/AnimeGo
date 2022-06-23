@@ -66,10 +66,10 @@ func TestRegxStep(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Log(tt)
-		has := regStep[tt.args.step].MatchString(tt.args.str)
+		has := nameRegxStep[tt.args.step].MatchString(tt.args.str)
 		assert.Equal(t, tt.has, has)
 		if has {
-			got := regStep[tt.args.step].ReplaceAllString(tt.args.str, "")
+			got := nameRegxStep[tt.args.step].ReplaceAllString(tt.args.str, "")
 			assert.Equal(t, tt.want, got)
 		}
 	}

@@ -26,6 +26,7 @@ func TestMikanProcessOne(t *testing.T) {
 	bgms := p.ParseBangumi(&models.FeedItem{
 		Url:  "https://mikanani.me/Home/Episode/6b23947f17c844570eee00177b870f16949900d4",
 		Name: "[酷漫404][辉夜姬想让人告白 一超级浪漫一][09][1080P][WebRip][繁日双语][AVC AAC][MP4][字幕组招人内详]",
+		Date: "2022-06-14",
 	}, &bangumi.Mikan{})
 	fmt.Println(bgms)
 

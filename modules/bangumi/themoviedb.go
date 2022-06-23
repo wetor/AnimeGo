@@ -59,7 +59,7 @@ func (b *Themoviedb) parseThemoviedb1(name string) int {
 		}
 		if resp.TotalResults == 0 {
 			glog.Errorln("Themoviedb中未找到番剧：" + name)
-			result := nameParser.ParseBangumiName(&models.ParseBangumiNameOptions{
+			result := nameParser.Parse(&models.ParseNameOptions{
 				Name:      name,
 				StartStep: step,
 			})
