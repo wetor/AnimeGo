@@ -20,7 +20,7 @@ func TestMain(m *testing.M) {
 	defer glog.Flush()
 
 	config.Init("../../data/config/conf.yaml")
-	conf := config.QBt()
+	conf := config.ClientQBt()
 	qbt = NewQBittorrent(conf.Url, conf.Username, conf.Password)
 	m.Run()
 	fmt.Println("end")

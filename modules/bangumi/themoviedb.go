@@ -10,14 +10,10 @@ import (
 	"net/url"
 )
 
-const (
-	ThemoviedbBaseApi = "https://api.themoviedb.org"
-)
-
 var ThemoviedbIdApi = func(query string) string {
-	url_, _ := url.Parse(ThemoviedbBaseApi + "/3/discover/tv")
+	url_, _ := url.Parse(config.Advanced().Themoviedb().Host + "/3/discover/tv")
 	q := url_.Query()
-	q.Set("api_key", config.TMDB())
+	q.Set("api_key", config.KeyTmdb())
 	q.Set("language", "zh-CN")
 	q.Set("timezone", "Asia/Shanghai")
 	q.Set("with_genres", "16")
@@ -25,7 +21,7 @@ var ThemoviedbIdApi = func(query string) string {
 	return url_.String() + "?" + q.Encode()
 }
 var ThemoviedbInfoApi = func(id int) string {
-	return fmt.Sprintf("%s/3/tv/%d?api_key=%s", ThemoviedbBaseApi, id, config.TMDB())
+	return fmt.Sprintf("%s/3/tv/%d?api_key=%s", config.Advanced().Themoviedb().Host, id, config.KeyTmdb())
 }
 
 type Themoviedb struct {
@@ -88,7 +84,7 @@ func (b *Themoviedb) parseThemoviedb1(name string) (tmdbID int) {
 			break
 		}
 	}
-	Cache.Put("name_tmdb", name, tmdbID, 0)
+	Cache.Put("name_tmdb", name, tmdbID, config.Advanced().Themoviedb().CacheIdExpire)
 	return tmdbID
 }
 func (b *Themoviedb) parseThemoviedb2(id int, date string) (season *models.BangumiSeason) {
@@ -128,7 +124,8 @@ func (b *Themoviedb) parseThemoviedb2(id int, date string) (season *models.Bangu
 			season.Season = r.SeasonNumber
 		}
 	}
-	if min > 90 {
+	conf := config.Advanced().Themoviedb()
+	if min > conf.MatchSeasonDays {
 		glog.Errorln("Themoviedb匹配Seasons失败，可能此番剧未开播")
 		return nil
 	}
@@ -136,6 +133,6 @@ func (b *Themoviedb) parseThemoviedb2(id int, date string) (season *models.Bangu
 		glog.Errorln("Themoviedb匹配Seasons失败")
 		return nil
 	}
-	Cache.Put("tmdb_season", cacheKey, season, 0)
+	Cache.Put("tmdb_season", cacheKey, season, conf.CacheSeasonExpire)
 	return season
 }

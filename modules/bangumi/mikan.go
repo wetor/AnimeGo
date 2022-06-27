@@ -1,6 +1,7 @@
 package bangumi
 
 import (
+	"GoBangumi/config"
 	"GoBangumi/models"
 	"GoBangumi/modules/parser"
 	"fmt"
@@ -12,13 +13,12 @@ import (
 )
 
 const (
-	MikanBaseUrl         = "https://mikanani.me"                                     // Mikan 域名
 	MikanIdXPath         = "//a[@class='mikan-rss']"                                 // Mikan番剧id获取XPath
 	MikanBangumiUrlXPath = "//p[@class='bangumi-info']/a[contains(@href, 'bgm.tv')]" // Mikan番剧信息中bangumi id获取XPath
 )
 
 var MikanInfoUrl = func(id int) string {
-	return fmt.Sprintf("%s/Home/Bangumi/%d", MikanBaseUrl, id)
+	return fmt.Sprintf("%s/Home/Bangumi/%d", config.Advanced().Mikan().Host, id)
 }
 
 type Mikan struct {
@@ -112,7 +112,7 @@ func (b *Mikan) parseMikan1(url_ string) (mikanID int) {
 		glog.Errorln("获取Mikan ID失败")
 		return 0
 	}
-	Cache.Put("rss_mikan", url_, mikanID, 0)
+	Cache.Put("rss_mikan", url_, mikanID, config.Advanced().Mikan().CacheIdExpire)
 	return mikanID
 }
 
@@ -151,7 +151,7 @@ func (b *Mikan) parseMikan2(mikanID int) (bangumiID int) {
 		return 0
 	}
 	// mikanID和bangumiID对应关系固定，缓存
-	Cache.Put("mikan_bangumi", mikanID, bangumiID, 0)
+	Cache.Put("mikan_bangumi", mikanID, bangumiID, config.Advanced().Mikan().CacheBangumiExpire)
 	return bangumiID
 }
 

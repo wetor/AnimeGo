@@ -7,5 +7,5 @@ import (
 
 func TestInit(t *testing.T) {
 	Init("")
-	fmt.Println(conf.Proxy)
+	fmt.Println(conf.Bangumi())
 }

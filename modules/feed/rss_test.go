@@ -25,7 +25,7 @@ func TestMain(m *testing.M) {
 }
 func TestRss(t *testing.T) {
 	config.Init("../../data/config/conf.yaml")
-	rssConf := config.Mikan()
+	rssConf := config.RssMikan()
 	rssFile := path.Join(config.Setting().CachePath, rssConf.Name+".xml")
 
 	//err := utils.HttpGet(rssConf.Url, rssFile, config.Proxy())
@@ -41,7 +41,7 @@ func TestRss(t *testing.T) {
 
 func TestRss_Parse(t *testing.T) {
 	config.Init("../../data/config/conf.yaml")
-	rssConf := config.Mikan()
+	rssConf := config.RssMikan()
 	f := NewRss()
 	items := f.Parse(&models.FeedParseOptions{
 		Url:          rssConf.Url,

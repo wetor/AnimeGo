@@ -12,7 +12,9 @@ func TestSettings_Tag(t *testing.T) {
 	}
 	str := setting.Tag(&models.Bangumi{
 		AirDate: "2022-04-11",
-		Ep:      10,
+		BangumiEp: &models.BangumiEp{
+			Ep: 10,
+		},
 	})
 	fmt.Println(str)
 }

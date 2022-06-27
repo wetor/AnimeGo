@@ -7,6 +7,7 @@ import (
 	"GoBangumi/modules/feed"
 	"fmt"
 	"sync"
+	"time"
 )
 
 type Mikan struct {
@@ -17,7 +18,7 @@ func NewMikan() Process {
 }
 
 func (p *Mikan) Run() {
-	rssConf := config.Mikan()
+	rssConf := config.RssMikan()
 
 	f := feed.NewRss()
 	items := f.Parse(&models.FeedParseOptions{
@@ -34,14 +35,22 @@ func (p *Mikan) Run() {
 
 func (p *Mikan) ParseBangumiAll(items []*models.FeedItem, bangumi bangumi.Bangumi) []*models.Bangumi {
 	bgms := make([]*models.Bangumi, len(items))
+	conf := config.Advanced().GoBangumi()
+	working := make(chan int, conf.MultiGoroutine.GoroutineMax) // 限制同时执行个数
 	wg := sync.WaitGroup{}
 	for i, item := range items {
+		working <- i //计数器+1 可能会发生阻塞
 		wg.Add(1)
 		go func(i_ int, item_ *models.FeedItem) {
 			defer wg.Done()
 			bgms[i_] = p.ParseBangumi(item_, bangumi)
+			time.Sleep(time.Duration(conf.RssDelay) * time.Second)
+			//工作完成后计数器减1
+			<-working
 		}(i, item)
-		wg.Wait() // 同步
+		if !conf.MultiGoroutine.Enable {
+			wg.Wait() // 同步
+		}
 	}
 	wg.Wait()
 	return bgms

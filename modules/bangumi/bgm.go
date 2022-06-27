@@ -9,22 +9,19 @@ import (
 	"github.com/golang/glog"
 )
 
-const (
-	BangumiBaseApi = "https://api.bgm.tv" // Bangumi 域名
-)
-
 var BangumiInfoApi = func(id int) string {
-	return fmt.Sprintf("%s/v0/subjects/%d", BangumiBaseApi, id)
+	return fmt.Sprintf("%s/v0/subjects/%d", config.Advanced().Bangumi().Host, id)
 }
 var BangumiEpApi = func(id, ep int) string {
 	// TODO: 支持根据上传日期，判断当前ep数
-	offset := ep - 2 // 缓存当前ep的前一集
+	conf := config.Advanced().Bangumi()
+	offset := ep - 1 - conf.MatchEpRange // 缓存当前ep的前一集
 	if offset < 0 {
 		offset = 0
 	}
-	limit := 3  // 共缓存三集
-	epType := 0 // 仅番剧本体
-	return fmt.Sprintf("%s/v0/episodes?subject_id=%d&type=%d&limit=%d&offset=%d", BangumiBaseApi, id, epType, limit, offset)
+	limit := conf.MatchEpRange*2 + 1 // 共缓存三集
+	epType := 0                      // 仅番剧本体
+	return fmt.Sprintf("%s/v0/episodes?subject_id=%d&type=%d&limit=%d&offset=%d", conf.Host, id, epType, limit, offset)
 }
 
 type Bgm struct {
@@ -35,6 +32,9 @@ func NewBgm() Bangumi {
 }
 func (b *Bgm) Parse(opt *models.BangumiParseOptions) *models.Bangumi {
 	info := b.parseBgm1(opt.ID)
+	if info == nil {
+		return nil
+	}
 	info.BangumiEp = b.parseBgm2(opt.ID, opt.Ep, opt.Date)
 	if info.BangumiEp == nil {
 		info.BangumiEp = &models.BangumiEp{
@@ -71,7 +71,7 @@ func (b *Bgm) parseBgm1(bangumiID int) (info *models.Bangumi) {
 		AirDate: *resp.Date,
 		Eps:     int(resp.Eps),
 	}
-	Cache.Put("bgm_info", bangumiID, info, 0)
+	Cache.Put("bgm_info", bangumiID, info, config.Advanced().Bangumi().CacheInfoExpire)
 	return info
 }
 func (b *Bgm) parseBgm2(bangumiID, ep int, date string) (epInfo *models.BangumiEp) {
@@ -84,9 +84,10 @@ func (b *Bgm) parseBgm2(bangumiID, ep int, date string) (epInfo *models.BangumiE
 		}
 	}
 	glog.V(5).Infof("解析Bangumi，步骤2，获取Ep信息\n")
+	conf := config.Advanced().Bangumi()
 	url_ := BangumiEpApi(bangumiID, ep)
 	resp := &res.Paged{
-		Data: make([]*res.Episode, 0, 3),
+		Data: make([]*res.Episode, 0, conf.MatchEpRange*2+1),
 	}
 	status, err := utils.ApiGet(url_, resp, config.Proxy())
 	if err != nil {
@@ -101,7 +102,7 @@ func (b *Bgm) parseBgm2(bangumiID, ep int, date string) (epInfo *models.BangumiE
 	var respEp *res.Episode = nil
 	for _, e := range resp.Data {
 		s := utils.StrTimeSubAbs(date, e.Airdate)
-		if ep == int(e.Ep) && s <= 30 {
+		if ep == int(e.Ep) && s <= conf.MatchEpDays {
 			respEp = e
 			break
 		}
@@ -119,6 +120,6 @@ func (b *Bgm) parseBgm2(bangumiID, ep int, date string) (epInfo *models.BangumiE
 		EpNameCN: respEp.NameCN,
 		EpID:     int(respEp.ID),
 	}
-	Cache.Put("bgm_ep", cacheKey, epInfo, 0)
+	Cache.Put("bgm_ep", cacheKey, epInfo, conf.CacheEpExpire)
 	return epInfo
 }

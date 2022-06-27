@@ -11,13 +11,14 @@ type Config struct {
 		Rss map[string]*Rss
 	}
 
-	Client    map[string]*Client
-	Key       map[string]string
-	*Settings `yaml:"setting"`
-	Proxy     struct {
+	Client map[string]*Client
+	Key    map[string]string
+	Proxy  struct {
 		Enable bool
 		Url    string
 	}
+	*Settings     `yaml:"setting"`
+	*AdvancedConf `yaml:"advanced"`
 }
 
 type Client struct {
@@ -46,35 +47,30 @@ func Init(path string) {
 	}
 }
 
-func QBt() *Client {
-	nameList := []string{"qbittorrent", "qBittorrent", "qbt", "qBt"}
-	for _, name := range nameList {
-		if client, has := conf.Client[name]; has {
-			return client
-		}
+func ClientQBt() *Client {
+	if client, has := conf.Client["qbittorrent"]; has {
+		return client
 	}
 	return nil
 }
-func Mikan() *Rss {
-	nameList := []string{"mikan", "Mikan", "mikanani"}
-	for _, name := range nameList {
-		if rss, has := conf.Feed.Rss[name]; has {
-			return rss
-		}
+func RssMikan() *Rss {
+	if rss, has := conf.Feed.Rss["mikan"]; has {
+		return rss
 	}
 	return nil
 }
-func TMDB() string {
-	nameList := []string{"themoviedb", "TheMovieDB", "tmdb", "TMDB"}
-	for _, name := range nameList {
-		if key, has := conf.Key[name]; has {
-			return key
-		}
+func KeyTmdb() string {
+	if key, has := conf.Key["themoviedb"]; has {
+		return key
 	}
 	return ""
 }
 func Setting() *Settings {
 	return conf.Settings
+}
+
+func Advanced() *AdvancedConf {
+	return conf.AdvancedConf
 }
 
 func Proxy() string {
