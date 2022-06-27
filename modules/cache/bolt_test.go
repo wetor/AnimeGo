@@ -29,6 +29,6 @@ func TestBolt_Put(t *testing.T) {
 func TestBolt_Get(t *testing.T) {
 	db := NewBolt()
 	db.Open(config.Setting().CachePath)
-	v := db.Get(DefaultBucket, "key")
+	v := db.Get(DefaultBucket, "key11")
 	fmt.Println(v)
 }

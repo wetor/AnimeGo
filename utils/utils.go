@@ -1,9 +1,11 @@
 package utils
 
 import (
+	"GoBangumi/models"
 	"bytes"
 	"crypto/md5"
 	"encoding/binary"
+	"encoding/gob"
 	"encoding/hex"
 	"reflect"
 	"time"
@@ -100,6 +102,21 @@ func ToBytes(val interface{}, extra int64) []byte {
 	case string:
 		buf.WriteByte(0x10)
 		buf.WriteString(value)
+	case *models.Bangumi:
+		buf.WriteByte(0x20)
+		buf.Write(GobToBytes(value))
+	case *models.BangumiSeason:
+		buf.WriteByte(0x21)
+		buf.Write(GobToBytes(value))
+	case *models.BangumiEp:
+		buf.WriteByte(0x22)
+		buf.Write(GobToBytes(value))
+	case *models.BangumiExtra:
+		buf.WriteByte(0x23)
+		buf.Write(GobToBytes(value))
+	default:
+		buf.WriteByte(0xFF)
+		buf.Write(GobToBytes(value))
 	}
 	return buf.Bytes()
 }
@@ -118,6 +135,32 @@ func ToValue(data []byte) (val interface{}, extra int64) {
 		val = int64(binary.LittleEndian.Uint64(data[9:]))
 	case 0x10:
 		val = string(data[9:])
+	case 0x20:
+		val = &models.Bangumi{}
+		GobToValue(data[9:], val)
+	case 0x21:
+		val = &models.BangumiSeason{}
+		GobToValue(data[9:], val)
+	case 0x22:
+		val = &models.BangumiEp{}
+		GobToValue(data[9:], val)
+	case 0x23:
+		val = &models.BangumiExtra{}
+		GobToValue(data[9:], val)
+	case 0xFF:
+		GobToValue(data[9:], val)
 	}
 	return val, extra
+}
+
+func GobToBytes(val interface{}) []byte {
+	buf2 := bytes.NewBuffer(nil)
+	enc := gob.NewEncoder(buf2)
+	enc.Encode(val)
+	return buf2.Bytes()
+}
+func GobToValue(data []byte, val interface{}) {
+	buf := bytes.NewBuffer(data)
+	dec := gob.NewDecoder(buf)
+	dec.Decode(val)
 }

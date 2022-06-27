@@ -19,7 +19,8 @@ const (
 	TmdbBucket Bucket = "tmdb_bucket"
 )
 
-var buckets = []Bucket{DefaultBucket, RssBucket, BgmBucket, BgmEpBucket, TmdbBucket}
+var buckets = []Bucket{DefaultBucket, RssBucket, BgmBucket, BgmEpBucket, TmdbBucket,
+	"rss_mikan", "mikan_bangumi", "name_tmdb", "tmdb_season", "bgm_info", "bgm_ep"}
 
 type Cache interface {
 	Open(dir string)

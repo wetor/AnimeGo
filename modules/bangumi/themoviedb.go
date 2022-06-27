@@ -43,7 +43,19 @@ func (b *Themoviedb) Parse(opt *models.BangumiParseOptions) *models.Bangumi {
 	}
 }
 
-func (b *Themoviedb) parseThemoviedb1(name string) int {
+// parseThemoviedb1
+//  @Cache name_tmdb name
+//
+func (b *Themoviedb) parseThemoviedb1(name string) (tmdbID int) {
+	// 通过name查询缓存中的tmdbID
+	tmp := Cache.Get("name_tmdb", name)
+	if tmp != nil {
+		if val, ok := tmp.(int); ok {
+			glog.V(5).Infof("解析Themoviedb，步骤1，缓存\n")
+			return val
+		}
+	}
+	glog.V(5).Infof("解析Themoviedb，步骤1，获取tmdb ID\n")
 	resp := &models.ThemoviedbIdResponse{}
 	nameParser := parser.NewBangumiName()
 	step := 0
@@ -72,13 +84,23 @@ func (b *Themoviedb) parseThemoviedb1(name string) int {
 			continue
 
 		} else {
-			return resp.Result[0].ID
+			tmdbID = resp.Result[0].ID
+			break
 		}
 	}
-
+	Cache.Put("name_tmdb", name, tmdbID, 0)
+	return tmdbID
 }
-func (b *Themoviedb) parseThemoviedb2(id int, date string) *models.BangumiSeason {
-
+func (b *Themoviedb) parseThemoviedb2(id int, date string) (season *models.BangumiSeason) {
+	cacheKey := fmt.Sprintf("%d_%s", id, date)
+	tmp := Cache.Get("tmdb_season", cacheKey)
+	if tmp != nil {
+		if val, ok := tmp.(*models.BangumiSeason); ok {
+			glog.V(5).Infof("解析Themoviedb，步骤2，缓存\n")
+			return val
+		}
+	}
+	glog.V(5).Infof("解析Themoviedb，步骤2，获取信息\n")
 	resp := &models.ThemoviedbResponse{}
 	status, err := utils.ApiGet(ThemoviedbInfoApi(id), resp, config.Proxy())
 	if err != nil {
@@ -89,7 +111,7 @@ func (b *Themoviedb) parseThemoviedb2(id int, date string) *models.BangumiSeason
 		glog.Errorln("Status:", status)
 		return nil
 	}
-	season := &models.BangumiSeason{
+	season = &models.BangumiSeason{
 		Season: 1,
 	}
 	if resp.Seasons == nil || len(resp.Seasons) == 0 {
@@ -114,5 +136,6 @@ func (b *Themoviedb) parseThemoviedb2(id int, date string) *models.BangumiSeason
 		glog.Errorln("Themoviedb匹配Seasons失败")
 		return nil
 	}
+	Cache.Put("tmdb_season", cacheKey, season, 0)
 	return season
 }

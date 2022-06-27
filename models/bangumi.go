@@ -9,6 +9,7 @@ type Bangumi struct {
 	Name    string // 名称，从bgm获取
 	NameCN  string // 中文名称，从bgm获取
 	AirDate string // 最初播放日期，从bgm获取
+	Eps     int    // 总集数，从bgm获取
 	*BangumiSeason
 	*BangumiEp
 	*BangumiExtra
@@ -25,7 +26,6 @@ type BangumiEp struct {
 	EpName   string // 当前集标题
 	EpNameCN string // 当前集中文标题
 	EpID     int    // 当前集bgm id
-	Eps      int    // 总集数，从bgm获取
 
 }
 type BangumiExtra struct {

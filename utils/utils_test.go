@@ -25,8 +25,17 @@ func TestApiGet(t *testing.T) {
 }
 
 func TestToBytes(t *testing.T) {
-	b := ToBytes("这是测试文本888", time.Now().Unix()+30)
+	b := ToBytes(&models.Bangumi{
+		ID:     1000,
+		Name:   "测试日文",
+		NameCN: "测试中文",
+		BangumiExtra: &models.BangumiExtra{
+			SubID:  22,
+			SubUrl: "hasdtasdasdas",
+		},
+	}, time.Now().Unix()+30)
 	fmt.Println(b)
 	v, e := ToValue(b)
-	fmt.Println(v, e)
+	bgm := v.(*models.Bangumi)
+	fmt.Println(bgm, bgm.BangumiExtra, e)
 }

@@ -4,6 +4,7 @@ import (
 	"GoBangumi/config"
 	"GoBangumi/models"
 	"GoBangumi/modules/bangumi"
+	"GoBangumi/modules/cache"
 	"flag"
 	"fmt"
 	"github.com/golang/glog"
@@ -18,17 +19,20 @@ func TestMain(m *testing.M) {
 	flag.Parse()
 	defer glog.Flush()
 	config.Init("../data/config/conf.yaml")
+	c := cache.NewBolt()
+	c.Open(config.Setting().CachePath)
+	bangumi.Init(c)
 	m.Run()
 	fmt.Println("end")
 }
 func TestMikanProcessOne(t *testing.T) {
 	p := NewMikan()
 	bgms := p.ParseBangumi(&models.FeedItem{
-		Url:  "https://mikanani.me/Home/Episode/6b23947f17c844570eee00177b870f16949900d4",
-		Name: "[酷漫404][辉夜姬想让人告白 一超级浪漫一][09][1080P][WebRip][繁日双语][AVC AAC][MP4][字幕组招人内详]",
-		Date: "2022-06-14",
+		Url:  "https://mikanani.me/Home/Episode/171f3b402fa4cf770ef267c0744a81b6b9ad77f2",
+		Name: "[夜莺家族&YYQ字幕组]New Doraemon 哆啦A梦新番[712][2022.06.25][AVC][1080P][GB_JP]",
+		Date: "2022-06-26",
 	}, &bangumi.Mikan{})
-	fmt.Println(bgms)
+	fmt.Println(bgms, bgms.BangumiSeason, bgms.BangumiEp, bgms.BangumiExtra)
 
 }
 func TestMikanProcess(t *testing.T) {

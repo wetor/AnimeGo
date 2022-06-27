@@ -49,6 +49,9 @@ func (c *Bolt) Close() {
 	}
 }
 func (c *Bolt) Put(bucket Bucket, key, val interface{}, ttl int64) {
+	if val == nil {
+		return
+	}
 	var expire int64
 	err := c.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
@@ -71,6 +74,10 @@ func (c *Bolt) Get(bucket Bucket, key interface{}) interface{} {
 	err := c.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
 		v := b.Get(utils.ToBytes(key, -1))
+		if len(v) == 0 {
+			// 不存在
+			return nil
+		}
 		val, ttl = utils.ToValue(v)
 		if ttl != 0 && ttl <= time.Now().Unix() {
 			return errors.New("data expired")

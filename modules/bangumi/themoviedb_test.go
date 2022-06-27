@@ -3,6 +3,7 @@ package bangumi
 import (
 	"GoBangumi/config"
 	"GoBangumi/models"
+	"GoBangumi/modules/cache"
 	"flag"
 	"fmt"
 	"github.com/golang/glog"
@@ -17,6 +18,9 @@ func TestMain(m *testing.M) {
 	flag.Parse()
 	defer glog.Flush()
 	config.Init("../../data/config/conf.yaml")
+	c := cache.NewBolt()
+	c.Open(config.Setting().CachePath)
+	Init(c)
 	m.Run()
 	fmt.Println("end")
 }

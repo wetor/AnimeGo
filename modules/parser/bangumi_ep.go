@@ -27,6 +27,9 @@ func (p *BangumiEp) Parse(opt *models.ParseNameOptions) *models.ParseResult {
 	str = strings.ReplaceAll(str, "【", "[")
 	str = strings.ReplaceAll(str, "】", "]")
 	res := epRegxStep[0].FindStringSubmatch(str)
+	if res == nil {
+		return nil
+	}
 	epStr := epRegxStep[1].FindString(res[2])
 	ep, err := strconv.Atoi(epStr)
 	if err != nil || ep == 0 {

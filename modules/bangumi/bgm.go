@@ -34,37 +34,25 @@ func NewBgm() Bangumi {
 	return &Bgm{}
 }
 func (b *Bgm) Parse(opt *models.BangumiParseOptions) *models.Bangumi {
-	resp := b.parseBgm1(opt.ID)
-
-	info := &models.Bangumi{
-		ID:      int(resp.ID),
-		NameCN:  resp.NameCN,
-		Name:    resp.Name,
-		AirDate: *resp.Date,
-	}
-	ep := b.parseBgm2(opt.ID, opt.Ep, opt.Date)
-	if ep != nil {
+	info := b.parseBgm1(opt.ID)
+	info.BangumiEp = b.parseBgm2(opt.ID, opt.Ep, opt.Date)
+	if info.BangumiEp == nil {
 		info.BangumiEp = &models.BangumiEp{
-			Ep:       opt.Ep,
-			Date:     ep.Airdate,
-			Duration: ep.Duration,
-			EpDesc:   ep.Description,
-			EpName:   ep.Name,
-			EpNameCN: ep.NameCN,
-			EpID:     int(ep.ID),
-			Eps:      int(resp.Eps),
-		}
-	} else {
-		info.BangumiEp = &models.BangumiEp{
-			Ep:  opt.Ep,
-			Eps: int(resp.Eps),
+			Ep: opt.Ep,
 		}
 	}
-
 	return info
 }
 
-func (b *Bgm) parseBgm1(bangumiID int) *res.SubjectV0 {
+func (b *Bgm) parseBgm1(bangumiID int) (info *models.Bangumi) {
+	tmp := Cache.Get("bgm_info", bangumiID)
+	if tmp != nil {
+		if val, ok := tmp.(*models.Bangumi); ok {
+			glog.V(5).Infof("解析Bangumi，步骤1，缓存\n")
+			return val
+		}
+	}
+	glog.V(5).Infof("解析Bangumi，步骤1，获取信息\n")
 	url_ := BangumiInfoApi(bangumiID)
 	resp := &res.SubjectV0{}
 	status, err := utils.ApiGet(url_, resp, config.Proxy())
@@ -76,9 +64,26 @@ func (b *Bgm) parseBgm1(bangumiID int) *res.SubjectV0 {
 		glog.Errorln("解析bangumi失败，Status:", status)
 		return nil
 	}
-	return resp
+	info = &models.Bangumi{
+		ID:      int(resp.ID),
+		NameCN:  resp.NameCN,
+		Name:    resp.Name,
+		AirDate: *resp.Date,
+		Eps:     int(resp.Eps),
+	}
+	Cache.Put("bgm_info", bangumiID, info, 0)
+	return info
 }
-func (b *Bgm) parseBgm2(bangumiID, ep int, date string) *res.Episode {
+func (b *Bgm) parseBgm2(bangumiID, ep int, date string) (epInfo *models.BangumiEp) {
+	cacheKey := fmt.Sprintf("%d_%d", bangumiID, ep)
+	tmp := Cache.Get("bgm_ep", cacheKey)
+	if tmp != nil {
+		if val, ok := tmp.(*models.BangumiEp); ok {
+			glog.V(5).Infof("解析Bangumi，步骤2，缓存\n")
+			return val
+		}
+	}
+	glog.V(5).Infof("解析Bangumi，步骤2，获取Ep信息\n")
 	url_ := BangumiEpApi(bangumiID, ep)
 	resp := &res.Paged{
 		Data: make([]*res.Episode, 0, 3),
@@ -93,12 +98,27 @@ func (b *Bgm) parseBgm2(bangumiID, ep int, date string) *res.Episode {
 		return nil
 	}
 	// TODO: 根据ep、date是否为空进行不同规则的判断
+	var respEp *res.Episode = nil
 	for _, e := range resp.Data {
 		s := utils.StrTimeSubAbs(date, e.Airdate)
 		if ep == int(e.Ep) && s <= 30 {
-			return e
+			respEp = e
+			break
 		}
 	}
-	glog.Errorln("解析bangumi ep失败，没有匹配到剧集信息")
-	return nil
+	if respEp == nil {
+		glog.Errorln("解析bangumi ep失败，没有匹配到剧集信息")
+		return nil
+	}
+	epInfo = &models.BangumiEp{
+		Ep:       int(respEp.Ep),
+		Date:     respEp.Airdate,
+		Duration: respEp.Duration,
+		EpDesc:   respEp.Description,
+		EpName:   respEp.Name,
+		EpNameCN: respEp.NameCN,
+		EpID:     int(respEp.ID),
+	}
+	Cache.Put("bgm_ep", cacheKey, epInfo, 0)
+	return epInfo
 }

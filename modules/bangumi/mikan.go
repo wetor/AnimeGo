@@ -30,6 +30,7 @@ func NewMikan() Bangumi {
 
 func (b *Mikan) Parse(opt *models.BangumiParseOptions) *models.Bangumi {
 	glog.V(3).Infof("获取「%s」信息开始...\n", opt.Name)
+	// ------------------- 解析文件名获取ep -------------------
 	epParser := parser.NewBangumiEp()
 	ep := epParser.Parse(&models.ParseNameOptions{
 		Name: opt.Name,
@@ -38,28 +39,27 @@ func (b *Mikan) Parse(opt *models.BangumiParseOptions) *models.Bangumi {
 		glog.Errorln("解析ep信息失败，结束此流程")
 		return nil
 	}
-	// TODO: opt.Name为文件名，解析出ep数
+	// ------------------- 获取mikanID -------------------
 	mikanID := b.parseMikan1(opt.Url)
 	if mikanID == 0 {
 		glog.Errorln("获取Mikan ID失败，结束此流程")
 		return nil
 	}
+	// ------------------- 获取bangumiID -------------------
 	bangumiID := b.parseMikan2(mikanID)
-	if mikanID == 0 {
+	if bangumiID == 0 {
 		glog.Errorln("获取bangumi ID失败，结束此流程")
 		return nil
 	}
+	// ------------------- 获取bangumi信息 -------------------
 	info := b.parseBangumi(bangumiID, ep.Ep, opt.Date)
 	if info == nil {
 		glog.Errorln("获取Bangumi信息失败，结束此流程")
 		return nil
 	}
+	// ------------------- 获取tmdb信息(季度信息) -------------------
 	info.BangumiSeason = b.parseThemoviedb(info.Name, info.AirDate)
 	if info.BangumiSeason == nil || info.Season == 0 {
-		//glog.Errorln("获取Themoviedb季度信息失败，默认SE01")
-		//info.BangumiSeason = &models.BangumiSeason{
-		//	Season: 1,
-		//}
 		glog.Errorln("获取Themoviedb季度信息失败，结束此流程")
 		return nil
 	}
@@ -77,7 +77,15 @@ func (b *Mikan) Parse(opt *models.BangumiParseOptions) *models.Bangumi {
 //  @param url_
 //  @return int
 //
-func (b *Mikan) parseMikan1(url_ string) int {
+func (b *Mikan) parseMikan1(url_ string) (mikanID int) {
+	tmp := Cache.Get("rss_mikan", url_)
+	if tmp != nil {
+		if val, ok := tmp.(int); ok {
+			glog.V(5).Infof("步骤1，解析Mikan，缓存\n")
+			return val
+		}
+	}
+
 	glog.V(5).Infof("步骤1，解析Mikan，%s\n", url_)
 	doc, err := htmlquery.LoadURL(url_)
 	if err != nil {
@@ -98,19 +106,33 @@ func (b *Mikan) parseMikan1(url_ string) int {
 			glog.Errorln(err)
 			return 0
 		}
-		return id
+		mikanID = id
 	}
-	glog.Errorln("获取Mikan ID失败")
-	return 0
+	if mikanID == 0 {
+		glog.Errorln("获取Mikan ID失败")
+		return 0
+	}
+	Cache.Put("rss_mikan", url_, mikanID, 0)
+	return mikanID
 }
 
 // parseMikan2
+//  @Cache mikan_bangumi mikanID
 //  @Description: 通过mikan id解析mikan番剧信息页面，获取bgm.tv id
 //  @receiver b
 //  @param mikanID
 //  @return int
 //
-func (b *Mikan) parseMikan2(mikanID int) int {
+func (b *Mikan) parseMikan2(mikanID int) (bangumiID int) {
+	// 通过mikanID查询缓存中的bangumiID
+	tmp := Cache.Get("mikan_bangumi", mikanID)
+	if tmp != nil {
+		if val, ok := tmp.(int); ok {
+			glog.V(5).Infof("步骤2，解析Mikan，缓存\n")
+			return val
+		}
+	}
+
 	url_ := MikanInfoUrl(mikanID)
 	glog.V(5).Infof("步骤2，解析Mikan，%s\n", url_)
 	doc, err := htmlquery.LoadURL(url_)
@@ -123,12 +145,14 @@ func (b *Mikan) parseMikan2(mikanID int) int {
 
 	//fmt.Println(href)
 	hrefSplit := strings.Split(href, "/")
-	bgmId, err := strconv.Atoi(hrefSplit[len(hrefSplit)-1])
+	bangumiID, err = strconv.Atoi(hrefSplit[len(hrefSplit)-1])
 	if err != nil {
 		glog.Errorln(err)
 		return 0
 	}
-	return bgmId
+	// mikanID和bangumiID对应关系固定，缓存
+	Cache.Put("mikan_bangumi", mikanID, bangumiID, 0)
+	return bangumiID
 }
 
 //  parseBangumi
