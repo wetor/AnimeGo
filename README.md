@@ -1,13 +1,18 @@
 # GoBangumi
 
-使用Golang编写的全自动追番工具，相较于[AutoBangumi](https://github.com/EstrellaXD/Auto_Bangumi) 简化部署和使用，以及更方便的模块化扩展
+使用Golang编写的全自动追番工具，简单的部署和使用，方便的模块化扩展
 
 ## 目的
 - 简化部署和使用，以及模块化扩展
 - 学习
 
+## 目前进度
+### 因个人原因暂停一段时间开发，目前仍无法完整的运行！第一个可使用版本开发完成后会放出Releases
+- 基本配置文件、rss解析、番剧信息获取完成。
+- 调用下载器进行下载、Jellyfin支持，以及自动控制等待开发。
+
 ## 开发计划
-- [ ] 完整的[AutoBangumi](https://github.com/EstrellaXD/Auto_Bangumi) 追番功能
+- [ ] 类似[AutoBangumi](https://github.com/EstrellaXD/Auto_Bangumi) 的追番功能
   - [ ] [Mikan Project](https://mikanani.me) 订阅支持
   - [ ] [qBittorrent](https://qbittorrent.org) 等下载支持
   - [ ] [Jellyfin](https://jellyfin.org/) 等媒体库软件识别
