@@ -4,6 +4,7 @@ import (
 	"GoBangumi/config"
 	"GoBangumi/models"
 	"GoBangumi/modules/parser"
+	"GoBangumi/store"
 	"fmt"
 	"github.com/antchfx/htmlquery"
 	"github.com/golang/glog"
@@ -78,7 +79,7 @@ func (b *Mikan) Parse(opt *models.BangumiParseOptions) *models.Bangumi {
 //  @return int
 //
 func (b *Mikan) parseMikan1(url_ string) (mikanID int) {
-	tmp := Cache.Get("rss_mikan", url_)
+	tmp := store.Cache.Get("rss_mikan", url_)
 	if tmp != nil {
 		if val, ok := tmp.(int); ok {
 			glog.V(5).Infof("步骤1，解析Mikan，缓存\n")
@@ -112,7 +113,7 @@ func (b *Mikan) parseMikan1(url_ string) (mikanID int) {
 		glog.Errorln("获取Mikan ID失败")
 		return 0
 	}
-	Cache.Put("rss_mikan", url_, mikanID, config.Advanced().Mikan().CacheIdExpire)
+	store.Cache.Put("rss_mikan", url_, mikanID, config.Advanced().Mikan().CacheIdExpire)
 	return mikanID
 }
 
@@ -125,7 +126,7 @@ func (b *Mikan) parseMikan1(url_ string) (mikanID int) {
 //
 func (b *Mikan) parseMikan2(mikanID int) (bangumiID int) {
 	// 通过mikanID查询缓存中的bangumiID
-	tmp := Cache.Get("mikan_bangumi", mikanID)
+	tmp := store.Cache.Get("mikan_bangumi", mikanID)
 	if tmp != nil {
 		if val, ok := tmp.(int); ok {
 			glog.V(5).Infof("步骤2，解析Mikan，缓存\n")
@@ -151,7 +152,7 @@ func (b *Mikan) parseMikan2(mikanID int) (bangumiID int) {
 		return 0
 	}
 	// mikanID和bangumiID对应关系固定，缓存
-	Cache.Put("mikan_bangumi", mikanID, bangumiID, config.Advanced().Mikan().CacheBangumiExpire)
+	store.Cache.Put("mikan_bangumi", mikanID, bangumiID, config.Advanced().Mikan().CacheBangumiExpire)
 	return bangumiID
 }
 

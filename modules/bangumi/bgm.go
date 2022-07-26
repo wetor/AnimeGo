@@ -4,6 +4,7 @@ import (
 	"GoBangumi/config"
 	"GoBangumi/models"
 	"GoBangumi/models/bgm/res"
+	"GoBangumi/store"
 	"GoBangumi/utils"
 	"fmt"
 	"github.com/golang/glog"
@@ -45,7 +46,7 @@ func (b *Bgm) Parse(opt *models.BangumiParseOptions) *models.Bangumi {
 }
 
 func (b *Bgm) parseBgm1(bangumiID int) (info *models.Bangumi) {
-	tmp := Cache.Get("bgm_info", bangumiID)
+	tmp := store.Cache.Get("bgm_info", bangumiID)
 	if tmp != nil {
 		if val, ok := tmp.(*models.Bangumi); ok {
 			glog.V(5).Infof("解析Bangumi，步骤1，缓存\n")
@@ -71,12 +72,12 @@ func (b *Bgm) parseBgm1(bangumiID int) (info *models.Bangumi) {
 		AirDate: *resp.Date,
 		Eps:     int(resp.Eps),
 	}
-	Cache.Put("bgm_info", bangumiID, info, config.Advanced().Bangumi().CacheInfoExpire)
+	store.Cache.Put("bgm_info", bangumiID, info, config.Advanced().Bangumi().CacheInfoExpire)
 	return info
 }
 func (b *Bgm) parseBgm2(bangumiID, ep int, date string) (epInfo *models.BangumiEp) {
 	cacheKey := fmt.Sprintf("%d_%d", bangumiID, ep)
-	tmp := Cache.Get("bgm_ep", cacheKey)
+	tmp := store.Cache.Get("bgm_ep", cacheKey)
 	if tmp != nil {
 		if val, ok := tmp.(*models.BangumiEp); ok {
 			glog.V(5).Infof("解析Bangumi，步骤2，缓存\n")
@@ -120,6 +121,6 @@ func (b *Bgm) parseBgm2(bangumiID, ep int, date string) (epInfo *models.BangumiE
 		EpNameCN: respEp.NameCN,
 		EpID:     int(respEp.ID),
 	}
-	Cache.Put("bgm_ep", cacheKey, epInfo, conf.CacheEpExpire)
+	store.Cache.Put("bgm_ep", cacheKey, epInfo, conf.CacheEpExpire)
 	return epInfo
 }

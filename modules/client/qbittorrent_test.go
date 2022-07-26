@@ -1,10 +1,31 @@
 package client
 
 import (
+	"GoBangumi/config"
 	"GoBangumi/models"
+	"flag"
 	"fmt"
+	"github.com/golang/glog"
 	"testing"
 )
+
+var qbt Client
+
+func TestMain(m *testing.M) {
+	fmt.Println("begin")
+	flag.Set("alsologtostderr", "true")
+	flag.Set("log_dir", "log")
+	flag.Set("v", "10")
+	flag.Parse()
+	defer glog.Flush()
+
+	config.Init("../../data/config/conf.yaml")
+
+	conf := config.ClientQBt()
+	qbt = NewQBittorrent(conf.Url, conf.Username, conf.Password)
+	m.Run()
+	fmt.Println("end")
+}
 
 func Test_QBittorrent(t *testing.T) {
 	list := qbt.List(&models.ClientListOptions{
