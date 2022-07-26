@@ -7,10 +7,10 @@ import (
 type Client interface {
 	Version() string
 	Preferences() *models.Preferences
-	SetPreferences(pref *models.Preferences)
+	SetDefaultPreferences()
 	List(opt *models.ClientListOptions) []*models.TorrentItem
 	Rename(opt *models.ClientRenameOptions)
 	Add(opt *models.ClientAddOptions)
 	Delete(opt *models.ClientDeleteOptions)
-	Get(opt *models.ClientGetOptions) []*models.TorrentItem
+	Get(opt *models.ClientGetOptions) []*models.TorrentContentItem
 }

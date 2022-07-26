@@ -9,9 +9,9 @@ import (
 
 var epRegxStep = []*regexp.Regexp{
 	// 匹配ep，https://github.com/EstrellaXD/Auto_Bangumi/blob/33454cf23578017cc92e31fd98f4c4d7351cdf7f/auto_bangumi/parser/analyser/raw_parser.py
-	regexp.MustCompile(`(.*|\[.*])( -? \d{1,3} |\[\d{1,3}]|\[\d{1,3}.?[vV]\d{1}]|[第]\d{1,3}[话話集]|\[\d{1,3}.?END])(.*)`),
+	regexp.MustCompile(`(.*|\[.*])( -? \d{1,4} |\[\d{1,4}]|\[\d{1,4}.?[vV]\d{1}]|[第]\d{1,4}[话話集]|\[\d{1,4}.?END])(.*)`),
 	// 取出数字
-	regexp.MustCompile(`\d{1,3}`),
+	regexp.MustCompile(`\d{1,4}`),
 }
 
 type BangumiEp struct {

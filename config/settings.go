@@ -30,6 +30,9 @@ func format(format string, p tagFormat) string {
 }
 
 func (s *Settings) Tag(info *models.Bangumi) string {
+	if len(s.TagSrc) == 0 || info == nil {
+		return ""
+	}
 	date, _ := time.Parse("2006-01-02", info.AirDate)
 	mouth := (int(date.Month()) + 2) / 3
 	str := format(s.TagSrc, tagFormat{

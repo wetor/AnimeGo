@@ -29,9 +29,11 @@ type BangumiEp struct {
 
 }
 type BangumiExtra struct {
-	SubID      int    // 其他id，mikan id
-	SubUrl     string // 其他url，mikan当前集的url
-	TorrentUrl string // 当前集种子链接
+	SubID       int                // 其他id，mikan id
+	SubUrl      string             // 其他url，mikan当前集的url
+	TorrentUrl  string             // 当前集种子链接
+	TorrentHash string             // 当前集种子Hash，唯一ID
+	Status      TorrentContentItem // 当前下载状态
 }
 
 func (b *Bangumi) FullName() string {

@@ -19,7 +19,8 @@ type ClientAddOptions struct {
 	SavePath    string
 	Category    string
 	Tag         string
-	SeedingTime int // 分钟
+	SeedingTime int    // 分钟
+	Rename      string // 保存名字
 }
 
 type ClientDeleteOptions struct {

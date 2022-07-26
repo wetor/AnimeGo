@@ -3,11 +3,16 @@ package client
 import (
 	"GoBangumi/models"
 	"GoBangumi/utils"
+	"encoding/json"
 	"fmt"
 	"github.com/golang/glog"
 	"github.com/xxxsen/qbapi"
 	"golang.org/x/net/context"
+	_ "unsafe"
 )
+
+//go:linkname getWithDecoder github.com/xxxsen/qbapi.(*QBAPI).getWithDecoder
+func getWithDecoder(qbapi *qbapi.QBAPI, ctx context.Context, path string, req interface{}, rsp interface{}, decoder qbapi.Decoder) error
 
 const (
 	QBtStatusAll                = ""
@@ -26,7 +31,8 @@ const (
 )
 
 type QBittorrent struct {
-	client *qbapi.QBAPI
+	client     *qbapi.QBAPI
+	apiVersion string
 }
 
 func NewQBittorrent(url, username, password string) Client {
@@ -45,6 +51,10 @@ func NewQBittorrent(url, username, password string) Client {
 	qbt := &QBittorrent{
 		client: client,
 	}
+	qbt.SetDefaultPreferences()
+
+	pre := qbt.Preferences()
+	fmt.Println(pre.CreateSubfolderEnabled)
 	glog.V(1).Infof("qBittorrent Version: %s\n", qbt.Version())
 	return qbt
 }
@@ -60,6 +70,7 @@ func (c *QBittorrent) Version() string {
 		glog.Errorln(err)
 		return ""
 	}
+	c.apiVersion = apiResp.Version
 	return fmt.Sprintf("Client: %s, API: %s", clientResp.Version, apiResp.Version)
 }
 func (c *QBittorrent) Preferences() *models.Preferences {
@@ -73,8 +84,20 @@ func (c *QBittorrent) Preferences() *models.Preferences {
 	return retn
 }
 
-func (c *QBittorrent) SetPreferences(pref *models.Preferences) {
-
+func (c *QBittorrent) SetDefaultPreferences() {
+	opt := "Subfolder"
+	pref := &models.SetApplicationPreferencesReq{
+		TorrentContentLayout: &opt,
+	}
+	js, _ := json.Marshal(pref)
+	innerReq := &models.SetApplicationPreferencesInnerReq{
+		Json: string(js),
+	}
+	err := getWithDecoder(c.client, context.Background(), "/api/v2/app/setPreferences", innerReq, nil, json.Unmarshal)
+	if err != nil {
+		glog.Errorln(err)
+		return
+	}
 }
 
 func (c *QBittorrent) List(opt *models.ClientListOptions) []*models.TorrentItem {
@@ -119,7 +142,8 @@ func (c *QBittorrent) Add(opt *models.ClientAddOptions) {
 			Savepath:         &opt.SavePath,
 			Category:         &opt.Category,
 			Tags:             opt.Tag,
-			SeedingTimeLimit: &opt.SeedingTime, // 分钟
+			SeedingTimeLimit: &opt.SeedingTime, // 秒
+			Rename:           &opt.Rename,
 		},
 	})
 	if err != nil {
@@ -137,16 +161,18 @@ func (c *QBittorrent) Delete(opt *models.ClientDeleteOptions) {
 	}
 }
 
-func (c *QBittorrent) Get(opt *models.ClientGetOptions) []*models.TorrentItem {
-
+func (c *QBittorrent) Get(opt *models.ClientGetOptions) []*models.TorrentContentItem {
 	contents, err := c.client.GetTorrentContents(context.Background(), &qbapi.GetTorrentContentsReq{
 		Hash: opt.Hash,
 	})
 	if err != nil {
+		glog.Errorln(err)
 		return nil
 	}
-	for _, c := range contents.Contents {
-		fmt.Println(c)
+	retn := make([]*models.TorrentContentItem, len(contents.Contents))
+	for i, _ := range retn {
+		retn[i] = &models.TorrentContentItem{}
+		utils.ConvertModel(contents.Contents[i], retn[i])
 	}
-	return nil
+	return retn
 }

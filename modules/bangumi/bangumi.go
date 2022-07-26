@@ -5,12 +5,12 @@ import (
 	"GoBangumi/modules/cache"
 )
 
-type Bangumi interface {
-	Parse(opt *models.BangumiParseOptions) *models.Bangumi
-}
-
 var Cache cache.Cache
 
 func Init(c cache.Cache) {
 	Cache = c
+}
+
+type Bangumi interface {
+	Parse(opt *models.BangumiParseOptions) *models.Bangumi
 }

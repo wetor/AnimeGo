@@ -47,6 +47,17 @@ type TorrentItem struct {
 	UploadedSession   int     `json:"uploaded_session"`
 	Upspeed           int     `json:"upspeed"`
 }
+type TorrentContentItem struct {
+	Index        int     `json:"index"`        //File index
+	Name         string  `json:"name"`         //File name (including relative path)
+	Size         int     `json:"size"`         //File size (bytes)
+	Progress     float64 `json:"progress"`     //File progress (percentage/100)
+	Priority     int     `json:"priority"`     //File priority. See possible values here below
+	IsSeed       bool    `json:"is_seed"`      //True if file is seeding/complete
+	PieceRange   []int   `json:"piece_range"`  //The first number is the starting piece index and the second number is the ending piece index (inclusive)
+	Availability float64 `json:"availability"` //Percentage of file pieces currently available (percentage/100)
+
+}
 
 type Preferences struct {
 	Locale                             string                 `json:"locale"`
@@ -195,4 +206,11 @@ type Preferences struct {
 	UploadSlotsBehavior                int                    `json:"upload_slots_behavior"`                 //Upload slots behavior used (see list of possible values below)
 	UpnpLeaseDuration                  int                    `json:"upnp_lease_duration"`                   //UPnP lease duration (0: Permanent lease)
 	UtpTcpMixedMode                    int                    `json:"utp_tcp_mixed_mode"`
+}
+
+type SetApplicationPreferencesInnerReq struct {
+	Json string `json:"json"`
+}
+type SetApplicationPreferencesReq struct {
+	TorrentContentLayout *string `json:"torrent_content_layout,omitempty"`
 }

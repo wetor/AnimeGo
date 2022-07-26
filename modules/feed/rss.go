@@ -62,11 +62,20 @@ func (f *Rss) Parse(opt *models.FeedParseOptions) []*models.FeedItem {
 		} else {
 			date = strs[1]
 		}
+		_, hash := path.Split(item.Enclosures[0].URL)
+		if len(hash) < 40 {
+			glog.Errorln(err)
+			hash = ""
+		} else {
+			hash = hash[:40]
+		}
+
 		items[i] = &models.FeedItem{
 			Url:     item.Link,
 			Name:    item.Title,
 			Date:    date,
 			Torrent: item.Enclosures[0].URL,
+			Hash:    hash,
 		}
 	}
 	return items
