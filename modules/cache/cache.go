@@ -2,10 +2,27 @@ package cache
 
 const (
 	// DefaultBucket 默认bucket，储存任何信息
-	DefaultBucket string = "default_bucket"
+	DefaultBucket       = "default_bucket"
+	RssMikanBucket      = "rss_mikan"
+	MikanBangumiBucket  = "mikan_bangumi"
+	NameTmdbBucket      = "name_tmdb"
+	TmdbSeasonBucket    = "tmdb_season"
+	BgmInfoBucket       = "bgm_info"
+	BgmEpBucket         = "bgm_ep"
+	ClientBangumiBucket = "client_bangumi"
+	ClientStateBucket   = "client_state"
 )
 
-var buckets = []string{"rss_mikan", "mikan_bangumi", "name_tmdb", "tmdb_season", "bgm_info", "bgm_ep", "client_bangumi"}
+var buckets = []string{
+	RssMikanBucket,
+	MikanBangumiBucket,
+	NameTmdbBucket,
+	TmdbSeasonBucket,
+	BgmInfoBucket,
+	BgmEpBucket,
+	ClientBangumiBucket,
+	ClientStateBucket,
+}
 
 type Cache interface {
 	Open(dir string)

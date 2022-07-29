@@ -8,10 +8,10 @@ import (
 )
 
 var epRegxStep = []*regexp.Regexp{
-	// 匹配ep，https://github.com/EstrellaXD/Auto_Bangumi/blob/33454cf23578017cc92e31fd98f4c4d7351cdf7f/auto_bangumi/parser/analyser/raw_parser.py
-	regexp.MustCompile(`(.*|\[.*])( -? \d{1,4} |\[\d{1,4}]|\[\d{1,4}.?[vV]\d{1}]|[第]\d{1,4}[话話集]|\[\d{1,4}.?END])(.*)`),
+	// 匹配ep，https://github.com/EstrellaXD/Auto_Bangumi/blob/97f078818a4f5b8513116a6032224d4e2f1dd7d9/src/parser/analyser/raw_parser.py
+	regexp.MustCompile(`(.*|\[.*])( -? \d+ |\[\d+]|\[\d+.?[vV]\d{1}]|[第]\d+[话話集]|\[\d+.?END])(.*)`),
 	// 取出数字
-	regexp.MustCompile(`\d{1,4}`),
+	regexp.MustCompile(`\d+`),
 }
 
 type BangumiEp struct {

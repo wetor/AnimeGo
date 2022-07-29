@@ -3,6 +3,7 @@ package bangumi
 import (
 	"GoBangumi/config"
 	"GoBangumi/models"
+	"GoBangumi/modules/cache"
 	"GoBangumi/modules/parser"
 	"GoBangumi/store"
 	"GoBangumi/utils"
@@ -45,7 +46,7 @@ func (b *Themoviedb) Parse(opt *models.BangumiParseOptions) *models.Bangumi {
 //
 func (b *Themoviedb) parseThemoviedb1(name string) (tmdbID int) {
 	// 通过name查询缓存中的tmdbID
-	tmp := store.Cache.Get("name_tmdb", name)
+	tmp := store.Cache.Get(cache.NameTmdbBucket, name)
 	if tmp != nil {
 		if val, ok := tmp.(int); ok {
 			glog.V(5).Infof("解析Themoviedb，步骤1，缓存\n")
@@ -85,12 +86,12 @@ func (b *Themoviedb) parseThemoviedb1(name string) (tmdbID int) {
 			break
 		}
 	}
-	store.Cache.Put("name_tmdb", name, tmdbID, config.Advanced().Themoviedb().CacheIdExpire)
+	store.Cache.Put(cache.NameTmdbBucket, name, tmdbID, config.Advanced().Themoviedb().CacheIdExpire)
 	return tmdbID
 }
 func (b *Themoviedb) parseThemoviedb2(id int, date string) (season *models.BangumiSeason) {
 	cacheKey := fmt.Sprintf("%d_%s", id, date)
-	tmp := store.Cache.Get("tmdb_season", cacheKey)
+	tmp := store.Cache.Get(cache.TmdbSeasonBucket, cacheKey)
 	if tmp != nil {
 		if val, ok := tmp.(*models.BangumiSeason); ok {
 			glog.V(5).Infof("解析Themoviedb，步骤2，缓存\n")
@@ -134,6 +135,6 @@ func (b *Themoviedb) parseThemoviedb2(id int, date string) (season *models.Bangu
 		glog.Errorln("Themoviedb匹配Seasons失败")
 		return nil
 	}
-	store.Cache.Put("tmdb_season", cacheKey, season, conf.CacheSeasonExpire)
+	store.Cache.Put(cache.TmdbSeasonBucket, cacheKey, season, conf.CacheSeasonExpire)
 	return season
 }

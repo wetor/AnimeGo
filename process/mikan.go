@@ -44,11 +44,11 @@ func (p *Mikan) ParseBangumiAll(items []*models.FeedItem, bangumi bangumi.Bangum
 		go func(i_ int, item_ *models.FeedItem) {
 			defer wg.Done()
 			bgms[i_] = p.ParseBangumi(item_, bangumi)
-			if bgms[i_].BangumiExtra == nil {
-				bgms[i_].BangumiExtra = &models.BangumiExtra{}
+			if bgms[i_].TorrentInfo == nil {
+				bgms[i_].TorrentInfo = &models.TorrentInfo{}
 			}
-			bgms[i_].TorrentUrl = item_.Torrent
-			bgms[i_].TorrentHash = item_.Hash
+			bgms[i_].Url = item_.Torrent
+			bgms[i_].Hash = item_.Hash
 			time.Sleep(time.Duration(conf.RssDelay) * time.Second)
 			//工作完成后计数器减1
 			<-working

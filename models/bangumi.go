@@ -13,6 +13,7 @@ type Bangumi struct {
 	*BangumiSeason
 	*BangumiEp
 	*BangumiExtra
+	*TorrentInfo
 }
 
 type BangumiSeason struct {
@@ -29,14 +30,17 @@ type BangumiEp struct {
 
 }
 type BangumiExtra struct {
-	SubID       int                // 其他id，mikan id
-	SubUrl      string             // 其他url，mikan当前集的url
-	TorrentUrl  string             // 当前集种子链接
-	TorrentHash string             // 当前集种子Hash，唯一ID
-	Status      TorrentContentItem // 当前下载状态
+	SubID  int    // 其他id，mikan id
+	SubUrl string // 其他url，mikan当前集的url
+}
+
+type TorrentInfo struct {
+	Url  string // 当前集种子链接
+	Hash string // 当前集种子Hash，唯一ID
 }
 
 func (b *Bangumi) FullName() string {
+	// TODO: 重命名
 	str := fmt.Sprintf("%s[第%d季][第%d集]", b.NameCN, b.Season, b.Ep)
 	return str
 }
