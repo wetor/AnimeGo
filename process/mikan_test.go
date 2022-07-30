@@ -6,19 +6,15 @@ import (
 	"GoBangumi/modules/bangumi"
 	"GoBangumi/modules/cache"
 	"GoBangumi/store"
-	"flag"
+	"GoBangumi/utils/logger"
 	"fmt"
-	"github.com/golang/glog"
 	"testing"
 )
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
-	flag.Set("alsologtostderr", "true")
-	flag.Set("log_dir", "log")
-	flag.Set("v", "10")
-	flag.Parse()
-	defer glog.Flush()
+	logger.Init()
+	defer logger.Flush()
 	config.Init("../data/config/conf.yaml")
 	store.InitState = store.InitLoadConfig
 

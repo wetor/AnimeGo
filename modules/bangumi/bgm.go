@@ -8,12 +8,13 @@ import (
 	"GoBangumi/store"
 	"GoBangumi/utils"
 	"fmt"
-	"github.com/golang/glog"
+	"go.uber.org/zap"
 )
 
 var BangumiInfoApi = func(id int) string {
 	return fmt.Sprintf("%s/v0/subjects/%d", config.Advanced().Bangumi().Host, id)
 }
+
 var BangumiEpApi = func(id, ep int) string {
 	// TODO: 支持根据上传日期，判断当前ep数
 	conf := config.Advanced().Bangumi()
@@ -32,6 +33,7 @@ type Bgm struct {
 func NewBgm() Bangumi {
 	return &Bgm{}
 }
+
 func (b *Bgm) Parse(opt *models.BangumiParseOptions) *models.Bangumi {
 	info := b.parseBgm1(opt.ID)
 	if info == nil {
@@ -50,20 +52,20 @@ func (b *Bgm) parseBgm1(bangumiID int) (info *models.Bangumi) {
 	tmp := store.Cache.Get(cache.BgmInfoBucket, bangumiID)
 	if tmp != nil {
 		if val, ok := tmp.(*models.Bangumi); ok {
-			glog.V(5).Infof("解析Bangumi，步骤1，缓存\n")
+			zap.S().Debugf("解析Bangumi，步骤1，缓存")
 			return val
 		}
 	}
-	glog.V(5).Infof("解析Bangumi，步骤1，获取信息\n")
+	zap.S().Debugf("解析Bangumi，步骤1，获取信息")
 	url_ := BangumiInfoApi(bangumiID)
 	resp := &res.SubjectV0{}
 	status, err := utils.ApiGet(url_, resp, config.Proxy())
 	if err != nil {
-		glog.Errorln(err)
+		zap.S().Warn(err)
 		return nil
 	}
 	if status != 200 {
-		glog.Errorln("解析bangumi失败，Status:", status)
+		zap.S().Warn("解析bangumi失败，Status:", status)
 		return nil
 	}
 	info = &models.Bangumi{
@@ -76,16 +78,17 @@ func (b *Bgm) parseBgm1(bangumiID int) (info *models.Bangumi) {
 	store.Cache.Put(cache.BgmInfoBucket, bangumiID, info, config.Advanced().Bangumi().CacheInfoExpire)
 	return info
 }
+
 func (b *Bgm) parseBgm2(bangumiID, ep int, date string) (epInfo *models.BangumiEp) {
 	cacheKey := fmt.Sprintf("%d_%d", bangumiID, ep)
 	tmp := store.Cache.Get(cache.BgmEpBucket, cacheKey)
 	if tmp != nil {
 		if val, ok := tmp.(*models.BangumiEp); ok {
-			glog.V(5).Infof("解析Bangumi，步骤2，缓存\n")
+			zap.S().Debugf("解析Bangumi，步骤2，缓存")
 			return val
 		}
 	}
-	glog.V(5).Infof("解析Bangumi，步骤2，获取Ep信息\n")
+	zap.S().Debugf("解析Bangumi，步骤2，获取Ep信息")
 	conf := config.Advanced().Bangumi()
 	url_ := BangumiEpApi(bangumiID, ep)
 	resp := &res.Paged{
@@ -93,11 +96,11 @@ func (b *Bgm) parseBgm2(bangumiID, ep int, date string) (epInfo *models.BangumiE
 	}
 	status, err := utils.ApiGet(url_, resp, config.Proxy())
 	if err != nil {
-		glog.Errorln(err)
+		zap.S().Warn(err)
 		return nil
 	}
 	if status != 200 {
-		glog.Errorln("解析bangumi ep失败，Status:", status)
+		zap.S().Warn("解析bangumi ep失败，Status:", status)
 		return nil
 	}
 	// TODO: 根据ep、date是否为空进行不同规则的判断
@@ -110,7 +113,7 @@ func (b *Bgm) parseBgm2(bangumiID, ep int, date string) (epInfo *models.BangumiE
 		}
 	}
 	if respEp == nil {
-		glog.Errorln("解析bangumi ep失败，没有匹配到剧集信息")
+		zap.S().Warn("解析bangumi ep失败，没有匹配到剧集信息")
 		return nil
 	}
 	epInfo = &models.BangumiEp{

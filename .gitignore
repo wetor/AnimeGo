@@ -16,6 +16,7 @@
 .DS_Store
 data/
 log/
+*.log
 gobangumi
 main
 .idea/

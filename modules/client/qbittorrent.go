@@ -6,8 +6,8 @@ import (
 	"GoBangumi/utils"
 	"encoding/json"
 	"fmt"
-	"github.com/golang/glog"
 	"github.com/xxxsen/qbapi"
+	"go.uber.org/zap"
 	"golang.org/x/net/context"
 	"time"
 	_ "unsafe"
@@ -53,11 +53,11 @@ func NewQBittorrent(url, username, password string) Client {
 	connectClient := func() bool {
 		client, err = qbapi.NewAPI(opts...)
 		if err != nil {
-			glog.Errorln(err)
+			zap.S().Warn(err)
 			return false
 		}
 		if err = client.Login(context.Background()); err != nil {
-			glog.Errorln(err)
+			zap.S().Warn(err)
 			return false
 		}
 		return true
@@ -70,7 +70,7 @@ func NewQBittorrent(url, username, password string) Client {
 			if connectClient() {
 				break
 			}
-			glog.V(3).Infof("[Client] 第%d次连接客户端失败...重新尝试连接\n", i)
+			zap.S().Infof("第%d次连接客户端失败...重新尝试连接", i)
 		}
 	} else {
 		// 重试指定次数
@@ -78,7 +78,7 @@ func NewQBittorrent(url, username, password string) Client {
 			if connectClient() {
 				break
 			}
-			glog.V(3).Infof("[Client] 第%d次连接客户端失败...剩余%d次尝试连接\n", i, retryNum-i)
+			zap.S().Infof("第%d次连接客户端失败...剩余%d次尝试连接", i, retryNum-i)
 		}
 	}
 
@@ -86,7 +86,7 @@ func NewQBittorrent(url, username, password string) Client {
 		client: client,
 	}
 	qbt.SetDefaultPreferences()
-	glog.V(1).Infof("qBittorrent Version: %s\n", qbt.Version())
+	zap.S().Infof("qBittorrent Version: %s", qbt.Version())
 	return qbt
 }
 
@@ -103,9 +103,9 @@ func (c *QBittorrent) checkError(err error, fun string) bool {
 	if qerror, ok := err.(*qbapi.QError); ok && qerror.Code() == -10004 {
 		// TODO: 添加下载任务后一段时间会无法获取列表
 		// context deadline exceeded (Client.Timeout exceeded while awaiting headers)
-		glog.V(5).Infof("[Client][%s] 请求失败，等待客户端响应...\n", fun)
+		zap.S().Debugf("[%s] 请求失败，等待客户端响应...", fun)
 	} else {
-		glog.Errorln(err)
+		zap.S().Warnf("[%s] %v", fun, err)
 	}
 	return true
 }
@@ -122,6 +122,7 @@ func (c *QBittorrent) Version() string {
 	c.apiVersion = apiResp.Version
 	return fmt.Sprintf("Client: %s, API: %s", clientResp.Version, apiResp.Version)
 }
+
 func (c *QBittorrent) Preferences() *models.Preferences {
 	resp, err := c.client.GetApplicationPreferences(context.Background(), &qbapi.GetApplicationPreferencesReq{})
 	if c.checkError(err, "Preferences") {
@@ -181,6 +182,7 @@ func (c *QBittorrent) Rename(opt *models.ClientRenameOptions) {
 		return
 	}
 }
+
 func (c *QBittorrent) Add(opt *models.ClientAddOptions) {
 	_, err := c.client.AddNewLink(context.Background(), &qbapi.AddNewLinkReq{
 		Url: opt.Urls,

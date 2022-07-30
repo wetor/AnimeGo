@@ -4,8 +4,8 @@ import (
 	"GoBangumi/config"
 	"GoBangumi/models"
 	"GoBangumi/utils"
-	"github.com/golang/glog"
 	"github.com/mmcdole/gofeed"
+	"go.uber.org/zap"
 	"os"
 	"path"
 	"regexp"
@@ -30,25 +30,25 @@ func (f *Rss) Parse(opt *models.FeedParseOptions) []*models.FeedItem {
 	filename := path.Join(config.Setting().CachePath, opt.Name+".xml")
 	// --------- 是否重新下载rss.xml ---------
 	if opt.RefreshCache {
-		glog.V(3).Infoln("获取Rss数据开始...")
+		zap.S().Info("获取Rss数据开始...")
 		err := utils.HttpGet(opt.Url, filename, config.Proxy())
 		if err != nil {
-			glog.Errorln(err)
+			zap.S().Warn(err)
 			return nil
 		}
-		glog.V(3).Infoln("获取Rss数据成功！")
+		zap.S().Info("获取Rss数据成功！")
 	}
 	// --------- 解析本地rss.xml ---------
 	file, err := os.Open(filename)
 	if err != nil {
-		glog.Errorln(err)
+		zap.S().Warn(err)
 		return nil
 	}
 	defer file.Close()
 	fp := gofeed.NewParser()
 	feed, err := fp.Parse(file)
 	if err != nil {
-		glog.Errorln(err)
+		zap.S().Warn(err)
 		return nil
 	}
 	regx := regexp.MustCompile(`<pubDate>(.*?)T`)
@@ -64,7 +64,7 @@ func (f *Rss) Parse(opt *models.FeedParseOptions) []*models.FeedItem {
 		}
 		_, hash := path.Split(item.Enclosures[0].URL)
 		if len(hash) < 40 {
-			glog.Errorln(err)
+			zap.S().Warn(err)
 			hash = ""
 		} else {
 			hash = hash[:40]

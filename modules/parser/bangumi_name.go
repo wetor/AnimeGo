@@ -2,7 +2,7 @@ package parser
 
 import (
 	"GoBangumi/models"
-	"github.com/golang/glog"
+	"go.uber.org/zap"
 	"regexp"
 )
 
@@ -29,7 +29,7 @@ func (p *BangumiName) Parse(opt *models.ParseNameOptions) *models.ParseResult {
 		return nil
 	}
 	if opt.StartStep >= len(nameRegxStep) {
-		glog.Errorln("BangumiName Step错误")
+		zap.S().Warn("BangumiName Step错误")
 		return nil
 	}
 	str := opt.Name

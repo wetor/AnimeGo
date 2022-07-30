@@ -7,7 +7,7 @@ import (
 	"GoBangumi/modules/client"
 	"GoBangumi/store"
 	"fmt"
-	"github.com/golang/glog"
+	"go.uber.org/zap"
 	"path"
 	"strings"
 	"sync"
@@ -67,7 +67,7 @@ func (m *Manager) Download(bgm *models.Bangumi) {
 func (m *Manager) download(bgms []*models.Bangumi) {
 	conf := config.Setting()
 	for _, bgm := range bgms {
-		glog.V(3).Infof("[Manager] 开始下载「%s」", bgm.FullName())
+		zap.S().Infof("开始下载「%s」", bgm.FullName())
 		if !m.canDownload(bgm) {
 			continue
 		}
@@ -251,7 +251,7 @@ func (m *Manager) UpdateList() {
 							oldPath = c.Name
 						}
 					}
-					glog.V(3).Infof("[Manager] 发现下载项「%s」\n", oldPath)
+					zap.S().Infof("发现下载项「%s」", oldPath)
 					newPath := path.Join(bangumi.DirName(), bangumi.FullName()+path.Ext(oldPath))
 					if newPath != oldPath {
 						m.client.Rename(&models.ClientRenameOptions{
@@ -259,7 +259,7 @@ func (m *Manager) UpdateList() {
 							OldPath: oldPath,
 							NewPath: newPath,
 						})
-						glog.V(3).Infof("[Manager] 重命名「%s」->「%s」\n", oldPath, newPath)
+						zap.S().Infof("重命名「%s」->「%s」", oldPath, newPath)
 					}
 					state.Renamed = true
 					state.Path = newPath

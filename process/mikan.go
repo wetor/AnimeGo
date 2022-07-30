@@ -60,13 +60,12 @@ func (p *Mikan) ParseBangumiAll(items []*models.FeedItem, bangumi bangumi.Bangum
 	wg.Wait()
 	return bgms
 }
+
 func (p *Mikan) ParseBangumi(item *models.FeedItem, bangumi bangumi.Bangumi) *models.Bangumi {
-	// TODO: 读取缓存，若存在且不过期则直接返回
 	bgmInfo := bangumi.Parse(&models.BangumiParseOptions{
 		Url:  item.Url,
 		Name: item.Name,
 		Date: item.Date,
 	})
-	// TODO: 写入缓存，需要线程安全
 	return bgmInfo
 }

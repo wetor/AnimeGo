@@ -3,9 +3,8 @@ package feed
 import (
 	"GoBangumi/config"
 	"GoBangumi/models"
-	"flag"
+	"GoBangumi/utils/logger"
 	"fmt"
-	"github.com/golang/glog"
 	"github.com/mmcdole/gofeed"
 	"os"
 	"path"
@@ -14,11 +13,8 @@ import (
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
-	flag.Set("alsologtostderr", "true")
-	flag.Set("log_dir", "log")
-	flag.Set("v", "5")
-	flag.Parse()
-	defer glog.Flush()
+	logger.Init()
+	defer logger.Flush()
 
 	m.Run()
 	fmt.Println("end")

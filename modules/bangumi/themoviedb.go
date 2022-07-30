@@ -8,7 +8,7 @@ import (
 	"GoBangumi/store"
 	"GoBangumi/utils"
 	"fmt"
-	"github.com/golang/glog"
+	"go.uber.org/zap"
 	"net/url"
 )
 
@@ -22,6 +22,7 @@ var ThemoviedbIdApi = func(query string) string {
 	q.Set("with_text_query", query)
 	return url_.String() + "?" + q.Encode()
 }
+
 var ThemoviedbInfoApi = func(id int) string {
 	return fmt.Sprintf("%s/3/tv/%d?api_key=%s", config.Advanced().Themoviedb().Host, id, config.KeyTmdb())
 }
@@ -32,6 +33,7 @@ type Themoviedb struct {
 func NewThemoviedb() Bangumi {
 	return &Themoviedb{}
 }
+
 func (b *Themoviedb) Parse(opt *models.BangumiParseOptions) *models.Bangumi {
 
 	id := b.parseThemoviedb1(opt.Name)
@@ -49,26 +51,26 @@ func (b *Themoviedb) parseThemoviedb1(name string) (tmdbID int) {
 	tmp := store.Cache.Get(cache.NameTmdbBucket, name)
 	if tmp != nil {
 		if val, ok := tmp.(int); ok {
-			glog.V(5).Infof("解析Themoviedb，步骤1，缓存\n")
+			zap.S().Debugf("解析Themoviedb，步骤1，缓存")
 			return val
 		}
 	}
-	glog.V(5).Infof("解析Themoviedb，步骤1，获取tmdb ID\n")
+	zap.S().Debugf("解析Themoviedb，步骤1，获取tmdb ID")
 	resp := &models.ThemoviedbIdResponse{}
 	nameParser := parser.NewBangumiName()
 	step := 0
 	for {
 		status, err := utils.ApiGet(ThemoviedbIdApi(name), resp, config.Proxy())
 		if err != nil {
-			glog.Errorln(err)
+			zap.S().Warn(err)
 			return 0
 		}
 		if status != 200 && resp == nil {
-			glog.Errorf("Themoviedb查找错误，状态码：%d，%s\n", status, name)
+			zap.S().Warn("Themoviedb查找错误，状态码：", status, name)
 			return 0
 		}
 		if resp.TotalResults == 0 {
-			glog.Errorln("Themoviedb中未找到番剧：" + name)
+			zap.S().Warn("Themoviedb中未找到番剧：" + name)
 			result := nameParser.Parse(&models.ParseNameOptions{
 				Name:      name,
 				StartStep: step,
@@ -78,7 +80,7 @@ func (b *Themoviedb) parseThemoviedb1(name string) (tmdbID int) {
 			}
 			step = result.NextStep
 			name = result.Name
-			glog.Errorln("Themoviedb重新查找番剧名：" + name)
+			zap.S().Warn("Themoviedb重新查找番剧名：" + name)
 			continue
 
 		} else {
@@ -89,24 +91,25 @@ func (b *Themoviedb) parseThemoviedb1(name string) (tmdbID int) {
 	store.Cache.Put(cache.NameTmdbBucket, name, tmdbID, config.Advanced().Themoviedb().CacheIdExpire)
 	return tmdbID
 }
+
 func (b *Themoviedb) parseThemoviedb2(id int, date string) (season *models.BangumiSeason) {
 	cacheKey := fmt.Sprintf("%d_%s", id, date)
 	tmp := store.Cache.Get(cache.TmdbSeasonBucket, cacheKey)
 	if tmp != nil {
 		if val, ok := tmp.(*models.BangumiSeason); ok {
-			glog.V(5).Infof("解析Themoviedb，步骤2，缓存\n")
+			zap.S().Debugf("解析Themoviedb，步骤2，缓存")
 			return val
 		}
 	}
-	glog.V(5).Infof("解析Themoviedb，步骤2，获取信息\n")
+	zap.S().Debugf("解析Themoviedb，步骤2，获取信息")
 	resp := &models.ThemoviedbResponse{}
 	status, err := utils.ApiGet(ThemoviedbInfoApi(id), resp, config.Proxy())
 	if err != nil {
-		glog.Errorln(err)
+		zap.S().Warn(err)
 		return nil
 	}
 	if status != 200 {
-		glog.Errorln("Status:", status)
+		zap.S().Warn("Status:", status)
 		return nil
 	}
 	season = &models.BangumiSeason{
@@ -128,11 +131,11 @@ func (b *Themoviedb) parseThemoviedb2(id int, date string) (season *models.Bangu
 	}
 	conf := config.Advanced().Themoviedb()
 	if min > conf.MatchSeasonDays {
-		glog.Errorln("Themoviedb匹配Seasons失败，可能此番剧未开播")
+		zap.S().Warn("Themoviedb匹配Seasons失败，可能此番剧未开播")
 		return nil
 	}
 	if season.Season == 0 {
-		glog.Errorln("Themoviedb匹配Seasons失败")
+		zap.S().Warn("Themoviedb匹配Seasons失败")
 		return nil
 	}
 	store.Cache.Put(cache.TmdbSeasonBucket, cacheKey, season, conf.CacheSeasonExpire)

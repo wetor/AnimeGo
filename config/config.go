@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/golang/glog"
+	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
 	"os"
 )
@@ -39,11 +39,11 @@ func Init(path string) {
 	}
 	data, err := os.ReadFile(path)
 	if err != nil {
-		glog.Errorln("配置文件加载错误：", err)
+		zap.S().Warn("配置文件加载错误：", err)
 	}
 	err = yaml.Unmarshal(data, conf)
 	if err != nil {
-		glog.Errorln("配置文件加载错误：", err)
+		zap.S().Warn("配置文件加载错误：", err)
 	}
 }
 

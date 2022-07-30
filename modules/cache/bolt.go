@@ -7,7 +7,7 @@ import (
 	"encoding/gob"
 	"errors"
 	"github.com/boltdb/bolt"
-	"github.com/golang/glog"
+	"go.uber.org/zap"
 	"path"
 	"time"
 )
@@ -23,7 +23,7 @@ func NewBolt() Cache {
 func (c *Bolt) Open(dir string) {
 	db, err := bolt.Open(path.Join(dir, "bolt.db"), 0600, nil)
 	if err != nil {
-		glog.Errorln(err)
+		zap.S().Warn(err)
 		return
 	}
 
@@ -39,18 +39,20 @@ func (c *Bolt) Open(dir string) {
 		return nil
 	})
 	if err != nil {
-		glog.Errorln(err)
+		zap.S().Warn(err)
 		return
 	}
 
 }
+
 func (c *Bolt) Close() {
 	err := c.db.Close()
 	if err != nil {
-		glog.Errorln(err)
+		zap.S().Warn(err)
 		return
 	}
 }
+
 func (c *Bolt) Put(bucket string, key, val interface{}, ttl int64) {
 	if val == nil {
 		return
@@ -67,10 +69,11 @@ func (c *Bolt) Put(bucket string, key, val interface{}, ttl int64) {
 		return err
 	})
 	if err != nil {
-		glog.Errorln(err)
+		zap.S().Warn(err)
 		return
 	}
 }
+
 func (c *Bolt) Get(bucket string, key interface{}) interface{} {
 	var val interface{}
 	var ttl int64
@@ -88,7 +91,7 @@ func (c *Bolt) Get(bucket string, key interface{}) interface{} {
 		return nil
 	})
 	if err != nil {
-		glog.Errorln(err)
+		zap.S().Warn(err)
 		return nil
 	}
 	return val
@@ -185,6 +188,7 @@ func GobToBytes(val interface{}) []byte {
 	enc.Encode(val)
 	return buf2.Bytes()
 }
+
 func GobToValue(data []byte, val interface{}) {
 	buf := bytes.NewBuffer(data)
 	dec := gob.NewDecoder(buf)

@@ -8,7 +8,7 @@ import (
 	"GoBangumi/store"
 	"fmt"
 	"github.com/antchfx/htmlquery"
-	"github.com/golang/glog"
+	"go.uber.org/zap"
 	"net/url"
 	"strconv"
 	"strings"
@@ -31,45 +31,45 @@ func NewMikan() Bangumi {
 }
 
 func (b *Mikan) Parse(opt *models.BangumiParseOptions) *models.Bangumi {
-	glog.V(3).Infof("获取「%s」信息开始...\n", opt.Name)
+	zap.S().Infof("获取「%s」信息开始...", opt.Name)
 	// ------------------- 解析文件名获取ep -------------------
 	epParser := parser.NewBangumiEp()
 	ep := epParser.Parse(&models.ParseNameOptions{
 		Name: opt.Name,
 	})
 	if ep == nil {
-		glog.Errorln("解析ep信息失败，结束此流程")
+		zap.S().Warn("解析ep信息失败，结束此流程")
 		return nil
 	}
 	// ------------------- 获取mikanID -------------------
 	mikanID := b.parseMikan1(opt.Url)
 	if mikanID == 0 {
-		glog.Errorln("获取Mikan ID失败，结束此流程")
+		zap.S().Warn("获取Mikan ID失败，结束此流程")
 		return nil
 	}
 	// ------------------- 获取bangumiID -------------------
 	bangumiID := b.parseMikan2(mikanID)
 	if bangumiID == 0 {
-		glog.Errorln("获取bangumi ID失败，结束此流程")
+		zap.S().Warn("获取bangumi ID失败，结束此流程")
 		return nil
 	}
 	// ------------------- 获取bangumi信息 -------------------
 	info := b.parseBangumi(bangumiID, ep.Ep, opt.Date)
 	if info == nil {
-		glog.Errorln("获取Bangumi信息失败，结束此流程")
+		zap.S().Warn("获取Bangumi信息失败，结束此流程")
 		return nil
 	}
 	// ------------------- 获取tmdb信息(季度信息) -------------------
 	info.BangumiSeason = b.parseThemoviedb(info.Name, info.AirDate)
 	if info.BangumiSeason == nil || info.Season == 0 {
-		glog.Errorln("获取Themoviedb季度信息失败，结束此流程")
+		zap.S().Warn("获取Themoviedb季度信息失败，结束此流程")
 		return nil
 	}
 	info.BangumiExtra = &models.BangumiExtra{
 		SubID:  mikanID,
 		SubUrl: opt.Url,
 	}
-	glog.V(3).Infof("获取「%s」信息成功！更名为「%s」\n", opt.Name, info.FullName())
+	zap.S().Infof("获取「%s」信息成功！更名为「%s」", opt.Name, info.FullName())
 	return info
 }
 
@@ -83,35 +83,35 @@ func (b *Mikan) parseMikan1(url_ string) (mikanID int) {
 	tmp := store.Cache.Get(cache.RssMikanBucket, url_)
 	if tmp != nil {
 		if val, ok := tmp.(int); ok {
-			glog.V(5).Infof("步骤1，解析Mikan，缓存\n")
+			zap.S().Debugf("步骤1，解析Mikan，缓存")
 			return val
 		}
 	}
 
-	glog.V(5).Infof("步骤1，解析Mikan，%s\n", url_)
+	zap.S().Debugf("步骤1，解析Mikan，%s", url_)
 	doc, err := htmlquery.LoadURL(url_)
 	if err != nil {
-		glog.Errorln(err)
+		zap.S().Warn(err)
 		return 0
 	}
 	miaknLink := htmlquery.FindOne(doc, MikanIdXPath)
 	href := htmlquery.SelectAttr(miaknLink, "href")
 	u, err := url.Parse(href)
 	if err != nil {
-		glog.Errorln(err)
+		zap.S().Warn(err)
 		return 0
 	}
 	query := u.Query()
 	if query.Has("bangumiId") {
 		id, err := strconv.Atoi(query.Get("bangumiId"))
 		if err != nil {
-			glog.Errorln(err)
+			zap.S().Warn(err)
 			return 0
 		}
 		mikanID = id
 	}
 	if mikanID == 0 {
-		glog.Errorln("获取Mikan ID失败")
+		zap.S().Warn("获取Mikan ID失败")
 		return 0
 	}
 	store.Cache.Put(cache.RssMikanBucket, url_, mikanID, config.Advanced().Mikan().CacheIdExpire)
@@ -130,16 +130,16 @@ func (b *Mikan) parseMikan2(mikanID int) (bangumiID int) {
 	tmp := store.Cache.Get(cache.MikanBangumiBucket, mikanID)
 	if tmp != nil {
 		if val, ok := tmp.(int); ok {
-			glog.V(5).Infof("步骤2，解析Mikan，缓存\n")
+			zap.S().Debugf("步骤2，解析Mikan，缓存")
 			return val
 		}
 	}
 
 	url_ := MikanInfoUrl(mikanID)
-	glog.V(5).Infof("步骤2，解析Mikan，%s\n", url_)
+	zap.S().Debugf("步骤2，解析Mikan，%s", url_)
 	doc, err := htmlquery.LoadURL(url_)
 	if err != nil {
-		glog.Errorln(err)
+		zap.S().Warn(err)
 		return 0
 	}
 	bangumiUrl := htmlquery.FindOne(doc, MikanBangumiUrlXPath)
@@ -149,7 +149,7 @@ func (b *Mikan) parseMikan2(mikanID int) (bangumiID int) {
 	hrefSplit := strings.Split(href, "/")
 	bangumiID, err = strconv.Atoi(hrefSplit[len(hrefSplit)-1])
 	if err != nil {
-		glog.Errorln(err)
+		zap.S().Warn(err)
 		return 0
 	}
 	// mikanID和bangumiID对应关系固定，缓存
@@ -165,7 +165,7 @@ func (b *Mikan) parseMikan2(mikanID int) (bangumiID int) {
 //  @return *models.Bangumi
 //
 func (b *Mikan) parseBangumi(bangumiID, ep int, date string) *models.Bangumi {
-	glog.V(5).Infof("步骤3，解析Bangumi，%d\n", bangumiID)
+	zap.S().Debugf("步骤3，解析Bangumi，%d", bangumiID)
 	bangumi := NewBgm()
 	newBgm := bangumi.Parse(&models.BangumiParseOptions{
 		ID:   bangumiID,
@@ -183,7 +183,7 @@ func (b *Mikan) parseBangumi(bangumiID, ep int, date string) *models.Bangumi {
 //  @return int
 //
 func (b *Mikan) parseThemoviedb(name, airDate string) *models.BangumiSeason {
-	glog.V(5).Infof("步骤4，解析Themoviedb，%s\n", name)
+	zap.S().Debugf("步骤4，解析Themoviedb，%s", name)
 	tmdb := NewThemoviedb()
 	newBgm := tmdb.Parse(&models.BangumiParseOptions{
 		Name: name,

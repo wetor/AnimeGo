@@ -3,20 +3,16 @@ package cache
 import (
 	"GoBangumi/config"
 	"GoBangumi/models"
-	"flag"
+	"GoBangumi/utils/logger"
 	"fmt"
-	"github.com/golang/glog"
 	"testing"
 	"time"
 )
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
-	flag.Set("alsologtostderr", "true")
-	flag.Set("log_dir", "log")
-	flag.Set("v", "10")
-	flag.Parse()
-	defer glog.Flush()
+	logger.Init()
+	defer logger.Flush()
 	config.Init("../../data/config/conf.yaml")
 	m.Run()
 	fmt.Println("end")
