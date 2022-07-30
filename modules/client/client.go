@@ -12,5 +12,6 @@ type Client interface {
 	Rename(opt *models.ClientRenameOptions)
 	Add(opt *models.ClientAddOptions)
 	Delete(opt *models.ClientDeleteOptions)
-	Get(opt *models.ClientGetOptions) []*models.TorrentContentItem
+	Get(opt *models.ClientGetOptions) *models.TorrentItem
+	GetContent(opt *models.ClientGetOptions) []*models.TorrentContentItem
 }

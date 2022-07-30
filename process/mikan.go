@@ -35,7 +35,7 @@ func (p *Mikan) Run() {
 
 func (p *Mikan) ParseBangumiAll(items []*models.FeedItem, bangumi bangumi.Bangumi) []*models.Bangumi {
 	bgms := make([]*models.Bangumi, len(items))
-	conf := config.Advanced().GoBangumi()
+	conf := config.Advanced().Main()
 	working := make(chan int, conf.MultiGoroutine.GoroutineMax) // 限制同时执行个数
 	wg := sync.WaitGroup{}
 	for i, item := range items {

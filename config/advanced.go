@@ -1,15 +1,24 @@
 package config
 
 type AdvancedConf struct {
-	*GoBangumiConf  `yaml:"gobangumi"`
+	*ClientConf     `yaml:"client"`
+	*MainConf       `yaml:"main"`
 	*BangumiConf    `yaml:"bangumi"`
 	*ThemoviedbConf `yaml:"themoviedb"`
 	*MikanConf      `yaml:"mikan"`
 }
 
-type GoBangumiConf struct {
-	RssDelay       int `yaml:"rss_delay_second"`
-	MultiGoroutine struct {
+type ClientConf struct {
+	ConnectTimeoutSecond int `yaml:"connect_timeout_second"`
+	RetryConnectNum      int `yaml:"retry_connect_num"`
+}
+type MainConf struct {
+	UpdateDelaySecond        int  `yaml:"update_delay_second"`
+	DownloadQueueDelaySecond int  `yaml:"download_queue_delay_second"`
+	DownloadQueueMaxNum      int  `yaml:"download_queue_max_num"`
+	AllowDuplicateDownload   bool `yaml:"allow_duplicate_download"`
+	RssDelay                 int  `yaml:"rss_delay_second"`
+	MultiGoroutine           struct {
 		Enable       bool `yaml:"enable"`
 		GoroutineMax int  `yaml:"goroutine_max"`
 	} `yaml:"multi_goroutine"`
@@ -33,8 +42,11 @@ type MikanConf struct {
 	CacheBangumiExpire int64  `yaml:"cache_bangumi_expire_second"`
 }
 
-func (a *AdvancedConf) GoBangumi() *GoBangumiConf {
-	return a.GoBangumiConf
+func (a *AdvancedConf) Client() *ClientConf {
+	return a.ClientConf
+}
+func (a *AdvancedConf) Main() *MainConf {
+	return a.MainConf
 }
 func (a *AdvancedConf) Bangumi() *BangumiConf {
 	return a.BangumiConf

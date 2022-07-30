@@ -1,6 +1,7 @@
 package client
 
 import (
+	"GoBangumi/config"
 	"GoBangumi/models"
 	"GoBangumi/utils"
 	"encoding/json"
@@ -8,6 +9,7 @@ import (
 	"github.com/golang/glog"
 	"github.com/xxxsen/qbapi"
 	"golang.org/x/net/context"
+	"time"
 	_ "unsafe"
 )
 
@@ -15,19 +17,25 @@ import (
 func getWithDecoder(qbapi *qbapi.QBAPI, ctx context.Context, path string, req interface{}, rsp interface{}, decoder qbapi.Decoder) error
 
 const (
-	QBtStatusAll                = ""
-	QBtStatusDownloading        = "downloading"
-	QBtStatusSeeding            = "seeding"
-	QBtStatusCompleted          = "completed"
-	QBtStatusPaused             = "paused"
-	QBtStatusResumed            = "resumed"
-	QBtStatusActive             = "active"
-	QBtStatusInactive           = "inactive"
-	QBtStatusStalled            = "stalled"
-	QBtStatusStalledUploading   = "stalled_uploading"
-	QBtStatusStalledDownloading = "stalled_downloading"
-	QBtStatusChecking           = "checking"
-	QBtStatusErrored            = "errored"
+	QbtError              = "error"              // Some error occurred, applies to paused torrents
+	QbtMissingFiles       = "missingFiles"       // Torrent data files is missing
+	QbtUploading          = "uploading"          // Torrent is being seeded and data is being transferred
+	QbtPausedUP           = "pausedUP"           // Torrent is paused and has finished downloading
+	QbtQueuedUP           = "queuedUP"           // Queuing is enabled and torrent is queued for upload
+	QbtStalledUP          = "stalledUP"          // Torrent is being seeded, but no connection were made
+	QbtCheckingUP         = "checkingUP"         // Torrent has finished downloading and is being checked
+	QbtForcedUP           = "forcedUP"           // Torrent is forced to uploading and ignore queue limit
+	QbtAllocating         = "allocating"         // Torrent is allocating disk space for download
+	QbtDownloading        = "downloading"        // Torrent is being downloaded and data is being transferred
+	QbtMetaDL             = "metaDL"             // Torrent has just started downloading and is fetching metadata
+	QbtPausedDL           = "pausedDL"           // Torrent is paused and has NOT finished downloading
+	QbtQueuedDL           = "queuedDL"           // Queuing is enabled and torrent is queued for download
+	QbtStalledDL          = "stalledDL"          // Torrent is being downloaded, but no connection were made
+	QbtCheckingDL         = "checkingDL"         // Same as checkingUP, but torrent has NOT finished downloading
+	QbtForcedDL           = "forcedDL"           // Torrent is forced to downloading to ignore queue limit
+	QbtCheckingResumeData = "checkingResumeData" // Checking resume data on qBt startup
+	QbtMoving             = "moving"             // Torrent is moving to another location
+	QbtUnknown            = "unknown"            // Unknown status
 )
 
 type QBittorrent struct {
@@ -37,37 +45,78 @@ type QBittorrent struct {
 
 func NewQBittorrent(url, username, password string) Client {
 	var opts []qbapi.Option
+	var err error
+	var client *qbapi.QBAPI
 	opts = append(opts, qbapi.WithAuth(username, password))
 	opts = append(opts, qbapi.WithHost(url))
-	client, err := qbapi.NewAPI(opts...)
-	if err != nil {
-		glog.Errorln(err)
-		return nil
+	opts = append(opts, qbapi.WithTimeout(time.Duration(config.Advanced().Client().ConnectTimeoutSecond)*time.Second))
+	connectClient := func() bool {
+		client, err = qbapi.NewAPI(opts...)
+		if err != nil {
+			glog.Errorln(err)
+			return false
+		}
+		if err = client.Login(context.Background()); err != nil {
+			glog.Errorln(err)
+			return false
+		}
+		return true
 	}
-	if err := client.Login(context.Background()); err != nil {
-		glog.Errorln(err)
-		return nil
+
+	retryNum := config.Advanced().Client().RetryConnectNum
+	if retryNum == 0 {
+		// 无限重试
+		for i := 1; ; i++ {
+			if connectClient() {
+				break
+			}
+			glog.V(3).Infof("[Client] 第%d次连接客户端失败...重新尝试连接\n", i)
+		}
+	} else {
+		// 重试指定次数
+		for i := 1; i <= retryNum; i++ {
+			if connectClient() {
+				break
+			}
+			glog.V(3).Infof("[Client] 第%d次连接客户端失败...剩余%d次尝试连接\n", i, retryNum-i)
+		}
 	}
+
 	qbt := &QBittorrent{
 		client: client,
 	}
 	qbt.SetDefaultPreferences()
-
-	pre := qbt.Preferences()
-	fmt.Println(pre.CreateSubfolderEnabled)
 	glog.V(1).Infof("qBittorrent Version: %s\n", qbt.Version())
 	return qbt
 }
 
+// checkError
+//  @Description: 检查错误，返回是否需要结束流程
+//  @receiver *QBittorrent
+//  @param err error
+//  @return bool
+//
+func (c *QBittorrent) checkError(err error, fun string) bool {
+	if err == nil {
+		return false
+	}
+	if qerror, ok := err.(*qbapi.QError); ok && qerror.Code() == -10004 {
+		// TODO: 添加下载任务后一段时间会无法获取列表
+		// context deadline exceeded (Client.Timeout exceeded while awaiting headers)
+		glog.V(5).Infof("[Client][%s] 请求失败，等待客户端响应...\n", fun)
+	} else {
+		glog.Errorln(err)
+	}
+	return true
+}
+
 func (c *QBittorrent) Version() string {
 	clientResp, err := c.client.GetApplicationVersion(context.Background(), &qbapi.GetApplicationVersionReq{})
-	if err != nil {
-		glog.Errorln(err)
+	if c.checkError(err, "Version 1") {
 		return ""
 	}
 	apiResp, err := c.client.GetAPIVersion(context.Background(), &qbapi.GetAPIVersionReq{})
-	if err != nil {
-		glog.Errorln(err)
+	if c.checkError(err, "Version 2") {
 		return ""
 	}
 	c.apiVersion = apiResp.Version
@@ -75,8 +124,7 @@ func (c *QBittorrent) Version() string {
 }
 func (c *QBittorrent) Preferences() *models.Preferences {
 	resp, err := c.client.GetApplicationPreferences(context.Background(), &qbapi.GetApplicationPreferencesReq{})
-	if err != nil {
-		glog.Errorln(err)
+	if c.checkError(err, "Preferences") {
 		return nil
 	}
 	retn := &models.Preferences{}
@@ -94,15 +142,14 @@ func (c *QBittorrent) SetDefaultPreferences() {
 		Json: string(js),
 	}
 	err := getWithDecoder(c.client, context.Background(), "/api/v2/app/setPreferences", innerReq, nil, json.Unmarshal)
-	if err != nil {
-		glog.Errorln(err)
+	if c.checkError(err, "SetDefaultPreferences") {
 		return
 	}
 }
 
 func (c *QBittorrent) List(opt *models.ClientListOptions) []*models.TorrentItem {
 	req := &qbapi.GetTorrentListReq{}
-	if opt.Status != string(QBtStatusAll) {
+	if len(opt.Status) != 0 {
 		req.Filter = &opt.Status
 	}
 	if len(opt.Category) != 0 {
@@ -113,8 +160,7 @@ func (c *QBittorrent) List(opt *models.ClientListOptions) []*models.TorrentItem 
 	}
 
 	listResp, err := c.client.GetTorrentList(context.Background(), req)
-	if err != nil {
-		glog.Errorln(err)
+	if c.checkError(err, "List") {
 		return nil
 	}
 	retn := make([]*models.TorrentItem, len(listResp.Items))
@@ -131,8 +177,8 @@ func (c *QBittorrent) Rename(opt *models.ClientRenameOptions) {
 		OldPath: opt.OldPath,
 		NewPath: opt.NewPath,
 	})
-	if err != nil {
-		glog.Errorln(err)
+	if c.checkError(err, "Rename") {
+		return
 	}
 }
 func (c *QBittorrent) Add(opt *models.ClientAddOptions) {
@@ -146,8 +192,8 @@ func (c *QBittorrent) Add(opt *models.ClientAddOptions) {
 			Rename:           &opt.Rename,
 		},
 	})
-	if err != nil {
-		glog.Errorln(err)
+	if c.checkError(err, "Add") {
+		return
 	}
 }
 
@@ -156,17 +202,29 @@ func (c *QBittorrent) Delete(opt *models.ClientDeleteOptions) {
 		IsDeleteFile: opt.DeleteFile,
 		Hash:         opt.Hash,
 	})
-	if err != nil {
-		glog.Errorln(err)
+	if c.checkError(err, "Delete") {
+		return
 	}
 }
 
-func (c *QBittorrent) Get(opt *models.ClientGetOptions) []*models.TorrentContentItem {
+func (c *QBittorrent) Get(opt *models.ClientGetOptions) *models.TorrentItem {
+	resp, err := c.client.GetTorrentGenericProperties(context.Background(), &qbapi.GetTorrentGenericPropertiesReq{
+		Hash: opt.Hash,
+	})
+	if c.checkError(err, "Get") {
+		return nil
+	}
+
+	retn := &models.TorrentItem{}
+	utils.ConvertModel(resp.Property, retn)
+	return retn
+}
+
+func (c *QBittorrent) GetContent(opt *models.ClientGetOptions) []*models.TorrentContentItem {
 	contents, err := c.client.GetTorrentContents(context.Background(), &qbapi.GetTorrentContentsReq{
 		Hash: opt.Hash,
 	})
-	if err != nil {
-		glog.Errorln(err)
+	if c.checkError(err, "GetContent") {
 		return nil
 	}
 	retn := make([]*models.TorrentContentItem, len(contents.Contents))

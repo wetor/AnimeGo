@@ -45,6 +45,11 @@ func (b *Bangumi) FullName() string {
 	return str
 }
 
+func (b *Bangumi) DirName() string {
+	str := fmt.Sprintf("%s-第%d季-第%d集", b.NameCN, b.Season, b.Ep)
+	return str
+}
+
 type ThemoviedbIdResponse struct {
 	Page         int `json:"page"`
 	TotalPages   int `json:"total_pages"`
