@@ -134,12 +134,19 @@ func (m *Manager) GetContent(hash string) *models.TorrentContentItem {
 		return nil
 	}
 	maxSize := 0
-	index := 0
+	index := -1
+	minSize := config.Setting().IgnoreSizeMaxKb * 1024 // 单位 B
 	for i, c := range cs {
+		if c.Size < minSize {
+			continue
+		}
 		if c.Size > maxSize {
 			maxSize = c.Size
 			index = i
 		}
+	}
+	if index < 0 {
+		return nil
 	}
 	// TODO: 支持多内容返回
 	return cs[index]
@@ -240,7 +247,9 @@ func (m *Manager) UpdateList() {
 					oldPath := strings.TrimPrefix(item.ContentPath, path.Clean(conf.SavePath)+"/")
 					if oldPath == item.ContentPath {
 						// 删除前缀失败，读取name
-						oldPath = m.GetContent(item.Hash).Name
+						if c := m.GetContent(item.Hash); c != nil {
+							oldPath = c.Name
+						}
 					}
 					glog.V(3).Infof("[Manager] 发现下载项「%s」\n", oldPath)
 					newPath := path.Join(bangumi.DirName(), bangumi.FullName()+path.Ext(oldPath))

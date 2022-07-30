@@ -11,10 +11,11 @@ type Settings struct {
 	DataPath  string `yaml:"data_path"`
 	CachePath string `yaml:"cache_path"`
 
-	SavePath    string `yaml:"save_path"`
-	Category    string `yaml:"category"`            // 分类
-	TagSrc      string `yaml:"tag"`                 // 标签
-	SeedingTime int    `yaml:"seeding_time_minute"` // 做种时间，单位：分钟
+	SavePath        string `yaml:"save_path"`
+	Category        string `yaml:"category"`            // 分类
+	TagSrc          string `yaml:"tag"`                 // 标签
+	SeedingTime     int    `yaml:"seeding_time_minute"` // 做种时间，单位：分钟
+	IgnoreSizeMaxKb int    `yaml:"ignore_size_max_kb"`  // 忽略小文件
 }
 
 type tagFormat map[string]interface{}

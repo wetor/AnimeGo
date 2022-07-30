@@ -41,7 +41,8 @@ setting:
   tag: "{year}年{quarter}月新番"
   # 下载完成后做种时间，单位分钟，为0则无限做种
   seeding_time_minute: 30
-
+  # 忽略种子中小于此大小的文件
+  ignore_size_max_kb: 1024
 # 高级设置，主要为一些细节设置，请勿随意修改
 advanced:
   # 下载器Client高级设置
