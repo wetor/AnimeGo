@@ -1,10 +1,10 @@
 package process
 
 import (
-	"GoBangumi/config"
 	"GoBangumi/models"
 	"GoBangumi/modules/bangumi"
 	"GoBangumi/modules/feed"
+	"GoBangumi/store"
 	"fmt"
 	"sync"
 	"time"
@@ -18,7 +18,7 @@ func NewMikan() Process {
 }
 
 func (p *Mikan) Run() {
-	rssConf := config.RssMikan()
+	rssConf := store.Config.RssMikan()
 
 	f := feed.NewRss()
 	items := f.Parse(&models.FeedParseOptions{
@@ -35,7 +35,7 @@ func (p *Mikan) Run() {
 
 func (p *Mikan) ParseBangumiAll(items []*models.FeedItem, bangumi bangumi.Bangumi) []*models.Bangumi {
 	bgms := make([]*models.Bangumi, len(items))
-	conf := config.Advanced().Main()
+	conf := store.Config.Advanced.MainConf
 	working := make(chan int, conf.MultiGoroutine.GoroutineMax) // 限制同时执行个数
 	wg := sync.WaitGroup{}
 	for i, item := range items {

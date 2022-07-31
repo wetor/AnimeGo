@@ -1,33 +1,35 @@
 package cache
 
 import (
-	"GoBangumi/config"
 	"GoBangumi/models"
+	"GoBangumi/store/config"
 	"GoBangumi/utils/logger"
 	"fmt"
 	"testing"
 	"time"
 )
 
+var conf *config.Config
+
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
 	logger.Init()
 	defer logger.Flush()
-	config.Init("../../data/config/conf.yaml")
+	conf = config.NewConfig("../../data/config/conf.yaml")
 	m.Run()
 	fmt.Println("end")
 }
 func TestBolt_Put(t *testing.T) {
 
 	db := NewBolt()
-	db.Open(config.Setting().CachePath)
-	db.Put(DefaultBucket, "key", "这是测试文222", 0)
+	db.Open(conf.Setting.CachePath)
+	db.Put(models.DefaultBucket, "key", "这是测试文222", 0)
 }
 
 func TestBolt_Get(t *testing.T) {
 	db := NewBolt()
-	db.Open(config.Setting().CachePath)
-	v := db.Get(DefaultBucket, "key11")
+	db.Open(conf.Setting.CachePath)
+	v := db.Get(models.DefaultBucket, "key11")
 	fmt.Println(v)
 }
 

@@ -1,8 +1,8 @@
 package client
 
 import (
-	"GoBangumi/config"
 	"GoBangumi/models"
+	"GoBangumi/store"
 	"GoBangumi/utils/logger"
 	"fmt"
 	"testing"
@@ -15,9 +15,9 @@ func TestMain(m *testing.M) {
 	logger.Init()
 	defer logger.Flush()
 
-	config.Init("../../data/config/conf.yaml")
+	store.Init(nil)
 
-	conf := config.ClientQBt()
+	conf := store.Config.ClientQBt()
 	qbt = NewQBittorrent(conf.Url, conf.Username, conf.Password)
 	m.Run()
 	fmt.Println("end")

@@ -1,9 +1,7 @@
 package manager
 
 import (
-	"GoBangumi/config"
 	"GoBangumi/models"
-	"GoBangumi/modules/cache"
 	"GoBangumi/modules/client"
 	"GoBangumi/store"
 	"GoBangumi/utils/logger"
@@ -20,19 +18,11 @@ func TestMain(m *testing.M) {
 	logger.Init()
 	defer logger.Flush()
 
-	config.Init("../../data/config/conf.yaml")
-	store.InitState = store.InitLoadConfig
+	store.Init(nil)
 
-	store.SetCache(cache.NewBolt())
-	store.Cache.Open(config.Setting().CachePath)
-	store.InitState = store.InitLoadCache
-
-	conf := config.ClientQBt()
+	conf := store.Config.ClientQBt()
 	qbt = client.NewQBittorrent(conf.Url, conf.Username, conf.Password)
 
-	store.InitState = store.InitConnectClient
-
-	store.InitState = store.InitFinish
 	m.Run()
 	fmt.Println("end")
 }

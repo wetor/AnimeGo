@@ -1,8 +1,8 @@
 package client
 
 import (
-	"GoBangumi/config"
 	"GoBangumi/models"
+	"GoBangumi/store"
 	"GoBangumi/utils"
 	"encoding/json"
 	"fmt"
@@ -49,7 +49,7 @@ func NewQBittorrent(url, username, password string) Client {
 	var client *qbapi.QBAPI
 	opts = append(opts, qbapi.WithAuth(username, password))
 	opts = append(opts, qbapi.WithHost(url))
-	opts = append(opts, qbapi.WithTimeout(time.Duration(config.Advanced().Client().ConnectTimeoutSecond)*time.Second))
+	opts = append(opts, qbapi.WithTimeout(time.Duration(store.Config.Advanced.ClientConf.ConnectTimeoutSecond)*time.Second))
 	connectClient := func() bool {
 		client, err = qbapi.NewAPI(opts...)
 		if err != nil {
@@ -63,7 +63,7 @@ func NewQBittorrent(url, username, password string) Client {
 		return true
 	}
 
-	retryNum := config.Advanced().Client().RetryConnectNum
+	retryNum := store.Config.Advanced.ClientConf.RetryConnectNum
 	if retryNum == 0 {
 		// 无限重试
 		for i := 1; ; i++ {

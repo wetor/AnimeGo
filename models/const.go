@@ -1,4 +1,4 @@
-package cache
+package models
 
 const (
 	// DefaultBucket 默认bucket，储存任何信息
@@ -12,21 +12,3 @@ const (
 	ClientBangumiBucket = "client_bangumi"
 	ClientStateBucket   = "client_state"
 )
-
-var buckets = []string{
-	RssMikanBucket,
-	MikanBangumiBucket,
-	NameTmdbBucket,
-	TmdbSeasonBucket,
-	BgmInfoBucket,
-	BgmEpBucket,
-	ClientBangumiBucket,
-	ClientStateBucket,
-}
-
-type Cache interface {
-	Open(dir string)
-	Close()
-	Put(bucket string, key, val interface{}, ttl int64)
-	Get(bucket string, key interface{}) interface{}
-}

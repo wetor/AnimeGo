@@ -1,11 +1,10 @@
 package manager
 
 import (
-	"GoBangumi/config"
 	"GoBangumi/models"
-	"GoBangumi/modules/cache"
 	"GoBangumi/modules/client"
 	"GoBangumi/store"
+	"GoBangumi/utils"
 	"fmt"
 	"go.uber.org/zap"
 	"path"
@@ -33,7 +32,7 @@ type Manager struct {
 func NewManager(client client.Client) *Manager {
 	m := &Manager{
 		client:       client,
-		downloadList: make([]*models.Bangumi, 0, config.Advanced().DownloadQueueMaxNum),
+		downloadList: make([]*models.Bangumi, 0, store.Config.Advanced.MainConf.DownloadQueueMaxNum),
 		exitChan:     make(chan bool),
 	}
 	// 首次运行将同步缓存与下载器下载项
@@ -51,7 +50,7 @@ func (m *Manager) Download(bgm *models.Bangumi) {
 	m.Lock()
 	defer m.Unlock()
 	m.downloadList = append(m.downloadList, bgm)
-	if len(m.downloadList) == config.Advanced().DownloadQueueMaxNum {
+	if len(m.downloadList) == store.Config.Advanced.MainConf.DownloadQueueMaxNum {
 		list := make([]*models.Bangumi, len(m.downloadList))
 		copy(list, m.downloadList)
 		go m.download(list)
@@ -65,7 +64,7 @@ func (m *Manager) Download(bgm *models.Bangumi) {
 //  @param bgms []*models.Bangumi
 //
 func (m *Manager) download(bgms []*models.Bangumi) {
-	conf := config.Setting()
+	conf := store.Config.Setting
 	for _, bgm := range bgms {
 		zap.S().Infof("开始下载「%s」", bgm.FullName())
 		if !m.canDownload(bgm) {
@@ -75,13 +74,13 @@ func (m *Manager) download(bgms []*models.Bangumi) {
 			Urls:        []string{bgm.Url},
 			SavePath:    conf.SavePath,
 			Category:    conf.Category,
-			Tag:         conf.Tag(bgm),
+			Tag:         utils.TagFormat(conf.TagSrc, bgm.AirDate, bgm.Ep),
 			SeedingTime: conf.SeedingTime,
 			Rename:      bgm.FullName(),
 		})
 		// 通过gb下载的番剧，将存储与缓存中
-		store.Cache.Put(cache.ClientBangumiBucket, bgm.Hash, bgm, 0)
-		time.Sleep(time.Duration(config.Advanced().Main().DownloadQueueDelaySecond) * time.Second)
+		store.Cache.Put(models.ClientBangumiBucket, bgm.Hash, bgm, 0)
+		time.Sleep(time.Duration(store.Config.Advanced.MainConf.DownloadQueueDelaySecond) * time.Second)
 	}
 }
 
@@ -102,7 +101,7 @@ func (m *Manager) canDownload(bgm *models.Bangumi) bool {
 		// 同一集不同资源
 		// 如果AllowDuplicateDownload == true，即允许同一集重复下载，则返回true，否则则不允许下载
 		if bgm.ID == b.ID && bgm.Season == b.Season && bgm.Ep == b.Ep {
-			return config.Advanced().Main().AllowDuplicateDownload
+			return store.Config.Advanced.MainConf.AllowDuplicateDownload
 		}
 	}
 	return true
@@ -113,7 +112,7 @@ func (m *Manager) canDownload(bgm *models.Bangumi) bool {
 //  @receiver m
 //
 func (m *Manager) Get(hash string) *models.TorrentItem {
-	//conf := config.Setting()
+	//conf := store.Config.Setting
 	item := m.client.Get(&models.ClientGetOptions{
 		Hash: hash,
 	})
@@ -135,7 +134,7 @@ func (m *Manager) GetContent(hash string) *models.TorrentContentItem {
 	}
 	maxSize := 0
 	index := -1
-	minSize := config.Setting().IgnoreSizeMaxKb * 1024 // 单位 B
+	minSize := store.Config.Setting.IgnoreSizeMaxKb * 1024 // 单位 B
 	for i, c := range cs {
 		if c.Size < minSize {
 			continue
@@ -165,19 +164,19 @@ func (m *Manager) Start(exit chan bool) {
 				exit <- true
 				return
 			default:
-				if store.InitState == store.InitFinish {
-					// 如果下载队列有内容则会进行下载
-					if len(m.downloadList) > 0 {
-						m.Lock()
-						list := make([]*models.Bangumi, len(m.downloadList))
-						copy(list, m.downloadList)
-						go m.download(list)
-						m.downloadList = m.downloadList[0:0]
-						m.Unlock()
-					}
-					m.UpdateList()
+
+				// 如果下载队列有内容则会进行下载
+				if len(m.downloadList) > 0 {
+					m.Lock()
+					list := make([]*models.Bangumi, len(m.downloadList))
+					copy(list, m.downloadList)
+					go m.download(list)
+					m.downloadList = m.downloadList[0:0]
+					m.Unlock()
 				}
-				delay := config.Advanced().Main().UpdateDelaySecond
+				m.UpdateList()
+
+				delay := store.Config.Advanced.MainConf.UpdateDelaySecond
 				if delay < UpdateWaitMinSecond {
 					delay = UpdateWaitMinSecond
 				}
@@ -203,7 +202,7 @@ func (m *Manager) UpdateList() {
 	// 涉及到bangumi list的清空与重建，运行在协程中，需要加锁
 	m.Lock()
 	defer m.Unlock()
-	conf := config.Setting()
+	conf := store.Config.Setting
 	// 获取客户端下载列表
 	items := m.client.List(&models.ClientListOptions{
 		Category: conf.Category,
@@ -226,7 +225,7 @@ func (m *Manager) UpdateList() {
 	// 根据下载项hash在缓存中查找记录，如已存在则将信息重新加入到list中
 	// 如不存在，则其不是通过gb下载的，忽略
 	for _, item := range items {
-		bangumiTemp := store.Cache.Get(cache.ClientBangumiBucket, item.Hash)
+		bangumiTemp := store.Cache.Get(models.ClientBangumiBucket, item.Hash)
 		if bangumiTemp != nil {
 			if bangumi, ok := bangumiTemp.(*models.Bangumi); ok {
 				m.bangumi = append(m.bangumi, bangumi)
@@ -239,7 +238,11 @@ func (m *Manager) UpdateList() {
 				state := m.itemState[item.Hash]
 				state.State = item.State
 				m.items[item.Hash] = item
-				fmt.Println(bangumi.Name, item.Progress, item.State)
+				zap.S().Debugw("下载进度",
+					"名称", bangumi.Name,
+					"状态", item.State,
+					"进度", fmt.Sprintf("%.1f", item.Progress*100),
+				)
 
 				// 是否已经重命名过，重启后第一次也会执行此部分，但不会做修改
 				if !state.Renamed {

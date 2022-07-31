@@ -1,9 +1,7 @@
 package bangumi
 
 import (
-	"GoBangumi/config"
 	"GoBangumi/models"
-	"GoBangumi/modules/cache"
 	"GoBangumi/modules/parser"
 	"GoBangumi/store"
 	"GoBangumi/utils"
@@ -13,9 +11,9 @@ import (
 )
 
 var ThemoviedbIdApi = func(query string) string {
-	url_, _ := url.Parse(config.Advanced().Themoviedb().Host + "/3/discover/tv")
+	url_, _ := url.Parse(store.Config.Advanced.ThemoviedbConf.Host + "/3/discover/tv")
 	q := url_.Query()
-	q.Set("api_key", config.KeyTmdb())
+	q.Set("api_key", store.Config.KeyTmdb())
 	q.Set("language", "zh-CN")
 	q.Set("timezone", "Asia/Shanghai")
 	q.Set("with_genres", "16")
@@ -24,7 +22,7 @@ var ThemoviedbIdApi = func(query string) string {
 }
 
 var ThemoviedbInfoApi = func(id int) string {
-	return fmt.Sprintf("%s/3/tv/%d?api_key=%s", config.Advanced().Themoviedb().Host, id, config.KeyTmdb())
+	return fmt.Sprintf("%s/3/tv/%d?api_key=%s", store.Config.Advanced.ThemoviedbConf.Host, id, store.Config.KeyTmdb())
 }
 
 type Themoviedb struct {
@@ -48,7 +46,7 @@ func (b *Themoviedb) Parse(opt *models.BangumiParseOptions) *models.Bangumi {
 //
 func (b *Themoviedb) parseThemoviedb1(name string) (tmdbID int) {
 	// 通过name查询缓存中的tmdbID
-	tmp := store.Cache.Get(cache.NameTmdbBucket, name)
+	tmp := store.Cache.Get(models.NameTmdbBucket, name)
 	if tmp != nil {
 		if val, ok := tmp.(int); ok {
 			zap.S().Debugf("解析Themoviedb，步骤1，缓存")
@@ -60,7 +58,7 @@ func (b *Themoviedb) parseThemoviedb1(name string) (tmdbID int) {
 	nameParser := parser.NewBangumiName()
 	step := 0
 	for {
-		status, err := utils.ApiGet(ThemoviedbIdApi(name), resp, config.Proxy())
+		status, err := utils.ApiGet(ThemoviedbIdApi(name), resp, store.Config.Proxy())
 		if err != nil {
 			zap.S().Warn(err)
 			return 0
@@ -71,7 +69,7 @@ func (b *Themoviedb) parseThemoviedb1(name string) (tmdbID int) {
 		}
 		if resp.TotalResults == 0 {
 			zap.S().Warn("Themoviedb中未找到番剧：" + name)
-			result := nameParser.Parse(&models.ParseNameOptions{
+			result := nameParser.Parse(&models.ParseOptions{
 				Name:      name,
 				StartStep: step,
 			})
@@ -88,13 +86,13 @@ func (b *Themoviedb) parseThemoviedb1(name string) (tmdbID int) {
 			break
 		}
 	}
-	store.Cache.Put(cache.NameTmdbBucket, name, tmdbID, config.Advanced().Themoviedb().CacheIdExpire)
+	store.Cache.Put(models.NameTmdbBucket, name, tmdbID, store.Config.Advanced.ThemoviedbConf.CacheIdExpire)
 	return tmdbID
 }
 
 func (b *Themoviedb) parseThemoviedb2(id int, date string) (season *models.BangumiSeason) {
 	cacheKey := fmt.Sprintf("%d_%s", id, date)
-	tmp := store.Cache.Get(cache.TmdbSeasonBucket, cacheKey)
+	tmp := store.Cache.Get(models.TmdbSeasonBucket, cacheKey)
 	if tmp != nil {
 		if val, ok := tmp.(*models.BangumiSeason); ok {
 			zap.S().Debugf("解析Themoviedb，步骤2，缓存")
@@ -103,7 +101,7 @@ func (b *Themoviedb) parseThemoviedb2(id int, date string) (season *models.Bangu
 	}
 	zap.S().Debugf("解析Themoviedb，步骤2，获取信息")
 	resp := &models.ThemoviedbResponse{}
-	status, err := utils.ApiGet(ThemoviedbInfoApi(id), resp, config.Proxy())
+	status, err := utils.ApiGet(ThemoviedbInfoApi(id), resp, store.Config.Proxy())
 	if err != nil {
 		zap.S().Warn(err)
 		return nil
@@ -129,7 +127,7 @@ func (b *Themoviedb) parseThemoviedb2(id int, date string) (season *models.Bangu
 			season.Season = r.SeasonNumber
 		}
 	}
-	conf := config.Advanced().Themoviedb()
+	conf := store.Config.Advanced.ThemoviedbConf
 	if min > conf.MatchSeasonDays {
 		zap.S().Warn("Themoviedb匹配Seasons失败，可能此番剧未开播")
 		return nil
@@ -138,6 +136,6 @@ func (b *Themoviedb) parseThemoviedb2(id int, date string) (season *models.Bangu
 		zap.S().Warn("Themoviedb匹配Seasons失败")
 		return nil
 	}
-	store.Cache.Put(cache.TmdbSeasonBucket, cacheKey, season, conf.CacheSeasonExpire)
+	store.Cache.Put(models.TmdbSeasonBucket, cacheKey, season, conf.CacheSeasonExpire)
 	return season
 }

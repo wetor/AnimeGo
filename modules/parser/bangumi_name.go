@@ -24,7 +24,13 @@ func NewBangumiName() Parser {
 	return &BangumiName{}
 }
 
-func (p *BangumiName) Parse(opt *models.ParseNameOptions) *models.ParseResult {
+// Parse
+//  @Description: 从 nameRegxStep[opt.StartStep] 开始执行，并返回下一步的index
+//  @receiver *BangumiName
+//  @param opt *models.ParseOptions
+//  @return *models.ParseResult
+//
+func (p *BangumiName) Parse(opt *models.ParseOptions) *models.ParseResult {
 	if opt.StartStep < 0 {
 		return nil
 	}

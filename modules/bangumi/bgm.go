@@ -1,10 +1,8 @@
 package bangumi
 
 import (
-	"GoBangumi/config"
 	"GoBangumi/models"
 	"GoBangumi/models/bgm/res"
-	"GoBangumi/modules/cache"
 	"GoBangumi/store"
 	"GoBangumi/utils"
 	"fmt"
@@ -12,12 +10,12 @@ import (
 )
 
 var BangumiInfoApi = func(id int) string {
-	return fmt.Sprintf("%s/v0/subjects/%d", config.Advanced().Bangumi().Host, id)
+	return fmt.Sprintf("%s/v0/subjects/%d", store.Config.Advanced.BangumiConf.Host, id)
 }
 
 var BangumiEpApi = func(id, ep int) string {
 	// TODO: 支持根据上传日期，判断当前ep数
-	conf := config.Advanced().Bangumi()
+	conf := store.Config.Advanced.BangumiConf
 	offset := ep - 1 - conf.MatchEpRange // 缓存当前ep的前一集
 	if offset < 0 {
 		offset = 0
@@ -49,7 +47,7 @@ func (b *Bgm) Parse(opt *models.BangumiParseOptions) *models.Bangumi {
 }
 
 func (b *Bgm) parseBgm1(bangumiID int) (info *models.Bangumi) {
-	tmp := store.Cache.Get(cache.BgmInfoBucket, bangumiID)
+	tmp := store.Cache.Get(models.BgmInfoBucket, bangumiID)
 	if tmp != nil {
 		if val, ok := tmp.(*models.Bangumi); ok {
 			zap.S().Debugf("解析Bangumi，步骤1，缓存")
@@ -59,7 +57,7 @@ func (b *Bgm) parseBgm1(bangumiID int) (info *models.Bangumi) {
 	zap.S().Debugf("解析Bangumi，步骤1，获取信息")
 	url_ := BangumiInfoApi(bangumiID)
 	resp := &res.SubjectV0{}
-	status, err := utils.ApiGet(url_, resp, config.Proxy())
+	status, err := utils.ApiGet(url_, resp, store.Config.Proxy())
 	if err != nil {
 		zap.S().Warn(err)
 		return nil
@@ -75,13 +73,13 @@ func (b *Bgm) parseBgm1(bangumiID int) (info *models.Bangumi) {
 		AirDate: *resp.Date,
 		Eps:     int(resp.Eps),
 	}
-	store.Cache.Put(cache.BgmInfoBucket, bangumiID, info, config.Advanced().Bangumi().CacheInfoExpire)
+	store.Cache.Put(models.BgmInfoBucket, bangumiID, info, store.Config.Advanced.CacheInfoExpire)
 	return info
 }
 
 func (b *Bgm) parseBgm2(bangumiID, ep int, date string) (epInfo *models.BangumiEp) {
 	cacheKey := fmt.Sprintf("%d_%d", bangumiID, ep)
-	tmp := store.Cache.Get(cache.BgmEpBucket, cacheKey)
+	tmp := store.Cache.Get(models.BgmEpBucket, cacheKey)
 	if tmp != nil {
 		if val, ok := tmp.(*models.BangumiEp); ok {
 			zap.S().Debugf("解析Bangumi，步骤2，缓存")
@@ -89,12 +87,12 @@ func (b *Bgm) parseBgm2(bangumiID, ep int, date string) (epInfo *models.BangumiE
 		}
 	}
 	zap.S().Debugf("解析Bangumi，步骤2，获取Ep信息")
-	conf := config.Advanced().Bangumi()
+	conf := store.Config.Advanced.BangumiConf
 	url_ := BangumiEpApi(bangumiID, ep)
 	resp := &res.Paged{
 		Data: make([]*res.Episode, 0, conf.MatchEpRange*2+1),
 	}
-	status, err := utils.ApiGet(url_, resp, config.Proxy())
+	status, err := utils.ApiGet(url_, resp, store.Config.Proxy())
 	if err != nil {
 		zap.S().Warn(err)
 		return nil
@@ -125,6 +123,6 @@ func (b *Bgm) parseBgm2(bangumiID, ep int, date string) (epInfo *models.BangumiE
 		EpNameCN: respEp.NameCN,
 		EpID:     int(respEp.ID),
 	}
-	store.Cache.Put(cache.BgmEpBucket, cacheKey, epInfo, conf.CacheEpExpire)
+	store.Cache.Put(models.BgmEpBucket, cacheKey, epInfo, conf.CacheEpExpire)
 	return epInfo
 }

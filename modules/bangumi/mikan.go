@@ -1,9 +1,7 @@
 package bangumi
 
 import (
-	"GoBangumi/config"
 	"GoBangumi/models"
-	"GoBangumi/modules/cache"
 	"GoBangumi/modules/parser"
 	"GoBangumi/store"
 	"fmt"
@@ -20,7 +18,7 @@ const (
 )
 
 var MikanInfoUrl = func(id int) string {
-	return fmt.Sprintf("%s/Home/Bangumi/%d", config.Advanced().Mikan().Host, id)
+	return fmt.Sprintf("%s/Home/Bangumi/%d", store.Config.Advanced.MikanConf.Host, id)
 }
 
 type Mikan struct {
@@ -34,7 +32,7 @@ func (b *Mikan) Parse(opt *models.BangumiParseOptions) *models.Bangumi {
 	zap.S().Infof("获取「%s」信息开始...", opt.Name)
 	// ------------------- 解析文件名获取ep -------------------
 	epParser := parser.NewBangumiEp()
-	ep := epParser.Parse(&models.ParseNameOptions{
+	ep := epParser.Parse(&models.ParseOptions{
 		Name: opt.Name,
 	})
 	if ep == nil {
@@ -80,7 +78,7 @@ func (b *Mikan) Parse(opt *models.BangumiParseOptions) *models.Bangumi {
 //  @return int
 //
 func (b *Mikan) parseMikan1(url_ string) (mikanID int) {
-	tmp := store.Cache.Get(cache.RssMikanBucket, url_)
+	tmp := store.Cache.Get(models.RssMikanBucket, url_)
 	if tmp != nil {
 		if val, ok := tmp.(int); ok {
 			zap.S().Debugf("步骤1，解析Mikan，缓存")
@@ -114,7 +112,7 @@ func (b *Mikan) parseMikan1(url_ string) (mikanID int) {
 		zap.S().Warn("获取Mikan ID失败")
 		return 0
 	}
-	store.Cache.Put(cache.RssMikanBucket, url_, mikanID, config.Advanced().Mikan().CacheIdExpire)
+	store.Cache.Put(models.RssMikanBucket, url_, mikanID, store.Config.Advanced.MikanConf.CacheIdExpire)
 	return mikanID
 }
 
@@ -127,7 +125,7 @@ func (b *Mikan) parseMikan1(url_ string) (mikanID int) {
 //
 func (b *Mikan) parseMikan2(mikanID int) (bangumiID int) {
 	// 通过mikanID查询缓存中的bangumiID
-	tmp := store.Cache.Get(cache.MikanBangumiBucket, mikanID)
+	tmp := store.Cache.Get(models.MikanBangumiBucket, mikanID)
 	if tmp != nil {
 		if val, ok := tmp.(int); ok {
 			zap.S().Debugf("步骤2，解析Mikan，缓存")
@@ -153,7 +151,7 @@ func (b *Mikan) parseMikan2(mikanID int) (bangumiID int) {
 		return 0
 	}
 	// mikanID和bangumiID对应关系固定，缓存
-	store.Cache.Put(cache.MikanBangumiBucket, mikanID, bangumiID, config.Advanced().Mikan().CacheBangumiExpire)
+	store.Cache.Put(models.MikanBangumiBucket, mikanID, bangumiID, store.Config.Advanced.MikanConf.CacheBangumiExpire)
 	return bangumiID
 }
 

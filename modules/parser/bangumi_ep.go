@@ -21,7 +21,7 @@ func NewBangumiEp() Parser {
 	return &BangumiEp{}
 }
 
-func (p *BangumiEp) Parse(opt *models.ParseNameOptions) *models.ParseResult {
+func (p *BangumiEp) Parse(opt *models.ParseOptions) *models.ParseResult {
 
 	str := opt.Name
 	str = strings.ReplaceAll(str, "【", "[")

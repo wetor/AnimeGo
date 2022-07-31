@@ -9,7 +9,7 @@ import (
 
 func TestBangumiEp_Parse(t *testing.T) {
 	ep := NewBangumiEp()
-	e := ep.Parse(&models.ParseNameOptions{
+	e := ep.Parse(&models.ParseOptions{
 		Name: "【幻樱字幕组】【4月新番】【古见同学有交流障碍症 第二季 Komi-san wa, Komyushou Desu. S02】【22】【GB_MP4】【1920X1080】",
 	})
 	fmt.Println(e.Ep)
@@ -42,7 +42,7 @@ func TestBangumiEp_Parse2(t *testing.T) {
 		{title: "[MingY] 辉夜大小姐想让我告白-Ultra Romantic-​ / Kaguya-sama wa Kokurasetai​ S3 [01][1080p][CHS] [复制磁连]", want: 1},
 	}
 	for _, tt := range tests {
-		g := epParser.Parse(&models.ParseNameOptions{
+		g := epParser.Parse(&models.ParseOptions{
 			Name: tt.title,
 		})
 		fmt.Println(g.Ep, tt.title)

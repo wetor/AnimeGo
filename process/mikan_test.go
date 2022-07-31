@@ -1,10 +1,8 @@
 package process
 
 import (
-	"GoBangumi/config"
 	"GoBangumi/models"
 	"GoBangumi/modules/bangumi"
-	"GoBangumi/modules/cache"
 	"GoBangumi/store"
 	"GoBangumi/utils/logger"
 	"fmt"
@@ -15,16 +13,8 @@ func TestMain(m *testing.M) {
 	fmt.Println("begin")
 	logger.Init()
 	defer logger.Flush()
-	config.Init("../data/config/conf.yaml")
-	store.InitState = store.InitLoadConfig
+	store.Init(nil)
 
-	store.SetCache(cache.NewBolt())
-	store.Cache.Open(config.Setting().CachePath)
-	store.InitState = store.InitLoadCache
-
-	store.InitState = store.InitConnectClient
-
-	store.InitState = store.InitFinish
 	m.Run()
 	fmt.Println("end")
 }

@@ -3,9 +3,38 @@ package utils
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"fmt"
 	"reflect"
+	"strings"
 	"time"
 )
+
+type FormatMap map[string]interface{}
+
+func Format(format string, p FormatMap) string {
+	args, i := make([]string, len(p)*2), 0
+	for k, v := range p {
+		args[i] = "{" + k + "}"
+		args[i+1] = fmt.Sprint(v)
+		i += 2
+	}
+	return strings.NewReplacer(args...).Replace(format)
+}
+
+func TagFormat(tagSrc, airDate string, ep int) string {
+	date, _ := time.Parse("2006-01-02", airDate)
+	mouth := (int(date.Month()) + 2) / 3
+	tag := Format(tagSrc, FormatMap{
+		"year":          date.Year(),
+		"quarter":       (mouth-1)*3 + 1,
+		"quarter_index": mouth,
+		"quarter_name":  []string{"冬", "春", "夏", "秋"}[mouth-1],
+		"ep":            ep,
+		"week":          (int(date.Weekday())+6)%7 + 1,
+		"week_name":     []string{"星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"}[date.Weekday()],
+	})
+	return tag
+}
 
 func ConvertModel(src, dst interface{}) {
 	vsrc := reflect.ValueOf(src).Elem()

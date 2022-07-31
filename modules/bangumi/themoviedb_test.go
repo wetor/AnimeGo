@@ -1,9 +1,7 @@
 package bangumi
 
 import (
-	"GoBangumi/config"
 	"GoBangumi/models"
-	"GoBangumi/modules/cache"
 	"GoBangumi/store"
 	"GoBangumi/utils/logger"
 	"fmt"
@@ -14,9 +12,7 @@ func TestMain(m *testing.M) {
 	fmt.Println("begin")
 	logger.Init()
 	defer logger.Flush()
-	config.Init("../../data/config/conf.yaml")
-	store.SetCache(cache.NewBolt())
-	store.Cache.Open(config.Setting().CachePath)
+	store.Init(nil)
 	m.Run()
 	fmt.Println("end")
 }

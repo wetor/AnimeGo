@@ -1,23 +1,35 @@
 package store
 
 import (
-	"GoBangumi/modules/cache"
-)
-
-const (
-	InitStart = iota
-	InitLoadConfig
-	InitLoadCache
-	InitConnectClient
-
-	InitFinish
+	"GoBangumi/store/cache"
+	"GoBangumi/store/config"
 )
 
 var (
-	Cache     cache.Cache
-	InitState int = InitStart
+	Cache  cache.Cache
+	Config *config.Config
 )
 
-func SetCache(c cache.Cache) {
-	Cache = c
+type InitOptions struct {
+	Cache      cache.Cache
+	ConfigFile string
+}
+
+func Init(opt *InitOptions) {
+	if opt == nil {
+		opt = &InitOptions{}
+	}
+
+	if len(opt.ConfigFile) == 0 {
+		Config = config.NewConfig("/Users/wetor/GoProjects/GoBangumi/data/config/conf.yaml")
+	} else {
+		Config = config.NewConfig(opt.ConfigFile)
+	}
+
+	if opt.Cache == nil {
+		Cache = cache.NewBolt()
+		Cache.Open(Config.Setting.CachePath)
+	} else {
+		Cache = opt.Cache
+	}
 }

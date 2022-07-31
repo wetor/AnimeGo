@@ -1,8 +1,8 @@
 package feed
 
 import (
-	"GoBangumi/config"
 	"GoBangumi/models"
+	"GoBangumi/store"
 	"GoBangumi/utils/logger"
 	"fmt"
 	"github.com/mmcdole/gofeed"
@@ -15,16 +15,15 @@ func TestMain(m *testing.M) {
 	fmt.Println("begin")
 	logger.Init()
 	defer logger.Flush()
-
+	store.Init(nil)
 	m.Run()
 	fmt.Println("end")
 }
 func TestRss(t *testing.T) {
-	config.Init("../../data/config/conf.yaml")
-	rssConf := config.RssMikan()
-	rssFile := path.Join(config.Setting().CachePath, rssConf.Name+".xml")
+	rssConf := store.Config.RssMikan()
+	rssFile := path.Join(store.Config.Setting.CachePath, rssConf.Name+".xml")
 
-	//err := utils.HttpGet(rssConf.Url, rssFile, config.Proxy())
+	//err := utils.HttpGet(rssConf.Url, rssFile, store.Config.Proxy())
 	//if err != nil {
 	//	panic(err)
 	//}
@@ -36,8 +35,7 @@ func TestRss(t *testing.T) {
 }
 
 func TestRss_Parse(t *testing.T) {
-	config.Init("../../data/config/conf.yaml")
-	rssConf := config.RssMikan()
+	rssConf := store.Config.RssMikan()
 	f := NewRss()
 	items := f.Parse(&models.FeedParseOptions{
 		Url:          rssConf.Url,
