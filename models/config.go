@@ -42,7 +42,10 @@ type MainConf struct {
 	DownloadQueueDelaySecond int  `yaml:"download_queue_delay_second"`
 	DownloadQueueMaxNum      int  `yaml:"download_queue_max_num"`
 	AllowDuplicateDownload   bool `yaml:"allow_duplicate_download"`
-	RssDelay                 int  `yaml:"rss_delay_second"`
+	SeedingTime              int  `yaml:"seeding_time_minute"`
+	IgnoreSizeMaxKb          int  `yaml:"ignore_size_max_kb"`
+	FeedUpdateDelayMinute    int  `yaml:"feed_update_delay_minute"`
+	FeedDelay                int  `yaml:"feed_delay_second"`
 	MultiGoroutine           struct {
 		Enable       bool `yaml:"enable"`
 		GoroutineMax int  `yaml:"goroutine_max"`
@@ -71,13 +74,11 @@ type MikanConf struct {
 }
 
 type Setting struct {
-	DataPath        string `yaml:"data_path"`
-	CachePath       string `yaml:"cache_path"`
-	SavePath        string `yaml:"save_path"`
-	Category        string `yaml:"category"`            // 分类
-	TagSrc          string `yaml:"tag"`                 // 标签
-	SeedingTime     int    `yaml:"seeding_time_minute"` // 做种时间，单位：分钟
-	IgnoreSizeMaxKb int    `yaml:"ignore_size_max_kb"`  // 忽略小文件
+	DataPath  string `yaml:"data_path"`
+	CachePath string `yaml:"cache_path"`
+	SavePath  string `yaml:"save_path"`
+	Category  string `yaml:"category"` // 分类
+	TagSrc    string `yaml:"tag"`      // 标签
 }
 
 func (s *Setting) Tag(info *Bangumi) string {

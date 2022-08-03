@@ -7,6 +7,7 @@ import (
 	"GoBangumi/utils/logger"
 	"fmt"
 	"testing"
+	"time"
 )
 
 func TestMain(m *testing.M) {
@@ -31,5 +32,14 @@ func TestMikanProcessOne(t *testing.T) {
 func TestMikanProcess(t *testing.T) {
 
 	m := NewMikan()
-	m.Run()
+
+	exit := make(chan bool)
+	m.Run(exit)
+
+	go func() {
+		time.Sleep(10 * time.Minute)
+		m.Exit()
+	}()
+
+	<-exit
 }

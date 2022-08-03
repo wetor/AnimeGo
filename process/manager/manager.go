@@ -105,7 +105,6 @@ func (m *Manager) Download(bgm *models.Bangumi) {
 //  @param bgms []*models.Bangumi
 //
 func (m *Manager) download(bgms []*models.Bangumi) {
-	conf := store.Config.Setting
 	for _, bgm := range bgms {
 		zap.S().Infof("开始下载「%s」", bgm.FullName())
 		if !m.canDownload(bgm) {
@@ -113,10 +112,10 @@ func (m *Manager) download(bgms []*models.Bangumi) {
 		}
 		m.client.Add(&models.ClientAddOptions{
 			Urls:        []string{bgm.Url},
-			SavePath:    conf.SavePath,
-			Category:    conf.Category,
-			Tag:         utils.TagFormat(conf.TagSrc, bgm.AirDate, bgm.Ep),
-			SeedingTime: conf.SeedingTime,
+			SavePath:    store.Config.SavePath,
+			Category:    store.Config.Category,
+			Tag:         utils.TagFormat(store.Config.TagSrc, bgm.AirDate, bgm.Ep),
+			SeedingTime: store.Config.SeedingTime,
 			Rename:      bgm.FullName(),
 		})
 		// 通过gb下载的番剧，将存储与缓存中
@@ -175,7 +174,7 @@ func (m *Manager) GetContent(hash string) *models.TorrentContentItem {
 	}
 	maxSize := 0
 	index := -1
-	minSize := store.Config.Setting.IgnoreSizeMaxKb * 1024 // 单位 B
+	minSize := store.Config.IgnoreSizeMaxKb * 1024 // 单位 B
 	for i, c := range cs {
 		if c.Size < minSize {
 			continue
@@ -313,11 +312,11 @@ func (m *Manager) UpdateList() {
 						(state.State == StateWaiting && item.Progress == 1) {
 						state.Downloaded = true
 					}
-				} else {
 					zap.S().Debugw("下载进度",
-						"名称", bangumi.Name,
-						"状态", item.State,
+						"名称", bangumi.FullName(),
 						"进度", fmt.Sprintf("%.1f", item.Progress*100),
+						"qbt状态", item.State,
+						"状态", state.State,
 					)
 				}
 				// 已经下载完成，但未移动到正确位置

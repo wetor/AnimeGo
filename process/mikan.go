@@ -3,23 +3,59 @@ package process
 import (
 	"GoBangumi/models"
 	"GoBangumi/modules/bangumi"
+	"GoBangumi/modules/client"
 	"GoBangumi/modules/feed"
+	"GoBangumi/process/manager"
 	"GoBangumi/store"
-	"fmt"
 	"sync"
 	"time"
 )
 
+const (
+	UpdateWaitMinMinute = 2 // 订阅最短间隔分钟
+)
+
 type Mikan struct {
+	mgr      *manager.Manager
+	exitChan chan bool // 结束标记
 }
 
-func NewMikan() Process {
+func NewMikan() *Mikan {
 	return &Mikan{}
 }
+func (p *Mikan) Exit() {
+	p.exitChan <- true
+}
+func (p *Mikan) Run(exit chan bool) {
 
-func (p *Mikan) Run() {
+	qbtConf := store.Config.ClientQBt()
+	qbt := client.NewQBittorrent(qbtConf.Url, qbtConf.Username, qbtConf.Password)
+	p.mgr = manager.NewManager(qbt)
+	managerExit := make(chan bool)
+	p.mgr.Start(managerExit)
+
+	go func() {
+		select {
+		case <-p.exitChan:
+			p.mgr.Exit()
+			// 等待manager退出
+			<-managerExit
+			// exit02
+			exit <- true
+			return
+		default:
+			p.UpdateFeed()
+			delay := store.Config.FeedUpdateDelayMinute
+			if delay < UpdateWaitMinMinute {
+				delay = UpdateWaitMinMinute
+			}
+			time.Sleep(time.Duration(delay) * time.Minute)
+		}
+	}()
+}
+
+func (p *Mikan) UpdateFeed() {
 	rssConf := store.Config.RssMikan()
-
 	f := feed.NewRss()
 	items := f.Parse(&models.FeedParseOptions{
 		Url:          rssConf.Url,
@@ -27,9 +63,9 @@ func (p *Mikan) Run() {
 		RefreshCache: true,
 	})
 	bgms := p.ParseBangumiAll(items, &bangumi.Mikan{})
-	fmt.Println(bgms)
-	for _, b := range bgms {
-		fmt.Println(b)
+
+	for _, bgm := range bgms {
+		p.mgr.Download(bgm)
 	}
 }
 
@@ -49,7 +85,7 @@ func (p *Mikan) ParseBangumiAll(items []*models.FeedItem, bangumi bangumi.Bangum
 			}
 			bgms[i_].Url = item_.Torrent
 			bgms[i_].Hash = item_.Hash
-			time.Sleep(time.Duration(conf.RssDelay) * time.Second)
+			time.Sleep(time.Duration(conf.FeedDelay) * time.Second)
 			//工作完成后计数器减1
 			<-working
 		}(i, item)
