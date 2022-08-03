@@ -190,7 +190,7 @@ func (c *QBittorrent) Add(opt *models.ClientAddOptions) {
 			Savepath:         &opt.SavePath,
 			Category:         &opt.Category,
 			Tags:             opt.Tag,
-			SeedingTimeLimit: &opt.SeedingTime, // 秒
+			SeedingTimeLimit: &opt.SeedingTime,
 			Rename:           &opt.Rename,
 		},
 	})

@@ -14,14 +14,55 @@ import (
 )
 
 const (
-	UpdateWaitMinSecond = 2 // 允许的最短刷新时间
+	UpdateWaitMinSecond                     = 2             // 允许的最短刷新时间
+	StateUnknown        models.TorrentState = "unknown"     //未知
+	StateWaiting        models.TorrentState = "waiting"     // 等待
+	StateDownloading    models.TorrentState = "downloading" // 下载中
+	StatePausing        models.TorrentState = "pausing"     // 暂停中
+	StateMoving         models.TorrentState = "moving"      // 移动中
+	StateSeeding        models.TorrentState = "seeding"     // 做种中
+	StateComplete       models.TorrentState = "complete"    // 完成下载
+	StateError          models.TorrentState = "error"       // 错误
 )
+
+// stateMap
+//  @Description: 下载器状态转换
+//  @param clientState string
+//  @return models.TorrentState
+//
+func stateMap(clientState string) models.TorrentState {
+	switch clientState {
+	case client.QbtAllocating, client.QbtMetaDL, client.QbtStalledDL,
+		client.QbtCheckingDL, client.QbtCheckingResumeData, client.QbtQueuedDL,
+		client.QbtForcedUP, client.QbtQueuedUP:
+		// 若进度为100，则下载完成
+		return StateWaiting
+	case client.QbtDownloading, client.QbtForcedDL:
+		return StateDownloading
+	case client.QbtMoving:
+		return StateMoving
+	case client.QbtUploading, client.QbtStalledUP:
+		// 已下载完成
+		return StateSeeding
+	case client.QbtPausedDL:
+		return StatePausing
+	case client.QbtPausedUP, client.QbtCheckingUP:
+		// 已下载完成
+		return StateComplete
+	case client.QbtError, client.QbtMissingFiles:
+		return StateError
+	case client.QbtUnknown:
+		return StateUnknown
+	default:
+		return StateUnknown
+	}
+}
 
 type Manager struct {
 	client    client.Client
-	bangumi   []*models.Bangumi               // 同步缓存，主要使用其中的Hash来索引item
-	itemState map[string]*models.TorrentState // 存储当前项的状态信息，处理过的
-	items     map[string]*models.TorrentItem  // 客户端下载项信息，直接获取到的
+	bangumi   map[string]*models.Bangumi     // 同步缓存，主要使用其中的Hash来索引item
+	itemState map[string]*models.Torrent     // 存储当前项的状态信息，处理过的
+	items     map[string]*models.TorrentItem // 客户端下载项信息，直接获取到的
 
 	downloadList []*models.Bangumi // 下载队列，存满或者盗下一个刷新时间会进行下载
 	exitChan     chan bool         // 结束标记
@@ -211,11 +252,11 @@ func (m *Manager) UpdateList() {
 		return
 	}
 
-	// 清空bangumi list，重新同步缓存
-	m.bangumi = make([]*models.Bangumi, 0, len(items))
+	// 清空bangumi map，重新同步缓存
+	m.bangumi = make(map[string]*models.Bangumi, len(items))
 	// 内存list不清空
 	if m.itemState == nil {
-		m.itemState = make(map[string]*models.TorrentState, len(items))
+		m.itemState = make(map[string]*models.Torrent, len(items))
 	}
 	if m.items == nil {
 		m.items = make(map[string]*models.TorrentItem, len(items))
@@ -228,23 +269,21 @@ func (m *Manager) UpdateList() {
 		bangumiTemp := store.Cache.Get(models.ClientBangumiBucket, item.Hash)
 		if bangumiTemp != nil {
 			if bangumi, ok := bangumiTemp.(*models.Bangumi); ok {
-				m.bangumi = append(m.bangumi, bangumi)
+				// item 缓存
+				m.items[item.Hash] = item
+
+				// 把从缓存数据库中存的bangumi信息加入到map中
+				if _, has := m.bangumi[bangumi.Hash]; !has {
+					m.bangumi[bangumi.Hash] = bangumi
+				}
+
 				// 初始化itemState
 				if _, has := m.itemState[item.Hash]; !has {
-					m.itemState[item.Hash] = &models.TorrentState{
-						Hash: item.Hash,
-					}
+					m.itemState[item.Hash] = &models.Torrent{Hash: item.Hash}
 				}
 				state := m.itemState[item.Hash]
-				state.State = item.State
-				m.items[item.Hash] = item
-				zap.S().Debugw("下载进度",
-					"名称", bangumi.Name,
-					"状态", item.State,
-					"进度", fmt.Sprintf("%.1f", item.Progress*100),
-				)
 
-				// 是否已经重命名过，重启后第一次也会执行此部分，但不会做修改
+				// 未完成重命名，或者首次运行（如重启下载器）
 				if !state.Renamed {
 					// 获取相对路径，删除绝对路径前缀
 					oldPath := strings.TrimPrefix(item.ContentPath, path.Clean(conf.SavePath)+"/")
@@ -264,10 +303,49 @@ func (m *Manager) UpdateList() {
 						})
 						zap.S().Infof("重命名「%s」->「%s」", oldPath, newPath)
 					}
-					state.Renamed = true
 					state.Path = newPath
+					state.Renamed = true
+				}
+				state.State = stateMap(item.State)
+				// 未下载完成，但State符合下载完成状态
+				if !state.Downloaded {
+					if state.State == StateComplete || state.State == StateSeeding ||
+						(state.State == StateWaiting && item.Progress == 1) {
+						state.Downloaded = true
+					}
+				} else {
+					zap.S().Debugw("下载进度",
+						"名称", bangumi.Name,
+						"状态", item.State,
+						"进度", fmt.Sprintf("%.1f", item.Progress*100),
+					)
+				}
+				// 已经下载完成，但未移动到正确位置
+				if state.Downloaded && !state.Moved {
+					filepath := ""
+					state.Moved, filepath = m.move(*state)
+					if state.Moved {
+						state.Path = filepath
+					}
+				}
+
+				// 已经下载完成、移动完成，但未搜刮元数据
+				if state.Downloaded && !state.Moved {
+					state.Scraped = m.scrape(*state)
+					if state.Scraped {
+						// TODO: 完成，是否删除下载项
+					}
 				}
 			}
 		}
 	}
+}
+
+func (m *Manager) move(torrent models.Torrent) (bool, string) {
+	zap.S().Infof("移动文件「%s」=>「%s」", torrent.Path, torrent.Path)
+	return true, torrent.Path
+}
+func (m *Manager) scrape(torrent models.Torrent) bool {
+
+	return false
 }
