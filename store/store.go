@@ -1,17 +1,17 @@
 package store
 
 import (
-	"GoBangumi/store/cache"
-	"GoBangumi/store/config"
+	"GoBangumi/configs"
+	cache2 "GoBangumi/internal/cache"
 )
 
 var (
-	Cache  cache.Cache
-	Config *config.Config
+	Cache  cache2.Cache
+	Config *configs.Config
 )
 
 type InitOptions struct {
-	Cache      cache.Cache
+	Cache      cache2.Cache
 	ConfigFile string
 }
 
@@ -21,13 +21,13 @@ func Init(opt *InitOptions) {
 	}
 
 	if len(opt.ConfigFile) == 0 {
-		Config = config.NewConfig("/Users/wetor/GoProjects/GoBangumi/data/config/conf.yaml")
+		Config = configs.NewConfig("/Users/wetor/GoProjects/GoBangumi/data/config/conf.yaml")
 	} else {
-		Config = config.NewConfig(opt.ConfigFile)
+		Config = configs.NewConfig(opt.ConfigFile)
 	}
 
 	if opt.Cache == nil {
-		Cache = cache.NewBolt()
+		Cache = cache2.NewBolt()
 		Cache.Open(Config.Setting.CachePath)
 	} else {
 		Cache = opt.Cache

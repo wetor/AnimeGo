@@ -1,9 +1,9 @@
 package utils
 
 import (
-	"GoBangumi/models"
+	"GoBangumi/internal/models"
+	"GoBangumi/third_party/qbapi"
 	"fmt"
-	"github.com/xxxsen/qbapi"
 	"testing"
 )
 

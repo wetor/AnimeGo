@@ -1,14 +1,13 @@
 package process
 
 import (
-	"GoBangumi/models"
-	"GoBangumi/modules/bangumi"
-	"GoBangumi/modules/client"
-	"GoBangumi/modules/feed"
-	"GoBangumi/process/manager"
+	"GoBangumi/internal/core/anisource/mikan"
+	feedManager "GoBangumi/internal/core/feed/manager"
+	mikanRss "GoBangumi/internal/core/feed/mikan"
+	downloaderManager "GoBangumi/internal/downloader/manager"
+	"GoBangumi/internal/downloader/qbittorent"
+	"GoBangumi/internal/models"
 	"GoBangumi/store"
-	"sync"
-	"time"
 )
 
 const (
@@ -16,8 +15,9 @@ const (
 )
 
 type Mikan struct {
-	mgr      *manager.Manager
-	exitChan chan bool // 结束标记
+	downloaderMgr *downloaderManager.Manager
+	feedMgr       *feedManager.Manager
+	exitChan      chan bool // 结束标记
 }
 
 func NewMikan() *Mikan {
@@ -29,79 +29,32 @@ func (p *Mikan) Exit() {
 func (p *Mikan) Run(exit chan bool) {
 
 	qbtConf := store.Config.ClientQBt()
-	qbt := client.NewQBittorrent(qbtConf.Url, qbtConf.Username, qbtConf.Password)
-	p.mgr = manager.NewManager(qbt)
-	managerExit := make(chan bool)
-	p.mgr.Start(managerExit)
+	qbt := qbittorent.NewQBittorrent(qbtConf.Url, qbtConf.Username, qbtConf.Password)
 
+	downloadChan := make(chan *models.AnimeEntity, 10)
+
+	p.downloaderMgr = downloaderManager.NewManager(qbt)
+	p.downloaderMgr.SetDownloadChan(downloadChan)
+	p.feedMgr = feedManager.NewManager(mikanRss.NewRss(), mikan.NewMikan())
+	p.feedMgr.SetDownloadChan(downloadChan)
+
+	downloaderExit := make(chan bool)
+	feedExit := make(chan bool)
+	p.downloaderMgr.Start(downloaderExit)
+	p.feedMgr.Start(feedExit)
+
+	exitFlag := 0
 	go func() {
 		select {
-		case <-p.exitChan:
-			p.mgr.Exit()
-			// 等待manager退出
-			<-managerExit
-			// exit02
-			exit <- true
-			return
+		case <-feedExit:
+			exitFlag++
+		case <-downloaderExit:
+			exitFlag++
 		default:
-			p.UpdateFeed()
-			delay := store.Config.FeedUpdateDelayMinute
-			if delay < UpdateWaitMinMinute {
-				delay = UpdateWaitMinMinute
+			if exitFlag >= 2 {
+				exit <- true
+				return
 			}
-			time.Sleep(time.Duration(delay) * time.Minute)
 		}
 	}()
-}
-
-func (p *Mikan) UpdateFeed() {
-	rssConf := store.Config.RssMikan()
-	f := feed.NewRss()
-	items := f.Parse(&models.FeedParseOptions{
-		Url:          rssConf.Url,
-		Name:         rssConf.Name, // 文件名
-		RefreshCache: true,
-	})
-	bgms := p.ParseBangumiAll(items, &bangumi.Mikan{})
-
-	for _, bgm := range bgms {
-		p.mgr.Download(bgm)
-	}
-}
-
-func (p *Mikan) ParseBangumiAll(items []*models.FeedItem, bangumi bangumi.Bangumi) []*models.Bangumi {
-	bgms := make([]*models.Bangumi, len(items))
-	conf := store.Config.Advanced.MainConf
-	working := make(chan int, conf.MultiGoroutine.GoroutineMax) // 限制同时执行个数
-	wg := sync.WaitGroup{}
-	for i, item := range items {
-		working <- i //计数器+1 可能会发生阻塞
-		wg.Add(1)
-		go func(i_ int, item_ *models.FeedItem) {
-			defer wg.Done()
-			bgms[i_] = p.ParseBangumi(item_, bangumi)
-			if bgms[i_].TorrentInfo == nil {
-				bgms[i_].TorrentInfo = &models.TorrentInfo{}
-			}
-			bgms[i_].Url = item_.Torrent
-			bgms[i_].Hash = item_.Hash
-			time.Sleep(time.Duration(conf.FeedDelay) * time.Second)
-			//工作完成后计数器减1
-			<-working
-		}(i, item)
-		if !conf.MultiGoroutine.Enable {
-			wg.Wait() // 同步
-		}
-	}
-	wg.Wait()
-	return bgms
-}
-
-func (p *Mikan) ParseBangumi(item *models.FeedItem, bangumi bangumi.Bangumi) *models.Bangumi {
-	bgmInfo := bangumi.Parse(&models.BangumiParseOptions{
-		Url:  item.Url,
-		Name: item.Name,
-		Date: item.Date,
-	})
-	return bgmInfo
 }
