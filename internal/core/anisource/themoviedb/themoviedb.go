@@ -34,14 +34,23 @@ func NewThemoviedb() *Themoviedb {
 
 func (b *Themoviedb) Parse(opt *models.AnimeParseOptions) *models.AnimeEntity {
 
-	id := b.parseThemoviedb1(opt.Name)
-	season := b.parseThemoviedb2(id, opt.Date)
-	return &models.AnimeEntity{
-		AnimeSeason: season,
-		AnimeExtra: &models.AnimeExtra{
-			ThemoviedbID: id,
-		},
+	result := &models.AnimeEntity{
+		AnimeSeason: &models.AnimeSeason{},
+		AnimeExtra:  &models.AnimeExtra{},
 	}
+	id := b.parseThemoviedb1(opt.Name)
+	if id == 0 {
+		zap.S().Warnf("解析Themoviedb失败，%s", opt.Name)
+		return result
+	}
+	result.ThemoviedbID = id
+	season := b.parseThemoviedb2(id, opt.Date)
+	if season == nil {
+		zap.S().Warnf("解析Themoviedb季度失败，%d", id)
+		return result
+	}
+	result.Season = season.Season
+	return result
 }
 
 // parseThemoviedb1
@@ -82,6 +91,11 @@ func (b *Themoviedb) parseThemoviedb1(name string) (tmdbID int) {
 
 		} else {
 			tmdbID = resp.Result[0].ID
+			for _, result := range resp.Result {
+				if result.OriginalName == name {
+					tmdbID = result.ID
+				}
+			}
 			break
 		}
 	}
@@ -98,7 +112,7 @@ func (b *Themoviedb) parseThemoviedb2(id int, date string) (season *models.Anime
 			return val
 		}
 	}
-	zap.S().Debugf("解析Themoviedb，步骤2，获取信息")
+	zap.S().Debugf("解析Themoviedb，步骤2，%d", id)
 	resp := &models.ThemoviedbResponse{}
 	status, err := utils.ApiGet(ThemoviedbInfoApi(id), resp, store.Config.Proxy())
 	if err != nil {

@@ -21,7 +21,7 @@ func NewBolt() Cache {
 }
 
 func (c *Bolt) Open(dir string) {
-	db, err := bolt.Open(path.Join(path.Dir(dir), "bolt.db"), 0600, nil)
+	db, err := bolt.Open(path.Join(dir, "bolt.db"), 0600, nil)
 	if err != nil {
 		zap.S().Warn(err)
 		return

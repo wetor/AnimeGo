@@ -1,21 +1,19 @@
 package utils
 
 import (
-	"GoBangumi/internal/models"
-	"GoBangumi/third_party/qbapi"
 	"fmt"
 	"testing"
 )
 
 func TestConvertModel(t *testing.T) {
-	src := &qbapi.TorrentListItem{
-		Name:        "测试标题",
-		ContentPath: "1111111",
-	}
-
-	dst := &models.TorrentItem{}
-	ConvertModel(src, dst)
-	fmt.Println(dst)
+	//src := &qbapi.TorrentListItem{
+	//	Name:        "测试标题",
+	//	ContentPath: "1111111",
+	//}
+	//
+	//dst := &models.TorrentItem{}
+	//ConvertModel(src, dst)
+	//fmt.Println(dst)
 }
 
 func TestApiGet(t *testing.T) {

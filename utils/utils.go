@@ -93,6 +93,9 @@ func CompareTimeStr(t1, t2 string, day int) bool {
 	}
 }
 func StrTimeSubAbs(t1, t2 string) int {
+	if len(t1)*len(t2) == 0 {
+		return 0
+	}
 	s := StrTimeSub(t1, t2)
 	if s < 0 {
 		return -int(s / (24 * 60 * 60))

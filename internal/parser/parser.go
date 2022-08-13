@@ -8,12 +8,23 @@ import (
 	"strings"
 )
 
+const (
+	MatchTitleEp = 0
+	MatchEpNum   = 1
+)
+
 var epRegx = []*regexp.Regexp{
 	// 匹配ep，https://github.com/EstrellaXD/Auto_Bangumi/blob/97f078818a4f5b8513116a6032224d4e2f1dd7d9/src/parser/analyser/raw_parser.py
 	regexp.MustCompile(`(.*|\[.*])( -? \d+ |\[\d+]|\[\d+.?[vV]\d{1}]|[第]\d+[话話集]|\[\d+.?END])(.*)`),
 	// 取出数字
 	regexp.MustCompile(`\d+`),
 }
+
+const (
+	MatchTitleResolution = 0
+	MatchTitleSubtitle   = 1
+	MatchTitleSource     = 2
+)
 
 var tagRegx = []*regexp.Regexp{
 	// 匹配分辨率 Resolution
@@ -26,39 +37,39 @@ var tagRegx = []*regexp.Regexp{
 
 var tagSplitRegx = regexp.MustCompile(`[\[\]()（）]`)
 
-func ParseEp(title string) (int, error) {
+func ParseTitle(title string) (*models.ParseResult, error) {
 
 	str := title
 	str = strings.ReplaceAll(str, "【", "[")
 	str = strings.ReplaceAll(str, "】", "]")
-	res := epRegx[0].FindStringSubmatch(str)
+	res := epRegx[MatchTitleEp].FindStringSubmatch(str)
 	if res == nil {
-		return 0, errors.ParseBangumiEpErr
+		return nil, errors.ParseAnimeTitleErr
 	}
-	epStr := epRegx[1].FindString(res[2])
+	if len(res) < 4 {
+		return nil, errors.ParseAnimeTitleErr
+	}
+	titleBody := res[1]
+	_ = titleBody
+	titleEp := res[2]
+	titleTags := res[3]
+	result := &models.ParseResult{}
+	// ep
+	epStr := epRegx[MatchEpNum].FindString(titleEp)
 	ep, err := strconv.Atoi(epStr)
 	if err != nil || ep == 0 {
-		return 0, errors.ParseBangumiEpErr
+		return nil, errors.ParseAnimeTitleErr
 	}
-	return ep, nil
-}
+	result.Ep = ep
 
-func ParseTag(title string) (*models.ParseTagResult, error) {
-
-	str := title
-	str = strings.ReplaceAll(str, "【", "[")
-	str = strings.ReplaceAll(str, "】", "]")
-
-	tags := strings.Split(tagSplitRegx.ReplaceAllString(str, "  "), " ")
-
-	result := &models.ParseTagResult{}
-
+	// tags
+	tags := strings.Split(tagSplitRegx.ReplaceAllString(titleTags, " "), " ")
 	for _, tag := range tags {
-		if tagRegx[0].MatchString(tag) {
+		if len(result.Resolution) == 0 && tagRegx[MatchTitleResolution].MatchString(tag) {
 			result.Resolution = tag
-		} else if tagRegx[1].MatchString(tag) {
+		} else if len(result.Subtitle) == 0 && tagRegx[MatchTitleSubtitle].MatchString(tag) {
 			result.Subtitle = tag
-		} else if tagRegx[2].MatchString(tag) {
+		} else if len(result.Source) == 0 && tagRegx[MatchTitleSource].MatchString(tag) {
 			result.Source = tag
 		}
 	}

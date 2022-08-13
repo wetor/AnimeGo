@@ -25,11 +25,11 @@ var nameRegxStep = []*regexp.Regexp{
 //
 func ParseName(name string, step int) (string, int, error) {
 	if step < 0 {
-		return "", 0, errors.ParseBangumiNameErr
+		return "", 0, errors.ParseAnimeNameErr
 	}
 	if step >= len(nameRegxStep) {
 		zap.S().Warn("BangumiName Step错误")
-		return "", 0, errors.ParseBangumiNameErr
+		return "", 0, errors.ParseAnimeNameErr
 	}
 	str := name
 	i := step

@@ -14,10 +14,9 @@ const (
 
 func GetLogger() {
 	Encoder := GetEncoder()
-	WriteSyncer := GetWriteSyncer()
 	newCore := zapcore.NewTee(
-		zapcore.NewCore(Encoder, WriteSyncer, zapcore.InfoLevel),              // 写入文件
-		zapcore.NewCore(Encoder, zapcore.Lock(os.Stdout), zapcore.DebugLevel), // 写入控制台
+		zapcore.NewCore(Encoder, GetWriteSyncer("./debug.log"), zapcore.DebugLevel), // 写入文件
+		zapcore.NewCore(Encoder, zapcore.Lock(os.Stdout), zapcore.DebugLevel),       // 写入控制台
 	)
 	logger := zap.New(newCore, zap.AddCaller())
 	zap.ReplaceGlobals(logger)
@@ -43,9 +42,9 @@ func GetEncoder() zapcore.Encoder {
 }
 
 // GetWriteSyncer 自定义的WriteSyncer
-func GetWriteSyncer() zapcore.WriteSyncer {
+func GetWriteSyncer(file string) zapcore.WriteSyncer {
 	lumberJackLogger := &lumberjack.Logger{
-		Filename:   "./zap.log",
+		Filename:   file,
 		MaxSize:    200,
 		MaxBackups: 10,
 		MaxAge:     30,

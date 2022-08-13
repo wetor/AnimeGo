@@ -33,7 +33,7 @@ func NewMikan() *Mikan {
 func (b *Mikan) Parse(opt *models.AnimeParseOptions) *models.AnimeEntity {
 	zap.S().Infof("获取「%s」信息开始...", opt.Name)
 	// ------------------- 解析文件名获取ep -------------------
-	ep, err := parser.ParseEp(opt.Name)
+	match, err := parser.ParseTitle(opt.Name)
 	if err != nil {
 		zap.S().Warn("解析ep信息失败，结束此流程")
 		return nil
@@ -51,16 +51,16 @@ func (b *Mikan) Parse(opt *models.AnimeParseOptions) *models.AnimeEntity {
 		return nil
 	}
 	// ------------------- 获取bangumi信息 -------------------
-	info := b.parseBangumi(bangumiID, ep, opt.Date)
+	info := b.parseBangumi(bangumiID, match.Ep, opt.Date)
 	if info == nil {
 		zap.S().Warn("获取Bangumi信息失败，结束此流程")
 		return nil
 	}
 	// ------------------- 获取tmdb信息(季度信息) -------------------
 	info.AnimeSeason, info.AnimeExtra = b.parseThemoviedb(info.Name, info.AirDate)
-	if info.AnimeSeason == nil || info.Season == 0 {
-		zap.S().Warn("获取Themoviedb季度信息失败，结束此流程")
-		return nil
+	if info.Season == 0 {
+		zap.S().Warn("获取Themoviedb季度信息失败，默认为第一季")
+		info.Season = 1
 	}
 	info.AnimeExtra.MikanID = mikanID
 	info.AnimeExtra.MikanUrl = opt.Url

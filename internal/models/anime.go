@@ -44,26 +44,35 @@ type TorrentInfo struct {
 }
 
 func (b *AnimeEntity) FullName() string {
+	if len(b.NameCN) == 0 {
+		b.NameCN = b.Name
+	}
+	if len(b.NameCN) == 0 {
+		b.NameCN = strconv.Itoa(b.ID)
+	}
 	return fmt.Sprintf("%s[第%d季][第%d集]", b.NameCN, b.Season, b.Ep)
 }
 
 func (b *AnimeEntity) FileName() string {
-	return fmt.Sprintf("E%03d", b.Ep)
+	return path.Join(fmt.Sprintf("S%02d", b.Season), fmt.Sprintf("E%03d", b.Ep))
 }
 
 func (b *AnimeEntity) DirName() string {
 	if len(b.NameCN) == 0 {
+		b.NameCN = b.Name
+	}
+	if len(b.NameCN) == 0 {
 		b.NameCN = strconv.Itoa(b.ID)
 	}
-	return path.Join(utils.Filename(b.NameCN), fmt.Sprintf("S%02d", b.Season))
+	return utils.Filename(b.NameCN)
 }
 
 func (b *AnimeEntity) Meta() string {
-	nfoTemplate := `<?xml version="1.0" encoding="utf-8" standalone="yes"?>
-<tvshow>
-  <tmdbid>{tmdbid}</tmdbid>
-  <bangumiid>{bangumiid}</bangumiid>
-</tvshow>`
+	nfoTemplate := "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>\n<tvshow>"
+	if b.ThemoviedbID != 0 {
+		nfoTemplate += "  <tmdbid>{tmdbid}</tmdbid>\n"
+	}
+	nfoTemplate += "  <bangumiid>{bangumiid}</bangumiid>\n</tvshow>"
 	return utils.Format(nfoTemplate, utils.FormatMap{
 		"tmdbid":    b.ThemoviedbID,
 		"bangumiid": b.ID,

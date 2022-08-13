@@ -28,7 +28,7 @@ func (f *Rss) Parse(opt *models.FeedParseOptions) []*models.FeedItem {
 	if len(opt.Name) == 0 {
 		opt.Name = utils.Md5Str(opt.Url)
 	}
-	filename := path.Join(store.Config.Setting.CachePath, opt.Name+".xml")
+	filename := path.Join(path.Clean(store.Config.Setting.CachePath), opt.Name+".xml")
 	// --------- 是否重新下载rss.xml ---------
 	if opt.RefreshCache {
 		zap.S().Info("获取Rss数据开始...")
@@ -47,7 +47,7 @@ func (f *Rss) Parse(opt *models.FeedParseOptions) []*models.FeedItem {
 	}
 	defer file.Close()
 	fp := gofeed.NewParser()
-	feed, err := fp.Parse(file)
+	feeds, err := fp.Parse(file)
 	if err != nil {
 		zap.S().Warn(err)
 		return nil
@@ -55,8 +55,8 @@ func (f *Rss) Parse(opt *models.FeedParseOptions) []*models.FeedItem {
 	regx := regexp.MustCompile(`<pubDate>(.*?)T`)
 
 	var date string
-	items := make([]*models.FeedItem, len(feed.Items))
-	for i, item := range feed.Items {
+	items := make([]*models.FeedItem, len(feeds.Items))
+	for i, item := range feeds.Items {
 		strs := regx.FindStringSubmatch(item.Custom["torrent"])
 		if len(strs) < 2 {
 			date = ""

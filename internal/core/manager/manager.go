@@ -118,7 +118,6 @@ func (m *Manager) download(animes []*models.AnimeEntity) {
 		zap.S().Infof("开始下载「%s」", anime.FullName())
 		if !m.canDownload(anime) {
 			zap.S().Debugf("取消下载，发现重复「%s」", anime.FullName())
-			fmt.Println("------------------")
 			continue
 		}
 		m.client.Add(&models.ClientAddOptions{
@@ -329,6 +328,14 @@ func (m *Manager) UpdateList() {
 					state.Renamed = true
 				}
 
+				// 移动完成，但未搜刮元数据
+				if state.Renamed && !state.Scraped {
+					state.Scraped = m.scrape(bangumi)
+					if state.Scraped {
+						// TODO: 完成，是否删除下载项
+					}
+				}
+
 				// 未下载完成，但State符合下载完成状态
 				if !state.Downloaded {
 					if state.State == StateComplete || state.State == StateSeeding ||
@@ -343,20 +350,13 @@ func (m *Manager) UpdateList() {
 					)
 				}
 
-				// 已经下载完成、移动完成，但未搜刮元数据
-				if state.Downloaded && state.Renamed && !state.Scraped {
-					state.Scraped = m.scrape(state, bangumi)
-					if state.Scraped {
-						// TODO: 完成，是否删除下载项
-					}
-				}
 			}
 		}
 	}
 }
 
-func (m *Manager) scrape(state *models.Torrent, bangumi *models.AnimeEntity) bool {
-	nfo := path.Join(store.Config.SavePath, path.Dir(state.Path), "tvshow.nfo")
+func (m *Manager) scrape(bangumi *models.AnimeEntity) bool {
+	nfo := path.Join(store.Config.SavePath, bangumi.DirName(), "tvshow.nfo")
 	zap.S().Infof("写入元数据文件「%s」", nfo)
 	err := os.WriteFile(nfo, []byte(bangumi.Meta()), os.ModePerm)
 	if err != nil {

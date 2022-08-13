@@ -2,16 +2,16 @@ package store
 
 import (
 	"GoBangumi/configs"
-	cache2 "GoBangumi/internal/cache"
+	"GoBangumi/internal/cache"
 )
 
 var (
-	Cache  cache2.Cache
+	Cache  cache.Cache
 	Config *configs.Config
 )
 
 type InitOptions struct {
-	Cache      cache2.Cache
+	Cache      cache.Cache
 	ConfigFile string
 }
 
@@ -27,7 +27,7 @@ func Init(opt *InitOptions) {
 	}
 
 	if opt.Cache == nil {
-		Cache = cache2.NewBolt()
+		Cache = cache.NewBolt()
 		Cache.Open(Config.Setting.CachePath)
 	} else {
 		Cache = opt.Cache

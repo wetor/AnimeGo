@@ -67,11 +67,15 @@ func (b *Bangumi) parseBnagumi1(bangumiID int) (info *models.AnimeEntity) {
 		return nil
 	}
 	info = &models.AnimeEntity{
-		ID:      int(resp.ID),
-		NameCN:  resp.NameCN,
-		Name:    resp.Name,
-		AirDate: *resp.Date,
-		Eps:     int(resp.Eps),
+		ID:     int(resp.ID),
+		NameCN: resp.NameCN,
+		Name:   resp.Name,
+		Eps:    int(resp.Eps),
+	}
+	if resp.Date != nil {
+		info.AirDate = *resp.Date
+	} else {
+		info.AirDate = ""
 	}
 	store.Cache.Put(models.BgmInfoBucket, bangumiID, info, store.Config.Advanced.CacheInfoExpire)
 	return info

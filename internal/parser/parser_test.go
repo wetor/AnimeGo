@@ -7,7 +7,7 @@ import (
 )
 
 func TestBangumiEp_Parse(t *testing.T) {
-	ep, err := ParseEp("【幻樱字幕组】【4月新番】【古见同学有交流障碍症 第二季 Komi-san wa, Komyushou Desu. S02】【22】【GB_MP4】【1920X1080】")
+	ep, err := ParseTitle("【幻樱字幕组】【4月新番】【古见同学有交流障碍症 第二季 Komi-san wa, Komyushou Desu. S02】【22】【GB_MP4】【1920X1080】")
 	fmt.Println(ep, err)
 }
 
@@ -35,14 +35,17 @@ func TestBangumiEp_Parse2(t *testing.T) {
 
 		{title: "[澄空学园&雪飘工作室][辉夜大小姐想让我告白 第三季 / かぐや様は告らせたい 三期 / Kaguya-sama wa Kokurasetai Season 3][05][720p][繁体内嵌]", want: 5},
 		{title: "[MingY] 辉夜大小姐想让我告白-Ultra Romantic-​ / Kaguya-sama wa Kokurasetai​ S3 [01][1080p][CHS] [复制磁连]", want: 1},
+
+		{title: "[NC-Raws] 幕末替身传说 / Bucchigire! - 06 (Baha 1920x1080 AVC AAC MP4) [复制磁连]", want: 6},
+		{title: "[NC-Raws] 杜鹃的婚约 / Kakkou no Iinazuke (A Couple of Cuckoos) - 15 (B-Global 3840x2160 HEVC AAC MKV) [复制磁连]", want: 15},
+		{title: "[NC-Raws] 星源之主 / Master of the Star Spring - 07 (B-Global Donghua 1920x1080 HEVC AAC MKV) [复制磁连]", want: 7},
 	}
 	for _, tt := range tests {
 
-		res, err := ParseTag(tt.title)
-		g, err := ParseEp(tt.title)
-		fmt.Println(g, res, tt.title)
+		g, err := ParseTitle(tt.title)
+		fmt.Println(g)
 		assert.Equal(t, err, nil)
-		assert.Equal(t, g, tt.want)
+		assert.Equal(t, g.Ep, tt.want)
 
 	}
 }
