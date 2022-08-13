@@ -21,6 +21,21 @@ func Format(format string, p FormatMap) string {
 	return strings.NewReplacer(args...).Replace(format)
 }
 
+var filenameMap = FormatMap{
+	`/`: "",
+	`\`: "",
+	`[`: "(",
+	`]`: ")",
+	`:`: "-",
+	`;`: "-",
+	`=`: "-",
+	`,`: "-",
+}
+
+func Filename(filename string) string {
+	return Format(filename, filenameMap)
+}
+
 // Sleep
 //  @Description: 信号计时器，每秒检测一次信号，避免长时间等待无法接收信号
 //  @Description: 收到exit信号后，会返回true；倒计时结束，会返回false

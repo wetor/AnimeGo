@@ -38,6 +38,9 @@ func (b *Themoviedb) Parse(opt *models.AnimeParseOptions) *models.AnimeEntity {
 	season := b.parseThemoviedb2(id, opt.Date)
 	return &models.AnimeEntity{
 		AnimeSeason: season,
+		AnimeExtra: &models.AnimeExtra{
+			ThemoviedbID: id,
+		},
 	}
 }
 

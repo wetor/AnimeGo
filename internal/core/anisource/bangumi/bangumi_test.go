@@ -18,6 +18,6 @@ func TestNewBgm(t *testing.T) {
 
 func TestBgm_Parse2(t *testing.T) {
 	bangumi := Bangumi{}
-	ep := bangumi.parseBgm2(324295, 6, "2022-05-30")
+	ep := bangumi.parseBnagumi2(324295, 6, "2022-05-30")
 	fmt.Println(ep)
 }

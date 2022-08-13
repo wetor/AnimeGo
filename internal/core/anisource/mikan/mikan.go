@@ -57,16 +57,15 @@ func (b *Mikan) Parse(opt *models.AnimeParseOptions) *models.AnimeEntity {
 		return nil
 	}
 	// ------------------- 获取tmdb信息(季度信息) -------------------
-	info.AnimeSeason = b.parseThemoviedb(info.Name, info.AirDate)
+	info.AnimeSeason, info.AnimeExtra = b.parseThemoviedb(info.Name, info.AirDate)
 	if info.AnimeSeason == nil || info.Season == 0 {
 		zap.S().Warn("获取Themoviedb季度信息失败，结束此流程")
 		return nil
 	}
-	info.AnimeExtra = &models.AnimeExtra{
-		SubID:  mikanID,
-		SubUrl: opt.Url,
-	}
-	zap.S().Infof("获取「%s」信息成功！更名为「%s」", opt.Name, info.FullName())
+	info.AnimeExtra.MikanID = mikanID
+	info.AnimeExtra.MikanUrl = opt.Url
+
+	zap.S().Infof("获取「%s」信息成功！原名「%s」", info.FullName(), opt.Name)
 	return info
 }
 
@@ -179,12 +178,12 @@ func (b *Mikan) parseBangumi(bangumiID, ep int, date string) *models.AnimeEntity
 //  @param airDate
 //  @return int
 //
-func (b *Mikan) parseThemoviedb(name, airDate string) *models.AnimeSeason {
+func (b *Mikan) parseThemoviedb(name, airDate string) (*models.AnimeSeason, *models.AnimeExtra) {
 	zap.S().Debugf("步骤4，解析Themoviedb，%s", name)
 	tmdb := themoviedb.NewThemoviedb()
 	newBgm := tmdb.Parse(&models.AnimeParseOptions{
 		Name: name,
 		Date: airDate,
 	})
-	return newBgm.AnimeSeason
+	return newBgm.AnimeSeason, newBgm.AnimeExtra
 }

@@ -32,11 +32,11 @@ func TestNewMikan(t *testing.T) {
 		if err != nil {
 			panic(err)
 		}
-		anime.SubID = id
+		anime.MikanID = id
 	}
 	fmt.Println(anime)
 	// ------------  获取bgm ID
-	filePath = fmt.Sprintf("../../data/cache/%d.html", anime.SubID)
+	filePath = fmt.Sprintf("../../data/cache/%d.html", anime.MikanID)
 	doc, err = htmlquery.LoadDoc(filePath)
 	if err != nil {
 		panic(err)

@@ -17,7 +17,7 @@ var nameRegxStep = []*regexp.Regexp{
 	regexp.MustCompile(`\s?((V|X|IX|IV|V?I{1,3})|[2-9]|[1-9]\d).*$|\s\S+$`),
 }
 
-// Parse
+// ParseName
 //  @Description: 从 nameRegxStep[opt.StartStep] 开始执行，并返回下一步的index
 //  @receiver *BangumiName
 //  @param opt *models.ParseOptions

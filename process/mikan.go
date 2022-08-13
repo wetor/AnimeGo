@@ -4,7 +4,7 @@ import (
 	"GoBangumi/internal/core/anisource/mikan"
 	feedManager "GoBangumi/internal/core/feed/manager"
 	mikanRss "GoBangumi/internal/core/feed/mikan"
-	downloaderManager "GoBangumi/internal/downloader/manager"
+	downloaderManager "GoBangumi/internal/core/manager"
 	"GoBangumi/internal/downloader/qbittorent"
 	"GoBangumi/internal/models"
 	"GoBangumi/store"
@@ -33,8 +33,7 @@ func (p *Mikan) Run(exit chan bool) {
 
 	downloadChan := make(chan *models.AnimeEntity, 10)
 
-	p.downloaderMgr = downloaderManager.NewManager(qbt)
-	p.downloaderMgr.SetDownloadChan(downloadChan)
+	p.downloaderMgr = downloaderManager.NewManager(qbt, downloadChan)
 	p.feedMgr = feedManager.NewManager(mikanRss.NewRss(), mikan.NewMikan())
 	p.feedMgr.SetDownloadChan(downloadChan)
 

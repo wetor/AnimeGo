@@ -7,7 +7,7 @@ import (
 	"GoBangumi/internal/models"
 	"GoBangumi/store"
 	"GoBangumi/utils"
-	"fmt"
+	"go.uber.org/zap"
 	"sync"
 	"time"
 )
@@ -85,7 +85,7 @@ func (m *Manager) UpdateFeed() {
 
 			animeList[_i] = anime
 			if m.downloadChanEnable {
-				fmt.Println("发送下载项：", anime.FullName())
+				zap.S().Debugf("发送下载项:「%s」", anime.FullName())
 				// 向管道中发送需要下载的信息
 				m.downloadChan <- anime
 			}

@@ -60,6 +60,7 @@ func HttpGet(url_, savePath, proxyUrl string) error {
 	}
 	return nil
 }
+
 func ApiGet(url_ string, obj interface{}, proxyUrl string) (int, error) {
 	client, err := GetHttpClient(proxyUrl)
 	if err != nil {
@@ -69,7 +70,7 @@ func ApiGet(url_ string, obj interface{}, proxyUrl string) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	request.Header.Set("User-Agent", "GoBangumi/1.0 (Golang 1.18)")
+	request.Header.Set("User-Agent", "AnimeGo/1.0 (Golang 1.18)")
 	request.Header.Set("Accept", "application/json")
 	response, err := client.Do(request)
 	if err != nil {

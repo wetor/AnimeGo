@@ -37,8 +37,10 @@ func TestBangumiEp_Parse2(t *testing.T) {
 		{title: "[MingY] 辉夜大小姐想让我告白-Ultra Romantic-​ / Kaguya-sama wa Kokurasetai​ S3 [01][1080p][CHS] [复制磁连]", want: 1},
 	}
 	for _, tt := range tests {
+
+		res, err := ParseTag(tt.title)
 		g, err := ParseEp(tt.title)
-		fmt.Println(g, tt.title)
+		fmt.Println(g, res, tt.title)
 		assert.Equal(t, err, nil)
 		assert.Equal(t, g, tt.want)
 

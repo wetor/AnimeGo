@@ -129,7 +129,7 @@ func (c *QBittorrent) Preferences() *models.Preferences {
 }
 
 func (c *QBittorrent) SetDefaultPreferences() {
-	opt := "Subfolder"
+	opt := "NoSubfolder"
 	pref := &qbapi.SetApplicationPreferencesReq{
 		TorrentContentLayout: &opt,
 	}

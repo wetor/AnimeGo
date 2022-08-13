@@ -40,8 +40,8 @@ func TestToBytes(t *testing.T) {
 		Name:   "测试日文",
 		NameCN: "测试中文",
 		AnimeExtra: &models.AnimeExtra{
-			SubID:  22,
-			SubUrl: "hasdtasdasdas",
+			MikanID:  22,
+			MikanUrl: "hasdtasdasdas",
 		},
 	}, time.Now().Unix()+30)
 	fmt.Println(b)

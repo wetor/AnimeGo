@@ -44,8 +44,8 @@ func Download1(m *Manager) {
 			EpID: 1114366,
 		},
 		AnimeExtra: &models.AnimeExtra{
-			SubID:  681,
-			SubUrl: "https://mikanani.me/Home/Episode/171f3b402fa4cf770ef267c0744a81b6b9ad77f2",
+			MikanID:  681,
+			MikanUrl: "https://mikanani.me/Home/Episode/171f3b402fa4cf770ef267c0744a81b6b9ad77f2",
 		},
 		TorrentInfo: &models.TorrentInfo{
 			Url:  "https://mikanani.me/Download/20220626/171f3b402fa4cf770ef267c0744a81b6b9ad77f2.torrent",
@@ -72,8 +72,8 @@ func Download2(m *Manager) {
 			EpID: 1114366,
 		},
 		AnimeExtra: &models.AnimeExtra{
-			SubID:  228,
-			SubUrl: "https://mikanani.me/Home/Episode/193f881098f1a2a4347e8b04512118090f79345d",
+			MikanID:  228,
+			MikanUrl: "https://mikanani.me/Home/Episode/193f881098f1a2a4347e8b04512118090f79345d",
 		},
 		TorrentInfo: &models.TorrentInfo{
 			Url:  "https://mikanani.me/Download/20220725/193f881098f1a2a4347e8b04512118090f79345d.torrent",
@@ -84,7 +84,7 @@ func Download2(m *Manager) {
 }
 
 func TestManager_Update(t *testing.T) {
-	m := NewManager(qbt)
+	m := NewManager(qbt, nil)
 	Download1(m)
 	Download2(m)
 	exit := make(chan bool)

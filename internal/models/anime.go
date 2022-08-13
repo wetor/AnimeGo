@@ -1,7 +1,10 @@
 package models
 
 import (
+	"GoBangumi/utils"
 	"fmt"
+	"path"
+	"strconv"
 )
 
 type AnimeEntity struct {
@@ -30,8 +33,9 @@ type AnimeEp struct {
 
 }
 type AnimeExtra struct {
-	SubID  int    // 其他id，mikan id
-	SubUrl string // 其他url，mikan当前集的url
+	ThemoviedbID int    // themoviedb ID
+	MikanID      int    // mikan id
+	MikanUrl     string // mikan当前集的url
 }
 
 type TorrentInfo struct {
@@ -40,14 +44,30 @@ type TorrentInfo struct {
 }
 
 func (b *AnimeEntity) FullName() string {
-	// TODO: 重命名
-	str := fmt.Sprintf("%s[第%d季][第%d集]", b.NameCN, b.Season, b.Ep)
-	return str
+	return fmt.Sprintf("%s[第%d季][第%d集]", b.NameCN, b.Season, b.Ep)
+}
+
+func (b *AnimeEntity) FileName() string {
+	return fmt.Sprintf("E%03d", b.Ep)
 }
 
 func (b *AnimeEntity) DirName() string {
-	str := fmt.Sprintf("%s-第%d季-第%d集", b.NameCN, b.Season, b.Ep)
-	return str
+	if len(b.NameCN) == 0 {
+		b.NameCN = strconv.Itoa(b.ID)
+	}
+	return path.Join(utils.Filename(b.NameCN), fmt.Sprintf("S%02d", b.Season))
+}
+
+func (b *AnimeEntity) Meta() string {
+	nfoTemplate := `<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<tvshow>
+  <tmdbid>{tmdbid}</tmdbid>
+  <bangumiid>{bangumiid}</bangumiid>
+</tvshow>`
+	return utils.Format(nfoTemplate, utils.FormatMap{
+		"tmdbid":    b.ThemoviedbID,
+		"bangumiid": b.ID,
+	})
 }
 
 type ThemoviedbIdResponse struct {
