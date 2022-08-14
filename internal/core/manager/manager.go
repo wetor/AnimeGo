@@ -6,13 +6,13 @@ import (
 	"GoBangumi/internal/models"
 	"GoBangumi/store"
 	"GoBangumi/utils"
+	"context"
 	"fmt"
 	"go.uber.org/zap"
 	"os"
 	"path"
 	"strings"
 	"sync"
-	"time"
 )
 
 const (
@@ -68,7 +68,6 @@ type Manager struct {
 	items     map[string]*models.TorrentItem // 客户端下载项信息，直接获取到的
 
 	downloadQueue []*models.AnimeEntity // 下载队列，存满或者盗下一个刷新时间会进行下载
-	exitChan      chan bool             // 结束标记
 
 	// 通过管道传递下载项
 	downloadChan chan *models.AnimeEntity
@@ -86,7 +85,6 @@ func NewManager(client downloader.Client, downloadChan chan *models.AnimeEntity)
 	m := &Manager{
 		client:        client,
 		downloadQueue: make([]*models.AnimeEntity, 0, store.Config.Advanced.MainConf.DownloadQueueMaxNum),
-		exitChan:      make(chan bool),
 	}
 	if downloadChan == nil || cap(downloadChan) <= 1 {
 		downloadChan = make(chan *models.AnimeEntity, DownloadChanDefaultCap)
@@ -113,7 +111,7 @@ func (m *Manager) Download(anime *models.AnimeEntity) {
 //  @param animes []*models.AnimeEntity
 //  @param finish chan bool 添加下载完成后发送消息
 //
-func (m *Manager) download(animes []*models.AnimeEntity) {
+func (m *Manager) download(animes []*models.AnimeEntity, ctx context.Context) {
 	for _, anime := range animes {
 		zap.S().Infof("开始下载「%s」", anime.FullName())
 		if !m.canDownload(anime) {
@@ -130,7 +128,7 @@ func (m *Manager) download(animes []*models.AnimeEntity) {
 		})
 		// 通过gb下载的番剧，将存储与缓存中
 		store.Cache.Put(models.ClientBangumiBucket, anime.Hash, anime, 0)
-		time.Sleep(time.Duration(store.Config.Advanced.MainConf.DownloadQueueDelaySecond) * time.Second)
+		utils.Sleep(store.Config.Advanced.MainConf.DownloadQueueDelaySecond, ctx)
 	}
 }
 
@@ -206,9 +204,14 @@ func (m *Manager) GetContent(hash string) *models.TorrentContentItem {
 //  @receiver *Manager
 //  @param exit chan bool 退出后的回调chan，manager结束后会返回true
 //
-func (m *Manager) Start(exit chan bool) {
+func (m *Manager) Start(ctx context.Context) {
 	// 开始下载协程
 	go func() {
+		defer func() {
+			if err := recover(); err != nil {
+				zap.S().Error(err)
+			}
+		}()
 		for {
 			if len(m.downloadQueue) > 0 {
 				m.Lock()
@@ -216,16 +219,24 @@ func (m *Manager) Start(exit chan bool) {
 				copy(list, m.downloadQueue)
 				m.downloadQueue = m.downloadQueue[0:0]
 				m.Unlock()
-				m.download(list)
+				m.download(list, ctx)
+			} else {
+				utils.Sleep(store.Config.Advanced.MainConf.DownloadQueueDelaySecond, ctx)
 			}
 		}
 	}()
 	// 刷新信息、接收下载、接收退出指令协程
 	go func() {
+		defer func() {
+			if err := recover(); err != nil {
+				zap.S().Error(err)
+			}
+		}()
+		defer store.WG.Done()
 		for {
 			select {
-			case <-m.exitChan:
-				exit <- true
+			case <-ctx.Done():
+				zap.S().Debug("正常退出")
 				return
 			case anime := <-m.downloadChan:
 				zap.S().Debugf("接收到下载项:「%s」", anime.FullName())
@@ -239,21 +250,10 @@ func (m *Manager) Start(exit chan bool) {
 				if delay < UpdateWaitMinSecond {
 					delay = UpdateWaitMinSecond
 				}
-				if utils.Sleep(delay, m.exitChan) {
-					exit <- true
-					return
-				}
+				utils.Sleep(delay, ctx)
 			}
 		}
 	}()
-}
-
-// Exit
-//  @Description: 结束manager
-//  @receiver *Manager
-//
-func (m *Manager) Exit() {
-	m.exitChan <- true
 }
 
 // UpdateList

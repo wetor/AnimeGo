@@ -6,6 +6,7 @@ import (
 	"GoBangumi/internal/models"
 	"GoBangumi/store"
 	"GoBangumi/utils/logger"
+	"context"
 	"fmt"
 	"path"
 	"testing"
@@ -88,11 +89,13 @@ func TestManager_Update(t *testing.T) {
 	Download1(m)
 	Download2(m)
 	exit := make(chan bool)
-	m.Start(exit)
+	ctx, cancel := context.WithCancel(context.Background())
+	m.Start(ctx)
 
 	go func() {
 		time.Sleep(30 * time.Second)
-		m.Exit()
+		cancel()
+		exit <- true
 	}()
 
 	time.Sleep(10 * time.Second)

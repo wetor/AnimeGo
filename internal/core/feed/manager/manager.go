@@ -7,9 +7,9 @@ import (
 	"GoBangumi/internal/models"
 	"GoBangumi/store"
 	"GoBangumi/utils"
+	"context"
 	"go.uber.org/zap"
 	"sync"
-	"time"
 )
 
 const (
@@ -20,8 +20,6 @@ type Manager struct {
 	feed      feed.Feed
 	anisource anisource.AniSource
 	animeList []*models.AnimeEntity
-
-	exitChan chan bool // 结束标记
 
 	downloadChanEnable bool
 	downloadChan       chan *models.AnimeEntity
@@ -37,7 +35,6 @@ func NewManager(feed feed.Feed, anisource anisource.AniSource) *Manager {
 	m := &Manager{
 		feed:      feed,
 		anisource: anisource,
-		exitChan:  make(chan bool),
 	}
 	return m
 }
@@ -55,7 +52,7 @@ func (m *Manager) GetAnimeList() []*models.AnimeEntity {
 	return list
 }
 
-func (m *Manager) UpdateFeed() {
+func (m *Manager) UpdateFeed(ctx context.Context) {
 	rssConf := store.Config.RssMikan()
 	f := mikanRss.NewRss()
 	items := f.Parse(&models.FeedParseOptions{
@@ -68,35 +65,47 @@ func (m *Manager) UpdateFeed() {
 	animeList := make([]*models.AnimeEntity, len(items))
 	working := make(chan int, conf.MultiGoroutine.GoroutineMax) // 限制同时执行个数
 	wg := sync.WaitGroup{}
+	exit := false
 	for i, item := range items {
+		if exit {
+			return
+		}
 		working <- i //计数器+1 可能会发生阻塞
 		wg.Add(1)
 		go func(_i int, _item *models.FeedItem) {
-			anime := m.anisource.Parse(&models.AnimeParseOptions{
-				Url:  _item.Url,
-				Name: _item.Name,
-				Date: _item.Date,
-			})
-			if anime.TorrentInfo == nil {
-				anime.TorrentInfo = &models.TorrentInfo{}
-			}
-			anime.Url = _item.Torrent
-			anime.Hash = _item.Hash
+			defer func() {
+				if err := recover(); err != nil {
+					zap.S().Error(err)
+				}
+			}()
+			select {
+			case <-ctx.Done():
+				exit = true
+			default:
+				anime := m.anisource.Parse(&models.AnimeParseOptions{
+					Url:  _item.Url,
+					Name: _item.Name,
+					Date: _item.Date,
+				})
+				if anime.TorrentInfo == nil {
+					anime.TorrentInfo = &models.TorrentInfo{}
+				}
+				anime.Url = _item.Torrent
+				anime.Hash = _item.Hash
 
-			animeList[_i] = anime
-			if m.downloadChanEnable {
-				zap.S().Debugf("发送下载项:「%s」", anime.FullName())
-				// 向管道中发送需要下载的信息
-				m.downloadChan <- anime
+				animeList[_i] = anime
+				if m.downloadChanEnable {
+					zap.S().Debugf("发送下载项:「%s」", anime.FullName())
+					// 向管道中发送需要下载的信息
+					m.downloadChan <- anime
+				}
+				utils.Sleep(conf.FeedDelay, ctx)
 			}
-			time.Sleep(time.Duration(conf.FeedDelay) * time.Second)
-
-			//工作完成后计数器减1
 			<-working
 			wg.Done()
-
 		}(i, item)
-		if !conf.MultiGoroutine.Enable {
+
+		if !exit && !conf.MultiGoroutine.Enable {
 			wg.Wait()
 		}
 	}
@@ -104,24 +113,26 @@ func (m *Manager) UpdateFeed() {
 	wg.Wait()
 }
 
-func (m *Manager) Exit() {
-	m.exitChan <- true
-}
-func (m *Manager) Start(exit chan bool) {
+func (m *Manager) Start(ctx context.Context) {
 	go func() {
-		select {
-		case <-m.exitChan:
-			exit <- true
-			return
-		default:
-			m.UpdateFeed()
-			delay := store.Config.Advanced.MainConf.FeedUpdateDelayMinute
-			if delay < UpdateWaitMinMinute {
-				delay = UpdateWaitMinMinute
+		defer func() {
+			if err := recover(); err != nil {
+				zap.S().Error(err)
 			}
-			if utils.Sleep(delay*60, m.exitChan) {
-				exit <- true
+		}()
+		defer store.WG.Done()
+		for {
+			select {
+			case <-ctx.Done():
+				zap.S().Debug("正常退出")
 				return
+			default:
+				m.UpdateFeed(ctx)
+				delay := store.Config.Advanced.MainConf.FeedUpdateDelayMinute
+				if delay < UpdateWaitMinMinute {
+					delay = UpdateWaitMinMinute
+				}
+				utils.Sleep(delay*60, ctx)
 			}
 		}
 	}()

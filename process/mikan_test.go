@@ -3,7 +3,9 @@ package process
 import (
 	"GoBangumi/store"
 	"GoBangumi/utils/logger"
+	"context"
 	"fmt"
+	"sync"
 	"testing"
 	"time"
 )
@@ -12,7 +14,9 @@ func TestMain(m *testing.M) {
 	fmt.Println("begin")
 	logger.Init()
 	defer logger.Flush()
-	store.Init(nil)
+	store.Init(&store.InitOptions{
+		ConfigFile: "/Users/wetor/GoProjects/GoBangumi/data/config/conf.yaml",
+	})
 
 	m.Run()
 	fmt.Println("end")
@@ -31,14 +35,31 @@ func TestMain(m *testing.M) {
 func TestMikanProcess(t *testing.T) {
 
 	m := NewMikan()
-
-	exit := make(chan bool)
-	m.Run(exit)
-
+	ctx, cancel := context.WithCancel(context.Background())
+	m.Run(ctx)
+	store.WG.Add(2)
 	go func() {
-		time.Sleep(10 * time.Minute)
-		m.Exit()
+		time.Sleep(5 * time.Second)
+		cancel()
 	}()
 
-	<-exit
+	store.WG.Wait()
+}
+
+func TestG(t *testing.T) {
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+
+	go func() {
+		defer func() {
+			if err := recover(); err != nil {
+				fmt.Println(err)
+			}
+		}()
+		time.Sleep(3 * time.Second)
+		panic("hellp")
+
+	}()
+	wg.Wait()
 }

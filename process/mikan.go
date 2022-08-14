@@ -8,6 +8,7 @@ import (
 	"GoBangumi/internal/downloader/qbittorent"
 	"GoBangumi/internal/models"
 	"GoBangumi/store"
+	"context"
 )
 
 const (
@@ -21,12 +22,14 @@ type Mikan struct {
 }
 
 func NewMikan() *Mikan {
-	return &Mikan{}
+	return &Mikan{
+		exitChan: make(chan bool),
+	}
 }
 func (p *Mikan) Exit() {
 	p.exitChan <- true
 }
-func (p *Mikan) Run(exit chan bool) {
+func (p *Mikan) Run(ctx context.Context) {
 
 	qbtConf := store.Config.ClientQBt()
 	qbt := qbittorent.NewQBittorrent(qbtConf.Url, qbtConf.Username, qbtConf.Password)
@@ -37,23 +40,6 @@ func (p *Mikan) Run(exit chan bool) {
 	p.feedMgr = feedManager.NewManager(mikanRss.NewRss(), mikan.NewMikan())
 	p.feedMgr.SetDownloadChan(downloadChan)
 
-	downloaderExit := make(chan bool)
-	feedExit := make(chan bool)
-	p.downloaderMgr.Start(downloaderExit)
-	p.feedMgr.Start(feedExit)
-
-	exitFlag := 0
-	go func() {
-		select {
-		case <-feedExit:
-			exitFlag++
-		case <-downloaderExit:
-			exitFlag++
-		default:
-			if exitFlag >= 2 {
-				exit <- true
-				return
-			}
-		}
-	}()
+	p.downloaderMgr.Start(ctx)
+	p.feedMgr.Start(ctx)
 }

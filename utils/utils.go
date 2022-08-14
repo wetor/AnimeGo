@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"context"
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
@@ -43,10 +44,10 @@ func Filename(filename string) string {
 //  @param exit chan bool
 //  @return bool
 //
-func Sleep(second int, exit chan bool) bool {
+func Sleep(second int, ctx context.Context) bool {
 	for second > 0 {
 		select {
-		case <-exit:
+		case <-ctx.Done():
 			return true
 		default:
 			second--

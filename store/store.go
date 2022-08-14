@@ -3,11 +3,13 @@ package store
 import (
 	"GoBangumi/configs"
 	"GoBangumi/internal/cache"
+	"sync"
 )
 
 var (
 	Cache  cache.Cache
 	Config *configs.Config
+	WG     sync.WaitGroup
 )
 
 type InitOptions struct {
@@ -21,7 +23,7 @@ func Init(opt *InitOptions) {
 	}
 
 	if len(opt.ConfigFile) == 0 {
-		Config = configs.NewConfig("/Users/wetor/GoProjects/GoBangumi/data/config/conf.yaml")
+		Config = configs.NewConfig("data/config/conf.yaml")
 	} else {
 		Config = configs.NewConfig(opt.ConfigFile)
 	}
