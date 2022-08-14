@@ -32,7 +32,7 @@ func (p *Mikan) Exit() {
 func (p *Mikan) Run(ctx context.Context) {
 
 	qbtConf := store.Config.ClientQBt()
-	qbt := qbittorent.NewQBittorrent(qbtConf.Url, qbtConf.Username, qbtConf.Password)
+	qbt := qbittorent.NewQBittorrent(qbtConf.Url, qbtConf.Username, qbtConf.Password, ctx)
 
 	downloadChan := make(chan *models.AnimeEntity, 10)
 

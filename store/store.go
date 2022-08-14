@@ -3,6 +3,8 @@ package store
 import (
 	"GoBangumi/configs"
 	"GoBangumi/internal/cache"
+	"GoBangumi/utils"
+	"go.uber.org/zap"
 	"sync"
 )
 
@@ -26,6 +28,19 @@ func Init(opt *InitOptions) {
 		Config = configs.NewConfig("data/config/conf.yaml")
 	} else {
 		Config = configs.NewConfig(opt.ConfigFile)
+	}
+
+	err := utils.CreateMutiDir(Config.DataPath)
+	if err != nil {
+		zap.S().Fatalf("创建文件夹失败，%s", Config.DataPath)
+	}
+	err = utils.CreateMutiDir(Config.SavePath)
+	if err != nil {
+		zap.S().Fatalf("创建文件夹失败，%s", Config.SavePath)
+	}
+	err = utils.CreateMutiDir(Config.CachePath)
+	if err != nil {
+		zap.S().Fatalf("创建文件夹失败，%s", Config.CachePath)
 	}
 
 	if opt.Cache == nil {

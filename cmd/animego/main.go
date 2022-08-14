@@ -20,17 +20,13 @@ func main() {
 	flag.Parse()
 
 	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGUSR1, syscall.SIGUSR2, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGQUIT)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGQUIT)
 	go func() {
 		for s := range sigs {
 			switch s {
 			case syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGQUIT:
 				zap.S().Infof("收到退出信号: %v", s)
 				doExit()
-			case syscall.SIGUSR1:
-				zap.S().Infof("收到USR1信号: %v", s)
-			case syscall.SIGUSR2:
-				zap.S().Infof("收到USR2信号: %v", s)
 			default:
 				zap.S().Infof("收到其他信号: %v", s)
 			}

@@ -5,6 +5,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
+	"os"
 	"reflect"
 	"strings"
 	"time"
@@ -68,11 +69,33 @@ func ConvertModel(src, dst interface{}) {
 		}
 	}
 }
+
+//CreateMutiDir 调用os.MkdirAll递归创建文件夹
+func CreateMutiDir(filePath string) error {
+	if !isExist(filePath) {
+		return os.MkdirAll(filePath, os.ModePerm)
+	}
+	return nil
+}
+
+//isExist 判断所给路径文件/文件夹是否存在(返回true是存在)
+func isExist(path string) bool {
+	_, err := os.Stat(path) //os.Stat获取文件信息
+	if err != nil {
+		if os.IsExist(err) {
+			return true
+		}
+		return false
+	}
+	return true
+}
+
 func Md5Str(str string) string {
 	h := md5.New()
 	h.Write([]byte(str))
 	return hex.EncodeToString(h.Sum(nil))
 }
+
 func CompareTime(t1, t2 time.Time, day int) bool {
 	ut1 := t1.Unix()
 	ut2 := t2.Unix()
@@ -82,6 +105,7 @@ func CompareTime(t1, t2 time.Time, day int) bool {
 		return ut1-ut2 <= int64(day*24*60*60)
 	}
 }
+
 func CompareTimeStr(t1, t2 string, day int) bool {
 	time1, _ := time.Parse("2006-01-02", t1)
 	time2, _ := time.Parse("2006-01-02", t2)
@@ -93,6 +117,7 @@ func CompareTimeStr(t1, t2 string, day int) bool {
 		return ut1-ut2 <= int64(day*24*60*60)
 	}
 }
+
 func StrTimeSubAbs(t1, t2 string) int {
 	if len(t1)*len(t2) == 0 {
 		return 0
@@ -104,6 +129,7 @@ func StrTimeSubAbs(t1, t2 string) int {
 		return int(s / (24 * 60 * 60))
 	}
 }
+
 func StrTimeSub(t1, t2 string) int64 {
 	time1, _ := time.Parse("2006-01-02", t1)
 	time2, _ := time.Parse("2006-01-02", t2)
@@ -111,6 +137,7 @@ func StrTimeSub(t1, t2 string) int64 {
 	ut2 := time2.Unix()
 	return ut1 - ut2
 }
+
 func GetTimeRangeDay(t time.Time, day int) (lower, upper string) {
 	lower = t.Add(-time.Duration(day) * time.Hour * 24).Format("2006-01-02")
 	upper = t.Add(time.Duration(day) * time.Hour * 24).Format("2006-01-02")

@@ -5,9 +5,9 @@ import (
 	"GoBangumi/store"
 	"GoBangumi/third_party/qbapi"
 	"GoBangumi/utils"
+	"context"
 	"fmt"
 	"go.uber.org/zap"
-	"golang.org/x/net/context"
 	"time"
 )
 
@@ -38,7 +38,7 @@ type QBittorrent struct {
 	apiVersion string
 }
 
-func NewQBittorrent(url, username, password string) *QBittorrent {
+func NewQBittorrent(url, username, password string, ctx context.Context) *QBittorrent {
 	var opts []qbapi.Option
 	var err error
 	var client *qbapi.QBAPI
@@ -66,6 +66,10 @@ func NewQBittorrent(url, username, password string) *QBittorrent {
 				break
 			}
 			zap.S().Infof("第%d次连接客户端失败...重新尝试连接", i)
+			if utils.Sleep(store.Config.Advanced.ClientConf.ConnectTimeoutSecond, ctx) {
+				zap.S().Fatal("正常退出")
+			}
+
 		}
 	} else {
 		// 重试指定次数
@@ -74,6 +78,9 @@ func NewQBittorrent(url, username, password string) *QBittorrent {
 				break
 			}
 			zap.S().Infof("第%d次连接客户端失败...剩余%d次尝试连接", i, retryNum-i)
+			if utils.Sleep(store.Config.Advanced.ClientConf.ConnectTimeoutSecond, ctx) {
+				zap.S().Fatal("正常退出")
+			}
 		}
 	}
 
