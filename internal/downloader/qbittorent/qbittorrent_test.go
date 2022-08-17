@@ -18,7 +18,7 @@ func TestMain(m *testing.M) {
 	store.Init(nil)
 
 	conf := store.Config.ClientQBt()
-	qbt = NewQBittorrent(conf.Url, conf.Username, conf.Password)
+	qbt = NewQBittorrent(conf.Url, conf.Username, conf.Password, nil)
 	m.Run()
 	fmt.Println("end")
 }

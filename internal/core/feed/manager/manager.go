@@ -28,7 +28,7 @@ type Manager struct {
 // NewManager
 //  @Description:
 //  @param feed feed.Feed
-//  @param anisource anisource.AniSource
+//  @param anisource1 anisource1.AniSource
 //  @return *Manager
 //
 func NewManager(feed feed.Feed, anisource anisource.AniSource) *Manager {

@@ -1,0 +1,5 @@
+package anisource
+
+var (
+	Proxy = ""
+)

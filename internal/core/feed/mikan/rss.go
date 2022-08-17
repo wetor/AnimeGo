@@ -3,6 +3,7 @@ package mikan
 import (
 	"GoBangumi/internal/core/feed"
 	"GoBangumi/internal/models"
+	"GoBangumi/pkg/request"
 	"GoBangumi/store"
 	"GoBangumi/utils"
 	"github.com/mmcdole/gofeed"
@@ -28,11 +29,15 @@ func (f *Rss) Parse(opt *models.FeedParseOptions) []*models.FeedItem {
 	if len(opt.Name) == 0 {
 		opt.Name = utils.Md5Str(opt.Url)
 	}
-	filename := path.Join(path.Clean(store.Config.Setting.CachePath), opt.Name+".xml")
+	filename := path.Join(store.Config.Setting.CachePath, opt.Name+".xml")
 	// --------- 是否重新下载rss.xml ---------
 	if opt.RefreshCache {
 		zap.S().Info("获取Rss数据开始...")
-		err := utils.HttpGet(opt.Url, filename, store.Config.Proxy())
+		err := request.Get(&request.Param{
+			Uri:      opt.Url,
+			Proxy:    store.Config.Proxy(),
+			SaveFile: filename,
+		})
 		if err != nil {
 			zap.S().Warn(err)
 			return nil

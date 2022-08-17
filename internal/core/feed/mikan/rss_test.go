@@ -15,7 +15,9 @@ func TestMain(m *testing.M) {
 	fmt.Println("begin")
 	logger.Init()
 	defer logger.Flush()
-	store.Init(nil)
+	store.Init(&store.InitOptions{
+		ConfigFile: "/Users/wetor/GoProjects/GoBangumi/data/config/conf.yaml",
+	})
 	m.Run()
 	fmt.Println("end")
 }
@@ -40,7 +42,7 @@ func TestRss_Parse(t *testing.T) {
 	items := f.Parse(&models.FeedParseOptions{
 		Url:          rssConf.Url,
 		Name:         rssConf.Name, // 文件名
-		RefreshCache: false,
+		RefreshCache: true,
 	})
 	for _, b := range items {
 		fmt.Println(b)

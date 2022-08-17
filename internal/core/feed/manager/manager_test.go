@@ -24,7 +24,7 @@ func TestMain(m *testing.M) {
 
 func TestManager_UpdateFeed(t *testing.T) {
 	rss := mikanRss.NewRss()
-	mk := mikan.NewMikan()
+	mk := mikan.MikanAdapter{ThemoviedbKey: store.Config.KeyTmdb()}
 	m := NewManager(rss, mk)
 
 	exit := make(chan bool)

@@ -37,7 +37,7 @@ func (p *Mikan) Run(ctx context.Context) {
 	downloadChan := make(chan *models.AnimeEntity, 10)
 
 	p.downloaderMgr = downloaderManager.NewManager(qbt, downloadChan)
-	p.feedMgr = feedManager.NewManager(mikanRss.NewRss(), mikan.NewMikan())
+	p.feedMgr = feedManager.NewManager(mikanRss.NewRss(), mikan.MikanAdapter{ThemoviedbKey: store.Config.KeyTmdb()})
 	p.feedMgr.SetDownloadChan(downloadChan)
 
 	p.downloaderMgr.Start(ctx)
