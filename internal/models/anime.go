@@ -68,7 +68,7 @@ func (b *AnimeEntity) DirName() string {
 }
 
 func (b *AnimeEntity) Meta() string {
-	nfoTemplate := "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>\n<tvshow>"
+	nfoTemplate := "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>\n<tvshow>\n"
 	if b.ThemoviedbID != 0 {
 		nfoTemplate += "  <tmdbid>{tmdbid}</tmdbid>\n"
 	}

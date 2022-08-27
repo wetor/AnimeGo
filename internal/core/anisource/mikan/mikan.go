@@ -1,11 +1,9 @@
 package mikan
 
 import (
+	"GoBangumi/internal/core/anisource"
 	"GoBangumi/internal/models"
 	"GoBangumi/internal/parser"
-	"GoBangumi/pkg/anisource/bangumi"
-	"GoBangumi/pkg/anisource/mikan"
-	"GoBangumi/pkg/anisource/themoviedb"
 	"go.uber.org/zap"
 )
 
@@ -19,7 +17,7 @@ func ParseMikan(name, url, tmdbKey string) (anime *models.AnimeEntity) {
 	}
 	// ------------------- 获取mikanID -------------------
 	zap.S().Debugf("步骤1，解析Mikan，%s", url)
-	mikanID, bangumiID, err := mikan.Mikan{}.Parse(url)
+	mikanID, bangumiID, err := anisource.Mikan().ParseCache(url)
 	if err != nil {
 		zap.S().Warn(err)
 		zap.S().Warn("结束此流程")
@@ -28,16 +26,14 @@ func ParseMikan(name, url, tmdbKey string) (anime *models.AnimeEntity) {
 
 	// ------------------- 获取bangumi信息 -------------------
 	zap.S().Debugf("步骤2，解析Bangumi，%d, %d", bangumiID, match.Ep)
-	entity, epInfo, err := bangumi.Bangumi{}.Parse(bangumiID, match.Ep)
+	entity, epInfo, err := anisource.Bangumi().ParseCache(bangumiID, match.Ep)
 	if err != nil {
 		zap.S().Warn(err)
 		return nil
 	}
 	// ------------------- 获取tmdb信息(季度信息) -------------------
 	zap.S().Debugf("步骤3，解析Themoviedb，%s, %s", entity.Name, entity.AirDate)
-	tmdbID, season, err := themoviedb.Themoviedb{
-		Key: tmdbKey,
-	}.Parse(entity.Name, entity.AirDate)
+	tmdbID, season, err := anisource.Themoviedb(tmdbKey).ParseCache(entity.Name, entity.AirDate)
 	if err != nil {
 		zap.S().Warn(err)
 	}

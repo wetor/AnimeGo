@@ -1,6 +1,7 @@
 package process
 
 import (
+	"GoBangumi/internal/core/anisource"
 	"GoBangumi/internal/core/anisource/mikan"
 	feedManager "GoBangumi/internal/core/feed/manager"
 	mikanRss "GoBangumi/internal/core/feed/mikan"
@@ -36,7 +37,8 @@ func (p *Mikan) Run(ctx context.Context) {
 
 	downloadChan := make(chan *models.AnimeEntity, 10)
 
-	p.downloaderMgr = downloaderManager.NewManager(qbt, downloadChan)
+	anisource.Init(store.Cache, store.Config.Proxy())
+	p.downloaderMgr = downloaderManager.NewManager(qbt, store.Cache, downloadChan)
 	p.feedMgr = feedManager.NewManager(mikanRss.NewRss(), mikan.MikanAdapter{ThemoviedbKey: store.Config.KeyTmdb()})
 	p.feedMgr.SetDownloadChan(downloadChan)
 

@@ -1,6 +1,8 @@
 package mikan
 
 import (
+	"GoBangumi/pkg/anisource"
+	mem "GoBangumi/pkg/memorizer"
 	"fmt"
 	"github.com/antchfx/htmlquery"
 	"net/url"
@@ -9,12 +11,64 @@ import (
 )
 
 const (
-	Host            = "https://mikanani.me"
 	IdXPath         = "//a[@class='mikan-rss']"                                 // Mikan番剧id获取XPath
 	BangumiUrlXPath = "//p[@class='bangumi-info']/a[contains(@href, 'bgm.tv')]" // Mikan番剧信息中bangumi id获取XPath
 )
 
+var (
+	Host              = "https://mikanani.me"
+	Bucket            = "mikan"
+	CacheSecond int64 = 30 * 24 * 60 * 60
+)
+
 type Mikan struct {
+	cacheInit                bool
+	cacheParseMikanID        mem.Func
+	cacheparseMikanBangumiID mem.Func
+}
+
+func (m *Mikan) RegisterCache() {
+	if anisource.Cache == nil {
+		panic("需要先调用anisource.Init初始化缓存")
+	}
+	m.cacheInit = true
+	m.cacheParseMikanID = mem.Memorized(Bucket, anisource.Cache, func(params *mem.Params, results *mem.Results) error {
+		mikanID, err := m.parseMikanID(params.Get("mikanUrl").(string))
+		if err != nil {
+			return err
+		}
+		results.Set("mikanID", mikanID)
+		return nil
+	})
+
+	m.cacheparseMikanBangumiID = mem.Memorized(Bucket, anisource.Cache, func(params *mem.Params, results *mem.Results) error {
+		bangumiID, err := m.parseMikanBangumiID(params.Get("mikanID").(int))
+		if err != nil {
+			return err
+		}
+		results.Set("bangumiID", bangumiID)
+		return nil
+	})
+}
+
+func (m Mikan) ParseCache(url string) (mikanID int, bangumiID int, err error) {
+	if !m.cacheInit {
+		m.RegisterCache()
+	}
+	results := mem.NewResults("mikanID", 0, "bangumiID", 0)
+
+	err = m.cacheParseMikanID(mem.NewParams("mikanUrl", url).TTL(CacheSecond), results)
+	if err != nil {
+		return 0, 0, err
+	}
+	mikanID = results.Get("mikanID").(int)
+
+	err = m.cacheparseMikanBangumiID(mem.NewParams("mikanID", mikanID).TTL(CacheSecond), results)
+	if err != nil {
+		return mikanID, 0, err
+	}
+	bangumiID = results.Get("bangumiID").(int)
+	return mikanID, bangumiID, nil
 }
 
 // Parse

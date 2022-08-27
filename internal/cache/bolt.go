@@ -1,7 +1,6 @@
 package cache
 
 import (
-	"GoBangumi/internal/models"
 	"bytes"
 	"encoding/binary"
 	"encoding/gob"
@@ -16,7 +15,7 @@ type Bolt struct {
 	db *bolt.DB
 }
 
-func NewBolt() Cache {
+func NewBolt() *Bolt {
 	return &Bolt{}
 }
 
@@ -28,25 +27,24 @@ func (c *Bolt) Open(dir string) {
 	}
 
 	c.db = db
-
-	err = c.db.Update(func(tx *bolt.Tx) error {
-		for _, bucket := range buckets {
-			_, err := tx.CreateBucketIfNotExists([]byte(bucket))
-			if err != nil {
-				return err
-			}
-		}
-		return nil
-	})
-	if err != nil {
-		zap.S().Warn(err)
-		return
-	}
-
 }
 
 func (c *Bolt) Close() {
 	err := c.db.Close()
+	if err != nil {
+		zap.S().Warn(err)
+		return
+	}
+}
+
+func (c *Bolt) Add(bucket string) {
+	err := c.db.Update(func(tx *bolt.Tx) error {
+		_, err := tx.CreateBucketIfNotExists([]byte(bucket))
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 	if err != nil {
 		zap.S().Warn(err)
 		return
@@ -74,27 +72,24 @@ func (c *Bolt) Put(bucket string, key, val interface{}, ttl int64) {
 	}
 }
 
-func (c *Bolt) Get(bucket string, key interface{}) interface{} {
-	var val interface{}
+func (c *Bolt) Get(bucket string, key, val interface{}) error {
 	var ttl int64
 	err := c.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
 		v := b.Get(c.toBytes(key, -1))
-		if len(v) == 0 {
-			// 不存在
-			return nil
+		if v == nil {
+			return errors.New("不存在")
 		}
-		val, ttl = c.toValue(v)
+		ttl = c.toValue(v, val)
 		if ttl != 0 && ttl <= time.Now().Unix() {
-			return errors.New("data expired")
+			return errors.New("已过期")
 		}
 		return nil
 	})
 	if err != nil {
-		zap.S().Warn(err)
-		return nil
+		return err
 	}
-	return val
+	return nil
 }
 
 // toBytes
@@ -110,87 +105,32 @@ func (c *Bolt) toBytes(val interface{}, extra int64) []byte {
 		binary.LittleEndian.PutUint64(b, uint64(extra))
 		buf.Write(b)
 	}
-	switch value := val.(type) {
-
-	case bool:
-		if !value {
-			buf.WriteByte(0x00)
-		} else {
-			buf.WriteByte(0x01)
-		}
-	case int:
-		b := make([]byte, 4)
-		binary.LittleEndian.PutUint32(b, uint32(value))
-		buf.WriteByte(0x04)
-		buf.Write(b)
-	case int64:
-		b := make([]byte, 8)
-		binary.LittleEndian.PutUint64(b, uint64(value))
-		buf.WriteByte(0x08)
-		buf.Write(b)
-	case string:
-		buf.WriteByte(0x10)
-		buf.WriteString(value)
-	case *models.AnimeEntity:
-		buf.WriteByte(0x20)
-		buf.Write(GobToBytes(value))
-	case *models.AnimeSeason:
-		buf.WriteByte(0x21)
-		buf.Write(GobToBytes(value))
-	case *models.AnimeEp:
-		buf.WriteByte(0x22)
-		buf.Write(GobToBytes(value))
-	case *models.AnimeExtra:
-		buf.WriteByte(0x23)
-		buf.Write(GobToBytes(value))
-	default:
-		buf.WriteByte(0xFF)
-		buf.Write(GobToBytes(value))
-	}
+	buf.Write(GobToBytes(val))
 	return buf.Bytes()
 }
 
-func (c *Bolt) toValue(data []byte) (val interface{}, extra int64) {
+func (c *Bolt) toValue(data []byte, val interface{}) (extra int64) {
 	_ = data[8]
 	extra = int64(binary.LittleEndian.Uint64(data[0:8]))
-	switch data[8] {
-	case 0x00:
-		val = false
-	case 0x01:
-		val = true
-	case 0x04:
-		val = int(binary.LittleEndian.Uint32(data[9:]))
-	case 0x08:
-		val = int64(binary.LittleEndian.Uint64(data[9:]))
-	case 0x10:
-		val = string(data[9:])
-	case 0x20:
-		val = &models.AnimeEntity{}
-		GobToValue(data[9:], val)
-	case 0x21:
-		val = &models.AnimeSeason{}
-		GobToValue(data[9:], val)
-	case 0x22:
-		val = &models.AnimeEp{}
-		GobToValue(data[9:], val)
-	case 0x23:
-		val = &models.AnimeExtra{}
-		GobToValue(data[9:], val)
-	case 0xFF:
-		GobToValue(data[9:], val)
-	}
-	return val, extra
+	GobToValue(data[8:], val)
+	return extra
 }
 
 func GobToBytes(val interface{}) []byte {
 	buf2 := bytes.NewBuffer(nil)
 	enc := gob.NewEncoder(buf2)
-	enc.Encode(val)
+	err := enc.Encode(val)
+	if err != nil {
+		panic(err)
+	}
 	return buf2.Bytes()
 }
 
 func GobToValue(data []byte, val interface{}) {
 	buf := bytes.NewBuffer(data)
 	dec := gob.NewDecoder(buf)
-	dec.Decode(val)
+	err := dec.Decode(val)
+	if err != nil {
+		panic(err)
+	}
 }

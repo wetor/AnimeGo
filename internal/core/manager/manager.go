@@ -1,8 +1,8 @@
 package manager
 
 import (
+	"GoBangumi/internal/cache"
 	"GoBangumi/internal/downloader"
-	"GoBangumi/internal/downloader/qbittorent"
 	"GoBangumi/internal/models"
 	"GoBangumi/store"
 	"GoBangumi/utils"
@@ -11,58 +11,23 @@ import (
 	"go.uber.org/zap"
 	"os"
 	"path"
+	"regexp"
 	"strings"
 	"sync"
 )
 
 const (
-	UpdateWaitMinSecond                        = 2             // 允许的最短刷新时间
-	DownloadChanDefaultCap                     = 10            // 下载通道默认容量
-	StateUnknown           models.TorrentState = "unknown"     //未知
-	StateWaiting           models.TorrentState = "waiting"     // 等待
-	StateDownloading       models.TorrentState = "downloading" // 下载中
-	StatePausing           models.TorrentState = "pausing"     // 暂停中
-	StateMoving            models.TorrentState = "moving"      // 移动中
-	StateSeeding           models.TorrentState = "seeding"     // 做种中
-	StateComplete          models.TorrentState = "complete"    // 完成下载
-	StateError             models.TorrentState = "error"       // 错误
+	UpdateWaitMinSecond    = 2  // 允许的最短刷新时间
+	DownloadChanDefaultCap = 10 // 下载通道默认容量
 )
 
-// stateMap
-//  @Description: 下载器状态转换
-//  @param clientState string
-//  @return models.TorrentState
-//
-func stateMap(clientState string) models.TorrentState {
-	switch clientState {
-	case qbittorent.QbtAllocating, qbittorent.QbtMetaDL, qbittorent.QbtStalledDL,
-		qbittorent.QbtCheckingDL, qbittorent.QbtCheckingResumeData, qbittorent.QbtQueuedDL,
-		qbittorent.QbtForcedUP, qbittorent.QbtQueuedUP:
-		// 若进度为100，则下载完成
-		return StateWaiting
-	case qbittorent.QbtDownloading, qbittorent.QbtForcedDL:
-		return StateDownloading
-	case qbittorent.QbtMoving:
-		return StateMoving
-	case qbittorent.QbtUploading, qbittorent.QbtStalledUP:
-		// 已下载完成
-		return StateSeeding
-	case qbittorent.QbtPausedDL:
-		return StatePausing
-	case qbittorent.QbtPausedUP, qbittorent.QbtCheckingUP:
-		// 已下载完成
-		return StateComplete
-	case qbittorent.QbtError, qbittorent.QbtMissingFiles:
-		return StateError
-	case qbittorent.QbtUnknown:
-		return StateUnknown
-	default:
-		return StateUnknown
-	}
-}
+var (
+	Bucket = "manager"
+)
 
 type Manager struct {
 	client    downloader.Client
+	cache     cache.Cache
 	bangumi   map[string]*models.AnimeEntity // 同步缓存，主要使用其中的Hash来索引item
 	itemState map[string]*models.Torrent     // 存储当前项的状态信息，处理过的
 	items     map[string]*models.TorrentItem // 客户端下载项信息，直接获取到的
@@ -78,14 +43,17 @@ type Manager struct {
 // NewManager
 //  @Description: 初始化下载管理器
 //  @param client downloader.Client 下载客户端
+//  @param cache cache.Cache 缓存
 //  @param downloadChan chan *models.AnimeEntity 下载传递通道
 //  @return *Manager
 //
-func NewManager(client downloader.Client, downloadChan chan *models.AnimeEntity) *Manager {
+func NewManager(client downloader.Client, cache cache.Cache, downloadChan chan *models.AnimeEntity) *Manager {
 	m := &Manager{
 		client:        client,
+		cache:         cache,
 		downloadQueue: make([]*models.AnimeEntity, 0, store.Config.Advanced.MainConf.DownloadQueueMaxNum),
 	}
+	m.cache.Add(Bucket)
 	if downloadChan == nil || cap(downloadChan) <= 1 {
 		downloadChan = make(chan *models.AnimeEntity, DownloadChanDefaultCap)
 	}
@@ -127,7 +95,7 @@ func (m *Manager) download(animes []*models.AnimeEntity, ctx context.Context) {
 			Rename:      anime.FullName(),
 		})
 		// 通过gb下载的番剧，将存储与缓存中
-		store.Cache.Put(models.ClientBangumiBucket, anime.Hash, anime, 0)
+		m.cache.Put(Bucket, anime.Hash, anime, 0)
 		utils.Sleep(store.Config.Advanced.MainConf.DownloadQueueDelaySecond, ctx)
 	}
 }
@@ -287,69 +255,67 @@ func (m *Manager) UpdateList() {
 	// 根据下载项hash在缓存中查找记录，如已存在则将信息重新加入到list中
 	// 如不存在，则其不是通过gb下载的，忽略
 	for _, item := range items {
-		bangumiTemp := store.Cache.Get(models.ClientBangumiBucket, item.Hash)
-		if bangumiTemp != nil {
-			if bangumi, ok := bangumiTemp.(*models.AnimeEntity); ok {
-				// item 缓存
-				m.items[item.Hash] = item
+		var bangumi *models.AnimeEntity
+		err := m.cache.Get(Bucket, item.Hash, bangumi)
+		if err == nil {
+			// item 缓存
+			m.items[item.Hash] = item
 
-				// 把从缓存数据库中存的bangumi信息加入到map中
-				if _, has := m.bangumi[bangumi.Hash]; !has {
-					m.bangumi[bangumi.Hash] = bangumi
-				}
+			// 把从缓存数据库中存的bangumi信息加入到map中
+			if _, has := m.bangumi[bangumi.Hash]; !has {
+				m.bangumi[bangumi.Hash] = bangumi
+			}
 
-				// 初始化itemState
-				if _, has := m.itemState[item.Hash]; !has {
-					m.itemState[item.Hash] = &models.Torrent{Hash: item.Hash}
-				}
-				state := m.itemState[item.Hash]
-				state.State = stateMap(item.State)
+			// 初始化itemState
+			if _, has := m.itemState[item.Hash]; !has {
+				m.itemState[item.Hash] = &models.Torrent{Hash: item.Hash}
+			}
+			state := m.itemState[item.Hash]
+			state.State = stateMap(item.State)
 
-				// 未完成重命名，或者首次运行（如重启下载器）
-				if !state.Renamed {
-					// 获取相对路径，删除绝对路径前缀
-					state.OldPath = strings.TrimPrefix(item.ContentPath, path.Clean(conf.SavePath)+"/")
-					if state.OldPath == item.ContentPath {
-						// 删除前缀失败，读取name
-						if c := m.GetContent(item.Hash); c != nil {
-							state.OldPath = c.Name
-						}
-					}
-					zap.S().Infof("发现下载项「%s」", state.OldPath)
-					state.Path = path.Join(bangumi.DirName(), bangumi.FileName()+path.Ext(state.OldPath))
-					if state.Path != state.OldPath {
-						m.client.Rename(&models.ClientRenameOptions{
-							Hash:    item.Hash,
-							OldPath: state.OldPath,
-							NewPath: state.Path,
-						})
-						zap.S().Infof("重命名「%s」->「%s」", state.OldPath, state.Path)
-					}
-					state.Renamed = true
-				}
-
-				// 移动完成，但未搜刮元数据
-				if state.Renamed && !state.Scraped {
-					state.Scraped = m.scrape(bangumi)
-					if state.Scraped {
-						// TODO: 完成，是否删除下载项
+			// 未完成重命名，或者首次运行（如重启下载器）
+			if !state.Renamed {
+				// 获取相对路径，删除绝对路径前缀
+				state.OldPath = strings.TrimPrefix(item.ContentPath, path.Clean(conf.SavePath)+"/")
+				if state.OldPath == item.ContentPath {
+					// 删除前缀失败，读取name
+					if c := m.GetContent(item.Hash); c != nil {
+						state.OldPath = c.Name
 					}
 				}
-
-				// 未下载完成，但State符合下载完成状态
-				if !state.Downloaded {
-					if state.State == StateComplete || state.State == StateSeeding ||
-						(state.State == StateWaiting && item.Progress == 1) {
-						state.Downloaded = true
-					}
-					zap.S().Debugw("下载进度",
-						"名称", bangumi.FullName(),
-						"进度", fmt.Sprintf("%.1f", item.Progress*100),
-						"qbt状态", item.State,
-						"状态", state.State,
-					)
+				zap.S().Infof("发现下载项「%s」", state.OldPath)
+				state.Path = path.Join(bangumi.DirName(), bangumi.FileName()+path.Ext(state.OldPath))
+				if state.Path != state.OldPath {
+					m.client.Rename(&models.ClientRenameOptions{
+						Hash:    item.Hash,
+						OldPath: state.OldPath,
+						NewPath: state.Path,
+					})
+					zap.S().Infof("重命名「%s」->「%s」", state.OldPath, state.Path)
 				}
+				state.Renamed = true
+			}
 
+			// 移动完成，但未搜刮元数据
+			if state.Renamed && !state.Scraped {
+				state.Scraped = m.scrape(bangumi)
+				if state.Scraped {
+					// TODO: 完成，是否删除下载项
+				}
+			}
+
+			// 未下载完成，但State符合下载完成状态
+			if !state.Downloaded {
+				if state.State == StateComplete || state.State == StateSeeding ||
+					(state.State == StateWaiting && item.Progress == 1) {
+					state.Downloaded = true
+				}
+				zap.S().Debugw("下载进度",
+					"名称", bangumi.FullName(),
+					"进度", fmt.Sprintf("%.1f", item.Progress*100),
+					"qbt状态", item.State,
+					"状态", state.State,
+				)
 			}
 		}
 	}
@@ -358,8 +324,30 @@ func (m *Manager) UpdateList() {
 func (m *Manager) scrape(bangumi *models.AnimeEntity) bool {
 	nfo := path.Join(store.Config.SavePath, bangumi.DirName(), "tvshow.nfo")
 	zap.S().Infof("写入元数据文件「%s」", nfo)
-	err := os.WriteFile(nfo, []byte(bangumi.Meta()), os.ModePerm)
+
+	_, err := os.Stat(nfo)
+	if os.IsNotExist(err) {
+		err = os.WriteFile(nfo, []byte(bangumi.Meta()), os.ModePerm)
+		if err != nil {
+			zap.S().Warn(err)
+			return false
+		}
+	}
+	data, err := os.ReadFile(nfo)
 	if err != nil {
+		zap.S().Warn(err)
+		return false
+	}
+	TmdbRegx := regexp.MustCompile(`<tmdbid>\d+</tmdbid>`)
+	BangumiRegx := regexp.MustCompile(`<bangumiid>\d+</bangumiid>`)
+
+	xmlStr := string(data)
+	xmlStr = TmdbRegx.ReplaceAllString(xmlStr, fmt.Sprintf("<tmdbid>%d</tmdbid>", bangumi.ThemoviedbID))
+	xmlStr = BangumiRegx.ReplaceAllString(xmlStr, fmt.Sprintf("<bangumiid>%d</bangumiid>", bangumi.ID))
+
+	err = os.WriteFile(nfo, []byte(xmlStr), os.ModePerm)
+	if err != nil {
+		zap.S().Warn(err)
 		return false
 	}
 	return true

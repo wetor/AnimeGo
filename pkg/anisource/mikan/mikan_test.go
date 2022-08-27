@@ -1,6 +1,8 @@
 package mikan
 
 import (
+	"GoBangumi/internal/cache"
+	"GoBangumi/pkg/anisource"
 	"testing"
 )
 
@@ -31,10 +33,14 @@ func TestMikan_Parse(t *testing.T) {
 			wantErr:       false,
 		},
 	}
+	db := cache.NewBolt()
+	db.Open(".")
+	anisource.Init(anisource.Options{Cache: db})
+	m := &Mikan{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			m := &Mikan{}
-			gotMikanID, gotBangumiID, err := m.Parse(tt.args.url)
+
+			gotMikanID, gotBangumiID, err := m.ParseCache(tt.args.url)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("Parse() error = %v, wantErr %v", err, tt.wantErr)
 				return

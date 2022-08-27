@@ -2,34 +2,66 @@ package themoviedb
 
 import (
 	"GoBangumi/pkg/anisource"
+	mem "GoBangumi/pkg/memorizer"
 	"GoBangumi/pkg/request"
-	"fmt"
-	"net/url"
 )
 
 var (
-	Host            = "https://api.themoviedb.org"
-	DefaultSeason   = 1
-	MatchSeasonDays = 90
+	Host                  = "https://api.themoviedb.org"
+	Bucket                = "themoviedb"
+	DefaultSeason         = 1
+	MatchSeasonDays       = 90
+	CacheSecond     int64 = 7 * 24 * 60 * 60
 )
 
-var idApi = func(key string, query string) string {
-	url_, _ := url.Parse(Host + "/3/discover/tv")
-	q := url_.Query()
-	q.Set("api_key", key)
-	q.Set("language", "zh-CN")
-	q.Set("timezone", "Asia/Shanghai")
-	q.Set("with_genres", "16")
-	q.Set("with_text_query", query)
-	return url_.String() + "?" + q.Encode()
-}
-
-var infoApi = func(key string, id int) string {
-	return fmt.Sprintf("%s/3/tv/%d?api_key=%s", Host, id, key)
-}
-
 type Themoviedb struct {
-	Key string
+	Key                    string
+	cacheInit              bool
+	cacheParseThemoviedbID mem.Func
+	cacheParseAnimeSeason  mem.Func
+}
+
+func (t *Themoviedb) RegisterCache() {
+	if anisource.Cache == nil {
+		panic("需要先调用anisource.Init初始化缓存")
+	}
+	t.cacheInit = true
+	t.cacheParseThemoviedbID = mem.Memorized(Bucket, anisource.Cache, func(params *mem.Params, results *mem.Results) error {
+		tmdbID, err := t.parseThemoviedbID(params.Get("name").(string))
+		if err != nil {
+			return err
+		}
+		results.Set("tmdbID", tmdbID)
+		return nil
+	})
+
+	t.cacheParseAnimeSeason = mem.Memorized(Bucket, anisource.Cache, func(params *mem.Params, results *mem.Results) error {
+		season, err := t.parseAnimeSeason(params.Get("tmdbID").(int), params.Get("airDate").(string))
+		if err != nil {
+			return err
+		}
+		results.Set("season", season)
+		return nil
+	})
+}
+
+func (t Themoviedb) ParseCache(name, airDate string) (tmdbID int, season int, err error) {
+	if !t.cacheInit {
+		t.RegisterCache()
+	}
+	results := mem.NewResults("tmdbID", 0, "season", 0)
+
+	err = t.cacheParseThemoviedbID(mem.NewParams("name", name).TTL(CacheSecond), results)
+	if err != nil {
+		return 0, DefaultSeason, err
+	}
+	tmdbID = results.Get("tmdbID").(int)
+	err = t.cacheParseAnimeSeason(mem.NewParams("tmdbID", tmdbID, "airDate", airDate).TTL(CacheSecond), results)
+	if err != nil {
+		return tmdbID, DefaultSeason, err
+	}
+	season = results.Get("season").(int)
+	return tmdbID, season, nil
 }
 
 func (t Themoviedb) Parse(name, airDate string) (tmdbID int, season int, err error) {

@@ -2,42 +2,71 @@ package bangumi
 
 import (
 	"GoBangumi/pkg/anisource"
+	mem "GoBangumi/pkg/memorizer"
 	"GoBangumi/pkg/request"
 	"GoBangumi/third_party/bangumi/res"
-	"fmt"
+	"encoding/gob"
 )
 
 var (
-	Host         = "https://api.bgm.tv"
-	MatchEpRange = 10
+	Host               = "https://api.bgm.tv"
+	Bucket             = "bangumi"
+	MatchEpRange       = 10
+	CacheSecond  int64 = 3 * 24 * 60 * 60
 )
 
-var infoApi = func(id int) string {
-	return fmt.Sprintf("%s/v0/subjects/%d", Host, id)
-}
-
-var epInfoApi = func(id, ep, eps int) string {
-	rang := 2
-	if eps > 15 {
-		rang = 4
-	} else if eps > 40 {
-		rang = 6
-	} else if eps > 80 {
-		rang = 10
-	} else if eps > 150 {
-		rang = 20
-	}
-	offset := ep - 1 - rang
-	if offset < 0 {
-		offset = 0
-	}
-	limit := rang*2 + 1
-
-	epType := 0 // 仅番剧本体
-	return fmt.Sprintf("%s/v0/episodes?subject_id=%d&type=%d&limit=%d&offset=%d", Host, id, epType, limit, offset)
-}
-
 type Bangumi struct {
+	cacheInit             bool
+	cacheParseAnimeInfo   mem.Func
+	cacheParseAnimeEpInfo mem.Func
+}
+
+func (b *Bangumi) RegisterCache() {
+	if anisource.Cache == nil {
+		panic("需要先调用anisource.Init初始化缓存")
+	}
+	b.cacheInit = true
+	b.cacheParseAnimeInfo = mem.Memorized(Bucket, anisource.Cache, func(params *mem.Params, results *mem.Results) error {
+		entity, err := b.parseAnimeInfo(params.Get("bangumiID").(int))
+		if err != nil {
+			return err
+		}
+		results.Set("entity", entity)
+		return nil
+	})
+
+	b.cacheParseAnimeEpInfo = mem.Memorized(Bucket, anisource.Cache, func(params *mem.Params, results *mem.Results) error {
+		epInfo, err := b.parseAnimeEpInfo(
+			params.Get("bangumiID").(int),
+			params.Get("ep").(int),
+			params.Get("eps").(int),
+		)
+		if err != nil {
+			return err
+		}
+		results.Set("epInfo", epInfo)
+		return nil
+	})
+}
+
+func (b Bangumi) ParseCache(bangumiID, ep int) (entity *Entity, epInfo *Ep, err error) {
+	if !b.cacheInit {
+		b.RegisterCache()
+	}
+	results := mem.NewResults("entity", &Entity{}, "epInfo", &Ep{})
+
+	err = b.cacheParseAnimeInfo(mem.NewParams("bangumiID", bangumiID).TTL(CacheSecond), results)
+	if err != nil {
+		return nil, nil, err
+	}
+	entity = results.Get("entity").(*Entity)
+	err = b.cacheParseAnimeEpInfo(
+		mem.NewParams("bangumiID", bangumiID, "ep", ep, "eps", entity.Eps).TTL(CacheSecond), results)
+	if err != nil {
+		return nil, nil, err
+	}
+	epInfo = results.Get("epInfo").(*Ep)
+	return entity, epInfo, nil
 }
 
 // Parse
@@ -138,4 +167,9 @@ func (b Bangumi) parseAnimeEpInfo(bangumiID, ep, eps int) (epInfo *Ep, err error
 		EpID:     int(respEp.ID),
 	}
 	return epInfo, nil
+}
+
+func init() {
+	gob.Register(&Entity{})
+	gob.Register(&Ep{})
 }

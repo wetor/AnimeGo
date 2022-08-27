@@ -1,21 +1,9 @@
 package cache
 
-import . "GoBangumi/internal/models"
-
-var buckets = []string{
-	RssMikanBucket,
-	MikanBangumiBucket,
-	NameTmdbBucket,
-	TmdbSeasonBucket,
-	BgmInfoBucket,
-	BgmEpBucket,
-	ClientBangumiBucket,
-	ClientStateBucket,
-}
-
 type Cache interface {
 	Open(dir string)
 	Close()
+	Add(bucket string)
 	Put(bucket string, key, val interface{}, ttl int64)
-	Get(bucket string, key interface{}) interface{}
+	Get(bucket string, key, val interface{}) error
 }

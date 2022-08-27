@@ -1,6 +1,8 @@
 package mikan
 
 import (
+	"GoBangumi/internal/cache"
+	"GoBangumi/internal/core/anisource"
 	"GoBangumi/internal/models"
 	"encoding/json"
 	"testing"
@@ -26,7 +28,7 @@ func TestParseMikan(t *testing.T) {
 			wantAnime: &models.AnimeEntity{
 				AnimeExtra: &models.AnimeExtra{
 					MikanID:      228,
-					ThemoviedbID: 0,
+					ThemoviedbID: 37854,
 				},
 				ID: 975,
 			},
@@ -40,12 +42,15 @@ func TestParseMikan(t *testing.T) {
 			wantAnime: &models.AnimeEntity{
 				AnimeExtra: &models.AnimeExtra{
 					MikanID:      2775,
-					ThemoviedbID: 77175,
+					ThemoviedbID: 72517,
 				},
 				ID: 371546,
 			},
 		},
 	}
+	db := cache.NewBolt()
+	db.Open(".")
+	anisource.Init(db, "")
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			gotAnime := ParseMikan(tt.args.name, tt.args.url, "d3d8430aefee6c19520d0f7da145daf5")

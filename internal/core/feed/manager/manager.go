@@ -87,17 +87,19 @@ func (m *Manager) UpdateFeed(ctx context.Context) {
 					Name: _item.Name,
 					Date: _item.Date,
 				})
-				if anime.TorrentInfo == nil {
-					anime.TorrentInfo = &models.TorrentInfo{}
-				}
-				anime.Url = _item.Torrent
-				anime.Hash = _item.Hash
+				if anime != nil {
+					if anime.TorrentInfo == nil {
+						anime.TorrentInfo = &models.TorrentInfo{}
+					}
+					anime.Url = _item.Torrent
+					anime.Hash = _item.Hash
 
-				animeList[_i] = anime
-				if m.downloadChanEnable {
-					zap.S().Debugf("发送下载项:「%s」", anime.FullName())
-					// 向管道中发送需要下载的信息
-					m.downloadChan <- anime
+					animeList[_i] = anime
+					if m.downloadChanEnable {
+						zap.S().Debugf("发送下载项:「%s」", anime.FullName())
+						// 向管道中发送需要下载的信息
+						m.downloadChan <- anime
+					}
 				}
 				utils.Sleep(conf.FeedDelay, ctx)
 			}

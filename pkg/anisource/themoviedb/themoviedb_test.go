@@ -2,6 +2,8 @@ package themoviedb
 
 import (
 	"GoBangumi/data"
+	"GoBangumi/internal/cache"
+	"GoBangumi/pkg/anisource"
 	"testing"
 )
 
@@ -47,12 +49,15 @@ func TestThemoviedb_Parse(t1 *testing.T) {
 			wantErr:    false,
 		},
 	}
+	db := cache.NewBolt()
+	db.Open(".")
+	anisource.Init(anisource.Options{Cache: db})
+	t := &Themoviedb{
+		Key: data.ThemoviedbKey,
+	}
 	for _, tt := range tests {
 		t1.Run(tt.name, func(t1 *testing.T) {
-			t := &Themoviedb{
-				Key: tt.fields.Key,
-			}
-			gotTmdbID, gotSeason, err := t.Parse(tt.args.name, tt.args.airDate)
+			gotTmdbID, gotSeason, err := t.ParseCache(tt.args.name, tt.args.airDate)
 			if (err != nil) != tt.wantErr {
 				t1.Errorf("Parse() error = %v, wantErr %v", err, tt.wantErr)
 				return

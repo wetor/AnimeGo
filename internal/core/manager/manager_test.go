@@ -20,10 +20,12 @@ func TestMain(m *testing.M) {
 	logger.Init()
 	defer logger.Flush()
 
-	store.Init(nil)
+	store.Init(&store.InitOptions{
+		ConfigFile: "/Users/wetor/GoProjects/GoBangumi/data/config/conf.yaml",
+	})
 
 	conf := store.Config.ClientQBt()
-	qbt = qbittorent.NewQBittorrent(conf.Url, conf.Username, conf.Password)
+	qbt = qbittorent.NewQBittorrent(conf.Url, conf.Username, conf.Password, nil)
 
 	m.Run()
 	fmt.Println("end")
@@ -85,7 +87,7 @@ func Download2(m *Manager) {
 }
 
 func TestManager_Update(t *testing.T) {
-	m := NewManager(qbt, nil)
+	m := NewManager(qbt, store.Cache, nil)
 	Download1(m)
 	Download2(m)
 	exit := make(chan bool)
@@ -101,10 +103,6 @@ func TestManager_Update(t *testing.T) {
 	time.Sleep(10 * time.Second)
 
 	<-exit
-
-}
-
-func TestManager_Get(t *testing.T) {
 
 }
 
