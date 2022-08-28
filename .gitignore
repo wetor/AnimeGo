@@ -15,8 +15,14 @@
 # vendor/
 .DS_Store
 data/
+!test/data
 log/
-gobangumi
+*.log
+*.db
+animego
+!animego/
+anigo
 main
 .idea/
 modules/proxy/
+note_*.*
