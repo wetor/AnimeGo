@@ -3,7 +3,10 @@ package mikan
 import (
 	"AnimeGo/pkg/anisource"
 	mem "AnimeGo/pkg/memorizer"
+	"AnimeGo/pkg/request"
+	"bytes"
 	"fmt"
+	"golang.org/x/net/html"
 	"net/url"
 	"strconv"
 	"strings"
@@ -92,6 +95,25 @@ func (m Mikan) Parse(url string) (mikanID int, bangumiID int, err error) {
 	return mikanID, bangumiID, nil
 }
 
+func (m Mikan) loadHtml(url string) (*html.Node, error) {
+	buf := bytes.NewBuffer(nil)
+	err := request.Get(&request.Param{
+		Uri:     url,
+		Proxy:   anisource.Proxy,
+		Writer:  buf,
+		Retry:   anisource.Retry,
+		Timeout: anisource.Timeout,
+	})
+	if err != nil {
+		return nil, err
+	}
+	doc, err := htmlquery.Parse(buf)
+	if err != nil {
+		return nil, err
+	}
+	return doc, nil
+}
+
 // parseMikanID
 //  @Description: 解析网页取出mikanID
 //  @receiver Mikan
@@ -100,7 +122,7 @@ func (m Mikan) Parse(url string) (mikanID int, bangumiID int, err error) {
 //  @return err error
 //
 func (m Mikan) parseMikanID(mikanUrl string) (mikanID int, err error) {
-	doc, err := htmlquery.LoadURL(mikanUrl)
+	doc, err := m.loadHtml(mikanUrl)
 	if err != nil {
 		return 0, err
 	}
@@ -131,7 +153,7 @@ func (m Mikan) parseMikanID(mikanUrl string) (mikanID int, err error) {
 //
 func (m Mikan) parseMikanBangumiID(mikanID int) (bangumiID int, err error) {
 	url_ := fmt.Sprintf("%s/Home/bangumi/%d", Host, mikanID)
-	doc, err := htmlquery.LoadURL(url_)
+	doc, err := m.loadHtml(url_)
 	if err != nil {
 		return 0, err
 	}

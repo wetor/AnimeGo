@@ -6,7 +6,7 @@ feed:
     # Mikan Project(mikanani.me)订阅信息
     mikan:
       name: Mikan Project
-      url: https://mikanani.me/RSS/MyBangumi?token=****
+      url:
 client:
   # qBittorrent客户端信息
   qbittorrent:
@@ -15,7 +15,7 @@ client:
     password: adminadmin
 key:
   # TheMovieDB APIkey，申请链接（需注册）：https://www.themoviedb.org/settings/api?language=zh-CN
-  themoviedb: ****
+  themoviedb:
 proxy:
   enable: false
   # 支持http和socks5代理
@@ -26,7 +26,7 @@ setting:
   # 缓存数据存储路径。如在Docker中部署，以下路径需要为挂载后的Docker内路径
   cache_path: ./data/cache
   # 下载保存位置。如在Docker中部署，以下路径需要为挂载后的Docker内路径
-  save_path: ./data/download
+  save_path: ./download
   # 分类名
   category: test
   # 标签表达式
@@ -58,14 +58,13 @@ advanced:
     update_delay_second: 2
     # 从下载队列中，添加下载项间隔时间
     # 默认为5
-    download_queue_delay_second: 5
+    download_queue_delay_second: 3
     # 下载队列最大容量
     # 新增下载任务后，不会第一时间开始下载，而是放入队列中
-    # 当队列满，或者达到下一次的 update_delay_second 刷新时间，将会依次下载队列中的下载项
+    # 当队列满，添加下载操作会阻塞
     # 下载队列下载项时，每一项都会间隔 download_queue_delay_second 时间添加到下载客户端中
-    # 下载队列下载是异步的，不会阻塞主线程，此时仍然可以添加下载任务到队列中
-    # 默认为10，如需要下载项马上添加到下载列表，可以设置为1
-    download_queue_max_num: 10
+    # 默认为20
+    download_queue_max_num: 20
     # 允许重复下载同剧集不同资源，相同资源无法重复下载
     # 默认不允许同样的剧集重复下载
     allow_duplicate_download: false
@@ -86,45 +85,11 @@ advanced:
       enable: false
       # 最大协程数量。默认为4，为0则同时解析所有Rss条目
       goroutine_max: 4
-  # Bangumi高级设置
-  bangumi:
-    # Api域名
-    host: https://api.bgm.tv
-    # 匹配当前ep信息时，额外获取的前、后集信息数量
-    # 默认值为1，则每次获取3集信息，即[ep-1,ep+1]集的信息，之后使用match_ep_days匹配
-    match_ep_range: 1
-    # 匹配当前ep信息时，在ep数匹配的情况下，资源发布时间与当前ep的更新时间允许的差值绝对值，单位为天
-    # 默认值为30，即番剧更新后，30天的发布的资源符合条件
-    match_ep_days: 30
-    # 番剧信息缓存过期时间，单位秒，为0则永不过期
-    # 默认值为604800，即7*24*60*60，7天
-    cache_info_expire_second: 604800
-    # 番剧ep信息缓存过期时间，单位秒，为0则永不过期
-    # 默认值为604800，即7*24*60*60，7天
-    cache_ep_expire_second: 604800
-  # TheMovieDB高级设置
-  themoviedb:
-    # Api域名
-    host: https://api.themoviedb.org
-    # 匹配当前番剧季度信息时，番剧当前季度开播时间与tmdb中对应季度开播时间允许误差天数
-    # 默认值为90，即当前番剧最接近的开播时间小于90天，认为是同一季度
-    match_season_days: 90
-    # 番剧Tmdb ID缓存过期时间，单位秒，为0则永不过期
-    # 默认值为0，即永不过期
-    cache_id_expire_second: 0
-    # 番剧季度信息缓存过期时间，单位秒，为0则永不过期
-    # 默认值为604800，即30*24*60*60，30天
-    cache_season_expire_second: 2592000
-  # Mikan高级设置
-  mikan:
-    # 域名
-    host: https://mikanani.me
-    # 番剧Mikan ID缓存过期时间，单位秒，为0则永不过期
-    # 默认值为0，即永不过期
-    cache_id_expire_second: 0
-    # 番剧Bangumi ID缓存过期时间，单位秒，为0则永不过期
-    # 默认值为0，即永不过期
-    cache_bangumi_expire_second: 0
+    # HTTP请求超时，默认3秒
+    http_timeout_second: 3
+    # HTTP请求失败重试次数，默认3次
+    http_retry_num: 3
+
 
 
 

@@ -30,6 +30,7 @@
 - 增加filter接口（暂无实现）
 - 将feed更新manager移动到filter manager
 - 增加部分包注释
+- 增加http请求超时重试机制（mikan除外）
 
 ### 2022.8.27
 - 更改项目结构

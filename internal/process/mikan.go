@@ -10,6 +10,7 @@ import (
 	filterManager "AnimeGo/internal/animego/manager/filter"
 	"AnimeGo/internal/models"
 	"AnimeGo/internal/store"
+	pkgAnisource "AnimeGo/pkg/anisource"
 	"context"
 )
 
@@ -33,7 +34,12 @@ func (p *Mikan) Run(ctx context.Context) {
 
 	downloadChan := make(chan *models.AnimeEntity, 10)
 
-	anisource.Init(store.Cache, store.Config.Proxy())
+	anisource.Init(&pkgAnisource.Options{
+		Cache:   store.Cache,
+		Proxy:   store.Config.Proxy(),
+		Timeout: store.Config.HttpTimeoutSecond,
+		Retry:   store.Config.HttpRetryNum,
+	})
 
 	p.downloaderMgr = downloader.NewManager(qbt, store.Cache, downloadChan)
 

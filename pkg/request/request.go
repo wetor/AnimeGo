@@ -4,13 +4,14 @@ import (
 	"AnimeGo/third_party/goreq"
 	"io"
 	"os"
+	"time"
 )
 
-func Get(param *Param) error {
-	// TODO: 增加重试机制
+func request(method string, param *Param) error {
 	req := goreq.Request{
-		Method: "GET",
-		Uri:    param.Uri,
+		Method:  method,
+		Uri:     param.Uri,
+		Timeout: time.Duration(param.Timeout) * time.Second,
 	}
 	if len(param.Proxy) > 0 {
 		req.Proxy = param.Proxy
@@ -26,6 +27,12 @@ func Get(param *Param) error {
 			return err
 		}
 	}
+	if param.Writer != nil {
+		_, err = io.Copy(param.Writer, resp.Body)
+		if err != nil {
+			return err
+		}
+	}
 	if len(param.SaveFile) > 0 {
 		all, err := io.ReadAll(resp.Body)
 		if err != nil {
@@ -37,4 +44,17 @@ func Get(param *Param) error {
 		}
 	}
 	return nil
+}
+
+func Get(param *Param) (err error) {
+	if param.Retry == 0 {
+		param.Retry = 1
+	}
+	for i := 0; i < param.Retry; i++ {
+		err = request("GET", param)
+		if err == nil {
+			break
+		}
+	}
+	return err
 }

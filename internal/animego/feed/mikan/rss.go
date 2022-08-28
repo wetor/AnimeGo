@@ -44,6 +44,8 @@ func (f *Rss) Parse() []*models.FeedItem {
 		Uri:      f.url,
 		Proxy:    store.Config.Proxy(),
 		SaveFile: filename,
+		Timeout:  store.Config.HttpTimeoutSecond,
+		Retry:    store.Config.HttpRetryNum,
 	})
 	if err != nil {
 		zap.S().Warn(err)

@@ -84,6 +84,8 @@ func (t Themoviedb) parseThemoviedbID(name string) (tmdbID int, err error) {
 			Uri:      idApi(t.Key, name),
 			Proxy:    anisource.Proxy,
 			BindJson: &resp,
+			Retry:    anisource.Retry,
+			Timeout:  anisource.Timeout,
 		})
 		if err != nil {
 			return 0, err
@@ -116,6 +118,8 @@ func (t Themoviedb) parseAnimeSeason(tmdbID int, airDate string) (season int, er
 		Uri:      infoApi(t.Key, tmdbID),
 		Proxy:    anisource.Proxy,
 		BindJson: &resp,
+		Retry:    anisource.Retry,
+		Timeout:  anisource.Timeout,
 	})
 	if err != nil {
 		return DefaultSeason, err
