@@ -15,7 +15,7 @@
 package res
 
 import (
-	model2 "GoBangumi/third_party/bangumi/model"
+	"AnimeGo/third_party/bangumi/model"
 	"time"
 )
 
@@ -32,13 +32,13 @@ type SubjectV0 struct {
 	Rating        Rating                `json:"rating"`
 	TotalEpisodes int64                 `json:"total_episodes"`
 	Collection    SubjectCollectionStat `json:"collection"`
-	ID            model2.SubjectIDType  `json:"id"`
+	ID            model.SubjectIDType   `json:"id"`
 	Eps           uint32                `json:"eps"`
 	Volumes       uint32                `json:"volumes"`
 	Redirect      uint32                `json:"-"`
 	Locked        bool                  `json:"locked"`
 	NSFW          bool                  `json:"nsfw"`
-	TypeID        model2.SubjectType    `json:"type"`
+	TypeID        model.SubjectType     `json:"type"`
 }
 
 type Subject struct {
@@ -53,13 +53,13 @@ type Subject struct {
 	Collection   SubjectCollectionStat `json:"collection"`
 	Volumes      uint32                `json:"volumes"`
 	Eps          uint32                `json:"eps"`
-	ID           model2.SubjectIDType  `json:"id"`
+	ID           model.SubjectIDType   `json:"id"`
 	Redirect     uint32                `json:"-"`
 	Platform     uint16                `json:"platform_id"`
 	Airtime      uint8                 `json:"air_time"`
 	Locked       bool                  `json:"locked"`
 	NSFW         bool                  `json:"nsfw"`
-	TypeID       model2.SubjectType    `json:"type_id"`
+	TypeID       model.SubjectType     `json:"type_id"`
 }
 
 type SubjectCollectionStat struct {
@@ -91,86 +91,86 @@ type Rating struct {
 }
 
 type PersonRelatedSubject struct {
-	Staff     string               `json:"staff"`
-	Name      string               `json:"name"`
-	NameCn    string               `json:"name_cn"`
-	Image     string               `json:"image"`
-	SubjectID model2.SubjectIDType `json:"id"`
+	Staff     string              `json:"staff"`
+	Name      string              `json:"name"`
+	NameCn    string              `json:"name_cn"`
+	Image     string              `json:"image"`
+	SubjectID model.SubjectIDType `json:"id"`
 }
 
 type PersonRelatedCharacter struct {
-	Images        PersonImages           `json:"images"`
-	Name          string                 `json:"name"`
-	SubjectName   string                 `json:"subject_name"`
-	SubjectNameCn string                 `json:"subject_name_cn"`
-	SubjectID     model2.SubjectIDType   `json:"subject_id"`
-	ID            model2.CharacterIDType `json:"id"`
-	Type          uint8                  `json:"type" doc:"character type"`
+	Images        PersonImages          `json:"images"`
+	Name          string                `json:"name"`
+	SubjectName   string                `json:"subject_name"`
+	SubjectNameCn string                `json:"subject_name_cn"`
+	SubjectID     model.SubjectIDType   `json:"subject_id"`
+	ID            model.CharacterIDType `json:"id"`
+	Type          uint8                 `json:"type" doc:"character type"`
 }
 
 type CharacterRelatedPerson struct {
 	Images        PersonImages `json:"images"`
 	Name          string
-	SubjectName   string                 `json:"subject_name"`
-	SubjectNameCn string                 `json:"subject_name_cn"`
-	SubjectID     model2.SubjectIDType   `json:"subject_id"`
-	ID            model2.CharacterIDType `json:"id"`
-	Type          uint8                  `json:"type" doc:"person type"`
+	SubjectName   string                `json:"subject_name"`
+	SubjectNameCn string                `json:"subject_name_cn"`
+	SubjectID     model.SubjectIDType   `json:"subject_id"`
+	ID            model.CharacterIDType `json:"id"`
+	Type          uint8                 `json:"type" doc:"person type"`
 }
 
 type CharacterRelatedSubject struct {
-	Staff  string               `json:"staff"`
-	Name   string               `json:"name"`
-	NameCn string               `json:"name_cn"`
-	Image  string               `json:"image"`
-	ID     model2.SubjectIDType `json:"id"`
+	Staff  string              `json:"staff"`
+	Name   string              `json:"name"`
+	NameCn string              `json:"name_cn"`
+	Image  string              `json:"image"`
+	ID     model.SubjectIDType `json:"id"`
 }
 
 type SubjectRelatedSubject struct {
-	Images    SubjectImages        `json:"images"`
-	Name      string               `json:"name"`
-	NameCn    string               `json:"name_cn"`
-	Relation  string               `json:"relation"`
-	Type      model2.SubjectType   `json:"type"`
-	SubjectID model2.SubjectIDType `json:"id"`
+	Images    SubjectImages       `json:"images"`
+	Name      string              `json:"name"`
+	NameCn    string              `json:"name_cn"`
+	Relation  string              `json:"relation"`
+	Type      model.SubjectType   `json:"type"`
+	SubjectID model.SubjectIDType `json:"id"`
 }
 
 type SubjectRelatedCharacter struct {
-	Images   PersonImages        `json:"images"`
-	Name     string              `json:"name"`
-	Relation string              `json:"relation"`
-	Actors   []Actor             `json:"actors"`
-	Type     uint8               `json:"type"`
-	ID       model2.PersonIDType `json:"id"`
+	Images   PersonImages       `json:"images"`
+	Name     string             `json:"name"`
+	Relation string             `json:"relation"`
+	Actors   []Actor            `json:"actors"`
+	Type     uint8              `json:"type"`
+	ID       model.PersonIDType `json:"id"`
 }
 
 type SubjectRelatedPerson struct {
-	Images   PersonImages        `json:"images"`
-	Name     string              `json:"name" doc:"person name"`
-	Relation string              `json:"relation"`
-	Career   []string            `json:"career"`
-	Type     uint8               `json:"type"`
-	ID       model2.PersonIDType `json:"id" doc:"person ID"`
+	Images   PersonImages       `json:"images"`
+	Name     string             `json:"name" doc:"person name"`
+	Relation string             `json:"relation"`
+	Career   []string           `json:"career"`
+	Type     uint8              `json:"type"`
+	ID       model.PersonIDType `json:"id" doc:"person ID"`
 }
 
 type Actor struct {
-	Images       PersonImages        `json:"images"`
-	Name         string              `json:"name"`
-	ShortSummary string              `json:"short_summary"`
-	Career       []string            `json:"career"`
-	ID           model2.PersonIDType `json:"id"`
-	Type         uint8               `json:"type"`
-	Locked       bool                `json:"locked"`
+	Images       PersonImages       `json:"images"`
+	Name         string             `json:"name"`
+	ShortSummary string             `json:"short_summary"`
+	Career       []string           `json:"career"`
+	ID           model.PersonIDType `json:"id"`
+	Type         uint8              `json:"type"`
+	Locked       bool               `json:"locked"`
 }
 
 type SlimSubjectV0 struct {
-	AddedAt time.Time          `json:"added_at"`
-	Date    *string            `json:"date"`
-	Image   SubjectImages      `json:"images"`
-	Name    string             `json:"name"`
-	NameCN  string             `json:"name_cn"`
-	Comment string             `json:"comment"`
-	Infobox v0wiki             `json:"infobox"`
-	ID      uint32             `json:"id"`
-	TypeID  model2.SubjectType `json:"type"`
+	AddedAt time.Time         `json:"added_at"`
+	Date    *string           `json:"date"`
+	Image   SubjectImages     `json:"images"`
+	Name    string            `json:"name"`
+	NameCN  string            `json:"name_cn"`
+	Comment string            `json:"comment"`
+	Infobox v0wiki            `json:"infobox"`
+	ID      uint32            `json:"id"`
+	TypeID  model.SubjectType `json:"type"`
 }

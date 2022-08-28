@@ -3,15 +3,16 @@
 package filter
 
 import (
-	"GoBangumi/internal/animego/anisource"
-	"GoBangumi/internal/animego/feed"
-	"GoBangumi/internal/animego/filter"
-	"GoBangumi/internal/models"
-	"GoBangumi/internal/store"
-	"GoBangumi/internal/utils"
+	"AnimeGo/internal/animego/anisource"
+	"AnimeGo/internal/animego/feed"
+	"AnimeGo/internal/animego/filter"
+	"AnimeGo/internal/models"
+	"AnimeGo/internal/store"
+	"AnimeGo/internal/utils"
 	"context"
-	"go.uber.org/zap"
 	"sync"
+
+	"go.uber.org/zap"
 )
 
 const (

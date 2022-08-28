@@ -1,11 +1,12 @@
 package store
 
 import (
-	"GoBangumi/configs"
-	"GoBangumi/internal/cache"
-	"GoBangumi/internal/utils"
-	"go.uber.org/zap"
+	"AnimeGo/configs"
+	"AnimeGo/internal/cache"
+	"AnimeGo/internal/utils"
 	"sync"
+
+	"go.uber.org/zap"
 )
 
 var (

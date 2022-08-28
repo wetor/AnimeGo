@@ -1,15 +1,16 @@
 package main
 
 import (
-	"GoBangumi/internal/process"
-	"GoBangumi/internal/store"
-	"GoBangumi/internal/utils/logger"
+	"AnimeGo/internal/logger"
+	"AnimeGo/internal/process"
+	"AnimeGo/internal/store"
 	"context"
 	"flag"
-	"go.uber.org/zap"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"go.uber.org/zap"
 )
 
 var ctx, cancel = context.WithCancel(context.Background())

@@ -3,7 +3,7 @@
 package feed
 
 import (
-	"GoBangumi/internal/models"
+	"AnimeGo/internal/models"
 )
 
 type Feed interface {

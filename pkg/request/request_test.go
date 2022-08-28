@@ -1,8 +1,8 @@
 package request
 
 import (
-	"GoBangumi/internal/store"
-	"GoBangumi/third_party/goreq"
+	"AnimeGo/internal/store"
+	"AnimeGo/third_party/goreq"
 	"fmt"
 	"io"
 	"testing"
@@ -25,7 +25,7 @@ func Test_goreq(t *testing.T) {
 
 func TestGet(t *testing.T) {
 	store.Init(&store.InitOptions{
-		ConfigFile: "/Users/wetor/GoProjects/GoBangumi/data/config/conf.yaml",
+		ConfigFile: "/Users/wetor/GoProjects/AnimeGo/data/config/conf.yaml",
 	})
 	err := Get(&Param{
 		Uri: "http://pv.sohu.com/cityjson?ie=utf-8",

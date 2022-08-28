@@ -1,8 +1,8 @@
 package mikan
 
 import (
-	"GoBangumi/internal/cache"
-	"GoBangumi/pkg/anisource"
+	"AnimeGo/internal/cache"
+	"AnimeGo/pkg/anisource"
 	"testing"
 )
 

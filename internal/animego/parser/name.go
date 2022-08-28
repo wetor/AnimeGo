@@ -1,9 +1,10 @@
 package parser
 
 import (
-	"GoBangumi/internal/errors"
-	"go.uber.org/zap"
+	"AnimeGo/internal/errors"
 	"regexp"
+
+	"go.uber.org/zap"
 )
 
 var nameRegxStep = []*regexp.Regexp{

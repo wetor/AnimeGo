@@ -1,6 +1,6 @@
 package anisource
 
-import mem "GoBangumi/pkg/memorizer"
+import mem "AnimeGo/pkg/memorizer"
 
 var (
 	Proxy string

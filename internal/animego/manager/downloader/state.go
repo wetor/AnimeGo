@@ -1,8 +1,8 @@
 package downloader
 
 import (
-	"GoBangumi/internal/animego/downloader/qbittorent"
-	"GoBangumi/internal/models"
+	"AnimeGo/internal/animego/downloader/qbittorent"
+	"AnimeGo/internal/models"
 )
 
 const (

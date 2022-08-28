@@ -1,9 +1,9 @@
 package themoviedb
 
 import (
-	"GoBangumi/data"
-	"GoBangumi/internal/cache"
-	"GoBangumi/pkg/anisource"
+	"AnimeGo/data"
+	"AnimeGo/internal/cache"
+	"AnimeGo/pkg/anisource"
 	"testing"
 )
 

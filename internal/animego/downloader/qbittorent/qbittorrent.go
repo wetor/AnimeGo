@@ -1,14 +1,15 @@
 package qbittorent
 
 import (
-	"GoBangumi/internal/models"
-	"GoBangumi/internal/store"
-	"GoBangumi/internal/utils"
-	"GoBangumi/third_party/qbapi"
+	"AnimeGo/internal/models"
+	"AnimeGo/internal/store"
+	"AnimeGo/internal/utils"
+	"AnimeGo/third_party/qbapi"
 	"context"
 	"fmt"
-	"go.uber.org/zap"
 	"time"
+
+	"go.uber.org/zap"
 )
 
 const (

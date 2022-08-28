@@ -1,7 +1,7 @@
 package models
 
 import (
-	"GoBangumi/internal/utils"
+	"AnimeGo/internal/utils"
 	"fmt"
 	"path"
 	"strconv"

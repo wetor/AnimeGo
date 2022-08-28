@@ -1,9 +1,10 @@
 package mikan
 
 import (
-	"GoBangumi/internal/animego/anisource"
-	"GoBangumi/internal/animego/parser"
-	"GoBangumi/internal/models"
+	"AnimeGo/internal/animego/anisource"
+	"AnimeGo/internal/animego/parser"
+	"AnimeGo/internal/models"
+
 	"go.uber.org/zap"
 )
 

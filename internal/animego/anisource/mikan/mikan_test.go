@@ -1,9 +1,10 @@
 package mikan
 
 import (
-	"GoBangumi/internal/animego/anisource"
-	"GoBangumi/internal/cache"
-	"GoBangumi/internal/models"
+	"AnimeGo/data"
+	"AnimeGo/internal/animego/anisource"
+	"AnimeGo/internal/cache"
+	"AnimeGo/internal/models"
 	"encoding/json"
 	"testing"
 )
@@ -53,7 +54,7 @@ func TestParseMikan(t *testing.T) {
 	anisource.Init(db, "")
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotAnime := ParseMikan(tt.args.name, tt.args.url, "d3d8430aefee6c19520d0f7da145daf5")
+			gotAnime := ParseMikan(tt.args.name, tt.args.url, data.ThemoviedbKey)
 			data, _ := json.Marshal(gotAnime)
 			t.Log(string(data))
 			if gotAnime.MikanID != tt.wantAnime.MikanID {

@@ -1,11 +1,11 @@
 package downloader
 
 import (
-	"GoBangumi/internal/animego/downloader"
-	"GoBangumi/internal/animego/downloader/qbittorent"
-	"GoBangumi/internal/models"
-	"GoBangumi/internal/store"
-	"GoBangumi/internal/utils/logger"
+	"AnimeGo/internal/animego/downloader"
+	"AnimeGo/internal/animego/downloader/qbittorent"
+	"AnimeGo/internal/logger"
+	"AnimeGo/internal/models"
+	"AnimeGo/internal/store"
 	"context"
 	"fmt"
 	"path"
@@ -21,7 +21,7 @@ func TestMain(m *testing.M) {
 	defer logger.Flush()
 
 	store.Init(&store.InitOptions{
-		ConfigFile: "/Users/wetor/GoProjects/GoBangumi/data/config/conf.yaml",
+		ConfigFile: "/Users/wetor/GoProjects/AnimeGo/data/config/conf.yaml",
 	})
 
 	conf := store.Config.ClientQBt()

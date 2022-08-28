@@ -1,8 +1,8 @@
 package mikan
 
 import (
-	"GoBangumi/internal/store"
-	"GoBangumi/internal/utils/logger"
+	"AnimeGo/internal/logger"
+	"AnimeGo/internal/store"
 	"fmt"
 	"testing"
 )
@@ -12,7 +12,7 @@ func TestMain(m *testing.M) {
 	logger.Init()
 	defer logger.Flush()
 	store.Init(&store.InitOptions{
-		ConfigFile: "/Users/wetor/GoProjects/GoBangumi/data/config/conf.yaml",
+		ConfigFile: "/Users/wetor/GoProjects/AnimeGo/data/config/conf.yaml",
 	})
 	m.Run()
 	fmt.Println("end")
