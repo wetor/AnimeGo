@@ -3,12 +3,12 @@
 package anisource
 
 import (
-	"GoBangumi/internal/cache"
-	"GoBangumi/internal/models"
-	"GoBangumi/pkg/anisource"
-	"GoBangumi/pkg/anisource/bangumi"
-	"GoBangumi/pkg/anisource/mikan"
-	"GoBangumi/pkg/anisource/themoviedb"
+	"AnimeGo/internal/cache"
+	"AnimeGo/internal/models"
+	"AnimeGo/pkg/anisource"
+	"AnimeGo/pkg/anisource/bangumi"
+	"AnimeGo/pkg/anisource/mikan"
+	"AnimeGo/pkg/anisource/themoviedb"
 )
 
 type AniSource interface {

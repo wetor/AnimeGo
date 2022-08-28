@@ -1,7 +1,7 @@
 package request
 
 import (
-	"GoBangumi/third_party/goreq"
+	"AnimeGo/third_party/goreq"
 	"io"
 	"os"
 )
@@ -15,11 +15,11 @@ func Get(param *Param) error {
 	if len(param.Proxy) > 0 {
 		req.Proxy = param.Proxy
 	}
-
 	resp, err := req.Do()
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 	if param.BindJson != nil {
 		err = resp.Body.FromJsonTo(param.BindJson)
 		if err != nil {

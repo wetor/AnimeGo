@@ -1,9 +1,9 @@
 package qbittorent
 
 import (
-	"GoBangumi/internal/models"
-	"GoBangumi/internal/store"
-	"GoBangumi/internal/utils/logger"
+	"AnimeGo/internal/logger"
+	"AnimeGo/internal/models"
+	"AnimeGo/internal/store"
 	"fmt"
 	"testing"
 )

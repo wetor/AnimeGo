@@ -1,9 +1,9 @@
 package themoviedb
 
 import (
-	"GoBangumi/pkg/anisource"
-	mem "GoBangumi/pkg/memorizer"
-	"GoBangumi/pkg/request"
+	"AnimeGo/pkg/anisource"
+	mem "AnimeGo/pkg/memorizer"
+	"AnimeGo/pkg/request"
 )
 
 var (

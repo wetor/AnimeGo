@@ -3,19 +3,20 @@
 package downloader
 
 import (
-	"GoBangumi/internal/animego/downloader"
-	"GoBangumi/internal/cache"
-	"GoBangumi/internal/models"
-	"GoBangumi/internal/store"
-	"GoBangumi/internal/utils"
+	"AnimeGo/internal/animego/downloader"
+	"AnimeGo/internal/cache"
+	"AnimeGo/internal/models"
+	"AnimeGo/internal/store"
+	"AnimeGo/internal/utils"
 	"context"
 	"fmt"
-	"go.uber.org/zap"
 	"os"
 	"path"
 	"regexp"
 	"strings"
 	"sync"
+
+	"go.uber.org/zap"
 )
 
 const (

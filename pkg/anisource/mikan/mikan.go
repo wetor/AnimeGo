@@ -1,13 +1,14 @@
 package mikan
 
 import (
-	"GoBangumi/pkg/anisource"
-	mem "GoBangumi/pkg/memorizer"
+	"AnimeGo/pkg/anisource"
+	mem "AnimeGo/pkg/memorizer"
 	"fmt"
-	"github.com/antchfx/htmlquery"
 	"net/url"
 	"strconv"
 	"strings"
+
+	"github.com/antchfx/htmlquery"
 )
 
 const (

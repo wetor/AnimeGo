@@ -1,12 +1,13 @@
 package configs
 
 import (
-	"GoBangumi/internal/models"
-	"GoBangumi/internal/utils"
-	"go.uber.org/zap"
-	"gopkg.in/yaml.v3"
+	"AnimeGo/internal/models"
+	"AnimeGo/internal/utils"
 	"os"
 	"time"
+
+	"go.uber.org/zap"
+	"gopkg.in/yaml.v3"
 )
 
 func NewConfig(path string) *Config {

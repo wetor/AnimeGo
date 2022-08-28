@@ -15,7 +15,7 @@
 package res
 
 import (
-	"GoBangumi/third_party/bangumi/model"
+	"AnimeGo/third_party/bangumi/model"
 )
 
 type Episode struct {

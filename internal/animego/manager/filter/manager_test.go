@@ -1,10 +1,10 @@
 package filter
 
 import (
-	"GoBangumi/internal/animego/anisource/mikan"
-	mikanRss "GoBangumi/internal/animego/feed/mikan"
-	"GoBangumi/internal/store"
-	"GoBangumi/internal/utils/logger"
+	"AnimeGo/internal/animego/anisource/mikan"
+	mikanRss "AnimeGo/internal/animego/feed/mikan"
+	"AnimeGo/internal/logger"
+	"AnimeGo/internal/store"
 	"context"
 	"fmt"
 	"testing"

@@ -1,4 +1,4 @@
-module GoBangumi
+module AnimeGo
 
 go 1.18
 

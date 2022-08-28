@@ -1,6 +1,6 @@
 package filter
 
-import "GoBangumi/internal/models"
+import "AnimeGo/internal/models"
 
 type Default struct {
 }

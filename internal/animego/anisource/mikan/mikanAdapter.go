@@ -1,6 +1,6 @@
 package mikan
 
-import "GoBangumi/internal/models"
+import "AnimeGo/internal/models"
 
 type MikanAdapter struct {
 	ThemoviedbKey string

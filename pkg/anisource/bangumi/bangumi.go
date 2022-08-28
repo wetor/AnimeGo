@@ -1,10 +1,10 @@
 package bangumi
 
 import (
-	"GoBangumi/pkg/anisource"
-	mem "GoBangumi/pkg/memorizer"
-	"GoBangumi/pkg/request"
-	"GoBangumi/third_party/bangumi/res"
+	"AnimeGo/pkg/anisource"
+	mem "AnimeGo/pkg/memorizer"
+	"AnimeGo/pkg/request"
+	"AnimeGo/third_party/bangumi/res"
 	"encoding/gob"
 )
 

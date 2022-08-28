@@ -3,16 +3,17 @@
 package mikan
 
 import (
-	"GoBangumi/internal/animego/feed"
-	"GoBangumi/internal/models"
-	"GoBangumi/internal/store"
-	"GoBangumi/internal/utils"
-	"GoBangumi/pkg/request"
-	"github.com/mmcdole/gofeed"
-	"go.uber.org/zap"
+	"AnimeGo/internal/animego/feed"
+	"AnimeGo/internal/models"
+	"AnimeGo/internal/store"
+	"AnimeGo/internal/utils"
+	"AnimeGo/pkg/request"
 	"os"
 	"path"
 	"regexp"
+
+	"github.com/mmcdole/gofeed"
+	"go.uber.org/zap"
 )
 
 type Rss struct {

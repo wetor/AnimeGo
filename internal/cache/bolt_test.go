@@ -1,7 +1,7 @@
 package cache
 
 import (
-	"GoBangumi/internal/models"
+	"AnimeGo/internal/models"
 	"fmt"
 	"testing"
 )

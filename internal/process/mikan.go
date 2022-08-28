@@ -1,15 +1,15 @@
 package process
 
 import (
-	"GoBangumi/internal/animego/anisource"
-	"GoBangumi/internal/animego/anisource/mikan"
-	"GoBangumi/internal/animego/downloader/qbittorent"
-	mikanRss "GoBangumi/internal/animego/feed/mikan"
-	"GoBangumi/internal/animego/filter"
-	"GoBangumi/internal/animego/manager/downloader"
-	filterManager "GoBangumi/internal/animego/manager/filter"
-	"GoBangumi/internal/models"
-	"GoBangumi/internal/store"
+	"AnimeGo/internal/animego/anisource"
+	"AnimeGo/internal/animego/anisource/mikan"
+	"AnimeGo/internal/animego/downloader/qbittorent"
+	mikanRss "AnimeGo/internal/animego/feed/mikan"
+	"AnimeGo/internal/animego/filter"
+	"AnimeGo/internal/animego/manager/downloader"
+	filterManager "AnimeGo/internal/animego/manager/filter"
+	"AnimeGo/internal/models"
+	"AnimeGo/internal/store"
 	"context"
 )
 

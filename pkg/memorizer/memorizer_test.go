@@ -1,8 +1,7 @@
 package memorizer
 
 import (
-	"GoBangumi/internal/cache"
-	"GoBangumi/internal/models"
+	"AnimeGo/internal/cache"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -43,7 +42,7 @@ func DoSomething(params *Params, results *Results) error {
 func TestMemorized(t *testing.T) {
 	db := cache.NewBolt()
 	db.Open(".")
-	dosomething := Memorized(models.DefaultBucket, db, DoSomething)
+	dosomething := Memorized("test", db, DoSomething)
 
 	res := NewResults("ThemovieID", &Type{})
 	dosomething(NewParams("mikanID", 1001, "bangumiID", 3333).TTL(1), res)

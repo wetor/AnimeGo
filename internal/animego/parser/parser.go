@@ -1,8 +1,8 @@
 package parser
 
 import (
-	"GoBangumi/internal/errors"
-	"GoBangumi/internal/models"
+	"AnimeGo/internal/errors"
+	"AnimeGo/internal/models"
 	"regexp"
 	"strconv"
 	"strings"

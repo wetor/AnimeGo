@@ -3,7 +3,7 @@
 package downloader
 
 import (
-	"GoBangumi/internal/models"
+	"AnimeGo/internal/models"
 )
 
 type Client interface {

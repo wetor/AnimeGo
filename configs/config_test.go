@@ -1,13 +1,13 @@
 package configs
 
 import (
-	"GoBangumi/internal/models"
+	"AnimeGo/internal/models"
 	"fmt"
 	"testing"
 )
 
 func TestNewConfig(t *testing.T) {
-	c := NewConfig("/Users/wetor/GoProjects/GoBangumi/data/config/conf.yaml")
+	c := NewConfig("/Users/wetor/GoProjects/AnimeGo/data/config/conf.yaml")
 	fmt.Println(c)
 }
 
