@@ -1,3 +1,5 @@
+// Package cache
+// @Description: 缓存包，用来调用缓存组件
 package cache
 
 type Cache interface {

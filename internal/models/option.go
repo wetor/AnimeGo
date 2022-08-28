@@ -32,14 +32,6 @@ type ClientGetOptions struct {
 	Hash string
 }
 
-// =========== Feed ===========
-
-type FeedParseOptions struct {
-	Url          string
-	Name         string
-	RefreshCache bool // 是否重新下载Url刷新本地缓存
-}
-
 // =========== AnimeEntity ===========
 
 type AnimeParseOptions struct {

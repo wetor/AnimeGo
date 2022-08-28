@@ -1,7 +1,7 @@
 package request
 
 import (
-	"GoBangumi/store"
+	"GoBangumi/internal/store"
 	"GoBangumi/third_party/goreq"
 	"fmt"
 	"io"

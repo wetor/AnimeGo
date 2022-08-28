@@ -12,7 +12,7 @@ func TestNewConfig(t *testing.T) {
 }
 
 func TestSettings_Tag(t *testing.T) {
-	setting := models.Setting{}
+	setting := Setting{}
 	setting.TagSrc = "{year}年{quarter}月新番,{quarter_index},{quarter_name}季,第{ep}集,周{week},{week_name}"
 	str := setting.Tag(&models.AnimeEntity{
 		AirDate: "2022-04-11",

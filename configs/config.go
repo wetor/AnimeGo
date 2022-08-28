@@ -2,7 +2,7 @@ package configs
 
 import (
 	"GoBangumi/internal/models"
-	"GoBangumi/utils"
+	"GoBangumi/internal/utils"
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
 	"os"

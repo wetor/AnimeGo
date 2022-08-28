@@ -1,7 +1,7 @@
 package models
 
 import (
-	"GoBangumi/utils"
+	"GoBangumi/internal/utils"
 	"fmt"
 	"path"
 	"strconv"

@@ -21,14 +21,14 @@ func TestBolt_Put(t *testing.T) {
 			ThemoviedbID: 888,
 		},
 	}
-	db.Put(models.DefaultBucket, "key", e, 0)
+	db.Put("test", "key", e, 0)
 }
 
 func TestBolt_Get(t *testing.T) {
 	db := NewBolt()
 	db.Open(".")
 	var data models.AnimeEntity
-	err := db.Get(models.DefaultBucket, "key", &data)
+	err := db.Get("test", "key", &data)
 	if err != nil {
 		panic(err)
 	}

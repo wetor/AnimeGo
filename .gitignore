@@ -15,10 +15,12 @@
 # vendor/
 .DS_Store
 data/
+!test/data
 log/
 *.log
 *.db
 animego
+!animego/
 anigo
 main
 .idea/
