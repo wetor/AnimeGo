@@ -16,7 +16,17 @@ type Options struct {
 	Cache   mem.Memorizer
 }
 
+func (o *Options) Default() {
+	if o.Timeout == 0 {
+		o.Timeout = 3
+	}
+	if o.Retry == 0 {
+		o.Retry = 1
+	}
+}
+
 func Init(opts *Options) {
+	opts.Default()
 	Proxy = opts.Proxy
 	Timeout = opts.Timeout
 	Retry = opts.Retry
