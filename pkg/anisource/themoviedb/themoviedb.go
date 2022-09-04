@@ -93,12 +93,16 @@ func (t Themoviedb) parseThemoviedbID(name string) (tmdbID int, err error) {
 		if resp.TotalResults == 1 {
 			return resp.Result[0].ID, nil
 		} else if resp.TotalResults > 1 {
-			tmdbID = resp.Result[0].ID
-			maxSimilar := float64(0)
+			// 筛选与original name完全相同的番剧
 			for _, result := range resp.Result {
-				if CompareNamePrefix(result.OriginalName, name) {
+				if result.OriginalName == name {
 					return result.ID, nil
 				}
+			}
+			tmdbID = resp.Result[0].ID
+			// 按照相似度排序筛选
+			maxSimilar := float64(0)
+			for _, result := range resp.Result {
 				similar := SimilarText(result.OriginalName, name)
 				if similar > maxSimilar {
 					maxSimilar = similar
@@ -141,7 +145,7 @@ func (t Themoviedb) parseAnimeSeason(tmdbID int, airDate string) (season int, er
 		if r.SeasonNumber == 0 || r.Name == "Specials" {
 			continue
 		}
-		// TODO: 待优化，通过比较此季度番剧的初放松日期，筛选差值最小的季
+		// TODO: 待优化，通过比较此季度番剧的初放送日期，筛选差值最小的季
 		if s := StrTimeSubAbs(r.AirDate, airDate); s < min {
 			min = s
 			season = r.SeasonNumber

@@ -1,6 +1,7 @@
 package themoviedb
 
 import (
+	"log"
 	"regexp"
 )
 
@@ -38,18 +39,15 @@ func RemoveNameSuffix(name string, fun func(string) (interface{}, error)) (inter
 		if currStep < len(nameRegxStep) {
 			has := nameRegxStep[currStep].MatchString(name)
 			if has {
-				name = nameRegxStep[currStep].ReplaceAllString(name, "")
+				newName := nameRegxStep[currStep].ReplaceAllString(name, "")
+				if len(newName) > 0 {
+					name = newName
+				}
+				log.Printf("重新搜索：「%s」", name)
 			}
 		}
 	}
 	return nil, RemoveNameSuffixErr
-}
-
-func CompareNamePrefix(orgName, name string) bool {
-	if len(name) < len(orgName) {
-		return false
-	}
-	return orgName == name[:len(orgName)]
 }
 
 // SimilarText
