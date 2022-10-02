@@ -28,9 +28,3 @@ log = {
         goLog.error(`[${getRow()}]\t`, ...params)
     },
 }
-
-filter = {
-    definition(height){
-
-    }
-}

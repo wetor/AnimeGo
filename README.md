@@ -8,6 +8,7 @@
 
 ## 目前进度
 - 可使用配置、筛选和下载等基本功能
+- javascript编写筛选器，[帮助文档](internal/animego/plugin/javascript/README.md)
 - Jellyfin支持
 
 ## 开发计划
@@ -30,7 +31,6 @@
   - 支持筛选
   - 支持日志、获取Mikan信息等基础内置函数
 - 支持 [poketto](https://github.com/3verness/poketto)初步解析下载项名
-- 目前缺少插件和过滤器相关文档
 
 ### 2022.8.28
 - **项目正式更名为AnimeGo**
