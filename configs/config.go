@@ -4,17 +4,18 @@ import (
 	"AnimeGo/internal/models"
 	"AnimeGo/internal/utils"
 	"os"
+	"path"
 	"time"
 
 	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
 )
 
-func NewConfig(path string) *Config {
-	if len(path) == 0 {
-		path = "../data/config/conf.yaml"
+func NewConfig(_path string) *Config {
+	if len(_path) == 0 {
+		_path = "../data/config/conf.yaml"
 	}
-	data, err := os.ReadFile(path)
+	data, err := os.ReadFile(_path)
 	if err != nil {
 		zap.S().Fatal("配置文件加载错误：", err)
 	}
@@ -23,6 +24,9 @@ func NewConfig(path string) *Config {
 	if err != nil {
 		zap.S().Fatal("配置文件加载错误：", err)
 	}
+	conf.CachePath = path.Join(conf.DataPath, conf.CachePath)
+	conf.SavePath = path.Join(conf.DataPath, conf.SavePath)
+	conf.Filter.JavaScript = path.Join(conf.DataPath, conf.Filter.JavaScript)
 	return conf
 }
 
@@ -32,12 +36,14 @@ func (c *Config) ClientQBt() *Client {
 	}
 	return nil
 }
+
 func (c *Config) RssMikan() *Rss {
 	if rss, has := c.Feed.Rss["mikan"]; has {
 		return rss
 	}
 	return nil
 }
+
 func (c *Config) KeyTmdb() string {
 	if key, has := c.Key["themoviedb"]; has {
 		return key
@@ -52,6 +58,7 @@ func (c *Config) Proxy() string {
 		return ""
 	}
 }
+
 func (s *Setting) Tag(info *models.AnimeEntity) string {
 	date, _ := time.Parse("2006-01-02", info.AirDate)
 	mouth := (int(date.Month()) + 2) / 3

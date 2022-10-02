@@ -12,6 +12,7 @@ type Config struct {
 		Url    string
 	} `yaml:"proxy"`
 	*Setting  `yaml:"setting"`
+	*Filter   `yaml:"filter"`
 	*Advanced `yaml:"advanced"`
 }
 type Client struct {
@@ -57,4 +58,8 @@ type Setting struct {
 	SavePath  string `yaml:"save_path"`
 	Category  string `yaml:"category"` // 分类
 	TagSrc    string `yaml:"tag"`      // 标签
+}
+
+type Filter struct {
+	JavaScript string `yaml:"javascript"` // 脚本名
 }

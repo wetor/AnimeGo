@@ -43,7 +43,7 @@ func (p *Mikan) Run(ctx context.Context) {
 
 	p.downloaderMgr = downloader.NewManager(qbt, store.Cache, downloadChan)
 
-	p.filterMgr = filterManager.NewManager(&filter.Default{},
+	p.filterMgr = filterManager.NewManager(&filter.JavaScript{},
 		mikanRss.NewRss(store.Config.RssMikan().Url, store.Config.RssMikan().Name),
 		mikan.MikanAdapter{ThemoviedbKey: store.Config.KeyTmdb()},
 		downloadChan)

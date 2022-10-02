@@ -7,8 +7,8 @@
 - 学习
 
 ## 目前进度
-- 基本配置文件、rss解析、番剧信息获取完成。
-- 调用下载器进行下载、Jellyfin支持，以及自动控制等待开发。
+- 可使用配置、筛选和下载等基本功能
+- Jellyfin支持
 
 ## 开发计划
 - [ ] 类似[AutoBangumi](https://github.com/EstrellaXD/Auto_Bangumi) 的追番功能
@@ -23,6 +23,14 @@
   - [ ] ...
 
 ## 开发日志
+
+### 2022.10.2
+- 初步的插件模型：内置javascript虚拟机引擎 [goja](https://github.com/dop251/goja) 
+- 支持js脚本编写Rss过滤器
+  - 支持筛选
+  - 支持日志、获取Mikan信息等基础内置函数
+- 支持 [poketto](https://github.com/3verness/poketto)初步解析下载项名
+- 目前缺少插件和过滤器相关文档
 
 ### 2022.8.28
 - **项目正式更名为AnimeGo**
