@@ -4,7 +4,6 @@ import (
 	"AnimeGo/internal/models"
 	"AnimeGo/internal/utils"
 	"os"
-	"path"
 	"time"
 
 	"go.uber.org/zap"
@@ -13,7 +12,7 @@ import (
 
 func NewConfig(_path string) *Config {
 	if len(_path) == 0 {
-		_path = "../data/config/conf.yaml"
+		_path = "../data/config/animego.yaml"
 	}
 	data, err := os.ReadFile(_path)
 	if err != nil {
@@ -24,9 +23,6 @@ func NewConfig(_path string) *Config {
 	if err != nil {
 		zap.S().Fatal("配置文件加载错误：", err)
 	}
-	conf.CachePath = path.Join(conf.DataPath, conf.CachePath)
-	conf.SavePath = path.Join(conf.DataPath, conf.SavePath)
-	conf.Filter.JavaScript = path.Join(conf.DataPath, conf.Filter.JavaScript)
 	return conf
 }
 

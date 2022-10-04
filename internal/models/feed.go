@@ -6,4 +6,5 @@ type FeedItem struct {
 	Date    string `json:"date"`    // 发布日期
 	Torrent string `json:"torrent"` // 种子连接
 	Hash    string `json:"hash"`    // 种子hash，唯一ID
+	Length  int64  `json:"length"`  // 种子大小
 }

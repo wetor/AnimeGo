@@ -17,7 +17,7 @@ var ctx, cancel = context.WithCancel(context.Background())
 var configFile string
 
 func main() {
-	flag.StringVar(&configFile, "config", "data/config/conf.yaml", "配置文件路径；配置文件中的相对路径均是相对与程序的位置")
+	flag.StringVar(&configFile, "config", "data/config/animego.yaml", "配置文件路径；配置文件中的相对路径均是相对与程序的位置")
 	flag.Parse()
 
 	sigs := make(chan os.Signal, 1)

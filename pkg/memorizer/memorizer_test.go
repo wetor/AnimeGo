@@ -41,7 +41,7 @@ func DoSomething(params *Params, results *Results) error {
 
 func TestMemorized(t *testing.T) {
 	db := cache.NewBolt()
-	db.Open(".")
+	db.Open("bolt.db")
 	dosomething := Memorized("test", db, DoSomething)
 
 	res := NewResults("ThemovieID", &Type{})

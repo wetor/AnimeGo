@@ -34,7 +34,7 @@ func TestMikan_Parse(t *testing.T) {
 		},
 	}
 	db := cache.NewBolt()
-	db.Open(".")
+	db.Open("bolt.db")
 	anisource.Init(&anisource.Options{Cache: db})
 	m := &Mikan{}
 	for _, tt := range tests {

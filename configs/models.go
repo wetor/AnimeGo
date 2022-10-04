@@ -7,12 +7,7 @@ type Config struct {
 
 	Client    map[string]*Client
 	Key       map[string]string
-	ProxyConf struct {
-		Enable bool
-		Url    string
-	} `yaml:"proxy"`
 	*Setting  `yaml:"setting"`
-	*Filter   `yaml:"filter"`
 	*Advanced `yaml:"advanced"`
 }
 type Client struct {
@@ -54,10 +49,15 @@ type MainConf struct {
 
 type Setting struct {
 	DataPath  string `yaml:"data_path"`
-	CachePath string `yaml:"cache_path"`
+	DbFile    string `yaml:"db_file"`
 	SavePath  string `yaml:"save_path"`
 	Category  string `yaml:"category"` // 分类
 	TagSrc    string `yaml:"tag"`      // 标签
+	ProxyConf struct {
+		Enable bool
+		Url    string
+	} `yaml:"proxy"`
+	*Filter `yaml:"filter"`
 }
 
 type Filter struct {

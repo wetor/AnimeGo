@@ -16,17 +16,14 @@ client:
 key:
   # TheMovieDB APIkey，申请链接（需注册）：https://www.themoviedb.org/settings/api?language=zh-CN
   themoviedb: 111
-proxy:
-  enable: false
-  # 支持http和socks5代理
-  url: http://127.0.0.1:7890
+# 常规设置
 setting:
   # 额外数据存储路径。如在Docker中部署，以下路径需要为挂载后的Docker内路径
-  data_path: /AnimeGo/data
+  data_path: data
+  # 下载保存位置。如在Docker中部署，以下路径需要为挂载后的Docker内路径
+  save_path: /root/download
   # 缓存数据存储路径。相对于data_path的路径
-  cache_path: cache
-  # 下载保存位置。相对于data_path的路径
-  save_path: download
+  db_file: cache/bolt.db
   # 分类名
   category: test
   # 标签表达式
@@ -39,11 +36,15 @@ setting:
   #   - {week} int 番剧更新星期数，取值为[1, 2, 3, 4, 5, 6, 7]
   #   - {week_name} string 番剧更新星期名，取值为[星期一, 星期二, 星期三, 星期四, 星期五, 星期六, 星期日]
   tag: "{year}年{quarter}月新番"
-
-# 过滤设置，用来在下载前根据文件名判断是否需要下载
-# 目前过滤仅支持javascript脚本过滤器，具体编写规则参考脚本文档
-filter:
-  javascript: filter/default.js
+  # 代理设置
+  proxy:
+    enable: false
+    # 支持http和socks5代理
+    url: http://127.0.0.1:7890
+  # 过滤设置，用来在下载前根据文件名判断是否需要下载
+  # 目前过滤仅支持javascript脚本过滤器，具体编写规则参考脚本文档
+  filter:
+    javascript: plugin/filter/default.js
 # 高级设置，主要为一些细节设置，请勿随意修改
 advanced:
   # 下载器Client高级设置

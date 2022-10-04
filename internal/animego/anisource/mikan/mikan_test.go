@@ -51,7 +51,7 @@ func TestParseMikan(t *testing.T) {
 		},
 	}
 	db := cache.NewBolt()
-	db.Open(".")
+	db.Open("bolt.db")
 	anisource.Init(&pkgAnisource.Options{
 		Cache: db,
 	})

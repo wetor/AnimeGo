@@ -84,8 +84,8 @@ func TestBangumi_ParseCache(t *testing.T) {
 	}
 
 	db := cache.NewBolt()
-	db.Open(".")
-	anisource.Init(anisource.Options{Cache: db})
+	db.Open("bolt.db")
+	anisource.Init(&anisource.Options{Cache: db})
 	b := &Bangumi{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

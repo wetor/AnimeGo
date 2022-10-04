@@ -1,4 +1,4 @@
-package filter
+package javascript
 
 import (
 	"AnimeGo/internal/animego/plugin/javascript"

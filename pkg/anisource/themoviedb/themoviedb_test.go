@@ -58,14 +58,14 @@ func TestThemoviedb_Parse(t1 *testing.T) {
 		{
 			name:       "OVERLORD IV",
 			fields:     fields{Key: data.ThemoviedbKey},
-			args:       args{name: "うたわれるもの 二人の白皇", airDate: "2022-07-05"},
+			args:       args{name: "オーバーロードIV", airDate: "2022-07-05"},
 			wantTmdbID: 64196,
 			wantSeason: 4,
 			wantErr:    false,
 		},
 	}
 	db := cache.NewBolt()
-	db.Open(".")
+	db.Open("bolt.db")
 	anisource.Init(&anisource.Options{Cache: db})
 	t := &Themoviedb{
 		Key: data.ThemoviedbKey,

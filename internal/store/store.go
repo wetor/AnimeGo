@@ -4,6 +4,7 @@ import (
 	"AnimeGo/configs"
 	"AnimeGo/internal/cache"
 	"AnimeGo/internal/utils"
+	"path"
 	"sync"
 
 	"go.uber.org/zap"
@@ -30,7 +31,23 @@ func Init(opt *InitOptions) {
 	} else {
 		Config = configs.NewConfig(opt.ConfigFile)
 	}
+	InitDir()
+	CreateDir()
+	if opt.Cache == nil {
+		Cache = cache.NewBolt()
+		Cache.Open(Config.Setting.DbFile)
+	} else {
+		Cache = opt.Cache
+	}
+}
 
+func InitDir() {
+	Config.JavaScript = path.Join(Config.DataPath, Config.JavaScript)
+	Config.DbFile = path.Join(Config.DataPath, Config.DbFile)
+	CacheDir = path.Join(Config.DataPath, CacheDir)
+}
+
+func CreateDir() {
 	err := utils.CreateMutiDir(Config.DataPath)
 	if err != nil {
 		zap.S().Fatalf("创建文件夹失败，%s", Config.DataPath)
@@ -39,15 +56,13 @@ func Init(opt *InitOptions) {
 	if err != nil {
 		zap.S().Fatalf("创建文件夹失败，%s", Config.SavePath)
 	}
-	err = utils.CreateMutiDir(Config.CachePath)
+	err = utils.CreateMutiDir(CacheDir)
 	if err != nil {
-		zap.S().Fatalf("创建文件夹失败，%s", Config.CachePath)
+		zap.S().Fatalf("创建文件夹失败，%s", CacheDir)
 	}
-
-	if opt.Cache == nil {
-		Cache = cache.NewBolt()
-		Cache.Open(Config.Setting.CachePath)
-	} else {
-		Cache = opt.Cache
+	dbDir := path.Join(Config.DataPath, path.Dir(Config.DbFile))
+	err = utils.CreateMutiDir(dbDir)
+	if err != nil {
+		zap.S().Fatalf("创建文件夹失败，%s", dbDir)
 	}
 }

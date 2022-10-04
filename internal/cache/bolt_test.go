@@ -9,7 +9,7 @@ import (
 func TestBolt_Put(t *testing.T) {
 
 	db := NewBolt()
-	db.Open(".")
+	db.Open("1.a")
 	e := models.AnimeEntity{
 		ID:      666,
 		Name:    "测试番剧名称",
@@ -26,7 +26,7 @@ func TestBolt_Put(t *testing.T) {
 
 func TestBolt_Get(t *testing.T) {
 	db := NewBolt()
-	db.Open(".")
+	db.Open("bolt.db")
 	var data models.AnimeEntity
 	err := db.Get("test", "key", &data)
 	if err != nil {

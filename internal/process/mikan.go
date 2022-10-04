@@ -5,17 +5,13 @@ import (
 	"AnimeGo/internal/animego/anisource/mikan"
 	"AnimeGo/internal/animego/downloader/qbittorent"
 	mikanRss "AnimeGo/internal/animego/feed/mikan"
-	"AnimeGo/internal/animego/filter"
+	"AnimeGo/internal/animego/filter/javascript"
 	"AnimeGo/internal/animego/manager/downloader"
 	filterManager "AnimeGo/internal/animego/manager/filter"
 	"AnimeGo/internal/models"
 	"AnimeGo/internal/store"
 	pkgAnisource "AnimeGo/pkg/anisource"
 	"context"
-)
-
-const (
-	UpdateWaitMinMinute = 2 // 订阅最短间隔分钟
 )
 
 type Mikan struct {
@@ -43,7 +39,7 @@ func (p *Mikan) Run(ctx context.Context) {
 
 	p.downloaderMgr = downloader.NewManager(qbt, store.Cache, downloadChan)
 
-	p.filterMgr = filterManager.NewManager(&filter.JavaScript{},
+	p.filterMgr = filterManager.NewManager(&javascript.JavaScript{},
 		mikanRss.NewRss(store.Config.RssMikan().Url, store.Config.RssMikan().Name),
 		mikan.MikanAdapter{ThemoviedbKey: store.Config.KeyTmdb()},
 		downloadChan)
