@@ -7,10 +7,6 @@ type Config struct {
 
 	Client    map[string]*Client
 	Key       map[string]string
-	ProxyConf struct {
-		Enable bool
-		Url    string
-	} `yaml:"proxy"`
 	*Setting  `yaml:"setting"`
 	*Advanced `yaml:"advanced"`
 }
@@ -25,11 +21,8 @@ type Rss struct {
 }
 
 type Advanced struct {
-	*ClientConf     `yaml:"client"`
-	*MainConf       `yaml:"main"`
-	*BangumiConf    `yaml:"bangumi"`
-	*ThemoviedbConf `yaml:"themoviedb"`
-	*MikanConf      `yaml:"mikan"`
+	*ClientConf `yaml:"client"`
+	*MainConf   `yaml:"main"`
 }
 
 type ClientConf struct {
@@ -50,33 +43,30 @@ type MainConf struct {
 		Enable       bool `yaml:"enable"`
 		GoroutineMax int  `yaml:"goroutine_max"`
 	} `yaml:"multi_goroutine"`
-}
-
-type BangumiConf struct {
-	Host            string `yaml:"host"`
-	MatchEpRange    int    `yaml:"match_ep_range"`
-	MatchEpDays     int    `yaml:"match_ep_days"`
-	CacheInfoExpire int64  `yaml:"cache_info_expire_second"`
-	CacheEpExpire   int64  `yaml:"cache_ep_expire_second"`
-}
-
-type ThemoviedbConf struct {
-	Host              string `yaml:"host"`
-	MatchSeasonDays   int    `yaml:"match_season_days"`
-	CacheIdExpire     int64  `yaml:"cache_id_expire_second"`
-	CacheSeasonExpire int64  `yaml:"cache_season_expire_second"`
-}
-
-type MikanConf struct {
-	Host               string `yaml:"host"`
-	CacheIdExpire      int64  `yaml:"cache_id_expire_second"`
-	CacheBangumiExpire int64  `yaml:"cache_bangumi_expire_second"`
+	HttpTimeoutSecond int `yaml:"http_timeout_second"`
+	HttpRetryNum      int `yaml:"http_retry_num"`
 }
 
 type Setting struct {
 	DataPath  string `yaml:"data_path"`
-	CachePath string `yaml:"cache_path"`
+	DbFile    string `yaml:"db_file"`
 	SavePath  string `yaml:"save_path"`
+	LogFile   string `yaml:"log_file"`
+	TempPath  string `yaml:"temp_path"`
 	Category  string `yaml:"category"` // 分类
 	TagSrc    string `yaml:"tag"`      // 标签
+	ProxyConf struct {
+		Enable bool   `yaml:"enable"`
+		Url    string `json:"url"`
+	} `yaml:"proxy"`
+	*Filter `yaml:"filter"`
+	WebApi  struct {
+		Key  string `yaml:"key"`
+		Host string `yaml:"host"`
+		Port int    `yaml:"port"`
+	} `yaml:"webapi"`
+}
+
+type Filter struct {
+	JavaScript string `yaml:"javascript"` // 脚本名
 }

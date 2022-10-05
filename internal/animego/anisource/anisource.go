@@ -3,7 +3,6 @@
 package anisource
 
 import (
-	"AnimeGo/internal/cache"
 	"AnimeGo/internal/models"
 	"AnimeGo/pkg/anisource"
 	"AnimeGo/pkg/anisource/bangumi"
@@ -27,14 +26,11 @@ var (
 //  @param cache cache.Cache
 //  @param proxy string
 //
-func Init(cache cache.Cache, proxy string) {
+func Init(opts *anisource.Options) {
 	mikanInstance = nil
 	bangumiInstance = nil
 	themoviedbInstance = nil
-	anisource.Init(anisource.Options{
-		Cache: cache,
-		Proxy: proxy,
-	})
+	anisource.Init(opts)
 }
 
 func Mikan() *mikan.Mikan {

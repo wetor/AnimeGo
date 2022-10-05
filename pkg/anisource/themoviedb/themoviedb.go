@@ -7,11 +7,12 @@ import (
 )
 
 var (
-	Host                  = "https://api.themoviedb.org"
-	Bucket                = "themoviedb"
-	DefaultSeason         = 1
-	MatchSeasonDays       = 90
-	CacheSecond     int64 = 7 * 24 * 60 * 60
+	Host                    = "https://api.themoviedb.org"
+	Bucket                  = "themoviedb"
+	DefaultSeason           = 1
+	MatchSeasonDays         = 90
+	CacheSecond     int64   = 7 * 24 * 60 * 60
+	MinSimilar      float64 = 0.75
 )
 
 type Themoviedb struct {
@@ -78,36 +79,49 @@ func (t Themoviedb) Parse(name, airDate string) (tmdbID int, season int, err err
 
 func (t Themoviedb) parseThemoviedbID(name string) (tmdbID int, err error) {
 	resp := FindResponse{}
-	step := 0
-	for step >= 0 {
-		err = request.Get(&request.Param{
-			Uri:      idApi(t.Key, name),
+	result, err := RemoveNameSuffix(name, func(innerName string) (interface{}, error) {
+		err := request.Get(&request.Param{
+			Uri:      idApi(t.Key, innerName),
 			Proxy:    anisource.Proxy,
 			BindJson: &resp,
+			Retry:    anisource.Retry,
+			Timeout:  anisource.Timeout,
 		})
 		if err != nil {
 			return 0, err
 		}
-		if resp.TotalResults != 0 {
-			tmdbID = resp.Result[0].ID
+		if resp.TotalResults == 1 {
+			return resp.Result[0].ID, nil
+		} else if resp.TotalResults > 1 {
+			// 筛选与original name完全相同的番剧
 			for _, result := range resp.Result {
 				if result.OriginalName == name {
-					tmdbID = result.ID
-					break
+					return result.ID, nil
 				}
 			}
-			return tmdbID, nil
-		} else {
-			result, nextStep, err := RemoveNameSuffix(name, step)
-			if err != nil {
-				return 0, err
+			tmdbID = resp.Result[0].ID
+			// 按照相似度排序筛选
+			maxSimilar := float64(0)
+			for _, result := range resp.Result {
+				similar := SimilarText(result.OriginalName, name)
+				if similar > maxSimilar {
+					maxSimilar = similar
+					tmdbID = result.ID
+				}
 			}
-			step = nextStep
-			name = result
-			continue
+			if maxSimilar >= MinSimilar {
+				return tmdbID, nil
+			}
+			return 0, NotFoundAnimeNameErr
+		} else {
+			// 未找到结果
+			return nil, nil
 		}
+	})
+	if err != nil {
+		return 0, err
 	}
-	return 0, NotFoundAnimeNameErr
+	return result.(int), nil
 }
 
 func (t Themoviedb) parseAnimeSeason(tmdbID int, airDate string) (season int, err error) {
@@ -116,6 +130,8 @@ func (t Themoviedb) parseAnimeSeason(tmdbID int, airDate string) (season int, er
 		Uri:      infoApi(t.Key, tmdbID),
 		Proxy:    anisource.Proxy,
 		BindJson: &resp,
+		Retry:    anisource.Retry,
+		Timeout:  anisource.Timeout,
 	})
 	if err != nil {
 		return DefaultSeason, err
@@ -129,7 +145,7 @@ func (t Themoviedb) parseAnimeSeason(tmdbID int, airDate string) (season int, er
 		if r.SeasonNumber == 0 || r.Name == "Specials" {
 			continue
 		}
-		// TODO: 待优化，通过比较此季度番剧的初放松日期，筛选差值最小的季
+		// TODO: 待优化，通过比较此季度番剧的初放送日期，筛选差值最小的季
 		if s := StrTimeSubAbs(r.AirDate, airDate); s < min {
 			min = s
 			season = r.SeasonNumber

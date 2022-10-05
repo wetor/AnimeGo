@@ -3,51 +3,29 @@ package store
 import (
 	"AnimeGo/configs"
 	"AnimeGo/internal/cache"
-	"AnimeGo/internal/utils"
+	"AnimeGo/internal/process"
 	"sync"
-
-	"go.uber.org/zap"
 )
 
 var (
-	Cache  cache.Cache
-	Config *configs.Config
-	WG     sync.WaitGroup
+	Cache   cache.Cache
+	Config  *configs.Config
+	WG      sync.WaitGroup
+	Process process.Process
 )
 
 type InitOptions struct {
-	Cache      cache.Cache
-	ConfigFile string
+	Config *configs.Config
+	Cache  cache.Cache
 }
 
+// Init
+//  @Description: 初始化store和dir
+//  @param opt *InitOptions
+//
 func Init(opt *InitOptions) {
-	if opt == nil {
-		opt = &InitOptions{}
-	}
 
-	if len(opt.ConfigFile) == 0 {
-		Config = configs.NewConfig("data/config/conf.yaml")
-	} else {
-		Config = configs.NewConfig(opt.ConfigFile)
-	}
+	Config = opt.Config
+	Cache = opt.Cache
 
-	err := utils.CreateMutiDir(Config.DataPath)
-	if err != nil {
-		zap.S().Fatalf("创建文件夹失败，%s", Config.DataPath)
-	}
-	err = utils.CreateMutiDir(Config.SavePath)
-	if err != nil {
-		zap.S().Fatalf("创建文件夹失败，%s", Config.SavePath)
-	}
-	err = utils.CreateMutiDir(Config.CachePath)
-	if err != nil {
-		zap.S().Fatalf("创建文件夹失败，%s", Config.CachePath)
-	}
-
-	if opt.Cache == nil {
-		Cache = cache.NewBolt()
-		Cache.Open(Config.Setting.CachePath)
-	} else {
-		Cache = opt.Cache
-	}
 }

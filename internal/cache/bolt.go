@@ -7,7 +7,6 @@ import (
 	"errors"
 	"github.com/boltdb/bolt"
 	"go.uber.org/zap"
-	"path"
 	"time"
 )
 
@@ -19,8 +18,8 @@ func NewBolt() *Bolt {
 	return &Bolt{}
 }
 
-func (c *Bolt) Open(dir string) {
-	db, err := bolt.Open(path.Join(dir, "bolt.db"), 0600, nil)
+func (c *Bolt) Open(path string) {
+	db, err := bolt.Open(path, 0600, nil)
 	if err != nil {
 		zap.S().Warn(err)
 		return

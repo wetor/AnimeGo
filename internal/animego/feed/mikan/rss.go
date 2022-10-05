@@ -11,6 +11,7 @@ import (
 	"os"
 	"path"
 	"regexp"
+	"strconv"
 
 	"github.com/mmcdole/gofeed"
 	"go.uber.org/zap"
@@ -37,13 +38,15 @@ func NewRss(url, name string) feed.Feed {
 //
 func (f *Rss) Parse() []*models.FeedItem {
 
-	filename := path.Join(store.Config.Setting.CachePath, f.name+".xml")
+	filename := path.Join(store.Config.TempPath, f.name+".xml")
 	// --------- 下载rss.xml ---------
 	zap.S().Info("获取Rss数据开始...")
 	err := request.Get(&request.Param{
 		Uri:      f.url,
 		Proxy:    store.Config.Proxy(),
 		SaveFile: filename,
+		Timeout:  store.Config.HttpTimeoutSecond,
+		Retry:    store.Config.HttpRetryNum,
 	})
 	if err != nil {
 		zap.S().Warn(err)
@@ -67,6 +70,7 @@ func (f *Rss) Parse() []*models.FeedItem {
 	regx := regexp.MustCompile(`<pubDate>(.*?)T`)
 
 	var date string
+	var length int64
 	items := make([]*models.FeedItem, len(feeds.Items))
 	for i, item := range feeds.Items {
 		strs := regx.FindStringSubmatch(item.Custom["torrent"])
@@ -82,6 +86,10 @@ func (f *Rss) Parse() []*models.FeedItem {
 		} else {
 			hash = hash[:40]
 		}
+		length, err = strconv.ParseInt(item.Enclosures[0].Length, 10, 64)
+		if err != nil {
+			zap.S().Warn(err)
+		}
 
 		items[i] = &models.FeedItem{
 			Url:     item.Link,
@@ -89,6 +97,7 @@ func (f *Rss) Parse() []*models.FeedItem {
 			Date:    date,
 			Torrent: item.Enclosures[0].URL,
 			Hash:    hash,
+			Length:  length,
 		}
 	}
 	return items

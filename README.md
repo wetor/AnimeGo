@@ -7,8 +7,10 @@
 - 学习
 
 ## 目前进度
-- 基本配置文件、rss解析、番剧信息获取完成。
-- 调用下载器进行下载、Jellyfin支持，以及自动控制等待开发。
+- 可使用配置、筛选和下载等基本功能
+- javascript编写筛选器，[帮助文档](internal/animego/plugin/javascript/README.md)
+- 支持Tampermonkey(油猴)插件 [AnimeGo\[Mikan快速订阅\]](https://greasyfork.org/zh-CN/scripts/449596-animego-mikan%E5%BF%AB%E9%80%9F%E8%AE%A2%E9%98%85) 快速订阅下载
+- Jellyfin支持
 
 ## 开发计划
 - [ ] 类似[AutoBangumi](https://github.com/EstrellaXD/Auto_Bangumi) 的追番功能
@@ -24,12 +26,32 @@
 
 ## 开发日志
 
+### 2022.10.5
+- 支持WebAPI
+  - 支持Tampermonkey(油猴)插件 [AnimeGo\[Mikan快速订阅\]](https://greasyfork.org/zh-CN/scripts/449596-animego-mikan%E5%BF%AB%E9%80%9F%E8%AE%A2%E9%98%85) 快速订阅下载
+- 整理项目初始化相关的代码结构
+- 整理测试文件初始化
+- 修复重复下载的问题
+
+### 2022.10.4
+- 增加种子大小Length字段
+- 增加资源释放程序
+- 修改部分配置结构
+
+### 2022.10.2
+- 初步的插件模型：内置javascript虚拟机引擎 [goja](https://github.com/dop251/goja) 
+- 支持js脚本编写Rss过滤器
+  - 支持筛选
+  - 支持日志、获取Mikan信息等基础内置函数
+- 支持 [poketto](https://github.com/3verness/poketto)初步解析下载项名
+
 ### 2022.8.28
 - **项目正式更名为AnimeGo**
 - 更改项目结构
 - 增加filter接口（暂无实现）
 - 将feed更新manager移动到filter manager
 - 增加部分包注释
+- 增加http请求超时重试机制（mikan除外）
 
 ### 2022.8.27
 - 更改项目结构

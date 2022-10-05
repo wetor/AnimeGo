@@ -1,9 +1,9 @@
 package qbittorent
 
 import (
-	"AnimeGo/internal/logger"
 	"AnimeGo/internal/models"
 	"AnimeGo/internal/store"
+	"AnimeGo/test"
 	"fmt"
 	"testing"
 )
@@ -12,11 +12,7 @@ var qbt *QBittorrent
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
-	logger.Init()
-	defer logger.Flush()
-
-	store.Init(nil)
-
+	test.TestInit()
 	conf := store.Config.ClientQBt()
 	qbt = NewQBittorrent(conf.Url, conf.Username, conf.Password, nil)
 	m.Run()

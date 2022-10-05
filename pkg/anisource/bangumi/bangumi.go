@@ -105,6 +105,8 @@ func (b Bangumi) parseAnimeInfo(bangumiID int) (entity *Entity, err error) {
 		Uri:      uri,
 		Proxy:    anisource.Proxy,
 		BindJson: &resp,
+		Retry:    anisource.Retry,
+		Timeout:  anisource.Timeout,
 	})
 	if err != nil {
 		return nil, err
@@ -143,6 +145,8 @@ func (b Bangumi) parseAnimeEpInfo(bangumiID, ep, eps int) (epInfo *Ep, err error
 		Uri:      uri,
 		Proxy:    anisource.Proxy,
 		BindJson: &resp,
+		Retry:    anisource.Retry,
+		Timeout:  anisource.Timeout,
 	})
 	if err != nil {
 		return nil, err

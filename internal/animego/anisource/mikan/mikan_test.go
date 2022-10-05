@@ -5,6 +5,7 @@ import (
 	"AnimeGo/internal/animego/anisource"
 	"AnimeGo/internal/cache"
 	"AnimeGo/internal/models"
+	pkgAnisource "AnimeGo/pkg/anisource"
 	"encoding/json"
 	"testing"
 )
@@ -50,8 +51,10 @@ func TestParseMikan(t *testing.T) {
 		},
 	}
 	db := cache.NewBolt()
-	db.Open(".")
-	anisource.Init(db, "")
+	db.Open("bolt.db")
+	anisource.Init(&pkgAnisource.Options{
+		Cache: db,
+	})
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			gotAnime := ParseMikan(tt.args.name, tt.args.url, data.ThemoviedbKey)

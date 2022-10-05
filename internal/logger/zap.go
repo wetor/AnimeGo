@@ -12,11 +12,15 @@ const (
 	logTmFmt = "2006-01-02 15:04:05"
 )
 
-func GetLogger() {
+func GetLogger(opt *InitOptions) {
 	Encoder := GetEncoder()
+	level := zapcore.DebugLevel
+	if !opt.Debug {
+		level = zapcore.InfoLevel
+	}
 	newCore := zapcore.NewTee(
-		zapcore.NewCore(Encoder, GetWriteSyncer("./debug.log"), zapcore.DebugLevel), // 写入文件
-		zapcore.NewCore(Encoder, zapcore.Lock(os.Stdout), zapcore.DebugLevel),       // 写入控制台
+		zapcore.NewCore(Encoder, GetWriteSyncer(opt.File), zapcore.DebugLevel), // 写入文件
+		zapcore.NewCore(Encoder, zapcore.Lock(os.Stdout), level),               // 写入控制台
 	)
 	logger := zap.New(newCore, zap.AddCaller())
 	zap.ReplaceGlobals(logger)

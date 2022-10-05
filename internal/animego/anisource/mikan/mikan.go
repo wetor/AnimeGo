@@ -4,7 +4,6 @@ import (
 	"AnimeGo/internal/animego/anisource"
 	"AnimeGo/internal/animego/parser"
 	"AnimeGo/internal/models"
-
 	"go.uber.org/zap"
 )
 

@@ -3,7 +3,7 @@
 package cache
 
 type Cache interface {
-	Open(dir string)
+	Open(path string)
 	Close()
 	Add(bucket string)
 	Put(bucket string, key, val interface{}, ttl int64)
