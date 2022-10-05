@@ -60,7 +60,6 @@ func (m *Mikan) RegisterCache() {
 
 func (m Mikan) ParseCache(url string) (mikanID int, bangumiID int, err error) {
 	mikan, err := m.CacheParseMikanInfo(url)
-	fmt.Println(mikan)
 	if err != nil {
 		return
 	}

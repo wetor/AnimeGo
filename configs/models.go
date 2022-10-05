@@ -51,13 +51,20 @@ type Setting struct {
 	DataPath  string `yaml:"data_path"`
 	DbFile    string `yaml:"db_file"`
 	SavePath  string `yaml:"save_path"`
+	LogFile   string `yaml:"log_file"`
+	TempPath  string `yaml:"temp_path"`
 	Category  string `yaml:"category"` // 分类
 	TagSrc    string `yaml:"tag"`      // 标签
 	ProxyConf struct {
-		Enable bool
-		Url    string
+		Enable bool   `yaml:"enable"`
+		Url    string `json:"url"`
 	} `yaml:"proxy"`
 	*Filter `yaml:"filter"`
+	WebApi  struct {
+		Key  string `yaml:"key"`
+		Host string `yaml:"host"`
+		Port int    `yaml:"port"`
+	} `yaml:"webapi"`
 }
 
 type Filter struct {

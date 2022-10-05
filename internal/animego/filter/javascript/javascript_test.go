@@ -3,19 +3,15 @@ package javascript
 import (
 	"AnimeGo/internal/animego/anisource"
 	mikanRss "AnimeGo/internal/animego/feed/mikan"
-	"AnimeGo/internal/logger"
 	"AnimeGo/internal/store"
 	pkgAnisource "AnimeGo/pkg/anisource"
+	"AnimeGo/test"
 	"fmt"
 	"testing"
 )
 
 func TestJavaScript_Filter(t *testing.T) {
-	logger.Init()
-	defer logger.Flush()
-	store.Init(&store.InitOptions{
-		ConfigFile: "/Users/wetor/GoProjects/AnimeGo/data/config/conf.yaml",
-	})
+	test.TestInit()
 
 	anisource.Init(&pkgAnisource.Options{
 		Cache:   store.Cache,

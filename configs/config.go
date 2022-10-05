@@ -3,27 +3,59 @@ package configs
 import (
 	"AnimeGo/internal/models"
 	"AnimeGo/internal/utils"
+	"log"
 	"os"
+	"path"
 	"time"
 
-	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
 )
 
-func NewConfig(_path string) *Config {
-	if len(_path) == 0 {
-		_path = "../data/config/animego.yaml"
+func Init(path string) *Config {
+	if len(path) == 0 {
+		path = "../data/config/animego.yaml"
 	}
-	data, err := os.ReadFile(_path)
+	data, err := os.ReadFile(path)
 	if err != nil {
-		zap.S().Fatal("配置文件加载错误：", err)
+		log.Fatal("配置文件加载错误：", err)
 	}
 	conf := &Config{}
 	err = yaml.Unmarshal(data, conf)
 	if err != nil {
-		zap.S().Fatal("配置文件加载错误：", err)
+		log.Fatal("配置文件加载错误：", err)
 	}
 	return conf
+}
+
+func (c *Config) InitDir() {
+	c.TempPath = path.Join(c.DataPath, c.TempPath)
+
+	err := utils.CreateMutiDir(c.DataPath)
+	if err != nil {
+		log.Fatalf("创建文件夹失败，%s", c.DataPath)
+	}
+	err = utils.CreateMutiDir(c.SavePath)
+	if err != nil {
+		log.Fatalf("创建文件夹失败，%s", c.SavePath)
+	}
+	err = utils.CreateMutiDir(c.TempPath)
+	if err != nil {
+		log.Fatalf("创建文件夹失败，%s", c.TempPath)
+	}
+	dbDir := path.Join(c.DataPath, path.Dir(c.DbFile))
+	err = utils.CreateMutiDir(dbDir)
+	if err != nil {
+		log.Fatalf("创建文件夹失败，%s", dbDir)
+	}
+	logDir := path.Join(c.DataPath, path.Dir(c.LogFile))
+	err = utils.CreateMutiDir(logDir)
+	if err != nil {
+		log.Fatalf("创建文件夹失败，%s", logDir)
+	}
+
+	c.DbFile = path.Join(c.DataPath, c.DbFile)
+	c.LogFile = path.Join(c.DataPath, c.LogFile)
+	c.JavaScript = path.Join(c.DataPath, c.JavaScript)
 }
 
 func (c *Config) ClientQBt() *Client {

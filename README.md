@@ -9,6 +9,7 @@
 ## 目前进度
 - 可使用配置、筛选和下载等基本功能
 - javascript编写筛选器，[帮助文档](internal/animego/plugin/javascript/README.md)
+- 支持Tampermonkey(油猴)插件 [AnimeGo\[Mikan快速订阅\]](https://greasyfork.org/zh-CN/scripts/449596-animego-mikan%E5%BF%AB%E9%80%9F%E8%AE%A2%E9%98%85) 快速订阅下载
 - Jellyfin支持
 
 ## 开发计划
@@ -24,6 +25,13 @@
   - [ ] ...
 
 ## 开发日志
+
+### 2022.10.5
+- 支持WebAPI
+  - 支持Tampermonkey(油猴)插件 [AnimeGo\[Mikan快速订阅\]](https://greasyfork.org/zh-CN/scripts/449596-animego-mikan%E5%BF%AB%E9%80%9F%E8%AE%A2%E9%98%85) 快速订阅下载
+- 整理项目初始化相关的代码结构
+- 整理测试文件初始化
+- 修复重复下载的问题
 
 ### 2022.10.4
 - 增加种子大小Length字段

@@ -49,10 +49,12 @@ func NewManager(filter filter.Filter, feed feed.Feed, anisource anisource.AniSou
 	return m
 }
 
-func (m *Manager) Update(ctx context.Context) {
-
+func (m *Manager) Update(ctx context.Context, items []*models.FeedItem) {
 	// 筛选
-	items := m.filter.Filter(m.feed.Parse())
+	if items == nil {
+		items = m.feed.Parse()
+	}
+	items = m.filter.Filter(items)
 
 	conf := store.Config.Advanced.MainConf
 	animeList := make([]*models.AnimeEntity, len(items))
@@ -109,6 +111,7 @@ func (m *Manager) Update(ctx context.Context) {
 }
 
 func (m *Manager) Start(ctx context.Context) {
+	store.WG.Add(1)
 	go func() {
 		defer func() {
 			if err := recover(); err != nil {
@@ -122,7 +125,7 @@ func (m *Manager) Start(ctx context.Context) {
 				zap.S().Debug("正常退出")
 				return
 			default:
-				m.Update(ctx)
+				m.Update(ctx, nil)
 				delay := store.Config.Advanced.MainConf.FeedUpdateDelayMinute
 				if delay < UpdateWaitMinMinute {
 					delay = UpdateWaitMinMinute

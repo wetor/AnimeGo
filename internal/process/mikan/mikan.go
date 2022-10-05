@@ -1,4 +1,4 @@
-package process
+package mikan
 
 import (
 	"AnimeGo/internal/animego/anisource"
@@ -17,10 +17,15 @@ import (
 type Mikan struct {
 	downloaderMgr *downloader.Manager
 	filterMgr     *filterManager.Manager
+	ctx           context.Context
 }
 
 func NewMikan() *Mikan {
 	return &Mikan{}
+}
+
+func (p *Mikan) UpdateFeed(items []*models.FeedItem) {
+	p.filterMgr.Update(p.ctx, items)
 }
 
 func (p *Mikan) Run(ctx context.Context) {
@@ -43,7 +48,7 @@ func (p *Mikan) Run(ctx context.Context) {
 		mikanRss.NewRss(store.Config.RssMikan().Url, store.Config.RssMikan().Name),
 		mikan.MikanAdapter{ThemoviedbKey: store.Config.KeyTmdb()},
 		downloadChan)
-
+	p.ctx = ctx
 	p.downloaderMgr.Start(ctx)
 	p.filterMgr.Start(ctx)
 }

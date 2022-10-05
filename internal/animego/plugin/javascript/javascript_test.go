@@ -1,8 +1,8 @@
 package javascript
 
 import (
-	"AnimeGo/internal/logger"
 	"AnimeGo/internal/models"
+	"AnimeGo/test"
 	"fmt"
 	"github.com/dop251/goja"
 	"testing"
@@ -31,12 +31,11 @@ function sum(a, b) {
 }
 
 func TestJavaScript_Execute(t *testing.T) {
-	logger.Init()
-	defer logger.Flush()
+	test.TestInit()
 
 	js := &JavaScript{}
 	js.SetSchema([]string{"feedItems"}, []string{"index", "error"})
-	execute, err := js.Execute("/Users/wetor/GoProjects/AnimeGo/data/filter/default.js",
+	execute, err := js.Execute("/Users/wetor/GoProjects/AnimeGo/data/plugin/filter/default.js",
 		Object{
 			"feedItems": []*models.FeedItem{
 				{

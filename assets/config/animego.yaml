@@ -22,6 +22,10 @@ setting:
   data_path: data
   # 下载保存位置。如在Docker中部署，以下路径需要为挂载后的Docker内路径
   save_path: /root/download
+  # 临时文件保存位置。相对于data_path的路径
+  temp_path: temp
+  # 日志文件保存位置。
+  log_file: log/debug.log
   # 缓存数据存储路径。相对于data_path的路径
   db_file: cache/bolt.db
   # 分类名
@@ -45,6 +49,13 @@ setting:
   # 目前过滤仅支持javascript脚本过滤器，具体编写规则参考脚本文档
   filter:
     javascript: plugin/filter/default.js
+  # WebApi设置
+  webapi:
+    # 请求秘钥，为空则不需要验证
+    key:
+    # 服务的host和端口设置
+    host: localhost
+    port: 7991
 # 高级设置，主要为一些细节设置，请勿随意修改
 advanced:
   # 下载器Client高级设置
@@ -91,7 +102,7 @@ advanced:
       # 最大协程数量。默认为4，为0则同时解析所有Rss条目
       goroutine_max: 4
     # HTTP请求超时，默认3秒
-    http_timeout_second: 3
+    http_timeout_second: 5
     # HTTP请求失败重试次数，默认3次
     http_retry_num: 3
 

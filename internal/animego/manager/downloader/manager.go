@@ -83,12 +83,25 @@ func (m *Manager) Download(anime *models.AnimeEntity) {
 //  @param finish chan bool 添加下载完成后发送消息
 //
 func (m *Manager) download(animes []*models.AnimeEntity, ctx context.Context) {
-	for _, anime := range animes {
+	// 去重
+	set := make(map[string]struct{})
+	setIndex := make([]int, 0, len(animes))
+	for i, anime := range animes {
+		if _, has := set[anime.FullName()]; !has {
+			set[anime.FullName()] = struct{}{}
+			setIndex = append(setIndex, i)
+		}
+	}
+	for _, i := range setIndex {
+		anime := animes[i]
 		zap.S().Infof("开始下载「%s」", anime.FullName())
 		if !m.canDownload(anime) {
 			zap.S().Debugf("取消下载，发现重复「%s」", anime.FullName())
 			continue
 		}
+
+		m.bangumi[anime.Hash] = anime
+
 		m.client.Add(&models.ClientAddOptions{
 			Urls:        []string{anime.Url},
 			SavePath:    store.Config.SavePath,
@@ -176,6 +189,7 @@ func (m *Manager) GetContent(hash string) *models.TorrentContentItem {
 //  @param exit chan bool 退出后的回调chan，manager结束后会返回true
 //
 func (m *Manager) Start(ctx context.Context) {
+	store.WG.Add(1)
 	// 开始下载协程
 	go func() {
 		defer func() {
@@ -261,6 +275,13 @@ func (m *Manager) UpdateList() {
 		bangumi := &models.AnimeEntity{}
 		err := m.cache.Get(Bucket, item.Hash, bangumi)
 		if err == nil {
+			if !m.canDownload(bangumi) {
+				m.client.Delete(&models.ClientDeleteOptions{
+					Hash: []string{item.Hash},
+				})
+				zap.S().Debugf("删除下载，发现重复「%s」", bangumi.FullName())
+				continue
+			}
 			// item 缓存
 			m.items[item.Hash] = item
 

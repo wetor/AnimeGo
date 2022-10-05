@@ -38,7 +38,7 @@ func NewRss(url, name string) feed.Feed {
 //
 func (f *Rss) Parse() []*models.FeedItem {
 
-	filename := path.Join(store.CacheDir, f.name+".xml")
+	filename := path.Join(store.Config.TempPath, f.name+".xml")
 	// --------- 下载rss.xml ---------
 	zap.S().Info("获取Rss数据开始...")
 	err := request.Get(&request.Param{

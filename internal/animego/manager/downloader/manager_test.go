@@ -3,9 +3,9 @@ package downloader
 import (
 	"AnimeGo/internal/animego/downloader"
 	"AnimeGo/internal/animego/downloader/qbittorent"
-	"AnimeGo/internal/logger"
 	"AnimeGo/internal/models"
 	"AnimeGo/internal/store"
+	"AnimeGo/test"
 	"context"
 	"fmt"
 	"path"
@@ -17,12 +17,7 @@ var qbt downloader.Client
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
-	logger.Init()
-	defer logger.Flush()
-
-	store.Init(&store.InitOptions{
-		ConfigFile: "/Users/wetor/GoProjects/AnimeGo/data/config/conf.yaml",
-	})
+	test.TestInit()
 
 	conf := store.Config.ClientQBt()
 	qbt = qbittorent.NewQBittorrent(conf.Url, conf.Username, conf.Password, nil)

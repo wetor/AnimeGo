@@ -1,8 +1,8 @@
-package process
+package mikan
 
 import (
-	"AnimeGo/internal/logger"
 	"AnimeGo/internal/store"
+	"AnimeGo/test"
 	"context"
 	"fmt"
 	"sync"
@@ -12,11 +12,7 @@ import (
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
-	logger.Init()
-	defer logger.Flush()
-	store.Init(&store.InitOptions{
-		ConfigFile: "/Users/wetor/GoProjects/AnimeGo/data/config/conf.yaml",
-	})
+	test.TestInit()
 
 	m.Run()
 	fmt.Println("end")
