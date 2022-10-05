@@ -25,7 +25,7 @@ func Download(c *gin.Context) {
 	rss := mikan.NewRss(request.Rss.Url, "")
 
 	items := rss.Parse()
-	if request.SelectEp {
+	if request.IsSelectEp {
 		set := make(map[string]bool)
 		for _, item := range request.EpLinks {
 			set[item] = true

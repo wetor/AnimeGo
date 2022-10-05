@@ -2,21 +2,15 @@ package web
 
 import (
 	"AnimeGo/internal/animego/anisource"
-	"AnimeGo/internal/logger"
 	"AnimeGo/internal/store"
 	pkgAnisource "AnimeGo/pkg/anisource"
+	"AnimeGo/test"
 	"context"
-	"fmt"
 	"testing"
-	"time"
 )
 
 func TestInitRouter(t *testing.T) {
-	logger.Init()
-	defer logger.Flush()
-	store.Init(&store.InitOptions{
-		ConfigFile: "/Users/wetor/GoProjects/AnimeGo/data/config/animego.yaml",
-	})
+	test.TestInit()
 
 	anisource.Init(&pkgAnisource.Options{
 		Cache:   store.Cache,
@@ -24,12 +18,9 @@ func TestInitRouter(t *testing.T) {
 		Timeout: store.Config.HttpTimeoutSecond,
 		Retry:   store.Config.HttpRetryNum,
 	})
-	var ctx, cancel = context.WithCancel(context.Background())
-	store.WG.Add(1)
-	Run(ctx)
 
-	time.Sleep(3 * time.Second)
-	cancel()
+	Run(context.Background())
+
 	store.WG.Wait()
-	fmt.Println("end")
+
 }
