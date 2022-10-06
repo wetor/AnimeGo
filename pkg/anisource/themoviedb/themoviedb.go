@@ -9,7 +9,6 @@ import (
 var (
 	Host                    = "https://api.themoviedb.org"
 	Bucket                  = "themoviedb"
-	DefaultSeason           = 1
 	MatchSeasonDays         = 90
 	CacheSecond     int64   = 7 * 24 * 60 * 60
 	MinSimilar      float64 = 0.75
@@ -54,12 +53,12 @@ func (t Themoviedb) ParseCache(name, airDate string) (tmdbID int, season int, er
 
 	err = t.cacheParseThemoviedbID(mem.NewParams("name", name).TTL(CacheSecond), results)
 	if err != nil {
-		return 0, DefaultSeason, err
+		return 0, 0, err
 	}
 	tmdbID = results.Get("tmdbID").(int)
 	err = t.cacheParseAnimeSeason(mem.NewParams("tmdbID", tmdbID, "airDate", airDate).TTL(CacheSecond), results)
 	if err != nil {
-		return tmdbID, DefaultSeason, err
+		return tmdbID, 0, err
 	}
 	season = results.Get("season").(int)
 	return tmdbID, season, nil
@@ -68,11 +67,11 @@ func (t Themoviedb) ParseCache(name, airDate string) (tmdbID int, season int, er
 func (t Themoviedb) Parse(name, airDate string) (tmdbID int, season int, err error) {
 	tmdbID, err = t.parseThemoviedbID(name)
 	if err != nil {
-		return 0, DefaultSeason, err
+		return 0, 0, err
 	}
 	season, err = t.parseAnimeSeason(tmdbID, airDate)
 	if err != nil {
-		return tmdbID, DefaultSeason, err
+		return tmdbID, 0, err
 	}
 	return tmdbID, season, nil
 }
@@ -134,10 +133,10 @@ func (t Themoviedb) parseAnimeSeason(tmdbID int, airDate string) (season int, er
 		Timeout:  anisource.Timeout,
 	})
 	if err != nil {
-		return DefaultSeason, err
+		return 0, err
 	}
 	if resp.Seasons == nil || len(resp.Seasons) == 0 {
-		return DefaultSeason, NotMatchSeasonErr
+		return 0, NotMatchSeasonErr
 	}
 	season = resp.Seasons[0].SeasonNumber
 	min := 36500
@@ -152,7 +151,7 @@ func (t Themoviedb) parseAnimeSeason(tmdbID int, airDate string) (season int, er
 		}
 	}
 	if min > MatchSeasonDays {
-		return DefaultSeason, NotMatchSeasonErr
+		return 0, NotMatchSeasonErr
 	}
 	return season, nil
 }

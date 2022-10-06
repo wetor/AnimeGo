@@ -49,7 +49,8 @@ func (f *Rss) Parse() []*models.FeedItem {
 		Retry:    store.Config.HttpRetryNum,
 	})
 	if err != nil {
-		zap.S().Warn(err)
+		zap.S().Debug(err)
+		zap.S().Warn("请求Rss失败")
 		return nil
 	}
 	zap.S().Info("获取Rss数据成功！")
@@ -57,14 +58,16 @@ func (f *Rss) Parse() []*models.FeedItem {
 	// --------- 解析本地rss.xml ---------
 	file, err := os.Open(filename)
 	if err != nil {
-		zap.S().Warn(err)
+		zap.S().Debug(err)
+		zap.S().Warn("打开Rss文件失败")
 		return nil
 	}
 	defer file.Close()
 	fp := gofeed.NewParser()
 	feeds, err := fp.Parse(file)
 	if err != nil {
-		zap.S().Warn(err)
+		zap.S().Debug(err)
+		zap.S().Warn("解析ss失败")
 		return nil
 	}
 	regx := regexp.MustCompile(`<pubDate>(.*?)T`)
@@ -81,14 +84,16 @@ func (f *Rss) Parse() []*models.FeedItem {
 		}
 		_, hash := path.Split(item.Enclosures[0].URL)
 		if len(hash) < 40 {
-			zap.S().Warn(err)
+			zap.S().Debug(err)
+			zap.S().Warn("获取torrent hash失败：URL错误")
 			hash = ""
 		} else {
 			hash = hash[:40]
 		}
 		length, err = strconv.ParseInt(item.Enclosures[0].Length, 10, 64)
 		if err != nil {
-			zap.S().Warn(err)
+			zap.S().Debug(err)
+			zap.S().Warn("获取torrent length失败")
 		}
 
 		items[i] = &models.FeedItem{

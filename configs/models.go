@@ -28,6 +28,7 @@ type Advanced struct {
 type ClientConf struct {
 	ConnectTimeoutSecond int `yaml:"connect_timeout_second"`
 	RetryConnectNum      int `yaml:"retry_connect_num"`
+	CheckTimeSecond      int `yaml:"check_time_second"`
 }
 
 type MainConf struct {
@@ -45,6 +46,11 @@ type MainConf struct {
 	} `yaml:"multi_goroutine"`
 	HttpTimeoutSecond int `yaml:"http_timeout_second"`
 	HttpRetryNum      int `yaml:"http_retry_num"`
+	Default           struct {
+		TMDBFailSkip           bool `yaml:"tmdb_fail_skip"`
+		TMDBFailUseTitleSeason bool `yaml:"tmdb_fail_use_title_season"`
+		TMDBFailUseFirstSeason bool `yaml:"tmdb_fail_use_first_season"`
+	} `yaml:"default"`
 }
 
 type Setting struct {

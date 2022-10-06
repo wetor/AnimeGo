@@ -4,9 +4,12 @@ package downloader
 
 import (
 	"AnimeGo/internal/models"
+	"context"
 )
 
 type Client interface {
+	Connected() bool
+	Start(ctx context.Context)
 	Version() string
 	Preferences() *models.Preferences
 	SetDefaultPreferences()

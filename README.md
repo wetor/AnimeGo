@@ -9,7 +9,7 @@
 ## 目前进度
 - 可使用配置、筛选和下载等基本功能
 - javascript编写筛选器，[帮助文档](internal/animego/plugin/javascript/README.md)
-- 支持Tampermonkey(油猴)插件 [AnimeGo\[Mikan快速订阅\]](https://greasyfork.org/zh-CN/scripts/449596-animego-mikan%E5%BF%AB%E9%80%9F%E8%AE%A2%E9%98%85) 快速订阅下载
+- 支持Tampermonkey(油猴)插件 [AnimeGo\[Mikan快速订阅\]](https://greasyfork.org/zh-CN/scripts/449596-animego-mikan%E5%BF%AB%E9%80%9F%E8%AE%A2%E9%98%85) (v0.3.3)快速订阅下载
 - Jellyfin支持
 
 ## 开发计划
@@ -25,6 +25,16 @@
   - [ ] ...
 
 ## 开发日志
+
+### 2022.10.6 alpha-0.1
+- qBittorrent关闭重连功能
+  - qbt退出期间下载项会暂存于下载队列中，重启后恢复下载
+  - 下载队列在qbt客户端关闭期间满的话，会停止解析、停止下载
+- 更好的日志分类
+  - 一般提示[INFO]
+  - 已知错误[WARN]，根据具体错误类型自动判断是否继续解析此项
+  - 未知错误[ERROR]，可能会影响功能的正常使用
+- tmdb默认值设置
 
 ### 2022.10.5
 - 支持WebAPI

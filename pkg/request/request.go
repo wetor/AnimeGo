@@ -2,6 +2,7 @@ package request
 
 import (
 	"AnimeGo/third_party/goreq"
+	"go.uber.org/zap"
 	"io"
 	"os"
 	"time"
@@ -52,7 +53,10 @@ func Get(param *Param) (err error) {
 	}
 	for i := 0; i < param.Retry; i++ {
 		err = request("GET", param)
-		if err == nil {
+		if err != nil {
+			zap.S().Debug(err)
+			zap.S().Warnf("请求第%d次，失败", i+1)
+		} else {
 			break
 		}
 	}

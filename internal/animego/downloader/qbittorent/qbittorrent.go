@@ -32,65 +32,124 @@ const (
 	QbtCheckingResumeData = "checkingResumeData" // Checking resume data on qBt startup
 	QbtMoving             = "moving"             // Torrent is moving to another location
 	QbtUnknown            = "unknown"            // Unknown status
+
+	ChanRetryConnect = 1 // 重连消息
 )
 
 type QBittorrent struct {
-	client     *qbapi.QBAPI
-	apiVersion string
+	option      []qbapi.Option
+	connectFunc func() bool
+	retryChan   chan int
+	retryNum    int // 重试次数
+
+	connected bool
+	client    *qbapi.QBAPI
 }
 
-func NewQBittorrent(url, username, password string, ctx context.Context) *QBittorrent {
-	var opts []qbapi.Option
-	var err error
-	var client *qbapi.QBAPI
-	opts = append(opts, qbapi.WithAuth(username, password))
-	opts = append(opts, qbapi.WithHost(url))
-	opts = append(opts, qbapi.WithTimeout(time.Duration(store.Config.Advanced.ClientConf.ConnectTimeoutSecond)*time.Second))
-	connectClient := func() bool {
-		client, err = qbapi.NewAPI(opts...)
+func NewQBittorrent(url, username, password string) *QBittorrent {
+	qbt := &QBittorrent{
+		retryChan: make(chan int, 1),
+		retryNum:  0,
+	}
+	qbt.option = make([]qbapi.Option, 0, 3)
+
+	qbt.option = append(qbt.option, qbapi.WithAuth(username, password))
+	qbt.option = append(qbt.option, qbapi.WithHost(url))
+	qbt.option = append(qbt.option, qbapi.WithTimeout(time.Duration(store.Config.Advanced.ClientConf.ConnectTimeoutSecond)*time.Second))
+	qbt.retryNum = 1
+	qbt.connected = false
+	qbt.retryChan <- ChanRetryConnect
+	return qbt
+}
+
+func (c *QBittorrent) Connected() bool {
+	return c.connected
+}
+
+func (c *QBittorrent) clientVersion() string {
+	clientResp, err := c.client.GetApplicationVersion(context.Background(), &qbapi.GetApplicationVersionReq{})
+	if err != nil {
+		return ""
+	}
+	return clientResp.Version
+}
+
+func (c *QBittorrent) Start(ctx context.Context) {
+	c.connectFunc = func() bool {
+		var err error
+		c.client, err = qbapi.NewAPI(c.option...)
 		if err != nil {
-			zap.S().Warn(err)
+			zap.S().Debug(err)
+			zap.S().Warnf("初始化QBittorrent客户端第%d次，失败", c.retryNum)
 			return false
 		}
-		if err = client.Login(context.Background()); err != nil {
-			zap.S().Warn(err)
+		if err = c.client.Login(ctx); err != nil {
+			zap.S().Debug(err)
+			zap.S().Warnf("连接QBittorrent第%d次，失败", c.retryNum)
 			return false
 		}
 		return true
 	}
-
-	retryNum := store.Config.Advanced.ClientConf.RetryConnectNum
-	if retryNum == 0 {
-		// 无限重试
-		for i := 1; ; i++ {
-			if connectClient() {
-				break
+	store.WG.Add(2)
+	go func() {
+		defer func() {
+			if err := recover(); err != nil {
+				zap.S().Error(err)
 			}
-			zap.S().Infof("第%d次连接客户端失败...重新尝试连接", i)
-			if utils.Sleep(store.Config.Advanced.ClientConf.ConnectTimeoutSecond, ctx) {
-				zap.S().Fatal("正常退出")
+		}()
+		defer store.WG.Done()
+		for {
+			select {
+			case <-ctx.Done():
+				zap.S().Info("正常退出")
+				return
+			case msg := <-c.retryChan:
+				c.connected = true
+				if msg == ChanRetryConnect && (c.client == nil || len(c.clientVersion()) == 0) {
+					if ok := c.connectFunc(); !ok {
+						c.retryNum++
+						c.connected = false
+						// 重连失败
+					} else {
+						// 重连成功
+						c.retryNum = 0
+						c.connected = true
+						zap.S().Info("连接QBittorrent成功")
+					}
+				}
 			}
-
 		}
-	} else {
-		// 重试指定次数
-		for i := 1; i <= retryNum; i++ {
-			if connectClient() {
-				break
+	}()
+
+	go func() {
+		defer func() {
+			if err := recover(); err != nil {
+				zap.S().Error(err)
 			}
-			zap.S().Infof("第%d次连接客户端失败...剩余%d次尝试连接", i, retryNum-i)
-			if utils.Sleep(store.Config.Advanced.ClientConf.ConnectTimeoutSecond, ctx) {
-				zap.S().Fatal("正常退出")
+		}()
+		defer store.WG.Done()
+		for {
+			select {
+			case <-ctx.Done():
+				zap.S().Info("正常退出")
+				return
+			default:
+				if c.retryNum == 0 {
+					c.retryChan <- ChanRetryConnect
+					// 检查是否在线，时间长
+					utils.Sleep(store.Config.CheckTimeSecond, ctx)
+				} else if c.retryNum <= store.Config.RetryConnectNum {
+					c.retryChan <- ChanRetryConnect
+					// 失败重试，时间短
+					utils.Sleep(store.Config.ConnectTimeoutSecond, ctx)
+				} else {
+					// 超过重试次数，不在频繁重试
+					c.retryNum = 0
+				}
 			}
 		}
-	}
+	}()
 
-	qbt := &QBittorrent{
-		client: client,
-	}
-	qbt.SetDefaultPreferences()
-	zap.S().Infof("qBittorrent Version: %s", qbt.Version())
-	return qbt
 }
 
 // checkError
@@ -104,16 +163,21 @@ func (c *QBittorrent) checkError(err error, fun string) bool {
 		return false
 	}
 	if qerror, ok := err.(*qbapi.QError); ok && qerror.Code() == -10004 {
-		// TODO: 添加下载任务后一段时间会无法获取列表
-		// context deadline exceeded (Client.Timeout exceeded while awaiting headers)
 		zap.S().Debugf("[%s] 请求失败，等待客户端响应...", fun)
+		c.retryNum = 1
+		c.connected = false
+		c.retryChan <- ChanRetryConnect
 	} else {
-		zap.S().Warnf("[%s] %v", fun, err)
+		zap.S().Debugf("[%s] %v", fun, err)
+		zap.S().Warn("请求QBittorrent接口失败")
 	}
 	return true
 }
 
 func (c *QBittorrent) Version() string {
+	if !c.connected {
+		return ""
+	}
 	clientResp, err := c.client.GetApplicationVersion(context.Background(), &qbapi.GetApplicationVersionReq{})
 	if c.checkError(err, "Version 1") {
 		return ""
@@ -122,11 +186,13 @@ func (c *QBittorrent) Version() string {
 	if c.checkError(err, "Version 2") {
 		return ""
 	}
-	c.apiVersion = apiResp.Version
 	return fmt.Sprintf("Client: %s, API: %s", clientResp.Version, apiResp.Version)
 }
 
 func (c *QBittorrent) Preferences() *models.Preferences {
+	if !c.connected {
+		return nil
+	}
 	resp, err := c.client.GetApplicationPreferences(context.Background(), &qbapi.GetApplicationPreferencesReq{})
 	if c.checkError(err, "Preferences") {
 		return nil
@@ -137,6 +203,9 @@ func (c *QBittorrent) Preferences() *models.Preferences {
 }
 
 func (c *QBittorrent) SetDefaultPreferences() {
+	if !c.connected {
+		return
+	}
 	opt := "NoSubfolder"
 	pref := &qbapi.SetApplicationPreferencesReq{
 		TorrentContentLayout: &opt,
@@ -148,6 +217,9 @@ func (c *QBittorrent) SetDefaultPreferences() {
 }
 
 func (c *QBittorrent) List(opt *models.ClientListOptions) []*models.TorrentItem {
+	if !c.connected {
+		return nil
+	}
 	req := &qbapi.GetTorrentListReq{}
 	if len(opt.Status) != 0 {
 		req.Filter = &opt.Status
@@ -172,6 +244,9 @@ func (c *QBittorrent) List(opt *models.ClientListOptions) []*models.TorrentItem 
 }
 
 func (c *QBittorrent) Rename(opt *models.ClientRenameOptions) {
+	if !c.connected {
+		return
+	}
 	_, err := c.client.RenameFile(context.Background(), &qbapi.RenameFileReq{
 		Hash:    opt.Hash,
 		OldPath: opt.OldPath,
@@ -183,6 +258,9 @@ func (c *QBittorrent) Rename(opt *models.ClientRenameOptions) {
 }
 
 func (c *QBittorrent) Add(opt *models.ClientAddOptions) {
+	if !c.connected {
+		return
+	}
 	_, err := c.client.AddNewLink(context.Background(), &qbapi.AddNewLinkReq{
 		Url: opt.Urls,
 		Meta: &qbapi.AddTorrentMeta{
@@ -199,6 +277,9 @@ func (c *QBittorrent) Add(opt *models.ClientAddOptions) {
 }
 
 func (c *QBittorrent) Delete(opt *models.ClientDeleteOptions) {
+	if !c.connected {
+		return
+	}
 	_, err := c.client.DeleteTorrents(context.Background(), &qbapi.DeleteTorrentsReq{
 		IsDeleteFile: opt.DeleteFile,
 		Hash:         opt.Hash,
@@ -209,6 +290,9 @@ func (c *QBittorrent) Delete(opt *models.ClientDeleteOptions) {
 }
 
 func (c *QBittorrent) Get(opt *models.ClientGetOptions) *models.TorrentItem {
+	if !c.connected {
+		return nil
+	}
 	resp, err := c.client.GetTorrentGenericProperties(context.Background(), &qbapi.GetTorrentGenericPropertiesReq{
 		Hash: opt.Hash,
 	})
@@ -222,6 +306,9 @@ func (c *QBittorrent) Get(opt *models.ClientGetOptions) *models.TorrentItem {
 }
 
 func (c *QBittorrent) GetContent(opt *models.ClientGetOptions) []*models.TorrentContentItem {
+	if !c.connected {
+		return nil
+	}
 	contents, err := c.client.GetTorrentContents(context.Background(), &qbapi.GetTorrentContentsReq{
 		Hash: opt.Hash,
 	})

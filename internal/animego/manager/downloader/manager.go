@@ -35,7 +35,7 @@ type Manager struct {
 	itemState map[string]*models.Torrent     // 存储当前项的状态信息，处理过的
 	items     map[string]*models.TorrentItem // 客户端下载项信息，直接获取到的
 
-	downloadQueue []*models.AnimeEntity // 下载队列，存满或者盗下一个刷新时间会进行下载
+	downloadQueue []*models.AnimeEntity // 下载队列，存满或者到下一个刷新时间会进行下载
 
 	// 通过管道传递下载项
 	downloadChan chan *models.AnimeEntity
@@ -96,7 +96,7 @@ func (m *Manager) download(animes []*models.AnimeEntity, ctx context.Context) {
 		anime := animes[i]
 		zap.S().Infof("开始下载「%s」", anime.FullName())
 		if !m.canDownload(anime) {
-			zap.S().Debugf("取消下载，发现重复「%s」", anime.FullName())
+			zap.S().Infof("取消下载，发现重复「%s」", anime.FullName())
 			continue
 		}
 
@@ -221,13 +221,21 @@ func (m *Manager) Start(ctx context.Context) {
 		for {
 			select {
 			case <-ctx.Done():
-				zap.S().Debug("正常退出")
+				zap.S().Info("正常退出")
 				return
 			case anime := <-m.downloadChan:
-				zap.S().Debugf("接收到下载项:「%s」", anime.FullName())
-				m.Lock()
-				m.downloadQueue = append(m.downloadQueue, anime)
-				m.Unlock()
+				if m.client.Connected() {
+					zap.S().Debugf("接收到下载项:「%s」", anime.FullName())
+					m.Lock()
+					m.downloadQueue = append(m.downloadQueue, anime)
+					m.Unlock()
+				} else {
+					zap.S().Warnf("无法连接客户端，等待。已接收到%d个下载项", len(m.downloadChan))
+					go func() {
+						m.downloadChan <- anime
+					}()
+					utils.Sleep(store.Config.Advanced.MainConf.DownloadQueueDelaySecond, ctx)
+				}
 			default:
 				m.UpdateList()
 
@@ -279,7 +287,7 @@ func (m *Manager) UpdateList() {
 				m.client.Delete(&models.ClientDeleteOptions{
 					Hash: []string{item.Hash},
 				})
-				zap.S().Debugf("删除下载，发现重复「%s」", bangumi.FullName())
+				zap.S().Infof("删除下载，发现重复「%s」", bangumi.FullName())
 				continue
 			}
 			// item 缓存
@@ -353,13 +361,15 @@ func (m *Manager) scrape(bangumi *models.AnimeEntity) bool {
 	if os.IsNotExist(err) {
 		err = os.WriteFile(nfo, []byte(bangumi.Meta()), os.ModePerm)
 		if err != nil {
-			zap.S().Warn(err)
+			zap.S().Debug(err)
+			zap.S().Warn("写入tvshow.nfo元文件失败")
 			return false
 		}
 	}
 	data, err := os.ReadFile(nfo)
 	if err != nil {
-		zap.S().Warn(err)
+		zap.S().Debug(err)
+		zap.S().Warn("打开已存在的tvshow.nfo元文件失败")
 		return false
 	}
 	TmdbRegx := regexp.MustCompile(`<tmdbid>\d+</tmdbid>`)
@@ -371,7 +381,8 @@ func (m *Manager) scrape(bangumi *models.AnimeEntity) bool {
 
 	err = os.WriteFile(nfo, []byte(xmlStr), os.ModePerm)
 	if err != nil {
-		zap.S().Warn(err)
+		zap.S().Debug(err)
+		zap.S().Warn("写入修改的tvshow.nfo元文件失败")
 		return false
 	}
 	return true

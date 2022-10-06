@@ -122,7 +122,7 @@ func (m *Manager) Start(ctx context.Context) {
 		for {
 			select {
 			case <-ctx.Done():
-				zap.S().Debug("正常退出")
+				zap.S().Info("正常退出")
 				return
 			default:
 				m.Update(ctx, nil)

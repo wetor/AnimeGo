@@ -31,7 +31,8 @@ func (p *Mikan) UpdateFeed(items []*models.FeedItem) {
 func (p *Mikan) Run(ctx context.Context) {
 
 	qbtConf := store.Config.ClientQBt()
-	qbt := qbittorent.NewQBittorrent(qbtConf.Url, qbtConf.Username, qbtConf.Password, ctx)
+	qbt := qbittorent.NewQBittorrent(qbtConf.Url, qbtConf.Username, qbtConf.Password)
+	qbt.Start(ctx)
 
 	downloadChan := make(chan *models.AnimeEntity, 10)
 

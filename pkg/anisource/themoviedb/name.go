@@ -1,7 +1,7 @@
 package themoviedb
 
 import (
-	"log"
+	"go.uber.org/zap"
 	"regexp"
 )
 
@@ -43,7 +43,7 @@ func RemoveNameSuffix(name string, fun func(string) (interface{}, error)) (inter
 				if len(newName) > 0 {
 					name = newName
 				}
-				log.Printf("重新搜索：「%s」", name)
+				zap.S().Debugf("重新搜索：「%s」", name)
 			}
 		}
 	}

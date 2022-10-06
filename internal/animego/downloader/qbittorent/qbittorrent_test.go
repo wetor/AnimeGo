@@ -4,8 +4,10 @@ import (
 	"AnimeGo/internal/models"
 	"AnimeGo/internal/store"
 	"AnimeGo/test"
+	"context"
 	"fmt"
 	"testing"
+	"time"
 )
 
 var qbt *QBittorrent
@@ -14,9 +16,21 @@ func TestMain(m *testing.M) {
 	fmt.Println("begin")
 	test.TestInit()
 	conf := store.Config.ClientQBt()
-	qbt = NewQBittorrent(conf.Url, conf.Username, conf.Password, nil)
+	qbt = NewQBittorrent(conf.Url, conf.Username, conf.Password)
+	qbt.Start(context.Background())
 	m.Run()
 	fmt.Println("end")
+}
+
+func TestQBittorrent_Run(t *testing.T) {
+	go func() {
+		for {
+			fmt.Println("ver", qbt.Version())
+			time.Sleep(1 * time.Second)
+		}
+	}()
+
+	store.WG.Wait()
 }
 
 func Test_QBittorrent(t *testing.T) {
@@ -29,6 +43,7 @@ func Test_QBittorrent(t *testing.T) {
 	}
 
 }
+
 func TestQBittorrent_Add(t *testing.T) {
 	qbt.Add(&models.ClientAddOptions{
 		Urls: []string{

@@ -34,15 +34,17 @@ func Run(ctx context.Context) {
 		}
 		go func() {
 			if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-				zap.S().Warn(err)
+				zap.S().Debug(err)
+				zap.S().Warn("启动web服务失败")
 			}
 		}()
 		select {
 		case <-ctx.Done():
 			if err := s.Close(); err != nil {
-				zap.S().Warn(err)
+				zap.S().Debug(err)
+				zap.S().Warn("关闭web服务失败")
 			}
-			zap.S().Debug("正常退出")
+			zap.S().Info("正常退出")
 		}
 	}()
 }

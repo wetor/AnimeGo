@@ -21,7 +21,8 @@ func NewBolt() *Bolt {
 func (c *Bolt) Open(path string) {
 	db, err := bolt.Open(path, 0600, nil)
 	if err != nil {
-		zap.S().Warn(err)
+		zap.S().Debug(err)
+		zap.S().Warn("打开bolt数据库失败")
 		return
 	}
 
@@ -31,7 +32,8 @@ func (c *Bolt) Open(path string) {
 func (c *Bolt) Close() {
 	err := c.db.Close()
 	if err != nil {
-		zap.S().Warn(err)
+		zap.S().Debug(err)
+		zap.S().Warn("关闭bolt数据库失败")
 		return
 	}
 }
@@ -45,7 +47,8 @@ func (c *Bolt) Add(bucket string) {
 		return nil
 	})
 	if err != nil {
-		zap.S().Warn(err)
+		zap.S().Debug(err)
+		zap.S().Warn("关闭bolt数据库失败")
 		return
 	}
 }
@@ -66,7 +69,8 @@ func (c *Bolt) Put(bucket string, key, val interface{}, ttl int64) {
 		return err
 	})
 	if err != nil {
-		zap.S().Warn(err)
+		zap.S().Debug(err)
+		zap.S().Warn("bolt添加数据失败")
 		return
 	}
 }
