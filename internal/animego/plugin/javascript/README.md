@@ -26,6 +26,19 @@ log.debug(...params)
 log.info(...params)
 log.error(...params)
 ```
+
+### os.getPwd
+获取当前程序所在目录
+
+### os.readFile
+```javascript
+// 读取文本文件
+// 参数
+filename // 绝对路径或基于程序所在目录的相对路径
+// 返回值
+os.readFile // 字符串
+```
+
 ### animeGo.parseName
 ```javascript
 // 初步解析资源名

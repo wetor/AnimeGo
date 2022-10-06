@@ -38,6 +38,6 @@ func Download(c *gin.Context) {
 		}
 		items = selectItems
 	}
-	store.Process.UpdateFeed(items)
+	go store.Process.UpdateFeed(items)
 	c.JSON(Succ(fmt.Sprintf("开始处理%d个下载项", len(items))))
 }
