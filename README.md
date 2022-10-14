@@ -2,6 +2,35 @@
 
 使用Golang编写的全自动追番工具，简单的部署和使用，方便的模块化扩展
 
+## 使用帮助
+```text
+-config string
+    配置文件路径；配置文件中的相对路径均是相对与程序的位置 (default "data/config/animego.yaml")
+-debug
+    Debug模式，将会输出更多的日志 (default true)
+-init-path string
+    [初始化]输出资源/配置文件到的根目录
+-init-replace
+    [初始化]输出资源/配置文件时是否自动替换
+```
+
+### 1.释放资源
+```shell
+AnimeGo -init-path=./data
+```
+> 可选`-init-replace`，启用后遇到已存在文件将不提示直接覆盖，慎用
+### 2.修改配置
+打开并编辑`./data/config/animego.yaml`
+>路径和`1.释放资源`所释放位置有关
+
+### 3.启动程序
+```shell
+AnimeGo -config=./data/config/animego.yaml
+```
+> 可选`-debug`，启用后将输出更详细的日志
+
+可以使用如screen等工具放至后台执行，也可以创建服务并启动
+### 更多待补充...
 ## 目的
 - 简化部署和使用，以及模块化扩展
 - 学习
