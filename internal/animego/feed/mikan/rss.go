@@ -23,8 +23,14 @@ type Rss struct {
 }
 
 func NewRss(url, name string) feed.Feed {
+
 	if len(name) == 0 {
-		name = utils.Md5Str(url)
+		if len(url) == 0 {
+			name = ""
+		} else {
+			name = utils.Md5Str(url)
+		}
+
 	}
 	return &Rss{
 		url:  url,
@@ -37,7 +43,9 @@ func NewRss(url, name string) feed.Feed {
 //  Receiver f *Rss
 //
 func (f *Rss) Parse() []*models.FeedItem {
-
+	if len(f.url) == 0 {
+		return nil
+	}
 	filename := path.Join(store.Config.TempPath, f.name+".xml")
 	// --------- 下载rss.xml ---------
 	zap.S().Info("获取Rss数据开始...")

@@ -160,13 +160,16 @@ func (m Mikan) parseMikanInfo(mikanUrl string) (mikan *MikanInfo, err error) {
 		}
 		mikan.SubGroupID, err = strconv.Atoi(query.Get("subgroupid"))
 		if err != nil {
-			return
+			mikan.SubGroupID = 0
 		}
 	} else {
 		return nil, ParseMikanIDErr
 	}
 
 	group := htmlquery.FindOne(doc, GroupXPath)
+	if group == nil {
+		return
+	}
 	href = htmlquery.SelectAttr(group, "href")
 	_, groupId := path.Split(href)
 	mikan.PubGroupID, err = strconv.Atoi(groupId)
