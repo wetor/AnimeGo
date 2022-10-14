@@ -1,0 +1,36 @@
+name: Go
+
+on:
+  push:
+    tags:
+    - '*'
+  
+jobs:
+  build_release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.18
+
+    - name: Build
+      run: |
+        CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o AnimeGo cmd/animego/main.go && tar -czvf AnimeGo_linux_amd64.tar.gz AnimeGo
+        CGO_ENABLED=0 GOOS=linux GOARCH=386 go build -o AnimeGo cmd/animego/main.go && tar -czvf AnimeGo_linux_386.tar.gz AnimeGo
+        CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o AnimeGo cmd/animego/main.go && tar -czvf AnimeGo_linux_arm64.tar.gz AnimeGo
+        CGO_ENABLED=0 GOOS=linux GOARCH=arm go build -o AnimeGo cmd/animego/main.go && tar -czvf AnimeGo_linux_arm.tar.gz AnimeGo
+        
+        CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -o AnimeGo cmd/animego/main.go && tar -czvf AnimeGo_darwin_amd64.tar.gz AnimeGo
+        
+        CGO_ENABLED=0 GOOS=windows GOARCH=amd64 go build -o AnimeGo.exe cmd/animego/main.go && zip AnimeGo_windows_amd64.zip AnimeGo.exe
+        CGO_ENABLED=0 GOOS=windows GOARCH=386 go build -o AnimeGo.exe cmd/animego/main.go && zip AnimeGo_windows_386.zip AnimeGo.exe
+    - uses: ncipollo/release-action@v1
+      with:
+        artifacts: "AnimeGo_linux_amd64.tar.gz,AnimeGo_linux_386.tar.gz,AnimeGo_linux_arm64.tar.gz,AnimeGo_linux_arm.tar.gz,AnimeGo_darwin_amd64.tar.gz,AnimeGo_windows_amd64.zip,AnimeGo_windows_386.zip"
+        bodyFile: ""
+        token: ${{secrets.GITHUB_TOKEN}}
