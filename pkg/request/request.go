@@ -1,6 +1,7 @@
 package request
 
 import (
+	"AnimeGo/pkg/errors"
 	"AnimeGo/third_party/goreq"
 	"go.uber.org/zap"
 	"io"
@@ -19,29 +20,29 @@ func request(method string, param *Param) error {
 	}
 	resp, err := req.Do()
 	if err != nil {
-		return err
+		return errors.NewAniError(err.Error())
 	}
 	defer resp.Body.Close()
 	if param.BindJson != nil {
 		err = resp.Body.FromJsonTo(param.BindJson)
 		if err != nil {
-			return err
+			return errors.NewAniError(err.Error())
 		}
 	}
 	if param.Writer != nil {
 		_, err = io.Copy(param.Writer, resp.Body)
 		if err != nil {
-			return err
+			return errors.NewAniError(err.Error())
 		}
 	}
 	if len(param.SaveFile) > 0 {
 		all, err := io.ReadAll(resp.Body)
 		if err != nil {
-			return err
+			return errors.NewAniError(err.Error())
 		}
 		err = os.WriteFile(param.SaveFile, all, os.ModePerm)
 		if err != nil {
-			return err
+			return errors.NewAniError(err.Error())
 		}
 	}
 	return nil

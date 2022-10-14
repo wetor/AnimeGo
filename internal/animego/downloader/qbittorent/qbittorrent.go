@@ -4,6 +4,7 @@ import (
 	"AnimeGo/internal/models"
 	"AnimeGo/internal/store"
 	"AnimeGo/internal/utils"
+	"AnimeGo/pkg/errors"
 	"AnimeGo/third_party/qbapi"
 	"context"
 	"fmt"
@@ -79,12 +80,12 @@ func (c *QBittorrent) Start(ctx context.Context) {
 		var err error
 		c.client, err = qbapi.NewAPI(c.option...)
 		if err != nil {
-			zap.S().Debug(err)
+			zap.S().Debug(errors.NewAniError(err.Error()))
 			zap.S().Warnf("初始化QBittorrent客户端第%d次，失败", c.retryNum)
 			return false
 		}
 		if err = c.client.Login(ctx); err != nil {
-			zap.S().Debug(err)
+			zap.S().Debug(errors.NewAniError(err.Error()))
 			zap.S().Warnf("连接QBittorrent第%d次，失败", c.retryNum)
 			return false
 		}
@@ -158,17 +159,17 @@ func (c *QBittorrent) Start(ctx context.Context) {
 //  @param err error
 //  @return bool
 //
-func (c *QBittorrent) checkError(err error, fun string) bool {
+func (c *QBittorrent) checkError(err error) bool {
 	if err == nil {
 		return false
 	}
 	if qerror, ok := err.(*qbapi.QError); ok && qerror.Code() == -10004 {
-		zap.S().Debugf("[%s] 请求失败，等待客户端响应...", fun)
+		zap.S().Debug(errors.NewAniErrorSkipf(2, "请求失败，等待客户端响应, err: %v", err))
 		c.retryNum = 1
 		c.connected = false
 		c.retryChan <- ChanRetryConnect
 	} else {
-		zap.S().Debugf("[%s] %v", fun, err)
+		zap.S().Debug(errors.NewAniErrorSkipf(2, "err: %v", err))
 		zap.S().Warn("请求QBittorrent接口失败")
 	}
 	return true
@@ -179,11 +180,11 @@ func (c *QBittorrent) Version() string {
 		return ""
 	}
 	clientResp, err := c.client.GetApplicationVersion(context.Background(), &qbapi.GetApplicationVersionReq{})
-	if c.checkError(err, "Version 1") {
+	if c.checkError(err) {
 		return ""
 	}
 	apiResp, err := c.client.GetAPIVersion(context.Background(), &qbapi.GetAPIVersionReq{})
-	if c.checkError(err, "Version 2") {
+	if c.checkError(err) {
 		return ""
 	}
 	return fmt.Sprintf("Client: %s, API: %s", clientResp.Version, apiResp.Version)
@@ -194,7 +195,7 @@ func (c *QBittorrent) Preferences() *models.Preferences {
 		return nil
 	}
 	resp, err := c.client.GetApplicationPreferences(context.Background(), &qbapi.GetApplicationPreferencesReq{})
-	if c.checkError(err, "Preferences") {
+	if c.checkError(err) {
 		return nil
 	}
 	retn := &models.Preferences{}
@@ -211,7 +212,7 @@ func (c *QBittorrent) SetDefaultPreferences() {
 		TorrentContentLayout: &opt,
 	}
 	_, err := c.client.SetApplicationPreferences(context.Background(), pref)
-	if c.checkError(err, "SetDefaultPreferences") {
+	if c.checkError(err) {
 		return
 	}
 }
@@ -232,7 +233,7 @@ func (c *QBittorrent) List(opt *models.ClientListOptions) []*models.TorrentItem 
 	}
 
 	listResp, err := c.client.GetTorrentList(context.Background(), req)
-	if c.checkError(err, "List") {
+	if c.checkError(err) {
 		return nil
 	}
 	retn := make([]*models.TorrentItem, len(listResp.Items))
@@ -252,7 +253,7 @@ func (c *QBittorrent) Rename(opt *models.ClientRenameOptions) {
 		OldPath: opt.OldPath,
 		NewPath: opt.NewPath,
 	})
-	if c.checkError(err, "Rename") {
+	if c.checkError(err) {
 		return
 	}
 }
@@ -271,7 +272,7 @@ func (c *QBittorrent) Add(opt *models.ClientAddOptions) {
 			Rename:           &opt.Rename,
 		},
 	})
-	if c.checkError(err, "Add") {
+	if c.checkError(err) {
 		return
 	}
 }
@@ -284,7 +285,7 @@ func (c *QBittorrent) Delete(opt *models.ClientDeleteOptions) {
 		IsDeleteFile: opt.DeleteFile,
 		Hash:         opt.Hash,
 	})
-	if c.checkError(err, "Delete") {
+	if c.checkError(err) {
 		return
 	}
 }
@@ -296,7 +297,7 @@ func (c *QBittorrent) Get(opt *models.ClientGetOptions) *models.TorrentItem {
 	resp, err := c.client.GetTorrentGenericProperties(context.Background(), &qbapi.GetTorrentGenericPropertiesReq{
 		Hash: opt.Hash,
 	})
-	if c.checkError(err, "Get") {
+	if c.checkError(err) {
 		return nil
 	}
 
@@ -312,7 +313,7 @@ func (c *QBittorrent) GetContent(opt *models.ClientGetOptions) []*models.Torrent
 	contents, err := c.client.GetTorrentContents(context.Background(), &qbapi.GetTorrentContentsReq{
 		Hash: opt.Hash,
 	})
-	if c.checkError(err, "GetContent") {
+	if c.checkError(err) {
 		return nil
 	}
 	retn := make([]*models.TorrentContentItem, len(contents.Contents))

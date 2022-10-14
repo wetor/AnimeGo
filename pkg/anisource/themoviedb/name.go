@@ -1,6 +1,7 @@
 package themoviedb
 
 import (
+	"AnimeGo/pkg/errors"
 	"go.uber.org/zap"
 	"regexp"
 )
@@ -47,7 +48,7 @@ func RemoveNameSuffix(name string, fun func(string) (interface{}, error)) (inter
 			}
 		}
 	}
-	return nil, RemoveNameSuffixErr
+	return nil, errors.NewAniError("解析番剧名失败")
 }
 
 // SimilarText

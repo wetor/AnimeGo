@@ -1,7 +1,7 @@
 package javascript
 
 import (
-	"errors"
+	"AnimeGo/pkg/errors"
 	"github.com/dop251/goja"
 	"os"
 )
@@ -89,7 +89,7 @@ func (js *JavaScript) checkParams(params Object) error {
 	for _, field := range js.paramsSchema {
 		_, has := params[field]
 		if !has {
-			return errors.New("参数缺少: " + field)
+			return errors.NewAniError("参数缺少: " + field)
 		}
 	}
 	return nil
@@ -98,12 +98,12 @@ func (js *JavaScript) checkParams(params Object) error {
 func (js *JavaScript) checkResult(result interface{}) error {
 	resultMap, ok := result.(Object)
 	if !ok {
-		return errors.New("返回类型错误")
+		return errors.NewAniError("返回类型错误")
 	}
 	for _, field := range js.resultSchema {
 		_, has := resultMap[field]
 		if !has {
-			return errors.New("返回值缺少: " + field)
+			return errors.NewAniError("返回值缺少: " + field)
 		}
 	}
 	return nil

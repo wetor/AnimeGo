@@ -2,6 +2,7 @@ package themoviedb
 
 import (
 	"AnimeGo/pkg/anisource"
+	"AnimeGo/pkg/errors"
 	mem "AnimeGo/pkg/memorizer"
 	"AnimeGo/pkg/request"
 )
@@ -23,13 +24,13 @@ type Themoviedb struct {
 
 func (t *Themoviedb) RegisterCache() {
 	if anisource.Cache == nil {
-		panic("需要先调用anisource.Init初始化缓存")
+		panic(errors.NewAniError("需要先调用anisource.Init初始化缓存"))
 	}
 	t.cacheInit = true
 	t.cacheParseThemoviedbID = mem.Memorized(Bucket, anisource.Cache, func(params *mem.Params, results *mem.Results) error {
 		tmdbID, err := t.parseThemoviedbID(params.Get("name").(string))
 		if err != nil {
-			return err
+			return errors.NewAniError(err.Error())
 		}
 		results.Set("tmdbID", tmdbID)
 		return nil
@@ -38,7 +39,7 @@ func (t *Themoviedb) RegisterCache() {
 	t.cacheParseAnimeSeason = mem.Memorized(Bucket, anisource.Cache, func(params *mem.Params, results *mem.Results) error {
 		season, err := t.parseAnimeSeason(params.Get("tmdbID").(int), params.Get("airDate").(string))
 		if err != nil {
-			return err
+			return errors.NewAniError(err.Error())
 		}
 		results.Set("season", season)
 		return nil
@@ -53,27 +54,31 @@ func (t Themoviedb) ParseCache(name, airDate string) (tmdbID int, season int, er
 
 	err = t.cacheParseThemoviedbID(mem.NewParams("name", name).TTL(CacheSecond), results)
 	if err != nil {
-		return 0, 0, err
+		err = errors.NewAniError(err.Error())
+		return
 	}
 	tmdbID = results.Get("tmdbID").(int)
 	err = t.cacheParseAnimeSeason(mem.NewParams("tmdbID", tmdbID, "airDate", airDate).TTL(CacheSecond), results)
 	if err != nil {
-		return tmdbID, 0, err
+		err = errors.NewAniError(err.Error())
+		return
 	}
 	season = results.Get("season").(int)
-	return tmdbID, season, nil
+	return
 }
 
 func (t Themoviedb) Parse(name, airDate string) (tmdbID int, season int, err error) {
 	tmdbID, err = t.parseThemoviedbID(name)
 	if err != nil {
-		return 0, 0, err
+		err = errors.NewAniError(err.Error())
+		return
 	}
 	season, err = t.parseAnimeSeason(tmdbID, airDate)
 	if err != nil {
-		return tmdbID, 0, err
+		err = errors.NewAniError(err.Error())
+		return
 	}
-	return tmdbID, season, nil
+	return
 }
 
 func (t Themoviedb) parseThemoviedbID(name string) (tmdbID int, err error) {
@@ -87,7 +92,7 @@ func (t Themoviedb) parseThemoviedbID(name string) (tmdbID int, err error) {
 			Timeout:  anisource.Timeout,
 		})
 		if err != nil {
-			return 0, err
+			return 0, errors.NewAniError(err.Error())
 		}
 		if resp.TotalResults == 1 {
 			return resp.Result[0].ID, nil
@@ -111,14 +116,14 @@ func (t Themoviedb) parseThemoviedbID(name string) (tmdbID int, err error) {
 			if maxSimilar >= MinSimilar {
 				return tmdbID, nil
 			}
-			return 0, NotFoundAnimeNameErr
+			return 0, errors.NewAniError("匹配Seasons失败，番剧名未找到")
 		} else {
 			// 未找到结果
 			return nil, nil
 		}
 	})
 	if err != nil {
-		return 0, err
+		return 0, errors.NewAniError(err.Error())
 	}
 	return result.(int), nil
 }
@@ -133,10 +138,10 @@ func (t Themoviedb) parseAnimeSeason(tmdbID int, airDate string) (season int, er
 		Timeout:  anisource.Timeout,
 	})
 	if err != nil {
-		return 0, err
+		return 0, errors.NewAniError(err.Error())
 	}
 	if resp.Seasons == nil || len(resp.Seasons) == 0 {
-		return 0, NotMatchSeasonErr
+		return 0, errors.NewAniError("匹配Seasons失败，可能此番剧未开播")
 	}
 	season = resp.Seasons[0].SeasonNumber
 	min := 36500
@@ -151,7 +156,7 @@ func (t Themoviedb) parseAnimeSeason(tmdbID int, airDate string) (season int, er
 		}
 	}
 	if min > MatchSeasonDays {
-		return 0, NotMatchSeasonErr
+		return 0, errors.NewAniError("匹配Seasons失败，可能此番剧未开播")
 	}
 	return season, nil
 }

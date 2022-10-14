@@ -2,10 +2,12 @@ package bangumi
 
 import (
 	"AnimeGo/pkg/anisource"
+	"AnimeGo/pkg/errors"
 	mem "AnimeGo/pkg/memorizer"
 	"AnimeGo/pkg/request"
 	"AnimeGo/third_party/bangumi/res"
 	"encoding/gob"
+	"go.uber.org/zap"
 )
 
 var (
@@ -23,7 +25,7 @@ type Bangumi struct {
 
 func (b *Bangumi) RegisterCache() {
 	if anisource.Cache == nil {
-		panic("需要先调用anisource.Init初始化缓存")
+		panic(errors.NewAniError("需要先调用anisource.Init初始化缓存"))
 	}
 	b.cacheInit = true
 	b.cacheParseAnimeInfo = mem.Memorized(Bucket, anisource.Cache, func(params *mem.Params, results *mem.Results) error {
@@ -57,13 +59,13 @@ func (b Bangumi) ParseCache(bangumiID, ep int) (entity *Entity, epInfo *Ep, err 
 
 	err = b.cacheParseAnimeInfo(mem.NewParams("bangumiID", bangumiID).TTL(CacheSecond), results)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errors.NewAniError(err.Error())
 	}
 	entity = results.Get("entity").(*Entity)
 	err = b.cacheParseAnimeEpInfo(
 		mem.NewParams("bangumiID", bangumiID, "ep", ep, "eps", entity.Eps).TTL(CacheSecond), results)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errors.NewAniError(err.Error())
 	}
 	epInfo = results.Get("epInfo").(*Ep)
 	return entity, epInfo, nil
@@ -81,11 +83,11 @@ func (b Bangumi) ParseCache(bangumiID, ep int) (entity *Entity, epInfo *Ep, err 
 func (b Bangumi) Parse(bangumiID, ep int) (entity *Entity, epInfo *Ep, err error) {
 	entity, err = b.parseAnimeInfo(bangumiID)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errors.NewAniError(err.Error())
 	}
 	epInfo, err = b.parseAnimeEpInfo(bangumiID, ep, entity.Eps)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, errors.NewAniError(err.Error())
 	}
 	return entity, epInfo, nil
 }
@@ -109,7 +111,7 @@ func (b Bangumi) parseAnimeInfo(bangumiID int) (entity *Entity, err error) {
 		Timeout:  anisource.Timeout,
 	})
 	if err != nil {
-		return nil, err
+		return nil, errors.NewAniError(err.Error())
 	}
 	entity = &Entity{
 		ID:     int(resp.ID),
@@ -128,7 +130,7 @@ func (b Bangumi) parseAnimeInfo(bangumiID int) (entity *Entity, err error) {
 }
 
 // parseBnagumiEpInfo
-//  @Description: 解析番剧ep信息，暂时无用
+//  @Description: 解析番剧ep信息。TODO:暂时无用，所以不会抛出错误
 //  @receiver Bangumi
 //  @param bangumiID int
 //  @param ep int
@@ -149,7 +151,7 @@ func (b Bangumi) parseAnimeEpInfo(bangumiID, ep, eps int) (epInfo *Ep, err error
 		Timeout:  anisource.Timeout,
 	})
 	if err != nil {
-		return nil, err
+		zap.S().Debug(errors.NewAniError("[非必要]" + err.Error()))
 	}
 	var respEp *res.Episode = nil
 	for _, e := range resp.Data {
@@ -159,16 +161,18 @@ func (b Bangumi) parseAnimeEpInfo(bangumiID, ep, eps int) (epInfo *Ep, err error
 		}
 	}
 	if respEp == nil {
-		return nil, NotMatchEpErr
-	}
-	epInfo = &Ep{
-		Ep:       int(respEp.Ep),
-		Date:     respEp.Airdate,
-		Duration: respEp.Duration,
-		EpDesc:   respEp.Description,
-		EpName:   respEp.Name,
-		EpNameCN: respEp.NameCN,
-		EpID:     int(respEp.ID),
+		zap.S().Debug(errors.NewAniError("[非必要]未匹配到对应ep"))
+		epInfo = &Ep{Ep: ep}
+	} else {
+		epInfo = &Ep{
+			Ep:       int(respEp.Ep),
+			Date:     respEp.Airdate,
+			Duration: respEp.Duration,
+			EpDesc:   respEp.Description,
+			EpName:   respEp.Name,
+			EpNameCN: respEp.NameCN,
+			EpID:     int(respEp.ID),
+		}
 	}
 	return epInfo, nil
 }
