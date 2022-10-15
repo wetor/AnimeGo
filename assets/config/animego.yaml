@@ -6,7 +6,7 @@ feed:
     # Mikan Project(mikanani.me)订阅信息
     mikan:
       name: Mikan Project
-      url: https://mikanani.me/RSS/MyBangumi?token=111
+      url: https://mikanani.me/RSS/MyBangumi?token=11111
 client:
   # qBittorrent客户端信息
   qbittorrent:
@@ -15,13 +15,13 @@ client:
     password: adminadmin
 key:
   # TheMovieDB APIkey，申请链接（需注册）：https://www.themoviedb.org/settings/api?language=zh-CN
-  themoviedb: 111
+  themoviedb: 2222
 # 常规设置
 setting:
   # 额外数据存储路径。如在Docker中部署，以下路径需要为挂载后的Docker内路径
-  data_path: data
+  data_path: ./data
   # 下载保存位置。如在Docker中部署，以下路径需要为挂载后的Docker内路径
-  save_path: /root/download
+  save_path: ./download
   # 临时文件保存位置。相对于data_path的路径
   temp_path: temp
   # 日志文件保存位置。
@@ -52,7 +52,7 @@ setting:
   # WebApi设置
   webapi:
     # 请求秘钥，为空则不需要验证
-    key:
+    access_key: test111222333
     # 服务的host和端口设置
     host: localhost
     port: 7991

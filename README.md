@@ -13,6 +13,9 @@
 -init-replace
     [初始化]输出资源/配置文件时是否自动替换
 ```
+### 0.安装插件
+- AnimeGo过滤器插件：https://github.com/deqxj00/AnimeGoFilterPlugin
+- AnimeGo网页快速订阅Tampermonkey(油猴)插件：https://github.com/deqxj00/AnimeGoHelper
 
 ### 1.释放资源
 ```shell
@@ -31,6 +34,12 @@ AnimeGo -config=./data/config/animego.yaml
 
 可以使用如screen等工具放至后台执行，也可以创建服务并启动
 ### 更多待补充...
+
+## 文档
+1. [配置文件](assets/config/animego.yaml)
+2. [插件函数文档（仅过滤器）](internal/animego/plugin/javascript/README.md)
+3. [webapi接口文档](internal/web/README.md)
+
 ## 目的
 - 简化部署和使用，以及模块化扩展
 - 学习
@@ -54,6 +63,12 @@ AnimeGo -config=./data/config/animego.yaml
   - [ ] ...
 
 ## 开发日志
+
+### 2022.10.15
+- 修改和增加webapi
+  - 支持access_key认证
+  - 修改url地址
+  - 支持设置和获取插件的json配置文件
 
 ### 2022.10.14
 - 统一错误提示\[未完成]

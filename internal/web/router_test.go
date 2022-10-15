@@ -3,9 +3,12 @@ package web
 import (
 	"AnimeGo/internal/animego/anisource"
 	"AnimeGo/internal/store"
+	"AnimeGo/internal/utils"
 	pkgAnisource "AnimeGo/pkg/anisource"
 	"AnimeGo/test"
 	"context"
+	"encoding/base64"
+	"fmt"
 	"testing"
 )
 
@@ -23,4 +26,17 @@ func TestInitRouter(t *testing.T) {
 
 	store.WG.Wait()
 
+}
+
+func TestSha256(t *testing.T) {
+	aa := utils.Sha256("test111222333")
+	fmt.Println(aa)
+	jsonStr := `
+{
+    "name": "filter/default.js",
+    "data": "=="
+}
+`
+	str := base64.StdEncoding.EncodeToString([]byte(jsonStr))
+	fmt.Println(str)
 }

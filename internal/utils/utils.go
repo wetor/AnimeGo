@@ -3,6 +3,7 @@ package utils
 import (
 	"context"
 	"crypto/md5"
+	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"os"
@@ -94,4 +95,11 @@ func Md5Str(str string) string {
 	h := md5.New()
 	h.Write([]byte(str))
 	return hex.EncodeToString(h.Sum(nil))
+}
+
+func Sha256(src string) string {
+	m := sha256.New()
+	m.Write([]byte(src))
+	res := hex.EncodeToString(m.Sum(nil))
+	return res
 }

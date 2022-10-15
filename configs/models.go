@@ -67,9 +67,9 @@ type Setting struct {
 	} `yaml:"proxy"`
 	*Filter `yaml:"filter"`
 	WebApi  struct {
-		Key  string `yaml:"key"`
-		Host string `yaml:"host"`
-		Port int    `yaml:"port"`
+		AccessKey string `yaml:"access_key"`
+		Host      string `yaml:"host"`
+		Port      int    `yaml:"port"`
 	} `yaml:"webapi"`
 }
 

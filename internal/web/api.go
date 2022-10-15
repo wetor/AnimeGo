@@ -4,20 +4,26 @@ import (
 	"AnimeGo/internal/animego/feed/mikan"
 	"AnimeGo/internal/models"
 	"AnimeGo/internal/store"
+	"AnimeGo/pkg/errors"
+	"encoding/base64"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
 	"net/http"
+	"os"
+	"path"
+	"strings"
 	"time"
 )
 
-func Pong(c *gin.Context) {
+func Ping(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
-		"time": time.Now(),
+		"time": time.Now().Unix(),
 		"pong": true,
 	})
 }
 
-func Download(c *gin.Context) {
+func Rss(c *gin.Context) {
 	var request SelectEpRequest
 	if !checkRequest(c, &request) {
 		return
@@ -40,4 +46,63 @@ func Download(c *gin.Context) {
 	}
 	go store.Process.UpdateFeed(items)
 	c.JSON(Succ(fmt.Sprintf("开始处理%d个下载项", len(items))))
+}
+
+func PluginConfigPost(c *gin.Context) {
+	var request PluginConfigUploadRequest
+	if !checkRequest(c, &request) {
+		return
+	}
+	if err := request.CheckName(); err != nil {
+		zap.S().Debug(err)
+		c.JSON(Fail(err.Error()))
+		return
+	}
+
+	data, err := base64.StdEncoding.DecodeString(request.Data)
+	if err != nil {
+		err = errors.NewAniError(err.Error())
+		zap.S().Debug(err)
+		c.JSON(Fail(err.Error()))
+		return
+	}
+	filename := strings.TrimSuffix(request.Name, ".js") + ".json"
+	file := path.Join(store.Config.DataPath, "plugin", filename)
+	err = os.WriteFile(file, data, 0666)
+	if err != nil {
+		err = errors.NewAniError(err.Error())
+		zap.S().Debug(err)
+		c.JSON(Fail(err.Error()))
+		return
+	}
+	c.JSON(Succ(fmt.Sprintf("写入插件配置文件成功，%s", filename)))
+}
+
+func PluginConfigGet(c *gin.Context) {
+	var request PluginConfigDownloadRequest
+	if !checkRequest(c, &request) {
+		return
+	}
+	if err := request.CheckName(); err != nil {
+		zap.S().Debug(err)
+		c.JSON(Fail(err.Error()))
+		return
+	}
+	filename := strings.TrimSuffix(request.Name, ".js") + ".json"
+	file := path.Join(store.Config.DataPath, "plugin", filename)
+
+	data, err := os.ReadFile(file)
+	if err != nil {
+		err = errors.NewAniError(err.Error())
+		zap.S().Debug(err)
+		c.JSON(Fail(err.Error()))
+		return
+	}
+	str := base64.StdEncoding.EncodeToString(data)
+	c.JSON(Succ("读取插件配置文件成功", PluginConfigResponse{
+		PluginResponse: PluginResponse{
+			Name: filename,
+		},
+		Data: str,
+	}))
 }

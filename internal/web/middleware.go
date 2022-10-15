@@ -13,6 +13,23 @@ import (
 	"time"
 )
 
+// KeyAuth 鉴权
+func KeyAuth() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		tokenRaw := ctx.Request.FormValue("access_key") // query/form 查找 access_key
+		if len(tokenRaw) == 0 {
+			tokenRaw = ctx.Request.Header.Get("access_key") // header 查找 access_key
+			if len(tokenRaw) == 0 {
+				ctx.JSON(ErrJwt("未发现access_key"))
+				ctx.Abort()
+				return
+			}
+		}
+		ctx.Set("access_key", tokenRaw)
+		ctx.Next()
+	}
+}
+
 // Cors 跨域中间件
 func Cors() gin.HandlerFunc {
 	return func(c *gin.Context) {

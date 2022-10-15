@@ -2,6 +2,7 @@ package web
 
 import (
 	"AnimeGo/internal/store"
+	"AnimeGo/pkg/errors"
 	"context"
 	"fmt"
 	"github.com/gin-gonic/gin"
@@ -19,15 +20,20 @@ func Run(ctx context.Context) {
 		r.Use(GinLogger(zap.S())) // 日志中间件
 		r.Use(GinRecovery(zap.S(), true, func(c *gin.Context, recovered interface{}) {
 			if err, ok := recovered.(error); ok {
-				c.JSON(ErrSvr(err.Error()))
+				zap.S().Debugf("服务器错误，err: %v", errors.NewAniError(err.Error()))
+				c.JSON(ErrSvr("服务器错误"))
 			} else {
+				zap.S().Debug(recovered.(string))
 				c.JSON(ErrSvr(recovered.(string)))
 			}
 		})) // 错误处理中间件
 		gin.SetMode("debug")
-
-		r.GET("/ping", Pong)
-		r.POST("/api", Download)
+		r.GET("/ping", Ping)
+		apiRoot := r.Group("/api")
+		apiRoot.Use(KeyAuth())
+		apiRoot.POST("/rss", Rss)
+		apiRoot.POST("/plugin/config", PluginConfigPost)
+		apiRoot.GET("/plugin/config", PluginConfigGet)
 		s := &http.Server{
 			Addr:    fmt.Sprintf("%s:%d", store.Config.WebApi.Host, store.Config.WebApi.Port),
 			Handler: r,
