@@ -9,6 +9,7 @@ var idApi = func(key string, query string) string {
 	url_, _ := url.Parse(Host + "/3/discover/tv")
 	q := url_.Query()
 	q.Set("api_key", key)
+	q.Set("sort_by", "first_air_date.desc")
 	q.Set("language", "zh-CN")
 	q.Set("timezone", "Asia/Shanghai")
 	q.Set("with_genres", "16")

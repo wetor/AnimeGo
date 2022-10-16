@@ -3,7 +3,6 @@ package web
 import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
-	"log"
 	"net"
 	"net/http"
 	"net/http/httputil"
@@ -18,7 +17,7 @@ func KeyAuth() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		tokenRaw := ctx.Request.FormValue("access_key") // query/form 查找 access_key
 		if len(tokenRaw) == 0 {
-			tokenRaw = ctx.Request.Header.Get("access_key") // header 查找 access_key
+			tokenRaw = ctx.Request.Header.Get("Access-Key") // header 查找 access_key
 			if len(tokenRaw) == 0 {
 				ctx.JSON(ErrJwt("未发现access_key"))
 				ctx.Abort()
@@ -39,9 +38,9 @@ func Cors() gin.HandlerFunc {
 			//接收客户端发送的origin （重要！）
 			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
 			//服务器支持的所有跨域请求的方法
-			c.Header("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE,UPDATE")
+			c.Header("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE, UPDATE")
 			//允许跨域设置可以返回其他子段，可以自定义字段
-			c.Header("Access-Control-Allow-Headers", "Content-Type, api_key, Authorization, Token,session")
+			c.Header("Access-Control-Allow-Headers", "Content-Type, Access-Key, Authorization, Token, session")
 			// 允许浏览器（客户端）可以解析的头部 （重要）
 			c.Header("Access-Control-Expose-Headers", "Content-Length, Access-Control-Allow-Origin, Access-Control-Allow-Headers")
 			//设置缓存时间
@@ -53,12 +52,6 @@ func Cors() gin.HandlerFunc {
 		if method == "OPTIONS" {
 			c.JSON(http.StatusOK, "ok!")
 		}
-
-		defer func() {
-			if err := recover(); err != nil {
-				log.Printf("Panic info is: %v", err)
-			}
-		}()
 		c.Next()
 	}
 }

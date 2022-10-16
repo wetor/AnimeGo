@@ -9,6 +9,9 @@ code值所代码含义
 500 服务端未知错误
 ```
 
+### 鉴权
+HTPP请求Header中，`Access-Key`为SHA256后的access_key
+
 ### 测试连通
 `GET /ping`
 #### 响应

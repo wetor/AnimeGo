@@ -63,6 +63,15 @@ func TestThemoviedb_Parse(t1 *testing.T) {
 			wantSeason: 4,
 			wantErr:    false,
 		},
+		{
+			name:       "福星小子",
+			fields:     fields{Key: data.ThemoviedbKey},
+			args:       args{name: "うる星やつら", airDate: "2022-10-14"},
+			wantTmdbID: 154524,
+			wantSeason: 1,
+			wantErr:    false,
+		},
+		//
 	}
 	db := cache.NewBolt()
 	db.Open("bolt.db")
@@ -72,7 +81,7 @@ func TestThemoviedb_Parse(t1 *testing.T) {
 	}
 	for _, tt := range tests {
 		t1.Run(tt.name, func(t1 *testing.T) {
-			gotTmdbID, gotSeason, err := t.ParseCache(tt.args.name, tt.args.airDate)
+			gotTmdbID, gotSeason, err := t.Parse(tt.args.name, tt.args.airDate)
 			if (err != nil) != tt.wantErr {
 				t1.Errorf("Parse() error = %v, wantErr %v", err, tt.wantErr)
 				return
