@@ -2,9 +2,8 @@ package themoviedb
 
 import (
 	"AnimeGo/pkg/errors"
-	"regexp"
-
 	"go.uber.org/zap"
+	"regexp"
 )
 
 var nameRegxStep = []*regexp.Regexp{
@@ -19,15 +18,15 @@ var nameRegxStep = []*regexp.Regexp{
 }
 
 // RemoveNameSuffix
+//  @Description: 删除番剧名的一些后缀，使得themoviedb能够正常搜索到
+//  @param name string 番剧名
+//  @param fun Action 执行操作。
+// 					返回obj, nil表示成功；
+//					返回nil, nil进行下一步；步骤执行完则返回nil, err
+//					返回nil, err则直接结束；
+//  @return interface{} fun返回的obj
+//  @return error
 //
-//	 @Description: 删除番剧名的一些后缀，使得themoviedb能够正常搜索到
-//	 @param name string 番剧名
-//	 @param fun Action 执行操作。
-//						返回obj, nil表示成功；
-//						返回nil, nil进行下一步；步骤执行完则返回nil, err
-//						返回nil, err则直接结束；
-//	 @return interface{} fun返回的obj
-//	 @return error
 func RemoveNameSuffix(name string, fun func(string) (interface{}, error)) (interface{}, error) {
 	currStep := 0
 	for ; currStep < len(nameRegxStep)+1; currStep++ {
@@ -42,7 +41,7 @@ func RemoveNameSuffix(name string, fun func(string) (interface{}, error)) (inter
 			has := nameRegxStep[currStep].MatchString(name)
 			if has {
 				newName := nameRegxStep[currStep].ReplaceAllString(name, "")
-				if len(newName) > 0 && len(newName) > len(name)/10 {
+				if len(newName) > 0 &&  len(newName) > len(name)/10  {
 					name = newName
 				}
 				zap.S().Debugf("重新搜索：「%s」", name)
@@ -53,12 +52,12 @@ func RemoveNameSuffix(name string, fun func(string) (interface{}, error)) (inter
 }
 
 // SimilarText
+//  @Description: 字符串相似度计算
+//  @param first string
+//  @param second string
+//  @param percent *float64
+//  @return int
 //
-//	@Description: 字符串相似度计算
-//	@param first string
-//	@param second string
-//	@param percent *float64
-//	@return int
 func SimilarText(first, second string) (percent float64) {
 	var similarText func(string, string, int, int) int
 	similarText = func(str1, str2 string, len1, len2 int) int {
