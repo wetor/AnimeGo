@@ -51,10 +51,13 @@ AnimeGo -config=./data/config/animego.yaml
 - Jellyfin支持
 
 ## 开发计划
+- [ ] 增加读取网站离线Archive的缓存功能 降低网站请求
+  - [ ] [Bangumi数据](https://github.com/bangumi/Archive)
+  - [ ] [Mikan数据](https://github.com/MikanProject/bangumi-data/blob/master/dist/data.json)
 - [ ] 类似[AutoBangumi](https://github.com/EstrellaXD/Auto_Bangumi) 的追番功能
-  - [ ] [Mikan Project](https://mikanani.me) 订阅支持
-  - [ ] [qBittorrent](https://qbittorrent.org) 等下载支持
-  - [ ] [Jellyfin](https://jellyfin.org/) 等媒体库软件识别
+  - [x] [Mikan Project](https://mikanani.me) 订阅支持
+  - [x] [qBittorrent](https://qbittorrent.org) 等下载支持
+  - [x] [Jellyfin](https://jellyfin.org/) 媒体库软件识别 会写入bgmid到tvshow.nfo 可以配合[jellyfin-plugin-bangumi](https://github.com/kookxiang/jellyfin-plugin-bangumi)使用
   - [ ] ...
 - [ ] Web界面支持
 - [ ] 模块化与高级自定义功能支持
