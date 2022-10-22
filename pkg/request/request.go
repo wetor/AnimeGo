@@ -13,6 +13,7 @@ func request(method string, param *Param) error {
 	req := goreq.Request{
 		Method:  method,
 		Uri:     param.Uri,
+		UserAgent: "0.2.1/AnimeGo (https://github.com/wetor/AnimeGo)",
 		Timeout: time.Duration(param.Timeout) * time.Second,
 	}
 	if len(param.Proxy) > 0 {
