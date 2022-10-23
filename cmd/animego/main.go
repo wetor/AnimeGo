@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	AnimeGoVersion = "0.2.2"
+	AnimeGoVersion = "0.2.3"
 	AnimeGoGithub  = "https://github.com/wetor/AnimeGo"
 )
 

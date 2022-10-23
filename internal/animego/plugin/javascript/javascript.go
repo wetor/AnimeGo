@@ -2,7 +2,6 @@ package javascript
 
 import (
 	"AnimeGo/pkg/errors"
-	"fmt"
 	"github.com/dop251/goja"
 	"os"
 	"path"
@@ -12,8 +11,6 @@ import (
 type JavaScript struct {
 	*goja.Runtime
 	main         func(Object) Object // 主函数
-	rootPath     string              // 脚本所在路径
-	name         string              // 脚本名
 	paramsSchema []string
 	resultSchema []string
 }
@@ -50,11 +47,9 @@ func (js *JavaScript) execute(file string) error {
 	if err != nil {
 		return errors.NewAniErrorD(err)
 	}
-	js.rootPath = path.Dir(file)
-	_, js.name = path.Split(file)
-	js.name = strings.TrimSuffix(js.name, path.Ext(file))
-
-	fmt.Println(js.rootPath, js.name)
+	currRootPath = path.Dir(file)
+	_, currName = path.Split(file)
+	currName = strings.TrimSuffix(currName, path.Ext(file))
 
 	_, err = js.RunScript(file, string(raw))
 	if err != nil {

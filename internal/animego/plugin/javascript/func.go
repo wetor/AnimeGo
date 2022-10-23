@@ -39,7 +39,7 @@ func (js JavaScript) initVar() Object {
 	return Object{
 		"variable": Object{
 			"version": os.Getenv("animego_version"),
-			"name":    js.name,
+			"name":    currName,
 		},
 	}
 }
@@ -52,11 +52,11 @@ func (js JavaScript) Sleep(ms int64) {
 	time.Sleep(time.Duration(ms) * time.Millisecond)
 }
 
-func (js JavaScript) ReadFile(filename string) string {
+func (js *JavaScript) ReadFile(filename string) string {
 	if strings.Index(filename, "../") >= 0 {
 		panic("禁止使用'../'访问路径")
 	}
-	file, err := os.ReadFile(path.Join(js.rootPath, filename))
+	file, err := os.ReadFile(path.Join(currRootPath, filename))
 	if err != nil {
 		panic(js.ToValue(err))
 	}

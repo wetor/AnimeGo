@@ -55,7 +55,10 @@ func (e *AniError) SetData(data interface{}) *AniError {
 func (e *AniError) Error() string {
 	str := bytes.NewBuffer(nil)
 	str.WriteString(e.Msg)
-
+	if err, ok := e.Data.(error); ok {
+		str.WriteString(" ")
+		str.WriteString(err.Error())
+	}
 	_, file := path.Split(e.File)
 	str.WriteString(fmt.Sprintf(" [(%s) %s:%d]", e.Func, file, e.Line))
 

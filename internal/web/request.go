@@ -48,7 +48,7 @@ type SelectEpRequest struct {
 	Rss    struct {
 		Url string `json:"url" binding:"required"`
 	} `json:"rss" binding:"required"`
-	IsSelectEp bool     `json:"is_select_ep" binding:"required"`
+	IsSelectEp bool     `json:"is_select_ep"`
 	EpLinks    []string `json:"ep_links"`
 }
 
