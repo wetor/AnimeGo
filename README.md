@@ -13,7 +13,7 @@
 -init-replace
     [初始化]输出资源/配置文件时是否自动替换
 ```
-### 0.安装插件
+### 0.安装插件 [可选]
 - (默认已安装) AnimeGo过滤器插件：https://github.com/deqxj00/AnimeGoFilterPlugin
   - 将配置文件中的`setting/filter/javascript`项修改为
     ```
@@ -33,6 +33,12 @@ AnimeGo -init-path=./data
 ### 2.修改配置
 打开并编辑`./data/config/animego.yaml`
 >路径和`1.释放资源`所释放位置有关
+
+其中主要需要修改的配置项为：
+- `feed/rss/mikan/url` : Mikan订阅url，如果仅使用浏览器插件手动下载则无需填写
+- `client/qbittorrent` : qbittorrent客户端webapi信息
+- `key/themoviedb` : themoviedb的webapi访问秘钥，需要注册申请
+- 其余配置项根据需求修改
 
 ### 3.启动程序
 ```shell
@@ -55,7 +61,7 @@ AnimeGo -config=./data/config/animego.yaml
 ## 目前进度
 - 可使用配置、筛选和下载等基本功能
 - javascript编写筛选器，[帮助文档](internal/animego/plugin/javascript/README.md)
-- 支持Tampermonkey(油猴)插件 [AnimeGo\[Mikan快速订阅\]](https://greasyfork.org/zh-CN/scripts/449596-animego-mikan%E5%BF%AB%E9%80%9F%E8%AE%A2%E9%98%85) (v0.3.3)快速订阅下载
+- 支持Tampermonkey(油猴)插件 [AnimeGo\[Mikan快速订阅\]](https://greasyfork.org/zh-CN/scripts/449596) 快速订阅下载
 - Jellyfin支持
 
 ## 开发计划
