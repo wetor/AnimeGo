@@ -80,12 +80,12 @@ func (c *QBittorrent) Start(ctx context.Context) {
 		var err error
 		c.client, err = qbapi.NewAPI(c.option...)
 		if err != nil {
-			zap.S().Debug(errors.NewAniError(err.Error()))
+			zap.S().Debug(errors.NewAniErrorD(err))
 			zap.S().Warnf("初始化QBittorrent客户端第%d次，失败", c.retryNum)
 			return false
 		}
 		if err = c.client.Login(ctx); err != nil {
-			zap.S().Debug(errors.NewAniError(err.Error()))
+			zap.S().Debug(errors.NewAniErrorD(err))
 			zap.S().Warnf("连接QBittorrent第%d次，失败", c.retryNum)
 			return false
 		}
@@ -164,12 +164,12 @@ func (c *QBittorrent) checkError(err error) bool {
 		return false
 	}
 	if qerror, ok := err.(*qbapi.QError); ok && qerror.Code() == -10004 {
-		zap.S().Debug(errors.NewAniErrorSkipf(2, "请求失败，等待客户端响应, err: %v", err))
+		zap.S().Debug(errors.NewAniErrorSkipf(2, "请求失败，等待客户端响应, err: %v", nil, err))
 		c.retryNum = 1
 		c.connected = false
 		c.retryChan <- ChanRetryConnect
 	} else {
-		zap.S().Debug(errors.NewAniErrorSkipf(2, "err: %v", err))
+		zap.S().Debug(errors.NewAniErrorSkipf(2, "err: %v", nil, err))
 		zap.S().Warn("请求QBittorrent接口失败")
 	}
 	return true

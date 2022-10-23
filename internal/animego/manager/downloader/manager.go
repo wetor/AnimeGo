@@ -8,6 +8,7 @@ import (
 	"AnimeGo/internal/models"
 	"AnimeGo/internal/store"
 	"AnimeGo/internal/utils"
+	"AnimeGo/pkg/errors"
 	"context"
 	"fmt"
 	"os"
@@ -361,14 +362,14 @@ func (m *Manager) scrape(bangumi *models.AnimeEntity) bool {
 	if os.IsNotExist(err) {
 		err = os.WriteFile(nfo, []byte(bangumi.Meta()), os.ModePerm)
 		if err != nil {
-			zap.S().Debug(err)
+			zap.S().Debug(errors.NewAniErrorD(err))
 			zap.S().Warn("写入tvshow.nfo元文件失败")
 			return false
 		}
 	}
 	data, err := os.ReadFile(nfo)
 	if err != nil {
-		zap.S().Debug(err)
+		zap.S().Debug(errors.NewAniErrorD(err))
 		zap.S().Warn("打开已存在的tvshow.nfo元文件失败")
 		return false
 	}
@@ -381,7 +382,7 @@ func (m *Manager) scrape(bangumi *models.AnimeEntity) bool {
 
 	err = os.WriteFile(nfo, []byte(xmlStr), os.ModePerm)
 	if err != nil {
-		zap.S().Debug(err)
+		zap.S().Debug(errors.NewAniErrorD(err))
 		zap.S().Warn("写入修改的tvshow.nfo元文件失败")
 		return false
 	}

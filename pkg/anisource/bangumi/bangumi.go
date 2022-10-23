@@ -59,13 +59,13 @@ func (b Bangumi) ParseCache(bangumiID, ep int) (entity *Entity, epInfo *Ep, err 
 
 	err = b.cacheParseAnimeInfo(mem.NewParams("bangumiID", bangumiID).TTL(CacheSecond), results)
 	if err != nil {
-		return nil, nil, errors.NewAniError(err.Error())
+		return nil, nil, err
 	}
 	entity = results.Get("entity").(*Entity)
 	err = b.cacheParseAnimeEpInfo(
 		mem.NewParams("bangumiID", bangumiID, "ep", ep, "eps", entity.Eps).TTL(CacheSecond), results)
 	if err != nil {
-		return nil, nil, errors.NewAniError(err.Error())
+		return nil, nil, err
 	}
 	epInfo = results.Get("epInfo").(*Ep)
 	return entity, epInfo, nil
@@ -83,11 +83,11 @@ func (b Bangumi) ParseCache(bangumiID, ep int) (entity *Entity, epInfo *Ep, err 
 func (b Bangumi) Parse(bangumiID, ep int) (entity *Entity, epInfo *Ep, err error) {
 	entity, err = b.parseAnimeInfo(bangumiID)
 	if err != nil {
-		return nil, nil, errors.NewAniError(err.Error())
+		return nil, nil, err
 	}
 	epInfo, err = b.parseAnimeEpInfo(bangumiID, ep, entity.Eps)
 	if err != nil {
-		return nil, nil, errors.NewAniError(err.Error())
+		return nil, nil, err
 	}
 	return entity, epInfo, nil
 }
@@ -111,7 +111,7 @@ func (b Bangumi) parseAnimeInfo(bangumiID int) (entity *Entity, err error) {
 		Timeout:  anisource.Timeout,
 	})
 	if err != nil {
-		return nil, errors.NewAniError(err.Error())
+		return nil, err
 	}
 	entity = &Entity{
 		ID:     int(resp.ID),

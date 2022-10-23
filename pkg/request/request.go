@@ -3,47 +3,54 @@ package request
 import (
 	"AnimeGo/pkg/errors"
 	"AnimeGo/third_party/goreq"
+	"fmt"
 	"go.uber.org/zap"
 	"io"
 	"os"
 	"time"
 )
 
+var userAgent string
+
 func request(method string, param *Param) error {
+	if len(userAgent) == 0 {
+		userAgent = fmt.Sprintf("%s/AnimeGo (%s)", os.Getenv("animego_version"), os.Getenv("animego_github"))
+	}
+	zap.S().Warn(userAgent)
 	req := goreq.Request{
-		Method:  method,
-		Uri:     param.Uri,
-		UserAgent: "0.2.1/AnimeGo (https://github.com/wetor/AnimeGo)",
-		Timeout: time.Duration(param.Timeout) * time.Second,
+		Method:    method,
+		Uri:       param.Uri,
+		UserAgent: userAgent,
+		Timeout:   time.Duration(param.Timeout) * time.Second,
 	}
 	if len(param.Proxy) > 0 {
 		req.Proxy = param.Proxy
 	}
 	resp, err := req.Do()
 	if err != nil {
-		return errors.NewAniError(err.Error())
+		return errors.NewAniErrorD(err)
 	}
 	defer resp.Body.Close()
 	if param.BindJson != nil {
 		err = resp.Body.FromJsonTo(param.BindJson)
 		if err != nil {
-			return errors.NewAniError(err.Error())
+			return errors.NewAniErrorD(err)
 		}
 	}
 	if param.Writer != nil {
 		_, err = io.Copy(param.Writer, resp.Body)
 		if err != nil {
-			return errors.NewAniError(err.Error())
+			return errors.NewAniErrorD(err)
 		}
 	}
 	if len(param.SaveFile) > 0 {
 		all, err := io.ReadAll(resp.Body)
 		if err != nil {
-			return errors.NewAniError(err.Error())
+			return errors.NewAniErrorD(err)
 		}
 		err = os.WriteFile(param.SaveFile, all, os.ModePerm)
 		if err != nil {
-			return errors.NewAniError(err.Error())
+			return errors.NewAniErrorD(err)
 		}
 	}
 	return nil

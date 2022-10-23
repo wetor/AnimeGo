@@ -8,6 +8,7 @@ import (
 )
 
 type AniError struct {
+	Data interface{}
 	Msg  string
 	File string //file
 	Func string //func
@@ -15,40 +16,48 @@ type AniError struct {
 }
 
 func NewAniError(msg string) *AniError {
-	return NewAniErrorSkipf(2, msg)
+	return NewAniErrorSkipf(2, msg, nil)
+}
+
+func NewAniErrorD(data interface{}) *AniError {
+	return NewAniErrorSkipf(2, "", data)
 }
 
 func NewAniErrorSkip(skip int, msg string) *AniError {
-	return NewAniErrorSkipf(skip+1, msg)
+	return NewAniErrorSkipf(skip+1, msg, nil)
 }
 
 func NewAniErrorf(format string, a ...interface{}) *AniError {
-	return NewAniErrorSkipf(2, format, a...)
+	return NewAniErrorSkipf(2, format, nil, a...)
 }
 
-func NewAniErrorSkipf(skip int, format string, a ...interface{}) *AniError {
+func NewAniErrorSkipf(skip int, format string, data interface{}, a ...interface{}) *AniError {
 	pc, file, line, _ := runtime.Caller(skip)
 	pcName := runtime.FuncForPC(pc).Name()
 	return &AniError{
 		Msg:  fmt.Sprintf(format, a...),
+		Data: data,
 		File: file,
 		Func: pcName,
 		Line: line,
 	}
 }
 
+func (e *AniError) SetMsg(msg string) *AniError {
+	e.Msg = msg
+	return e
+}
+func (e *AniError) SetData(data interface{}) *AniError {
+	e.Data = data
+	return e
+}
+
 func (e *AniError) Error() string {
 	str := bytes.NewBuffer(nil)
-	str.WriteString("[Msg]: ")
 	str.WriteString(e.Msg)
-	if len(e.Func) > 0 {
-		str.WriteString(", [Func]: ")
-		str.WriteString(e.Func)
-	}
-	if len(e.File) > 0 {
-		_, file := path.Split(e.File)
-		str.WriteString(fmt.Sprintf(", [File]: %s:%d", file, e.Line))
-	}
+
+	_, file := path.Split(e.File)
+	str.WriteString(fmt.Sprintf(" [(%s) %s:%d]", e.Func, file, e.Line))
 
 	return str.String()
 }

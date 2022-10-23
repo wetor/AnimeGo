@@ -43,7 +43,7 @@ func (m *Mikan) RegisterCache() {
 	m.cacheParseMikanInfoVar = mem.Memorized(Bucket, anisource.Cache, func(params *mem.Params, results *mem.Results) error {
 		mikan, err := m.parseMikanInfo(params.Get("mikanUrl").(string))
 		if err != nil {
-			return errors.NewAniError(err.Error())
+			return err
 		}
 		results.Set("mikanInfo", mikan)
 		return nil
@@ -52,7 +52,7 @@ func (m *Mikan) RegisterCache() {
 	m.cacheParseMikanBangumiIDVar = mem.Memorized(Bucket, anisource.Cache, func(params *mem.Params, results *mem.Results) error {
 		bangumiID, err := m.parseMikanBangumiID(params.Get("mikanID").(int))
 		if err != nil {
-			return errors.NewAniError(err.Error())
+			return err
 		}
 		results.Set("bangumiID", bangumiID)
 		return nil
@@ -62,7 +62,7 @@ func (m *Mikan) RegisterCache() {
 func (m Mikan) ParseCache(url string) (mikanID int, bangumiID int, err error) {
 	mikan, err := m.CacheParseMikanInfo(url)
 	if err != nil {
-		err = errors.NewAniError(err.Error())
+		err = err
 		return
 	}
 	mikanID = mikan.ID
@@ -77,7 +77,6 @@ func (m Mikan) CacheParseMikanInfo(url string) (mikanInfo *MikanInfo, err error)
 	results := mem.NewResults("mikanInfo", &MikanInfo{})
 	err = m.cacheParseMikanInfoVar(mem.NewParams("mikanUrl", url).TTL(CacheSecond), results)
 	if err != nil {
-		err = errors.NewAniError(err.Error())
 		return
 	}
 	mikanInfo = results.Get("mikanInfo").(*MikanInfo)
@@ -91,7 +90,6 @@ func (m Mikan) CacheParseMikanBangumiID(mikanID int) (bangumiID int, err error) 
 	results := mem.NewResults("bangumiID", 0)
 	err = m.cacheParseMikanBangumiIDVar(mem.NewParams("mikanID", mikanID).TTL(CacheSecond), results)
 	if err != nil {
-		err = errors.NewAniError(err.Error())
 		return
 	}
 	bangumiID = results.Get("bangumiID").(int)
@@ -109,13 +107,11 @@ func (m Mikan) CacheParseMikanBangumiID(mikanID int) (bangumiID int, err error) 
 func (m Mikan) Parse(url string) (mikanID int, bangumiID int, err error) {
 	mikan, err := m.parseMikanInfo(url)
 	if err != nil {
-		err = errors.NewAniError(err.Error())
 		return
 	}
 	mikanID = mikan.ID
 	bangumiID, err = m.parseMikanBangumiID(mikan.ID)
 	if err != nil {
-		err = errors.NewAniError(err.Error())
 		return
 	}
 	return
@@ -131,11 +127,11 @@ func (m Mikan) loadHtml(url string) (*html.Node, error) {
 		Timeout: anisource.Timeout,
 	})
 	if err != nil {
-		return nil, errors.NewAniError(err.Error())
+		return nil, err
 	}
 	doc, err := htmlquery.Parse(buf)
 	if err != nil {
-		return nil, errors.NewAniError(err.Error())
+		return nil, errors.NewAniErrorD(err)
 	}
 	return doc, nil
 }
@@ -150,14 +146,14 @@ func (m Mikan) loadHtml(url string) (*html.Node, error) {
 func (m Mikan) parseMikanInfo(mikanUrl string) (mikan *MikanInfo, err error) {
 	doc, err := m.loadHtml(mikanUrl)
 	if err != nil {
-		err = errors.NewAniError(err.Error())
+		err = errors.NewAniErrorD(err)
 		return
 	}
 	miaknLink := htmlquery.FindOne(doc, IdXPath)
 	href := htmlquery.SelectAttr(miaknLink, "href")
 	u, err := url.Parse(href)
 	if err != nil {
-		err = errors.NewAniError(err.Error())
+		err = errors.NewAniErrorD(err)
 		return
 	}
 	mikan = &MikanInfo{}
@@ -165,7 +161,7 @@ func (m Mikan) parseMikanInfo(mikanUrl string) (mikan *MikanInfo, err error) {
 	if query.Has("bangumiId") {
 		mikan.ID, err = strconv.Atoi(query.Get("bangumiId"))
 		if err != nil {
-			err = errors.NewAniError(err.Error())
+			err = errors.NewAniErrorD(err)
 			return
 		}
 		mikan.SubGroupID, err = strconv.Atoi(query.Get("subgroupid"))
@@ -185,7 +181,7 @@ func (m Mikan) parseMikanInfo(mikanUrl string) (mikan *MikanInfo, err error) {
 	_, groupId := path.Split(href)
 	mikan.PubGroupID, err = strconv.Atoi(groupId)
 	if err != nil {
-		err = errors.NewAniError(err.Error())
+		err = errors.NewAniErrorD(err)
 		return
 	}
 	mikan.GroupName = group.FirstChild.Data
@@ -203,7 +199,7 @@ func (m Mikan) parseMikanBangumiID(mikanID int) (bangumiID int, err error) {
 	url_ := fmt.Sprintf("%s/Home/bangumi/%d", Host, mikanID)
 	doc, err := m.loadHtml(url_)
 	if err != nil {
-		err = errors.NewAniError(err.Error())
+		err = errors.NewAniErrorD(err)
 		return
 	}
 	bangumiUrl := htmlquery.FindOne(doc, BangumiUrlXPath)
@@ -212,7 +208,7 @@ func (m Mikan) parseMikanBangumiID(mikanID int) (bangumiID int, err error) {
 	hrefSplit := strings.Split(href, "/")
 	bangumiID, err = strconv.Atoi(hrefSplit[len(hrefSplit)-1])
 	if err != nil {
-		err = errors.NewAniError(err.Error())
+		err = errors.NewAniErrorD(err)
 		return
 	}
 	return

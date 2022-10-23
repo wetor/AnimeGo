@@ -2,6 +2,7 @@ package parser
 
 import (
 	"AnimeGo/internal/models"
+	"AnimeGo/pkg/errors"
 	"AnimeGo/third_party/poketto"
 )
 
@@ -9,7 +10,7 @@ func ParseTitle(title string) (*models.ParseResult, error) {
 	parse := poketto.NewEpisode(title)
 	parse.TryParse()
 	if parse.ParseErr != nil {
-		return nil, parse.ParseErr
+		return nil, errors.NewAniErrorD(parse.ParseErr)
 	}
 	return &models.ParseResult{
 		Ep:         parse.Ep,

@@ -3,10 +3,10 @@
 package mikan
 
 import (
-	"AnimeGo/internal/animego/feed"
 	"AnimeGo/internal/models"
 	"AnimeGo/internal/store"
 	"AnimeGo/internal/utils"
+	"AnimeGo/pkg/errors"
 	"AnimeGo/pkg/request"
 	"os"
 	"path"
@@ -22,7 +22,7 @@ type Rss struct {
 	name string
 }
 
-func NewRss(url, name string) feed.Feed {
+func NewRss(url, name string) *Rss {
 
 	if len(name) == 0 {
 		if len(url) == 0 {
@@ -42,14 +42,14 @@ func NewRss(url, name string) feed.Feed {
 //  Description 第一步，解析rss
 //  Receiver f *Rss
 //
-func (f *Rss) Parse() []*models.FeedItem {
+func (f *Rss) Parse() (items []*models.FeedItem, err error) {
 	if len(f.url) == 0 {
-		return nil
+		return nil, nil
 	}
 	filename := path.Join(store.Config.TempPath, f.name+".xml")
 	// --------- 下载rss.xml ---------
 	zap.S().Info("获取Rss数据开始...")
-	err := request.Get(&request.Param{
+	err = request.Get(&request.Param{
 		Uri:      f.url,
 		Proxy:    store.Config.Proxy(),
 		SaveFile: filename,
@@ -59,30 +59,32 @@ func (f *Rss) Parse() []*models.FeedItem {
 	if err != nil {
 		zap.S().Debug(err)
 		zap.S().Warn("请求Rss失败")
-		return nil
+		return
 	}
 	zap.S().Info("获取Rss数据成功！")
 
 	// --------- 解析本地rss.xml ---------
 	file, err := os.Open(filename)
 	if err != nil {
+		err = errors.NewAniErrorD(err)
 		zap.S().Debug(err)
 		zap.S().Warn("打开Rss文件失败")
-		return nil
+		return
 	}
 	defer file.Close()
 	fp := gofeed.NewParser()
 	feeds, err := fp.Parse(file)
 	if err != nil {
+		err = errors.NewAniErrorD(err)
 		zap.S().Debug(err)
 		zap.S().Warn("解析ss失败")
-		return nil
+		return
 	}
 	regx := regexp.MustCompile(`<pubDate>(.*?)T`)
 
 	var date string
 	var length int64
-	items := make([]*models.FeedItem, len(feeds.Items))
+	items = make([]*models.FeedItem, len(feeds.Items))
 	for i, item := range feeds.Items {
 		strs := regx.FindStringSubmatch(item.Custom["torrent"])
 		if len(strs) < 2 {
@@ -90,18 +92,23 @@ func (f *Rss) Parse() []*models.FeedItem {
 		} else {
 			date = strs[1]
 		}
+		if len(item.Enclosures) == 0 {
+			zap.S().Debug(errors.NewAniErrorf("Torrent Enclosures错误，%s", item.Title))
+			zap.S().Warn("Torrent Enclosures错误，跳过")
+			continue
+		}
 		_, hash := path.Split(item.Enclosures[0].URL)
 		if len(hash) < 40 {
-			zap.S().Debug(err)
-			zap.S().Warn("获取torrent hash失败：URL错误")
+			zap.S().Debug(errors.NewAniErrorf("Torrent URL错误，%s", item.Title))
+			zap.S().Warn("Torrent URL错误")
 			hash = ""
 		} else {
 			hash = hash[:40]
 		}
 		length, err = strconv.ParseInt(item.Enclosures[0].Length, 10, 64)
 		if err != nil {
-			zap.S().Debug(err)
-			zap.S().Warn("获取torrent length失败")
+			zap.S().Debug(errors.NewAniErrorD(err))
+			zap.S().Warn("Torrent Length错误")
 		}
 
 		items[i] = &models.FeedItem{
@@ -113,6 +120,6 @@ func (f *Rss) Parse() []*models.FeedItem {
 			Length:  length,
 		}
 	}
-	return items
+	return items, nil
 
 }

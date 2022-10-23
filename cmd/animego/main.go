@@ -22,6 +22,11 @@ import (
 	"go.uber.org/zap"
 )
 
+const (
+	AnimeGoVersion = "0.2.2"
+	AnimeGoGithub  = "https://github.com/wetor/AnimeGo"
+)
+
 var ctx, cancel = context.WithCancel(context.Background())
 var configFile string
 var debug bool
@@ -29,14 +34,27 @@ var debug bool
 var rootPath string
 var replace bool
 
+func init() {
+	var err error
+	err = os.Setenv("animego_version", AnimeGoVersion)
+	if err != nil {
+		panic(err)
+	}
+	err = os.Setenv("animego_github", AnimeGoGithub)
+	if err != nil {
+		panic(err)
+	}
+}
+
 func main() {
+	printInfo()
+
 	flag.StringVar(&configFile, "config", "data/config/animego.yaml", "配置文件路径；配置文件中的相对路径均是相对与程序的位置")
 	flag.BoolVar(&debug, "debug", true, "Debug模式，将会输出更多的日志")
 
 	flag.StringVar(&rootPath, "init-path", "", "[初始化]输出资源/配置文件到的根目录")
 	flag.BoolVar(&replace, "init-replace", false, "[初始化]输出资源/配置文件时是否自动替换")
 	flag.Parse()
-
 	if len(rootPath) > 0 {
 		copyDir(assets.Plugin, "plugin", path.Join(rootPath, "plugin"), replace)
 		copyDir(assets.Config, "config", path.Join(rootPath, "config"), replace)
@@ -62,6 +80,10 @@ func main() {
 func doExit() {
 	zap.S().Infof("正在退出...")
 	cancel()
+}
+
+func printInfo() {
+	fmt.Printf("AnimeGo %s (%s)\n", os.Getenv("animego_version"), os.Getenv("animego_github"))
 }
 
 func Main(ctx context.Context) {

@@ -18,17 +18,17 @@ import (
 //
 func checkRequest(c *gin.Context, data interface{}) bool {
 	if err := c.ShouldBind(data); err != nil {
-		zap.S().Warnf("参数错误，err: %s", errors.NewAniError(err.Error()))
+		zap.S().Warnf("参数错误，err: %s", errors.NewAniErrorD(err))
 		c.JSON(Fail("参数错误"))
 		return false
 	}
 	if err := c.ShouldBindQuery(data); err != nil {
-		zap.S().Warnf("Query参数错误，err: %s", errors.NewAniError(err.Error()))
+		zap.S().Warnf("Query参数错误，err: %s", errors.NewAniErrorD(err))
 		c.JSON(Fail("Query参数错误"))
 		return false
 	}
 	if err := c.ShouldBindUri(data); err != nil {
-		zap.S().Warnf("Uri参数错误，err: %s", errors.NewAniError(err.Error()))
+		zap.S().Warnf("Uri参数错误，err: %s", errors.NewAniErrorD(err))
 		c.JSON(Fail("Uri参数错误"))
 		return false
 	}

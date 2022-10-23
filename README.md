@@ -67,6 +67,10 @@ AnimeGo -config=./data/config/animego.yaml
 
 ## 开发日志
 
+### 2022.10.23
+- 修复错误信息嵌套问题，优化错误提示
+- UserAgent
+
 ### 2022.10.15
 - 修改和增加webapi
   - 支持access_key认证

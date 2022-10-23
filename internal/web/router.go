@@ -20,7 +20,7 @@ func Run(ctx context.Context) {
 		r.Use(GinLogger(zap.S())) // 日志中间件
 		r.Use(GinRecovery(zap.S(), true, func(c *gin.Context, recovered interface{}) {
 			if err, ok := recovered.(error); ok {
-				zap.S().Debugf("服务器错误，err: %v", errors.NewAniError(err.Error()))
+				zap.S().Debugf("服务器错误，err: %v", errors.NewAniErrorD(err))
 				c.JSON(ErrSvr("服务器错误"))
 			} else {
 				zap.S().Debug(recovered.(string))

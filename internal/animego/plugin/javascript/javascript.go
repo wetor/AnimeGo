@@ -43,17 +43,20 @@ func (js *JavaScript) preExecute() error {
 func (js *JavaScript) execute(file string, params Object) (result interface{}, err error) {
 	raw, err := os.ReadFile(file)
 	if err != nil {
+		err = errors.NewAniErrorD(err)
 		return
 	}
 
 	_, err = js.RunScript(file, string(raw))
 	if err != nil {
+		err = errors.NewAniErrorD(err)
 		return
 	}
 
 	var main func(Object) Object
 	err = js.ExportTo(js.Get(funcMain), &main)
 	if err != nil {
+		err = errors.NewAniErrorD(err)
 		return
 	}
 	result = main(params)

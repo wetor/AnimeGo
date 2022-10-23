@@ -52,7 +52,7 @@ func NewManager(filter filter.Filter, feed feed.Feed, anisource anisource.AniSou
 func (m *Manager) Update(ctx context.Context, items []*models.FeedItem) {
 	// 筛选
 	if items == nil {
-		items = m.feed.Parse()
+		items, _ = m.feed.Parse()
 	}
 	items = m.filter.Filter(items)
 

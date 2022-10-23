@@ -1,10 +1,11 @@
 package cache
 
 import (
+	"AnimeGo/pkg/errors"
 	"bytes"
 	"encoding/binary"
 	"encoding/gob"
-	"errors"
+
 	"github.com/boltdb/bolt"
 	"go.uber.org/zap"
 	"time"
@@ -21,7 +22,7 @@ func NewBolt() *Bolt {
 func (c *Bolt) Open(path string) {
 	db, err := bolt.Open(path, 0600, nil)
 	if err != nil {
-		zap.S().Debug(err)
+		zap.S().Debug(errors.NewAniErrorD(err))
 		zap.S().Warn("打开bolt数据库失败")
 		return
 	}
@@ -32,7 +33,7 @@ func (c *Bolt) Open(path string) {
 func (c *Bolt) Close() {
 	err := c.db.Close()
 	if err != nil {
-		zap.S().Debug(err)
+		zap.S().Debug(errors.NewAniErrorD(err))
 		zap.S().Warn("关闭bolt数据库失败")
 		return
 	}
@@ -47,7 +48,7 @@ func (c *Bolt) Add(bucket string) {
 		return nil
 	})
 	if err != nil {
-		zap.S().Debug(err)
+		zap.S().Debug(errors.NewAniErrorD(err))
 		zap.S().Warn("关闭bolt数据库失败")
 		return
 	}
@@ -69,7 +70,7 @@ func (c *Bolt) Put(bucket string, key, val interface{}, ttl int64) {
 		return err
 	})
 	if err != nil {
-		zap.S().Debug(err)
+		zap.S().Debug(errors.NewAniErrorD(err))
 		zap.S().Warn("bolt添加数据失败")
 		return
 	}
@@ -81,11 +82,11 @@ func (c *Bolt) Get(bucket string, key, val interface{}) error {
 		b := tx.Bucket([]byte(bucket))
 		v := b.Get(c.toBytes(key, -1))
 		if v == nil {
-			return errors.New("不存在")
+			return errors.NewAniError("Key不存在")
 		}
 		ttl = c.toValue(v, val)
 		if ttl != 0 && ttl <= time.Now().Unix() {
-			return errors.New("已过期")
+			return errors.NewAniError("Key已过期")
 		}
 		return nil
 	})
@@ -124,7 +125,8 @@ func GobToBytes(val interface{}) []byte {
 	enc := gob.NewEncoder(buf2)
 	err := enc.Encode(val)
 	if err != nil {
-		panic(err)
+		zap.S().Debug(errors.NewAniErrorD(err))
+		zap.S().Error("Gob Encode失败")
 	}
 	return buf2.Bytes()
 }
@@ -134,6 +136,7 @@ func GobToValue(data []byte, val interface{}) {
 	dec := gob.NewDecoder(buf)
 	err := dec.Decode(val)
 	if err != nil {
-		panic(err)
+		zap.S().Debug(errors.NewAniErrorD(err))
+		zap.S().Error("Gob Decode失败")
 	}
 }

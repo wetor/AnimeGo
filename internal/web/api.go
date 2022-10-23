@@ -30,7 +30,7 @@ func Rss(c *gin.Context) {
 	}
 	rss := mikan.NewRss(request.Rss.Url, "")
 
-	items := rss.Parse()
+	items, _ := rss.Parse()
 	if request.IsSelectEp {
 		set := make(map[string]bool)
 		for _, item := range request.EpLinks {
@@ -61,7 +61,7 @@ func PluginConfigPost(c *gin.Context) {
 
 	data, err := base64.StdEncoding.DecodeString(request.Data)
 	if err != nil {
-		err = errors.NewAniError(err.Error())
+		err = errors.NewAniErrorD(err)
 		zap.S().Debug(err)
 		c.JSON(Fail(err.Error()))
 		return
@@ -70,7 +70,7 @@ func PluginConfigPost(c *gin.Context) {
 	file := path.Join(store.Config.DataPath, "plugin", filename)
 	err = os.WriteFile(file, data, 0666)
 	if err != nil {
-		err = errors.NewAniError(err.Error())
+		err = errors.NewAniErrorD(err)
 		zap.S().Debug(err)
 		c.JSON(Fail(err.Error()))
 		return
@@ -93,7 +93,7 @@ func PluginConfigGet(c *gin.Context) {
 
 	data, err := os.ReadFile(file)
 	if err != nil {
-		err = errors.NewAniError(err.Error())
+		err = errors.NewAniErrorD(err)
 		zap.S().Debug(err)
 		c.JSON(Fail(err.Error()))
 		return
