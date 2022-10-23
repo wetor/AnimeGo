@@ -1,0 +1,3 @@
+[submodule "assets/plugin/filter/AnimeGoHelperParser"]
+	path = assets/plugin/filter/AnimeGoHelperParser
+	url = https://github.com/deqxj00/AnimeGoFilterPlugin.git

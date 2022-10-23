@@ -14,8 +14,16 @@
     [初始化]输出资源/配置文件时是否自动替换
 ```
 ### 0.安装插件
-- AnimeGo过滤器插件：https://github.com/deqxj00/AnimeGoFilterPlugin
-- AnimeGo网页快速订阅Tampermonkey(油猴)插件：https://github.com/deqxj00/AnimeGoHelper
+- (默认已安装) AnimeGo过滤器插件：https://github.com/deqxj00/AnimeGoFilterPlugin
+  - 将配置文件中的`setting/filter/javascript`项修改为
+    ```
+    setting:
+      # ...
+      filter:
+        javascript: plugin/filter/AnimeGoHelperParser/AnimeGoHelperParser.js
+    ```
+    后开启插件
+- ([安装Tampermonkey插件](https://greasyfork.org/zh-CN/scripts/449596)) AnimeGo网页快速订阅Tampermonkey(油猴)插件：https://github.com/deqxj00/AnimeGoHelper
 
 ### 1.释放资源
 ```shell
@@ -67,7 +75,7 @@ AnimeGo -config=./data/config/animego.yaml
 
 ## 开发日志
 
-### 2022.10.23
+### 2022.10.23 (v0.2.2)
 - 修复错误信息嵌套问题，优化错误提示
 - UserAgent
 
