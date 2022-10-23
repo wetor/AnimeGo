@@ -27,16 +27,20 @@ log.info(...params)
 log.error(...params)
 ```
 
-### os.getPwd
-获取当前程序所在目录
-
 ### os.readFile
 ```javascript
 // 读取文本文件
 // 参数
-filename // 绝对路径或基于程序所在目录的相对路径
+filename // 基于当前插件所在目录的相对路径
 // 返回值
 os.readFile // 字符串
+```
+
+### variable
+```javascript
+// 变量
+variable.version // AnimeGo版本号
+variable.name // 插件名（即不含扩展名的插件文件名）
 ```
 
 ### animeGo.parseName

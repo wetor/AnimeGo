@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"go.uber.org/zap"
 	"io"
+	"net/http"
 	"os"
 	"time"
 )
@@ -16,7 +17,6 @@ func request(method string, param *Param) error {
 	if len(userAgent) == 0 {
 		userAgent = fmt.Sprintf("%s/AnimeGo (%s)", os.Getenv("animego_version"), os.Getenv("animego_github"))
 	}
-	zap.S().Warn(userAgent)
 	req := goreq.Request{
 		Method:    method,
 		Uri:       param.Uri,
@@ -31,6 +31,10 @@ func request(method string, param *Param) error {
 		return errors.NewAniErrorD(err)
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return errors.NewAniErrorf("HTTP错误，%s", resp.Status)
+	}
 	if param.BindJson != nil {
 		err = resp.Body.FromJsonTo(param.BindJson)
 		if err != nil {

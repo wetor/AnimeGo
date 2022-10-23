@@ -5,6 +5,7 @@ import (
 	"AnimeGo/test"
 	"fmt"
 	"github.com/dop251/goja"
+	"os"
 	"testing"
 )
 
@@ -28,6 +29,21 @@ function sum(a, b) {
 		panic(err)
 	}
 	fmt.Println(res)
+}
+
+func TestJs2(t *testing.T) {
+	test.TestInit()
+	os.Setenv("animego_version", "0.2.2")
+	js := &JavaScript{}
+	js.SetSchema([]string{"feedItems"}, []string{"index", "error"})
+	execute, err := js.Execute("/Users/wetor/GoProjects/AnimeGo/internal/animego/plugin/javascript/test.js",
+		Object{
+			"feedItems": []*models.FeedItem{},
+		})
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(execute)
 }
 
 func TestJavaScript_Execute(t *testing.T) {

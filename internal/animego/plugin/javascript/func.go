@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"go.uber.org/zap"
 	"os"
+	"path"
+	"strings"
 	"time"
 )
 
@@ -20,7 +22,6 @@ func (js JavaScript) initFunc() Object {
 		"sleep": js.Sleep,
 		"os": Object{
 			"readFile": js.ReadFile,
-			"getPwd":   js.GetPwd,
 		},
 		"goLog": Object{
 			"debug": zap.S().Debug,
@@ -30,7 +31,15 @@ func (js JavaScript) initFunc() Object {
 		"animeGo": Object{
 			"parseName":    js.ParseName,
 			"getMikanInfo": js.GetMikanInfo,
-			"test":         js.Test,
+		},
+	}
+}
+
+func (js JavaScript) initVar() Object {
+	return Object{
+		"variable": Object{
+			"version": os.Getenv("animego_version"),
+			"name":    js.name,
 		},
 	}
 }
@@ -44,16 +53,14 @@ func (js JavaScript) Sleep(ms int64) {
 }
 
 func (js JavaScript) ReadFile(filename string) string {
-	file, err := os.ReadFile(filename)
+	if strings.Index(filename, "../") >= 0 {
+		panic("禁止使用'../'访问路径")
+	}
+	file, err := os.ReadFile(path.Join(js.rootPath, filename))
 	if err != nil {
 		panic(js.ToValue(err))
 	}
 	return string(file)
-}
-
-func (js JavaScript) GetPwd() string {
-	pwd, _ := os.Getwd()
-	return pwd
 }
 
 func (js JavaScript) ParseName(name string) (episode *poketto.Episode) {
@@ -71,8 +78,4 @@ func (js JavaScript) GetMikanInfo(url string) *mikan.MikanInfo {
 		panic(js.ToValue(err))
 	}
 	return info
-}
-
-func (js JavaScript) Test() {
-	panic(js.ToValue("异常测试"))
 }

@@ -2,12 +2,18 @@ package javascript
 
 import (
 	"AnimeGo/pkg/errors"
+	"fmt"
 	"github.com/dop251/goja"
 	"os"
+	"path"
+	"strings"
 )
 
 type JavaScript struct {
 	*goja.Runtime
+	main         func(Object) Object // 主函数
+	rootPath     string              // 脚本所在路径
+	name         string              // 脚本名
 	paramsSchema []string
 	resultSchema []string
 }
@@ -22,11 +28,11 @@ func (js *JavaScript) preExecute() error {
 		js.Runtime = goja.New()
 		err := js.registerFunc()
 		if err != nil {
-			return err
+			return errors.NewAniErrorD(err)
 		}
 		_, err = js.RunScript(animeGoBaseFilename, animeGoBaseJs)
 		if err != nil {
-			return err
+			return errors.NewAniErrorD(err)
 		}
 	}
 	return nil
@@ -36,31 +42,30 @@ func (js *JavaScript) preExecute() error {
 //  @Description: 执行脚本
 //  @receiver *JavaScript
 //  @param file string
-//  @param params map[string]interface{}
 //  @return result interface{}
 //  @return err error
 //
-func (js *JavaScript) execute(file string, params Object) (result interface{}, err error) {
+func (js *JavaScript) execute(file string) error {
 	raw, err := os.ReadFile(file)
 	if err != nil {
-		err = errors.NewAniErrorD(err)
-		return
+		return errors.NewAniErrorD(err)
 	}
+	js.rootPath = path.Dir(file)
+	_, js.name = path.Split(file)
+	js.name = strings.TrimSuffix(js.name, path.Ext(file))
+
+	fmt.Println(js.rootPath, js.name)
 
 	_, err = js.RunScript(file, string(raw))
 	if err != nil {
-		err = errors.NewAniErrorD(err)
-		return
+		return errors.NewAniErrorD(err)
 	}
 
-	var main func(Object) Object
-	err = js.ExportTo(js.Get(funcMain), &main)
+	err = js.ExportTo(js.Get(funcMain), &js.main)
 	if err != nil {
-		err = errors.NewAniErrorD(err)
-		return
+		return errors.NewAniErrorD(err)
 	}
-	result = main(params)
-	return
+	return nil
 }
 
 // endExecute
@@ -69,6 +74,10 @@ func (js *JavaScript) execute(file string, params Object) (result interface{}, e
 //  @return error
 //
 func (js *JavaScript) endExecute() error {
+	err := js.registerVar()
+	if err != nil {
+		return errors.NewAniErrorD(err)
+	}
 	return nil
 }
 
@@ -81,6 +90,22 @@ func (js *JavaScript) registerFunc() error {
 	funcMap := js.initFunc()
 	for name, method := range funcMap {
 		err := js.Set(name, method)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// registerVar
+//  @Description: 注册全局变量
+//  @receiver *JavaScript
+//  @return error
+//
+func (js *JavaScript) registerVar() error {
+	varMap := js.initVar()
+	for name, v := range varMap {
+		err := js.Set(name, v)
 		if err != nil {
 			return err
 		}
@@ -126,7 +151,7 @@ func (js *JavaScript) Execute(file string, params Object) (result interface{}, e
 	if err != nil {
 		return
 	}
-	result, err = js.execute(file, params)
+	err = js.execute(file)
 	if err != nil {
 		return
 	}
@@ -134,6 +159,8 @@ func (js *JavaScript) Execute(file string, params Object) (result interface{}, e
 	if err != nil {
 		return
 	}
+
+	result = js.main(params)
 	err = js.checkResult(result)
 	if err != nil {
 		return
