@@ -56,9 +56,8 @@ func (m *Manager) Update(ctx context.Context, items []*models.FeedItem) {
 	}
 	items = m.filter.Filter(items)
 
-	conf := store.Config.Advanced.MainConf
 	animeList := make([]*models.AnimeEntity, len(items))
-	working := make(chan int, conf.MultiGoroutine.GoroutineMax) // 限制同时执行个数
+	working := make(chan int, store.Config.Advanced.Feed.MultiGoroutine.GoroutineMax) // 限制同时执行个数
 	wg := sync.WaitGroup{}
 	exit := false
 	for i, item := range items {
@@ -96,13 +95,13 @@ func (m *Manager) Update(ctx context.Context, items []*models.FeedItem) {
 					m.downloadChan <- anime
 
 				}
-				utils.Sleep(conf.FeedDelay, ctx)
+				utils.Sleep(store.Config.Advanced.Feed.Delay, ctx)
 			}
 			<-working
 			wg.Done()
 		}(i, item)
 
-		if !exit && !conf.MultiGoroutine.Enable {
+		if !exit && !store.Config.Advanced.Feed.MultiGoroutine.Enable {
 			wg.Wait()
 		}
 	}
@@ -122,11 +121,11 @@ func (m *Manager) Start(ctx context.Context) {
 		for {
 			select {
 			case <-ctx.Done():
-				zap.S().Info("正常退出")
+				zap.S().Info("正常退出 manager filter")
 				return
 			default:
 				m.Update(ctx, nil)
-				delay := store.Config.Advanced.MainConf.FeedUpdateDelayMinute
+				delay := store.Config.Advanced.Feed.UpdateDelayMinute
 				if delay < UpdateWaitMinMinute {
 					delay = UpdateWaitMinMinute
 				}

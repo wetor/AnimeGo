@@ -9,6 +9,7 @@ import (
 	"AnimeGo/internal/store"
 	"AnimeGo/internal/utils"
 	"AnimeGo/internal/web"
+	"AnimeGo/pkg/request"
 	"context"
 	"embed"
 	"flag"
@@ -23,7 +24,7 @@ import (
 )
 
 const (
-	AnimeGoVersion = "0.2.3"
+	AnimeGoVersion = "0.3.0"
 	AnimeGoGithub  = "https://github.com/wetor/AnimeGo"
 )
 
@@ -50,7 +51,7 @@ func main() {
 	printInfo()
 
 	flag.StringVar(&configFile, "config", "data/config/animego.yaml", "配置文件路径；配置文件中的相对路径均是相对与程序的位置")
-	flag.BoolVar(&debug, "debug", true, "Debug模式，将会输出更多的日志")
+	flag.BoolVar(&debug, "debug", false, "Debug模式，将会输出更多的日志")
 
 	flag.StringVar(&rootPath, "init-path", "", "[初始化]输出资源/配置文件到的根目录")
 	flag.BoolVar(&replace, "init-replace", false, "[初始化]输出资源/配置文件时是否自动替换")
@@ -89,24 +90,36 @@ func printInfo() {
 func Main(ctx context.Context) {
 
 	config := configs.Init(configFile)
-	config.InitDir()
 
 	logger.Init(&logger.InitOptions{
-		File:    config.LogFile,
+		File:    config.Advanced.Path.LogFile,
 		Debug:   debug,
 		Context: ctx,
 	})
 
 	bolt := cache.NewBolt()
-	bolt.Open(config.Setting.DbFile)
+	bolt.Open(config.Advanced.Path.DbFile)
 
 	store.Init(&store.InitOptions{
 		Config: config,
 		Cache:  bolt,
 	})
 
+	request.Init(&request.InitOptions{
+		Proxy:     store.Config.Proxy(),
+		Timeout:   store.Config.Advanced.Request.TimeoutSecond,
+		Retry:     store.Config.Advanced.Request.RetryNum,
+		RetryWait: store.Config.Advanced.Request.RetryWaitSecond,
+		Debug:     debug,
+	})
+
 	store.Process = mikan.NewMikan()
 	store.Process.Run(ctx)
+
+	web.Init(&web.InitOptions{
+		Debug: debug,
+	})
+
 	web.Run(ctx)
 	store.WG.Wait()
 }

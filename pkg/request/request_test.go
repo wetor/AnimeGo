@@ -1,65 +1,32 @@
 package request
 
 import (
-	"AnimeGo/internal/store"
-	"AnimeGo/third_party/goreq"
+	"AnimeGo/test"
 	"fmt"
-	"io"
 	"testing"
 )
 
-func Test_goreq(t *testing.T) {
-	req, err := goreq.Request{
-		Method: "GET",
-		Proxy:  "http://127.0.0.1:7890",
-		Uri:    "http://pv.sohu.com/cityjson?ie=utf-8",
-	}.Do()
-	if err != nil {
-		panic(err)
-	}
-	defer req.Body.Close()
-	fmt.Println(req.StatusCode)
-	body, _ := io.ReadAll(req.Body)
-	fmt.Println(string(body))
-}
-
-func Test_goreq_google(t *testing.T) {
-	req, err := goreq.Request{
-		Method: "GET",
-		Proxy:  "http://127.0.0.1:7890",
-		Uri:    "https://www.google.com/",
-	}.Do()
-	if err != nil {
-		panic(err)
-	}
-	defer req.Body.Close()
-	fmt.Println(req.StatusCode)
-	body, _ := io.ReadAll(req.Body)
-	fmt.Println(string(body))
-}
-
 func TestGet(t *testing.T) {
-	store.Init(&store.InitOptions{
-		ConfigFile: "/Users/wetor/GoProjects/AnimeGo/data/config/conf.yaml",
-	})
-	err := Get(&Param{
-		Uri: "http://pv.sohu.com/cityjson?ie=utf-8",
-	})
+	Init(&InitOptions{})
+
+	err, str := GetString("http://pv.sohu.com/cityjson?ie=utf-8")
 	if err != nil {
 		panic(err)
 	}
+	fmt.Println(str)
 }
 
 func TestGetRetry(t *testing.T) {
-	store.Init(&store.InitOptions{
-		ConfigFile: "/Users/wetor/GoProjects/AnimeGo/data/config/conf.yaml",
+	test.TestInit()
+	Init(&InitOptions{
+		Proxy:     "http://127.0.0.1:7890",
+		Retry:     3,
+		RetryWait: 1,
+		Timeout:   3,
+		Debug:     true,
 	})
-	err := Get(&Param{
-		Uri:     "https://www.google.com/",
-		Proxy:   "http://127.0.0.1:6666",
-		Retry:   3,
-		Timeout: 3,
-	})
+	err, str := GetString("https://www.baidu.com/aaa/test")
+	fmt.Println(str)
 	if err != nil {
 		panic(err)
 	}

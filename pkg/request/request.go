@@ -2,8 +2,8 @@ package request
 
 import (
 	"AnimeGo/pkg/errors"
-	"AnimeGo/third_party/goreq"
 	"fmt"
+	"github.com/parnurzeal/gorequest"
 	"go.uber.org/zap"
 	"io"
 	"net/http"
@@ -11,67 +11,100 @@ import (
 	"time"
 )
 
-var userAgent string
+var (
+	Retry     int
+	RetryWait int
+	Timeout   int
+	Proxy     string
+	UserAgent string
+	Debug     bool
+)
 
-func request(method string, param *Param) error {
-	if len(userAgent) == 0 {
-		userAgent = fmt.Sprintf("%s/AnimeGo (%s)", os.Getenv("animego_version"), os.Getenv("animego_github"))
-	}
-	req := goreq.Request{
-		Method:    method,
-		Uri:       param.Uri,
-		UserAgent: userAgent,
-		Timeout:   time.Duration(param.Timeout) * time.Second,
-	}
-	if len(param.Proxy) > 0 {
-		req.Proxy = param.Proxy
-	}
-	resp, err := req.Do()
-	if err != nil {
-		return errors.NewAniErrorD(err)
-	}
-	defer resp.Body.Close()
+func Init(opt *InitOptions) {
+	opt.Default()
+	Retry = opt.Retry
+	RetryWait = opt.RetryWait
+	Timeout = opt.Timeout
+	Proxy = opt.Proxy
+	UserAgent = fmt.Sprintf("%s/AnimeGo (%s)", os.Getenv("animego_version"), os.Getenv("animego_github"))
+}
 
+func get(uri string) *gorequest.SuperAgent {
+	zap.S().Infof("HTTP GET %s", uri)
+	retryWait := time.Duration(RetryWait) * time.Second
+	timeout := time.Duration(Timeout) * time.Second
+	allTimeout := timeout + (timeout+retryWait)*time.Duration(Retry) // 最长等待时间
+	return gorequest.New().
+		Timeout(allTimeout).
+		Proxy(Proxy).
+		SetDebug(Debug).
+		Get(uri).
+		Set("User-Agent", UserAgent).
+		Retry(Retry, retryWait,
+			http.StatusBadRequest,
+			http.StatusNotFound,
+			http.StatusInternalServerError,
+			http.StatusBadGateway,
+			http.StatusServiceUnavailable,
+			http.StatusGatewayTimeout)
+}
+
+func handleError(resp gorequest.Response, errs []error) (err error) {
+	if len(errs) != 0 {
+		zap.S().Debug(errors.NewAniErrorD(errs))
+		zap.S().Warn("HTTP 请求失败")
+		return errs[0]
+	}
 	if resp.StatusCode != http.StatusOK {
-		return errors.NewAniErrorf("HTTP错误，%s", resp.Status)
+		err = errors.NewAniErrorSkipf(3, "HTTP 请求失败，%s, 重试 %s 次", nil, resp.Status, resp.Header.Get("Retry-Count"))
+		zap.S().Debug(err)
+		zap.S().Warnf("HTTP 请求失败, %s", resp.Status)
+		return err
 	}
-	if param.BindJson != nil {
-		err = resp.Body.FromJsonTo(param.BindJson)
-		if err != nil {
-			return errors.NewAniErrorD(err)
-		}
+	zap.S().Infof("HTTP 请求完成，重试 %s 次", resp.Header.Get("Retry-Count"))
+	return nil
+}
+
+func GetString(uri string) (error, string) {
+	resp, str, errs := get(uri).End()
+	err := handleError(resp, errs)
+	if err != nil {
+		return err, ""
 	}
-	if param.Writer != nil {
-		_, err = io.Copy(param.Writer, resp.Body)
-		if err != nil {
-			return errors.NewAniErrorD(err)
-		}
-	}
-	if len(param.SaveFile) > 0 {
-		all, err := io.ReadAll(resp.Body)
-		if err != nil {
-			return errors.NewAniErrorD(err)
-		}
-		err = os.WriteFile(param.SaveFile, all, os.ModePerm)
-		if err != nil {
-			return errors.NewAniErrorD(err)
-		}
+	return nil, str
+}
+
+func Get(uri string, body interface{}) error {
+	resp, _, errs := get(uri).EndStruct(body)
+	err := handleError(resp, errs)
+	if err != nil {
+		return err
 	}
 	return nil
 }
 
-func Get(param *Param) (err error) {
-	if param.Retry == 0 {
-		param.Retry = 1
+func GetFile(uri string, file string) error {
+	resp, bodyBytes, errs := get(uri).EndBytes()
+	err := handleError(resp, errs)
+	if err != nil {
+		return err
 	}
-	for i := 0; i < param.Retry; i++ {
-		err = request("GET", param)
-		if err != nil {
-			zap.S().Debug(err)
-			zap.S().Warnf("请求第%d次，失败", i+1)
-		} else {
-			break
-		}
+	err = os.WriteFile(file, bodyBytes, 0666)
+	if err != nil {
+		return errors.NewAniErrorD(err)
 	}
-	return err
+	return nil
+}
+
+func GetWriter(uri string, w io.Writer) error {
+	resp, bodyBytes, errs := get(uri).EndBytes()
+	err := handleError(resp, errs)
+	if err != nil {
+		return err
+	}
+	_, err = w.Write(bodyBytes)
+	if err != nil {
+		return errors.NewAniErrorD(err)
+	}
+	return nil
 }

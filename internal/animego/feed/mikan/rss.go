@@ -46,16 +46,10 @@ func (f *Rss) Parse() (items []*models.FeedItem, err error) {
 	if len(f.url) == 0 {
 		return nil, nil
 	}
-	filename := path.Join(store.Config.TempPath, f.name+".xml")
+	filename := path.Join(store.Config.Advanced.Path.TempPath, f.name+".xml")
 	// --------- 下载rss.xml ---------
 	zap.S().Info("获取Rss数据开始...")
-	err = request.Get(&request.Param{
-		Uri:      f.url,
-		Proxy:    store.Config.Proxy(),
-		SaveFile: filename,
-		Timeout:  store.Config.HttpTimeoutSecond,
-		Retry:    store.Config.HttpRetryNum,
-	})
+	err = request.GetFile(f.url, filename)
 	if err != nil {
 		zap.S().Debug(err)
 		zap.S().Warn("请求Rss失败")

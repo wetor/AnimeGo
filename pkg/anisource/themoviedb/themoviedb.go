@@ -80,13 +80,7 @@ func (t Themoviedb) Parse(name, airDate string) (tmdbID int, season int, err err
 func (t Themoviedb) parseThemoviedbID(name string) (tmdbID int, err error) {
 	resp := FindResponse{}
 	result, err := RemoveNameSuffix(name, func(innerName string) (interface{}, error) {
-		err := request.Get(&request.Param{
-			Uri:      idApi(t.Key, innerName),
-			Proxy:    anisource.Proxy,
-			BindJson: &resp,
-			Retry:    anisource.Retry,
-			Timeout:  anisource.Timeout,
-		})
+		err := request.Get(idApi(t.Key, innerName), &resp)
 		if err != nil {
 			return 0, err
 		}
@@ -126,13 +120,7 @@ func (t Themoviedb) parseThemoviedbID(name string) (tmdbID int, err error) {
 
 func (t Themoviedb) parseAnimeSeason(tmdbID int, airDate string) (season int, err error) {
 	resp := InfoResponse{}
-	err = request.Get(&request.Param{
-		Uri:      infoApi(t.Key, tmdbID),
-		Proxy:    anisource.Proxy,
-		BindJson: &resp,
-		Retry:    anisource.Retry,
-		Timeout:  anisource.Timeout,
-	})
+	err = request.Get(infoApi(t.Key, tmdbID), &resp)
 	if err != nil {
 		return 0, err
 	}

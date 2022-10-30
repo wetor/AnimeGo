@@ -103,13 +103,7 @@ func (b Bangumi) parseAnimeInfo(bangumiID int) (entity *Entity, err error) {
 	uri := infoApi(bangumiID)
 	resp := res.SubjectV0{}
 
-	err = request.Get(&request.Param{
-		Uri:      uri,
-		Proxy:    anisource.Proxy,
-		BindJson: &resp,
-		Retry:    anisource.Retry,
-		Timeout:  anisource.Timeout,
-	})
+	err = request.Get(uri, &resp)
 	if err != nil {
 		return nil, err
 	}
@@ -143,13 +137,7 @@ func (b Bangumi) parseAnimeEpInfo(bangumiID, ep, eps int) (epInfo *Ep, err error
 	resp := &res.Paged{
 		Data: make([]*res.Episode, 0, MatchEpRange*2+1),
 	}
-	err = request.Get(&request.Param{
-		Uri:      uri,
-		Proxy:    anisource.Proxy,
-		BindJson: &resp,
-		Retry:    anisource.Retry,
-		Timeout:  anisource.Timeout,
-	})
+	err = request.Get(uri, &resp)
 	if err != nil {
 		zap.S().Debug(errors.NewAniError("[非必要]" + err.Error()))
 	}

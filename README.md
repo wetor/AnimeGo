@@ -35,7 +35,7 @@ AnimeGo -init-path=./data
 >路径和`1.释放资源`所释放位置有关
 
 其中主要需要修改的配置项为：
-- `feed/rss/mikan/url` : Mikan订阅url，如果仅使用浏览器插件手动下载则无需填写
+- `feed/mikan/url` : Mikan订阅url，如果仅使用浏览器插件手动下载则无需填写
 - `client/qbittorrent` : qbittorrent客户端webapi信息
 - `key/themoviedb` : themoviedb的webapi访问秘钥，需要注册申请
 - 其余配置项根据需求修改
@@ -79,7 +79,22 @@ AnimeGo -config=./data/config/animego.yaml
   - [ ] 独立下载控制
   - [ ] ...
 
+## 版本计划
+### v0.3.1
+- [ ] 每种数据缓存时间自定义
+- [ ] 资源文件自动释放
+- [ ] 配置文件局部升级
+- [ ] 修复bug
+
+### v0.3.2
+
 ## 开发日志
+
+### 2022.10.30 (v0.3.0)
+- 修改配置文件结构
+- 使用[gorequest](https://github.com/parnurzeal/gorequest)作为网络请求库
+  - 更好的重试等待和超时
+- 默认关闭debug模式
 
 ### 2022.10.23 (v0.2.3)
 - 修改插件读取文件规范，现在仅能够读取所在路径文件

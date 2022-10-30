@@ -30,24 +30,21 @@ func (p *Mikan) UpdateFeed(items []*models.FeedItem) {
 
 func (p *Mikan) Run(ctx context.Context) {
 
-	qbtConf := store.Config.ClientQBt()
+	qbtConf := store.Config.Setting.Client.QBittorrent
 	qbt := qbittorent.NewQBittorrent(qbtConf.Url, qbtConf.Username, qbtConf.Password)
 	qbt.Start(ctx)
 
 	downloadChan := make(chan *models.AnimeEntity, 10)
 
 	anisource.Init(&pkgAnisource.Options{
-		Cache:   store.Cache,
-		Proxy:   store.Config.Proxy(),
-		Timeout: store.Config.HttpTimeoutSecond,
-		Retry:   store.Config.HttpRetryNum,
+		Cache: store.Cache,
 	})
 
 	p.downloaderMgr = downloader.NewManager(qbt, store.Cache, downloadChan)
 
 	p.filterMgr = filterManager.NewManager(&javascript.JavaScript{},
-		mikanRss.NewRss(store.Config.RssMikan().Url, store.Config.RssMikan().Name),
-		mikan.MikanAdapter{ThemoviedbKey: store.Config.KeyTmdb()},
+		mikanRss.NewRss(store.Config.Setting.Feed.Mikan.Url, store.Config.Setting.Feed.Mikan.Name),
+		mikan.MikanAdapter{ThemoviedbKey: store.Config.Setting.Key.Themoviedb},
 		downloadChan)
 	p.ctx = ctx
 	p.downloaderMgr.Start(ctx)

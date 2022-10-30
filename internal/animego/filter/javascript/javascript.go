@@ -13,7 +13,7 @@ type JavaScript struct {
 func (j *JavaScript) Filter(list []*models.FeedItem) []*models.FeedItem {
 	js := &javascript.JavaScript{}
 	js.SetSchema([]string{"feedItems"}, []string{"index", "error"})
-	execute, err := js.Execute(store.Config.JavaScript, javascript.Object{
+	execute, err := js.Execute(store.Config.Filter.JavaScript, javascript.Object{
 		"feedItems": list,
 	})
 	if err != nil {

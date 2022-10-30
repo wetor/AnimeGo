@@ -24,11 +24,12 @@ func Init(path string) *Config {
 	if err != nil {
 		log.Fatal("配置文件加载错误：", err)
 	}
+	conf.InitDir()
 	return conf
 }
 
 func (c *Config) InitDir() {
-	c.TempPath = path.Join(c.DataPath, c.TempPath)
+	c.Path.TempPath = path.Join(c.DataPath, c.Path.TempPath)
 
 	err := utils.CreateMutiDir(c.DataPath)
 	if err != nil {
@@ -38,50 +39,29 @@ func (c *Config) InitDir() {
 	if err != nil {
 		log.Fatalf("创建文件夹失败，%s", c.SavePath)
 	}
-	err = utils.CreateMutiDir(c.TempPath)
+	err = utils.CreateMutiDir(c.Path.TempPath)
 	if err != nil {
-		log.Fatalf("创建文件夹失败，%s", c.TempPath)
+		log.Fatalf("创建文件夹失败，%s", c.Path.TempPath)
 	}
-	dbDir := path.Join(c.DataPath, path.Dir(c.DbFile))
+	dbDir := path.Join(c.DataPath, path.Dir(c.Path.DbFile))
 	err = utils.CreateMutiDir(dbDir)
 	if err != nil {
 		log.Fatalf("创建文件夹失败，%s", dbDir)
 	}
-	logDir := path.Join(c.DataPath, path.Dir(c.LogFile))
+	logDir := path.Join(c.DataPath, path.Dir(c.Path.LogFile))
 	err = utils.CreateMutiDir(logDir)
 	if err != nil {
 		log.Fatalf("创建文件夹失败，%s", logDir)
 	}
 
-	c.DbFile = path.Join(c.DataPath, c.DbFile)
-	c.LogFile = path.Join(c.DataPath, c.LogFile)
-	c.JavaScript = path.Join(c.DataPath, c.JavaScript)
-}
-
-func (c *Config) ClientQBt() *Client {
-	if client, has := c.Client["qbittorrent"]; has {
-		return client
-	}
-	return nil
-}
-
-func (c *Config) RssMikan() *Rss {
-	if rss, has := c.Feed.Rss["mikan"]; has {
-		return rss
-	}
-	return nil
-}
-
-func (c *Config) KeyTmdb() string {
-	if key, has := c.Key["themoviedb"]; has {
-		return key
-	}
-	return ""
+	c.Path.DbFile = path.Join(c.DataPath, c.Path.DbFile)
+	c.Path.LogFile = path.Join(c.DataPath, c.Path.LogFile)
+	c.Filter.JavaScript = path.Join(c.DataPath, c.Filter.JavaScript)
 }
 
 func (c *Config) Proxy() string {
-	if c.ProxyConf.Enable {
-		return c.ProxyConf.Url
+	if c.Setting.Proxy.Enable {
+		return c.Setting.Proxy.Url
 	} else {
 		return ""
 	}

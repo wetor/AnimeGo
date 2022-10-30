@@ -13,13 +13,13 @@ func TestInit() {
 	config.InitDir()
 
 	logger.Init(&logger.InitOptions{
-		File:    config.LogFile,
+		File:    config.Advanced.Path.LogFile,
 		Debug:   true,
 		Context: context.Background(),
 	})
 
 	bolt := cache.NewBolt()
-	bolt.Open(config.Setting.DbFile)
+	bolt.Open(config.Advanced.Path.DbFile)
 
 	store.Init(&store.InitOptions{
 		Config: config,

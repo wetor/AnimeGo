@@ -56,7 +56,7 @@ func NewQBittorrent(url, username, password string) *QBittorrent {
 
 	qbt.option = append(qbt.option, qbapi.WithAuth(username, password))
 	qbt.option = append(qbt.option, qbapi.WithHost(url))
-	qbt.option = append(qbt.option, qbapi.WithTimeout(time.Duration(store.Config.Advanced.ClientConf.ConnectTimeoutSecond)*time.Second))
+	qbt.option = append(qbt.option, qbapi.WithTimeout(time.Duration(store.Config.Advanced.Client.ConnectTimeoutSecond)*time.Second))
 	qbt.retryNum = 1
 	qbt.connected = false
 	qbt.retryChan <- ChanRetryConnect
@@ -89,6 +89,7 @@ func (c *QBittorrent) Start(ctx context.Context) {
 			zap.S().Warnf("连接QBittorrent第%d次，失败", c.retryNum)
 			return false
 		}
+		c.SetDefaultPreferences()
 		return true
 	}
 	store.WG.Add(2)
@@ -102,7 +103,7 @@ func (c *QBittorrent) Start(ctx context.Context) {
 		for {
 			select {
 			case <-ctx.Done():
-				zap.S().Info("正常退出")
+				zap.S().Info("正常退出 qbittorent 1")
 				return
 			case msg := <-c.retryChan:
 				c.connected = true
@@ -132,17 +133,17 @@ func (c *QBittorrent) Start(ctx context.Context) {
 		for {
 			select {
 			case <-ctx.Done():
-				zap.S().Info("正常退出")
+				zap.S().Info("正常退出 qbittorent 2")
 				return
 			default:
 				if c.retryNum == 0 {
 					c.retryChan <- ChanRetryConnect
 					// 检查是否在线，时间长
-					utils.Sleep(store.Config.CheckTimeSecond, ctx)
-				} else if c.retryNum <= store.Config.RetryConnectNum {
+					utils.Sleep(store.Config.Advanced.Client.CheckTimeSecond, ctx)
+				} else if c.retryNum <= store.Config.Advanced.Client.RetryConnectNum {
 					c.retryChan <- ChanRetryConnect
 					// 失败重试，时间短
-					utils.Sleep(store.Config.ConnectTimeoutSecond, ctx)
+					utils.Sleep(store.Config.Advanced.Client.ConnectTimeoutSecond, ctx)
 				} else {
 					// 超过重试次数，不在频繁重试
 					c.retryNum = 0
@@ -237,7 +238,7 @@ func (c *QBittorrent) List(opt *models.ClientListOptions) []*models.TorrentItem 
 		return nil
 	}
 	retn := make([]*models.TorrentItem, len(listResp.Items))
-	for i, _ := range retn {
+	for i := range retn {
 		retn[i] = &models.TorrentItem{}
 		utils.ConvertModel(listResp.Items[i], retn[i])
 	}
@@ -317,7 +318,7 @@ func (c *QBittorrent) GetContent(opt *models.ClientGetOptions) []*models.Torrent
 		return nil
 	}
 	retn := make([]*models.TorrentContentItem, len(contents.Contents))
-	for i, _ := range retn {
+	for i := range retn {
 		retn[i] = &models.TorrentContentItem{}
 		utils.ConvertModel(contents.Contents[i], retn[i])
 	}

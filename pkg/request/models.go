@@ -1,13 +1,18 @@
 package request
 
-import "io"
+type InitOptions struct {
+	Proxy     string // 使用代理
+	Retry     int    // 额外重试次数，默认为不做重试
+	RetryWait int    // 重试等待时间，最小3秒
+	Timeout   int    // 超时时间，最小3秒
+	Debug     bool
+}
 
-type Param struct {
-	Uri      string      // 必须
-	Proxy    string      // 可选，使用代理
-	SaveFile string      // 可选，保存到文件
-	BindJson interface{} // 可选，绑定json到结构，结构指针
-	Writer   io.Writer   // 可选，写入到writer中
-	Retry    int         // 可选，重试次数，默认为1次
-	Timeout  int         // 可选，超时时间
+func (o *InitOptions) Default() {
+	if o.RetryWait < 3 {
+		o.RetryWait = 3
+	}
+	if o.Timeout < 3 {
+		o.Timeout = 3
+	}
 }

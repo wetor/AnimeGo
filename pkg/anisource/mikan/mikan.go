@@ -119,13 +119,7 @@ func (m Mikan) Parse(url string) (mikanID int, bangumiID int, err error) {
 
 func (m Mikan) loadHtml(url string) (*html.Node, error) {
 	buf := bytes.NewBuffer(nil)
-	err := request.Get(&request.Param{
-		Uri:     url,
-		Proxy:   anisource.Proxy,
-		Writer:  buf,
-		Retry:   anisource.Retry,
-		Timeout: anisource.Timeout,
-	})
+	err := request.GetWriter(url, buf)
 	if err != nil {
 		return nil, err
 	}

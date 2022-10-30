@@ -55,7 +55,7 @@ func NewManager(client downloader.Client, cache cache.Cache, downloadChan chan *
 	m := &Manager{
 		client:        client,
 		cache:         cache,
-		downloadQueue: make([]*models.AnimeEntity, 0, store.Config.Advanced.MainConf.DownloadQueueMaxNum),
+		downloadQueue: make([]*models.AnimeEntity, 0, store.Config.Advanced.Download.QueueMaxNum),
 	}
 	m.cache.Add(Bucket)
 	if downloadChan == nil || cap(downloadChan) <= 1 {
@@ -108,12 +108,12 @@ func (m *Manager) download(animes []*models.AnimeEntity, ctx context.Context) {
 			SavePath:    store.Config.SavePath,
 			Category:    store.Config.Category,
 			Tag:         store.Config.Tag(anime),
-			SeedingTime: store.Config.SeedingTime,
+			SeedingTime: store.Config.Advanced.Download.SeedingTime,
 			Rename:      anime.FullName(),
 		})
 		// 通过gb下载的番剧，将存储与缓存中
 		m.cache.Put(Bucket, anime.Hash, anime, 0)
-		utils.Sleep(store.Config.Advanced.MainConf.DownloadQueueDelaySecond, ctx)
+		utils.Sleep(store.Config.Advanced.Download.QueueDelaySecond, ctx)
 	}
 }
 
@@ -134,7 +134,7 @@ func (m *Manager) canDownload(anime *models.AnimeEntity) bool {
 		// 同一集不同资源
 		// 如果AllowDuplicateDownload == true，即允许同一集重复下载，则返回true，否则则不允许下载
 		if anime.ID == b.ID && anime.Season == b.Season && anime.Ep == b.Ep {
-			return store.Config.Advanced.MainConf.AllowDuplicateDownload
+			return store.Config.Advanced.Download.AllowDuplicateDownload
 		}
 	}
 	return true
@@ -167,7 +167,7 @@ func (m *Manager) GetContent(hash string) *models.TorrentContentItem {
 	}
 	maxSize := 0
 	index := -1
-	minSize := store.Config.IgnoreSizeMaxKb * 1024 // 单位 B
+	minSize := store.Config.Advanced.Download.IgnoreSizeMaxKb * 1024 // 单位 B
 	for i, c := range cs {
 		if c.Size < minSize {
 			continue
@@ -207,7 +207,7 @@ func (m *Manager) Start(ctx context.Context) {
 				m.Unlock()
 				m.download(list, ctx)
 			} else {
-				utils.Sleep(store.Config.Advanced.MainConf.DownloadQueueDelaySecond, ctx)
+				utils.Sleep(store.Config.Advanced.Download.QueueDelaySecond, ctx)
 			}
 		}
 	}()
@@ -222,7 +222,7 @@ func (m *Manager) Start(ctx context.Context) {
 		for {
 			select {
 			case <-ctx.Done():
-				zap.S().Info("正常退出")
+				zap.S().Info("正常退出 manager downloader")
 				return
 			case anime := <-m.downloadChan:
 				if m.client.Connected() {
@@ -235,12 +235,12 @@ func (m *Manager) Start(ctx context.Context) {
 					go func() {
 						m.downloadChan <- anime
 					}()
-					utils.Sleep(store.Config.Advanced.MainConf.DownloadQueueDelaySecond, ctx)
+					utils.Sleep(store.Config.Advanced.Download.QueueDelaySecond, ctx)
 				}
 			default:
 				m.UpdateList()
 
-				delay := store.Config.Advanced.MainConf.UpdateDelaySecond
+				delay := store.Config.UpdateDelaySecond
 				if delay < UpdateWaitMinSecond {
 					delay = UpdateWaitMinSecond
 				}

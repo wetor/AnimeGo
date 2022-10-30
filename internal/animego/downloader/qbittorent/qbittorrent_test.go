@@ -15,7 +15,7 @@ var qbt *QBittorrent
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
 	test.TestInit()
-	conf := store.Config.ClientQBt()
+	conf := store.Config.Setting.Client.QBittorrent
 	qbt = NewQBittorrent(conf.Url, conf.Username, conf.Password)
 	qbt.Start(context.Background())
 	m.Run()

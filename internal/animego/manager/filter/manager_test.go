@@ -24,14 +24,11 @@ func TestMain(m *testing.M) {
 
 func TestManager_UpdateFeed(t *testing.T) {
 	anisource.Init(&pkgAnisource.Options{
-		Cache:   store.Cache,
-		Proxy:   store.Config.Proxy(),
-		Timeout: store.Config.HttpTimeoutSecond,
-		Retry:   store.Config.HttpRetryNum,
+		Cache: store.Cache,
 	})
 
-	rss := mikanRss.NewRss(store.Config.RssMikan().Url, store.Config.RssMikan().Name)
-	mk := mikan.MikanAdapter{ThemoviedbKey: store.Config.KeyTmdb()}
+	rss := mikanRss.NewRss(store.Config.Setting.Feed.Mikan.Url, store.Config.Setting.Feed.Mikan.Name)
+	mk := mikan.MikanAdapter{ThemoviedbKey: store.Config.Setting.Key.Themoviedb}
 	m := NewManager(&filter.Default{}, rss, mk, nil)
 
 	exit := make(chan bool)

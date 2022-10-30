@@ -12,10 +12,15 @@ const (
 	logTmFmt = "2006-01-02 15:04:05"
 )
 
+var (
+	debug bool
+)
+
 func GetLogger(opt *InitOptions) {
+	debug = opt.Debug
 	Encoder := GetEncoder()
 	level := zapcore.DebugLevel
-	if !opt.Debug {
+	if !debug {
 		level = zapcore.InfoLevel
 	}
 	newCore := zapcore.NewTee(
@@ -68,5 +73,8 @@ func cEncodeTime(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 
 // cEncodeCaller 自定义行号显示
 func cEncodeCaller(caller zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {
-	enc.AppendString("[" + caller.TrimmedPath() + "]")
+	if debug {
+		enc.AppendString("[" + caller.TrimmedPath() + "]")
+	}
+
 }

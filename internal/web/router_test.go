@@ -16,10 +16,7 @@ func TestInitRouter(t *testing.T) {
 	test.TestInit()
 
 	anisource.Init(&pkgAnisource.Options{
-		Cache:   store.Cache,
-		Proxy:   store.Config.Proxy(),
-		Timeout: store.Config.HttpTimeoutSecond,
-		Retry:   store.Config.HttpRetryNum,
+		Cache: store.Cache,
 	})
 
 	Run(context.Background())

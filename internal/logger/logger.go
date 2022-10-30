@@ -23,7 +23,7 @@ func Init(opt *InitOptions) {
 			select {
 			case <-opt.Context.Done():
 				Flush()
-				zap.S().Info("正常退出")
+				zap.S().Info("正常退出 logger")
 				return
 			default:
 				Flush()

@@ -27,7 +27,11 @@ func Run(ctx context.Context) {
 				c.JSON(ErrSvr(recovered.(string)))
 			}
 		})) // 错误处理中间件
-		gin.SetMode("debug")
+		if Debug {
+			gin.SetMode(gin.DebugMode)
+		} else {
+			gin.SetMode(gin.ReleaseMode)
+		}
 		r.GET("/ping", Ping)
 		apiRoot := r.Group("/api")
 		apiRoot.Use(KeyAuth())
@@ -44,13 +48,14 @@ func Run(ctx context.Context) {
 				zap.S().Warn("启动web服务失败")
 			}
 		}()
+		zap.S().Infof("AnimeGo Web服务已启动: http://%s", s.Addr)
 		select {
 		case <-ctx.Done():
 			if err := s.Close(); err != nil {
 				zap.S().Debug(err)
 				zap.S().Warn("关闭web服务失败")
 			}
-			zap.S().Info("正常退出")
+			zap.S().Info("正常退出 web")
 		}
 	}()
 }
