@@ -1,9 +1,9 @@
 package memorizer
 
 import (
-	"AnimeGo/internal/cache"
 	"encoding/json"
 	"fmt"
+	"github.com/wetor/AnimeGo/pkg/cache"
 	"strconv"
 	"testing"
 	"time"

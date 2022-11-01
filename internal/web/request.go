@@ -1,10 +1,10 @@
 package web
 
 import (
-	"AnimeGo/internal/store"
-	"AnimeGo/internal/utils"
-	"AnimeGo/pkg/errors"
 	"github.com/gin-gonic/gin"
+	"github.com/wetor/AnimeGo/internal/store"
+	"github.com/wetor/AnimeGo/internal/utils"
+	"github.com/wetor/AnimeGo/pkg/errors"
 	"go.uber.org/zap"
 	"path"
 	"strings"

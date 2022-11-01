@@ -3,14 +3,14 @@
 package downloader
 
 import (
-	"AnimeGo/internal/animego/downloader"
-	"AnimeGo/internal/cache"
-	"AnimeGo/internal/models"
-	"AnimeGo/internal/store"
-	"AnimeGo/internal/utils"
-	"AnimeGo/pkg/errors"
 	"context"
 	"fmt"
+	"github.com/wetor/AnimeGo/internal/animego/downloader"
+	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/store"
+	"github.com/wetor/AnimeGo/internal/utils"
+	"github.com/wetor/AnimeGo/pkg/cache"
+	"github.com/wetor/AnimeGo/pkg/errors"
 	"os"
 	"path"
 	"regexp"
@@ -56,6 +56,9 @@ func NewManager(client downloader.Client, cache cache.Cache, downloadChan chan *
 		client:        client,
 		cache:         cache,
 		downloadQueue: make([]*models.AnimeEntity, 0, store.Config.Advanced.Download.QueueMaxNum),
+		bangumi:       make(map[string]*models.AnimeEntity),
+		itemState:     make(map[string]*models.Torrent),
+		items:         make(map[string]*models.TorrentItem),
 	}
 	m.cache.Add(Bucket)
 	if downloadChan == nil || cap(downloadChan) <= 1 {
@@ -222,7 +225,7 @@ func (m *Manager) Start(ctx context.Context) {
 		for {
 			select {
 			case <-ctx.Done():
-				zap.S().Info("正常退出 manager downloader")
+				zap.S().Debug("正常退出 manager downloader")
 				return
 			case anime := <-m.downloadChan:
 				if m.client.Connected() {

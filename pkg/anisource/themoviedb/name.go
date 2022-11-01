@@ -1,7 +1,7 @@
 package themoviedb
 
 import (
-	"AnimeGo/pkg/errors"
+	"github.com/wetor/AnimeGo/pkg/errors"
 	"go.uber.org/zap"
 	"regexp"
 )
@@ -41,7 +41,7 @@ func RemoveNameSuffix(name string, fun func(string) (interface{}, error)) (inter
 			has := nameRegxStep[currStep].MatchString(name)
 			if has {
 				newName := nameRegxStep[currStep].ReplaceAllString(name, "")
-				if len(newName) > 0 &&  len(newName) > len(name)/10  {
+				if len(newName) > 0 && len(newName) > len(name)/10 {
 					name = newName
 				}
 				zap.S().Debugf("重新搜索：「%s」", name)

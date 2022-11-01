@@ -1,10 +1,10 @@
 package cache
 
 import (
-	"AnimeGo/pkg/errors"
 	"bytes"
 	"encoding/binary"
 	"encoding/gob"
+	"github.com/wetor/AnimeGo/pkg/errors"
 
 	"github.com/boltdb/bolt"
 	"go.uber.org/zap"

@@ -1,10 +1,10 @@
 package themoviedb
 
 import (
-	"AnimeGo/pkg/anisource"
-	"AnimeGo/pkg/errors"
-	mem "AnimeGo/pkg/memorizer"
-	"AnimeGo/pkg/request"
+	"github.com/wetor/AnimeGo/pkg/anisource"
+	"github.com/wetor/AnimeGo/pkg/errors"
+	mem "github.com/wetor/AnimeGo/pkg/memorizer"
+	"github.com/wetor/AnimeGo/pkg/request"
 )
 
 var (

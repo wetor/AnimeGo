@@ -1,22 +1,36 @@
 package cache
 
 import (
-	"AnimeGo/internal/models"
 	"fmt"
 	"testing"
 )
+
+type AnimeEntity struct {
+	ID      int    // bangumi id
+	Name    string // 名称，从bgm获取
+	NameCN  string // 中文名称，从bgm获取
+	AirDate string // 最初播放日期，从bgm获取
+	Eps     int    // 总集数，从bgm获取
+	*AnimeExtra
+}
+
+type AnimeExtra struct {
+	ThemoviedbID int    // themoviedb ID
+	MikanID      int    // mikan id
+	MikanUrl     string // mikan当前集的url
+}
 
 func TestBolt_Put(t *testing.T) {
 
 	db := NewBolt()
 	db.Open("1.a")
-	e := models.AnimeEntity{
+	e := AnimeEntity{
 		ID:      666,
 		Name:    "测试番剧名称",
 		NameCN:  "测试番剧中文",
 		AirDate: "2022-09-01",
 		Eps:     10,
-		AnimeExtra: &models.AnimeExtra{
+		AnimeExtra: &AnimeExtra{
 			MikanID:      777,
 			ThemoviedbID: 888,
 		},
@@ -27,7 +41,7 @@ func TestBolt_Put(t *testing.T) {
 func TestBolt_Get(t *testing.T) {
 	db := NewBolt()
 	db.Open("bolt.db")
-	var data models.AnimeEntity
+	var data AnimeEntity
 	err := db.Get("test", "key", &data)
 	if err != nil {
 		panic(err)

@@ -1,8 +1,8 @@
 package request
 
 import (
-	"AnimeGo/test"
 	"fmt"
+	"github.com/wetor/AnimeGo/test"
 	"testing"
 )
 

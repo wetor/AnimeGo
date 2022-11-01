@@ -1,13 +1,13 @@
 package web
 
 import (
-	"AnimeGo/internal/animego/feed/mikan"
-	"AnimeGo/internal/models"
-	"AnimeGo/internal/store"
-	"AnimeGo/pkg/errors"
 	"encoding/base64"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/wetor/AnimeGo/internal/animego/feed/mikan"
+	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/store"
+	"github.com/wetor/AnimeGo/pkg/errors"
 	"go.uber.org/zap"
 	"net/http"
 	"os"

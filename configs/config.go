@@ -1,8 +1,8 @@
 package configs
 
 import (
-	"AnimeGo/internal/models"
-	"AnimeGo/internal/utils"
+	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/utils"
 	"log"
 	"os"
 	"path"

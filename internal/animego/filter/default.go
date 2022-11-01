@@ -1,7 +1,7 @@
 package filter
 
 import (
-	"AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/models"
 )
 
 type Default struct {

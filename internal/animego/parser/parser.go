@@ -1,9 +1,9 @@
 package parser
 
 import (
-	"AnimeGo/internal/models"
-	"AnimeGo/pkg/errors"
-	"AnimeGo/third_party/poketto"
+	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/pkg/errors"
+	"github.com/wetor/AnimeGo/third_party/poketto"
 )
 
 func ParseTitle(title string) (*models.ParseResult, error) {

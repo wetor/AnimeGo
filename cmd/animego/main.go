@@ -1,19 +1,19 @@
 package main
 
 import (
-	"AnimeGo/assets"
-	"AnimeGo/configs"
-	"AnimeGo/internal/cache"
-	"AnimeGo/internal/logger"
-	"AnimeGo/internal/process/mikan"
-	"AnimeGo/internal/store"
-	"AnimeGo/internal/utils"
-	"AnimeGo/internal/web"
-	"AnimeGo/pkg/request"
 	"context"
 	"embed"
 	"flag"
 	"fmt"
+	"github.com/wetor/AnimeGo/assets"
+	"github.com/wetor/AnimeGo/configs"
+	"github.com/wetor/AnimeGo/internal/logger"
+	"github.com/wetor/AnimeGo/internal/process/mikan"
+	"github.com/wetor/AnimeGo/internal/store"
+	"github.com/wetor/AnimeGo/internal/utils"
+	"github.com/wetor/AnimeGo/internal/web"
+	"github.com/wetor/AnimeGo/pkg/cache"
+	"github.com/wetor/AnimeGo/pkg/request"
 	"os"
 	"os/signal"
 	"path"
@@ -84,7 +84,7 @@ func doExit() {
 }
 
 func printInfo() {
-	fmt.Printf("AnimeGo %s (%s)\n", os.Getenv("animego_version"), os.Getenv("animego_github"))
+	fmt.Printf("github.com/wetor/AnimeGo %s (%s)\n", os.Getenv("animego_version"), os.Getenv("animego_github"))
 }
 
 func Main(ctx context.Context) {

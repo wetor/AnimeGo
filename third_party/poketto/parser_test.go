@@ -1,15 +1,13 @@
 package poketto
 
 import (
-	"AnimeGo/internal/animego/parser"
 	"bufio"
 	"encoding/csv"
 	"fmt"
+	"github.com/wetor/AnimeGo/internal/animego/parser"
 	"os"
 	"testing"
 )
-
-var rawList = ``
 
 func TestParser(t *testing.T) {
 	fr, err := os.Open("./data/test_data.txt")

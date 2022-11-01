@@ -3,11 +3,11 @@
 package anisource
 
 import (
-	"AnimeGo/internal/models"
-	"AnimeGo/pkg/anisource"
-	"AnimeGo/pkg/anisource/bangumi"
-	"AnimeGo/pkg/anisource/mikan"
-	"AnimeGo/pkg/anisource/themoviedb"
+	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/pkg/anisource"
+	"github.com/wetor/AnimeGo/pkg/anisource/bangumi"
+	"github.com/wetor/AnimeGo/pkg/anisource/mikan"
+	"github.com/wetor/AnimeGo/pkg/anisource/themoviedb"
 )
 
 type AniSource interface {

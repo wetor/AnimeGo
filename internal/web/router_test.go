@@ -1,14 +1,14 @@
 package web
 
 import (
-	"AnimeGo/internal/animego/anisource"
-	"AnimeGo/internal/store"
-	"AnimeGo/internal/utils"
-	pkgAnisource "AnimeGo/pkg/anisource"
-	"AnimeGo/test"
 	"context"
 	"encoding/base64"
 	"fmt"
+	"github.com/wetor/AnimeGo/internal/animego/anisource"
+	"github.com/wetor/AnimeGo/internal/store"
+	"github.com/wetor/AnimeGo/internal/utils"
+	pkgAnisource "github.com/wetor/AnimeGo/pkg/anisource"
+	"github.com/wetor/AnimeGo/test"
 	"testing"
 )
 

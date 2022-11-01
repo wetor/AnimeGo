@@ -1,10 +1,10 @@
 package javascript
 
 import (
-	"AnimeGo/internal/models"
-	"AnimeGo/test"
 	"fmt"
 	"github.com/dop251/goja"
+	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/test"
 	"os"
 	"testing"
 )

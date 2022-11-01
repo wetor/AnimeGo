@@ -3,7 +3,7 @@
 package feed
 
 import (
-	"AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/models"
 )
 
 type Feed interface {

@@ -3,13 +3,13 @@
 package filter
 
 import (
-	"AnimeGo/internal/animego/anisource"
-	"AnimeGo/internal/animego/feed"
-	"AnimeGo/internal/animego/filter"
-	"AnimeGo/internal/models"
-	"AnimeGo/internal/store"
-	"AnimeGo/internal/utils"
 	"context"
+	"github.com/wetor/AnimeGo/internal/animego/anisource"
+	"github.com/wetor/AnimeGo/internal/animego/feed"
+	"github.com/wetor/AnimeGo/internal/animego/filter"
+	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/store"
+	"github.com/wetor/AnimeGo/internal/utils"
 	"sync"
 
 	"go.uber.org/zap"
@@ -121,7 +121,7 @@ func (m *Manager) Start(ctx context.Context) {
 		for {
 			select {
 			case <-ctx.Done():
-				zap.S().Info("正常退出 manager filter")
+				zap.S().Debug("正常退出 manager filter")
 				return
 			default:
 				m.Update(ctx, nil)

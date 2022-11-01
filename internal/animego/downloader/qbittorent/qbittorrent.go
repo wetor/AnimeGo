@@ -1,13 +1,13 @@
 package qbittorent
 
 import (
-	"AnimeGo/internal/models"
-	"AnimeGo/internal/store"
-	"AnimeGo/internal/utils"
-	"AnimeGo/pkg/errors"
-	"AnimeGo/third_party/qbapi"
 	"context"
 	"fmt"
+	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/store"
+	"github.com/wetor/AnimeGo/internal/utils"
+	"github.com/wetor/AnimeGo/pkg/errors"
+	"github.com/wetor/AnimeGo/third_party/qbapi"
 	"time"
 
 	"go.uber.org/zap"
@@ -103,7 +103,7 @@ func (c *QBittorrent) Start(ctx context.Context) {
 		for {
 			select {
 			case <-ctx.Done():
-				zap.S().Info("正常退出 qbittorent 1")
+				zap.S().Debug("正常退出 qbittorent 1")
 				return
 			case msg := <-c.retryChan:
 				c.connected = true
@@ -133,7 +133,7 @@ func (c *QBittorrent) Start(ctx context.Context) {
 		for {
 			select {
 			case <-ctx.Done():
-				zap.S().Info("正常退出 qbittorent 2")
+				zap.S().Debug("正常退出 qbittorent 2")
 				return
 			default:
 				if c.retryNum == 0 {

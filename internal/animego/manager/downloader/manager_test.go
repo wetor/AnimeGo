@@ -1,13 +1,13 @@
 package downloader
 
 import (
-	"AnimeGo/internal/animego/downloader"
-	"AnimeGo/internal/animego/downloader/qbittorent"
-	"AnimeGo/internal/models"
-	"AnimeGo/internal/store"
-	"AnimeGo/test"
 	"context"
 	"fmt"
+	"github.com/wetor/AnimeGo/internal/animego/downloader"
+	"github.com/wetor/AnimeGo/internal/animego/downloader/qbittorent"
+	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/store"
+	"github.com/wetor/AnimeGo/test"
 	"path"
 	"testing"
 	"time"

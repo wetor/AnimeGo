@@ -1,10 +1,10 @@
 package mikan
 
 import (
-	"AnimeGo/internal/store"
-	"AnimeGo/test"
 	"context"
 	"fmt"
+	"github.com/wetor/AnimeGo/internal/store"
+	"github.com/wetor/AnimeGo/test"
 	"testing"
 	"time"
 )

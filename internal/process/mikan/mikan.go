@@ -1,17 +1,17 @@
 package mikan
 
 import (
-	"AnimeGo/internal/animego/anisource"
-	"AnimeGo/internal/animego/anisource/mikan"
-	"AnimeGo/internal/animego/downloader/qbittorent"
-	mikanRss "AnimeGo/internal/animego/feed/mikan"
-	"AnimeGo/internal/animego/filter/javascript"
-	"AnimeGo/internal/animego/manager/downloader"
-	filterManager "AnimeGo/internal/animego/manager/filter"
-	"AnimeGo/internal/models"
-	"AnimeGo/internal/store"
-	pkgAnisource "AnimeGo/pkg/anisource"
 	"context"
+	"github.com/wetor/AnimeGo/internal/animego/anisource"
+	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
+	"github.com/wetor/AnimeGo/internal/animego/downloader/qbittorent"
+	mikanRss "github.com/wetor/AnimeGo/internal/animego/feed/mikan"
+	"github.com/wetor/AnimeGo/internal/animego/filter/javascript"
+	"github.com/wetor/AnimeGo/internal/animego/manager/downloader"
+	filterManager "github.com/wetor/AnimeGo/internal/animego/manager/filter"
+	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/store"
+	pkgAnisource "github.com/wetor/AnimeGo/pkg/anisource"
 )
 
 type Mikan struct {

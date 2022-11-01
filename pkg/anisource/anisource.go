@@ -1,6 +1,6 @@
 package anisource
 
-import mem "AnimeGo/pkg/memorizer"
+import mem "github.com/wetor/AnimeGo/pkg/memorizer"
 
 var (
 	Cache mem.Memorizer

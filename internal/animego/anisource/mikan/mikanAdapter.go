@@ -1,6 +1,6 @@
 package mikan
 
-import "AnimeGo/internal/models"
+import "github.com/wetor/AnimeGo/internal/models"
 
 type MikanAdapter struct {
 	ThemoviedbKey string

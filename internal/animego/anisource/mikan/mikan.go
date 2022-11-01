@@ -1,10 +1,10 @@
 package mikan
 
 import (
-	"AnimeGo/internal/animego/anisource"
-	"AnimeGo/internal/models"
-	"AnimeGo/internal/store"
-	"AnimeGo/third_party/poketto"
+	"github.com/wetor/AnimeGo/internal/animego/anisource"
+	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/store"
+	"github.com/wetor/AnimeGo/third_party/poketto"
 	"go.uber.org/zap"
 )
 
@@ -68,13 +68,13 @@ func ParseMikan(name, url, tmdbKey string) (anime *models.AnimeEntity) {
 			Season: season,
 		},
 		AnimeEp: &models.AnimeEp{
-			Ep:       epInfo.Ep,
-			Date:     epInfo.Date,
-			Duration: epInfo.Duration,
-			EpDesc:   epInfo.EpDesc,
-			EpName:   epInfo.EpName,
-			EpNameCN: epInfo.EpNameCN,
-			EpID:     epInfo.EpID,
+			Ep:   epInfo.Ep,
+			Date: epInfo.AirDate,
+			//Duration: epInfo.Duration,
+			//EpDesc:   epInfo.EpDesc,
+			//EpName:   epInfo.EpName,
+			//EpNameCN: epInfo.EpNameCN,
+			EpID: epInfo.ID,
 		},
 		AnimeExtra: &models.AnimeExtra{
 			MikanID:      mikanID,

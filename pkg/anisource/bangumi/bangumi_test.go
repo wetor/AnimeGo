@@ -1,9 +1,9 @@
 package bangumi
 
 import (
-	"AnimeGo/internal/cache"
-	"AnimeGo/pkg/anisource"
 	"fmt"
+	"github.com/wetor/AnimeGo/pkg/anisource"
+	"github.com/wetor/AnimeGo/pkg/cache"
 	"testing"
 )
 
@@ -24,14 +24,14 @@ func TestBangumi_Parse(t *testing.T) {
 			name:       "联盟空军航空魔法音乐队 光辉魔女",
 			args:       args{bangumiID: 253047, ep: 3},
 			wantEntity: &Entity{Eps: 12},
-			wantEpInfo: &Ep{EpID: 1109152},
+			wantEpInfo: &Ep{ID: 1109152},
 			wantErr:    false,
 		},
 		{
 			name:       "海贼王",
 			args:       args{bangumiID: 975, ep: 509},
 			wantEntity: &Entity{Eps: 1056},
-			wantEpInfo: &Ep{EpID: 98996},
+			wantEpInfo: &Ep{ID: 98996},
 			wantErr:    false,
 		},
 	}
@@ -47,7 +47,7 @@ func TestBangumi_Parse(t *testing.T) {
 			if gotEntity.Eps != tt.wantEntity.Eps {
 				t.Errorf("Parse() gotEntity = %v, want %v", gotEntity, tt.wantEntity)
 			}
-			if gotEpInfo.EpID != tt.wantEpInfo.EpID {
+			if gotEpInfo.ID != tt.wantEpInfo.ID {
 				t.Errorf("Parse() gotEpInfo = %v, want %v", gotEpInfo, tt.wantEpInfo)
 			}
 		})
@@ -71,14 +71,14 @@ func TestBangumi_ParseCache(t *testing.T) {
 			name:       "联盟空军航空魔法音乐队 光辉魔女",
 			args:       args{bangumiID: 253047, ep: 3},
 			wantEntity: &Entity{Eps: 12},
-			wantEpInfo: &Ep{EpID: 1109152},
+			wantEpInfo: &Ep{ID: 1109152},
 			wantErr:    false,
 		},
 		{
 			name:       "海贼王",
 			args:       args{bangumiID: 975, ep: 509},
 			wantEntity: &Entity{Eps: 1057},
-			wantEpInfo: &Ep{EpID: 98996},
+			wantEpInfo: &Ep{ID: 98996},
 			wantErr:    false,
 		},
 	}
@@ -98,7 +98,7 @@ func TestBangumi_ParseCache(t *testing.T) {
 			if gotEntity.Eps != tt.wantEntity.Eps {
 				t.Errorf("Parse() gotEntity = %v, want %v", gotEntity, tt.wantEntity)
 			}
-			if gotEpInfo.EpID != tt.wantEpInfo.EpID {
+			if gotEpInfo.ID != tt.wantEpInfo.ID {
 				t.Errorf("Parse() gotEpInfo = %v, want %v", gotEpInfo, tt.wantEpInfo)
 			}
 		})

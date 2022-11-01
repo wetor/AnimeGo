@@ -1,15 +1,15 @@
 package filter
 
 import (
-	"AnimeGo/internal/animego/anisource"
-	"AnimeGo/internal/animego/anisource/mikan"
-	mikanRss "AnimeGo/internal/animego/feed/mikan"
-	"AnimeGo/internal/animego/filter"
-	"AnimeGo/internal/store"
-	pkgAnisource "AnimeGo/pkg/anisource"
-	"AnimeGo/test"
 	"context"
 	"fmt"
+	"github.com/wetor/AnimeGo/internal/animego/anisource"
+	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
+	mikanRss "github.com/wetor/AnimeGo/internal/animego/feed/mikan"
+	"github.com/wetor/AnimeGo/internal/animego/filter"
+	"github.com/wetor/AnimeGo/internal/store"
+	pkgAnisource "github.com/wetor/AnimeGo/pkg/anisource"
+	"github.com/wetor/AnimeGo/test"
 	"testing"
 	"time"
 )

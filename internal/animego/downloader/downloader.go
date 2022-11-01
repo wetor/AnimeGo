@@ -3,8 +3,8 @@
 package downloader
 
 import (
-	"AnimeGo/internal/models"
 	"context"
+	"github.com/wetor/AnimeGo/internal/models"
 )
 
 type Client interface {

@@ -1,9 +1,9 @@
 package logger
 
 import (
-	"AnimeGo/internal/store"
-	"AnimeGo/internal/utils"
 	"context"
+	"github.com/wetor/AnimeGo/internal/store"
+	"github.com/wetor/AnimeGo/internal/utils"
 	"go.uber.org/zap"
 )
 
@@ -23,7 +23,7 @@ func Init(opt *InitOptions) {
 			select {
 			case <-opt.Context.Done():
 				Flush()
-				zap.S().Info("正常退出 logger")
+				zap.S().Debug("正常退出 logger")
 				return
 			default:
 				Flush()

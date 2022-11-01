@@ -1,12 +1,12 @@
 package javascript
 
 import (
-	"AnimeGo/internal/animego/anisource"
-	mikanRss "AnimeGo/internal/animego/feed/mikan"
-	"AnimeGo/internal/store"
-	pkgAnisource "AnimeGo/pkg/anisource"
-	"AnimeGo/test"
 	"fmt"
+	"github.com/wetor/AnimeGo/internal/animego/anisource"
+	mikanRss "github.com/wetor/AnimeGo/internal/animego/feed/mikan"
+	"github.com/wetor/AnimeGo/internal/store"
+	pkgAnisource "github.com/wetor/AnimeGo/pkg/anisource"
+	"github.com/wetor/AnimeGo/test"
 	"testing"
 )
 

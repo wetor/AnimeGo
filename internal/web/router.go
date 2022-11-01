@@ -1,11 +1,11 @@
 package web
 
 import (
-	"AnimeGo/internal/store"
-	"AnimeGo/pkg/errors"
 	"context"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/wetor/AnimeGo/internal/store"
+	"github.com/wetor/AnimeGo/pkg/errors"
 	"go.uber.org/zap"
 	"net/http"
 )
@@ -48,14 +48,14 @@ func Run(ctx context.Context) {
 				zap.S().Warn("启动web服务失败")
 			}
 		}()
-		zap.S().Infof("AnimeGo Web服务已启动: http://%s", s.Addr)
+		zap.S().Infof("github.com/wetor/AnimeGo Web服务已启动: http://%s", s.Addr)
 		select {
 		case <-ctx.Done():
 			if err := s.Close(); err != nil {
 				zap.S().Debug(err)
 				zap.S().Warn("关闭web服务失败")
 			}
-			zap.S().Info("正常退出 web")
+			zap.S().Debug("正常退出 web")
 		}
 	}()
 }

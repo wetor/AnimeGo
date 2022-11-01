@@ -1,8 +1,8 @@
 package process
 
 import (
-	"AnimeGo/internal/models"
 	"context"
+	"github.com/wetor/AnimeGo/internal/models"
 )
 
 type Process interface {

@@ -3,11 +3,11 @@
 package mikan
 
 import (
-	"AnimeGo/internal/models"
-	"AnimeGo/internal/store"
-	"AnimeGo/internal/utils"
-	"AnimeGo/pkg/errors"
-	"AnimeGo/pkg/request"
+	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/store"
+	"github.com/wetor/AnimeGo/internal/utils"
+	"github.com/wetor/AnimeGo/pkg/errors"
+	"github.com/wetor/AnimeGo/pkg/request"
 	"os"
 	"path"
 	"regexp"

@@ -1,4 +1,4 @@
-module AnimeGo
+module github.com/wetor/AnimeGo
 
 go 1.18
 

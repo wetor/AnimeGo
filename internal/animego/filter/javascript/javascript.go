@@ -1,9 +1,9 @@
 package javascript
 
 import (
-	"AnimeGo/internal/animego/plugin/javascript"
-	"AnimeGo/internal/models"
-	"AnimeGo/internal/store"
+	"github.com/wetor/AnimeGo/internal/animego/plugin/javascript"
+	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/store"
 	"go.uber.org/zap"
 )
 

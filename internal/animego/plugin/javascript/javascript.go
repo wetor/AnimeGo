@@ -1,8 +1,8 @@
 package javascript
 
 import (
-	"AnimeGo/pkg/errors"
 	"github.com/dop251/goja"
+	"github.com/wetor/AnimeGo/pkg/errors"
 	"os"
 	"path"
 	"strings"

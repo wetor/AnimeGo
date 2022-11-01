@@ -1,9 +1,9 @@
 package store
 
 import (
-	"AnimeGo/configs"
-	"AnimeGo/internal/cache"
-	"AnimeGo/internal/process"
+	"github.com/wetor/AnimeGo/configs"
+	"github.com/wetor/AnimeGo/internal/process"
+	"github.com/wetor/AnimeGo/pkg/cache"
 	"sync"
 )
 

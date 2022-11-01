@@ -1,12 +1,12 @@
 package bangumi
 
 import (
-	"AnimeGo/pkg/anisource"
-	"AnimeGo/pkg/errors"
-	mem "AnimeGo/pkg/memorizer"
-	"AnimeGo/pkg/request"
-	"AnimeGo/third_party/bangumi/res"
 	"encoding/gob"
+	"github.com/wetor/AnimeGo/pkg/anisource"
+	"github.com/wetor/AnimeGo/pkg/errors"
+	mem "github.com/wetor/AnimeGo/pkg/memorizer"
+	"github.com/wetor/AnimeGo/pkg/request"
+	"github.com/wetor/AnimeGo/third_party/bangumi/res"
 	"go.uber.org/zap"
 )
 
@@ -153,13 +153,9 @@ func (b Bangumi) parseAnimeEpInfo(bangumiID, ep, eps int) (epInfo *Ep, err error
 		epInfo = &Ep{Ep: ep}
 	} else {
 		epInfo = &Ep{
-			Ep:       int(respEp.Ep),
-			Date:     respEp.Airdate,
-			Duration: respEp.Duration,
-			EpDesc:   respEp.Description,
-			EpName:   respEp.Name,
-			EpNameCN: respEp.NameCN,
-			EpID:     int(respEp.ID),
+			Ep:      int(respEp.Ep),
+			AirDate: respEp.Airdate,
+			ID:      int(respEp.ID),
 		}
 	}
 	return epInfo, nil

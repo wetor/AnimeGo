@@ -1,10 +1,10 @@
 package javascript
 
 import (
-	"AnimeGo/internal/animego/anisource"
-	"AnimeGo/pkg/anisource/mikan"
-	"AnimeGo/third_party/poketto"
 	"fmt"
+	"github.com/wetor/AnimeGo/internal/animego/anisource"
+	"github.com/wetor/AnimeGo/pkg/anisource/mikan"
+	"github.com/wetor/AnimeGo/third_party/poketto"
 	"go.uber.org/zap"
 	"os"
 	"path"

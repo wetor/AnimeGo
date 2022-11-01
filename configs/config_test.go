@@ -1,13 +1,13 @@
 package configs
 
 import (
-	"AnimeGo/internal/models"
 	"fmt"
+	"github.com/wetor/AnimeGo/internal/models"
 	"testing"
 )
 
 func TestNewConfig(t *testing.T) {
-	c := NewConfig("/Users/wetor/GoProjects/AnimeGo/data/config/conf.yaml")
+	c := Init("/Users/wetor/GoProjects/AnimeGo/data/config/conf.yaml")
 	fmt.Println(c)
 }
 

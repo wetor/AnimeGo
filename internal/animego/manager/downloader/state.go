@@ -1,8 +1,8 @@
 package downloader
 
 import (
-	"AnimeGo/internal/animego/downloader/qbittorent"
-	"AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/animego/downloader/qbittorent"
+	"github.com/wetor/AnimeGo/internal/models"
 )
 
 const (

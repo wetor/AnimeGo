@@ -1,11 +1,11 @@
 package test
 
 import (
-	"AnimeGo/configs"
-	"AnimeGo/internal/cache"
-	"AnimeGo/internal/logger"
-	"AnimeGo/internal/store"
 	"context"
+	"github.com/wetor/AnimeGo/configs"
+	"github.com/wetor/AnimeGo/internal/logger"
+	"github.com/wetor/AnimeGo/internal/store"
+	"github.com/wetor/AnimeGo/pkg/cache"
 )
 
 func TestInit() {

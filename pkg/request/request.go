@@ -1,9 +1,9 @@
 package request
 
 import (
-	"AnimeGo/pkg/errors"
 	"fmt"
 	"github.com/parnurzeal/gorequest"
+	"github.com/wetor/AnimeGo/pkg/errors"
 	"go.uber.org/zap"
 	"io"
 	"net/http"
@@ -61,7 +61,12 @@ func handleError(resp gorequest.Response, errs []error) (err error) {
 		zap.S().Warnf("HTTP 请求失败, %s", resp.Status)
 		return err
 	}
-	zap.S().Infof("HTTP 请求完成，重试 %s 次", resp.Header.Get("Retry-Count"))
+
+	if retryCount := resp.Header.Get("Retry-Count"); retryCount != "0" {
+		zap.S().Infof("HTTP 请求完成，重试 %s 次", retryCount)
+	} else {
+		zap.S().Infof("HTTP 请求完成")
+	}
 	return nil
 }
 

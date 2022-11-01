@@ -1,13 +1,13 @@
 package mikan
 
 import (
-	"AnimeGo/pkg/anisource"
-	"AnimeGo/pkg/errors"
-	mem "AnimeGo/pkg/memorizer"
-	"AnimeGo/pkg/request"
 	"bytes"
 	"encoding/gob"
 	"fmt"
+	"github.com/wetor/AnimeGo/pkg/anisource"
+	"github.com/wetor/AnimeGo/pkg/errors"
+	mem "github.com/wetor/AnimeGo/pkg/memorizer"
+	"github.com/wetor/AnimeGo/pkg/request"
 	"golang.org/x/net/html"
 	"net/url"
 	"path"

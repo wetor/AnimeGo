@@ -1,8 +1,8 @@
 package models
 
 import (
-	"AnimeGo/internal/utils"
 	"fmt"
+	"github.com/wetor/AnimeGo/internal/utils"
 	"path"
 	"strconv"
 )

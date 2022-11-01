@@ -1,11 +1,11 @@
 package themoviedb
 
 import (
-	"AnimeGo/data"
-	"AnimeGo/internal/cache"
-	"AnimeGo/pkg/anisource"
 	"encoding/csv"
 	"fmt"
+	"github.com/wetor/AnimeGo/data"
+	"github.com/wetor/AnimeGo/pkg/anisource"
+	"github.com/wetor/AnimeGo/pkg/cache"
 	"io"
 	"log"
 	"os"

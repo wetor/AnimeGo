@@ -1,8 +1,8 @@
 package mikan
 
 import (
-	"AnimeGo/internal/cache"
-	"AnimeGo/pkg/anisource"
+	"github.com/wetor/AnimeGo/pkg/anisource"
+	"github.com/wetor/AnimeGo/pkg/cache"
 	"testing"
 )
 
