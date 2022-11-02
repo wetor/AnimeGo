@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/wetor/AnimeGo/internal/animego/anisource"
 	mikanRss "github.com/wetor/AnimeGo/internal/animego/feed/mikan"
+	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/store"
 	pkgAnisource "github.com/wetor/AnimeGo/pkg/anisource"
 	"github.com/wetor/AnimeGo/test"
@@ -27,4 +28,31 @@ func TestJavaScript_Filter(t *testing.T) {
 		fmt.Println(r.Name)
 	}
 
+}
+
+func TestJavaScript_Filter2(t *testing.T) {
+	list := []*models.FeedItem{
+		{
+			Name: "0000",
+		},
+		{
+			Name: "1108011",
+		},
+		{
+			Name: "2222",
+		},
+		{
+			Name: "3333",
+		},
+	}
+	js := &JavaScript{
+		ScriptFile: []string{
+			"/Users/wetor/GoProjects/AnimeGo/data/plugin/filter/regexp.js",
+		},
+	}
+	result := js.Filter(list)
+	fmt.Println(len(result))
+	for _, r := range result {
+		fmt.Println(r.Name)
+	}
 }

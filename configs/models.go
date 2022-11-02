@@ -31,7 +31,7 @@ type Setting struct {
 		Url    string `json:"url"`
 	} `yaml:"proxy"`
 	Filter struct {
-		JavaScript string `yaml:"javascript"` // 脚本名
+		JavaScript []string `yaml:"javascript"` // 脚本名
 	} `yaml:"filter"`
 	WebApi struct {
 		AccessKey string `yaml:"access_key"`

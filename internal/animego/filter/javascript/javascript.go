@@ -8,25 +8,48 @@ import (
 )
 
 type JavaScript struct {
+	ScriptFile []string
 }
 
 func (j *JavaScript) Filter(list []*models.FeedItem) []*models.FeedItem {
-	js := &javascript.JavaScript{}
-	js.SetSchema([]string{"feedItems"}, []string{"index", "error"})
-	execute, err := js.Execute(store.Config.Filter.JavaScript, javascript.Object{
-		"feedItems": list,
-	})
-	if err != nil {
-		zap.S().Debug(err)
+	if len(j.ScriptFile) == 0 {
+		j.ScriptFile = store.Config.Filter.JavaScript
 	}
-	resultIndex := execute.(javascript.Object)["index"].([]interface{})
-	result := make([]*models.FeedItem, 0, len(list))
-	for _, index := range resultIndex {
-		i := index.(int64)
-		if i < 0 || i >= int64(len(list)) {
-			continue
+	// 过滤出的index列表
+	filterIndex := make([]int64, 0, len(list))
+	for i := range list {
+		filterIndex = append(filterIndex, int64(i))
+	}
+	for _, jsFile := range j.ScriptFile {
+		// 入参
+		inList := make([]*models.FeedItem, 0)
+		for _, i := range filterIndex {
+			inList = append(inList, list[i])
 		}
-		result = append(result, list[i])
+		js := &javascript.JavaScript{}
+		js.SetSchema([]string{"feedItems"}, []string{"index", "error"})
+		execute, err := js.Execute(jsFile, javascript.Object{
+			"feedItems": inList,
+		})
+		if err != nil {
+			zap.S().Debug(err)
+		}
+		// 返回的index列表
+		resultIndex := execute.(javascript.Object)["index"].([]interface{})
+
+		filterIndex = make([]int64, 0, len(resultIndex))
+		for _, index := range resultIndex {
+			i := index.(int64)
+			if i < 0 || i >= int64(len(list)) {
+				continue
+			}
+			filterIndex = append(filterIndex, i)
+		}
+	}
+	// 返回筛选结果
+	result := make([]*models.FeedItem, 0, len(filterIndex))
+	for _, index := range filterIndex {
+		result = append(result, list[index])
 	}
 	return result
 }

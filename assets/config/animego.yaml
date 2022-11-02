@@ -27,7 +27,9 @@ setting:
   # 过滤设置，用来在下载前根据文件名判断是否需要下载
   # 目前过滤仅支持javascript脚本过滤器，具体编写规则参考脚本文档
   filter:
-    javascript: plugin/filter/AnimeGoHelperParser/AnimeGoHelperParser.js
+    javascript:
+      - plugin/filter/default.js
+      - plugin/filter/regexp.js
   # 分类名
   category: AnimeGo
   # 标签表达式

@@ -56,7 +56,9 @@ func (c *Config) InitDir() {
 
 	c.Path.DbFile = path.Join(c.DataPath, c.Path.DbFile)
 	c.Path.LogFile = path.Join(c.DataPath, c.Path.LogFile)
-	c.Filter.JavaScript = path.Join(c.DataPath, c.Filter.JavaScript)
+	for i := range c.Filter.JavaScript {
+		c.Filter.JavaScript[i] = path.Join(c.DataPath, c.Filter.JavaScript[i])
+	}
 }
 
 func (c *Config) Proxy() string {
