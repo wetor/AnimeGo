@@ -7,6 +7,4 @@ import (
 var (
 	//go:embed plugin
 	Plugin embed.FS
-	//go:embed config
-	Config embed.FS
 )

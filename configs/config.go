@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path"
+	"path/filepath"
 	"time"
 
 	"gopkg.in/yaml.v3"
@@ -24,7 +25,6 @@ func Init(path string) *Config {
 	if err != nil {
 		log.Fatal("配置文件加载错误：", err)
 	}
-	conf.InitDir()
 	return conf
 }
 
@@ -39,6 +39,11 @@ func (c *Config) InitDir() {
 	if err != nil {
 		log.Fatalf("创建文件夹失败，%s", c.SavePath)
 	}
+	absPath, err := filepath.Abs(c.SavePath)
+	if err != nil {
+		log.Fatalf("save_path不是正确的路径，%s", c.SavePath)
+	}
+	c.SavePath = absPath
 	err = utils.CreateMutiDir(c.Path.TempPath)
 	if err != nil {
 		log.Fatalf("创建文件夹失败，%s", c.Path.TempPath)

@@ -5,13 +5,9 @@
 ## 使用帮助
 ```text
 -config string
-    配置文件路径；配置文件中的相对路径均是相对与程序的位置 (default "data/config/animego.yaml")
+    配置文件路径；配置文件中的相对路径均是相对与程序的位置 (default "data/animego.yaml")
 -debug
-    Debug模式，将会输出更多的日志 (default true)
--init-path string
-    [初始化]输出资源/配置文件到的根目录
--init-replace
-    [初始化]输出资源/配置文件时是否自动替换
+    Debug模式，将会输出更多的日志 (default false)
 ```
 ### 0.安装插件 [可选]
 - (默认已安装) AnimeGo过滤器插件：https://github.com/deqxj00/AnimeGoFilterPlugin
@@ -20,31 +16,33 @@
     setting:
       # ...
       filter:
-        javascript: plugin/filter/AnimeGoHelperParser/AnimeGoHelperParser.js
+        javascript: 
+          - plugin/filter/AnimeGoHelperParser/AnimeGoHelperParser.js
     ```
-    后开启插件
+    后开启插件。支持多插件顺序执行筛选
 - ([安装Tampermonkey插件](https://greasyfork.org/zh-CN/scripts/449596)) AnimeGo网页快速订阅Tampermonkey(油猴)插件：https://github.com/deqxj00/AnimeGoHelper
 
-### 1.释放资源
+### 1.首次启动
 ```shell
-AnimeGo -init-path=./data
+./AnimeGo
 ```
-> 可选`-init-replace`，启用后遇到已存在文件将不提示直接覆盖，慎用
+会在程序所在目录输出`data`文件夹，其中`data/animego.yaml`为配置文件。
 ### 2.修改配置
-打开并编辑`./data/config/animego.yaml`
->路径和`1.释放资源`所释放位置有关
+打开并编辑`data/animego.yaml`
 
 其中主要需要修改的配置项为：
-- `feed/mikan/url` : Mikan订阅url，如果仅使用浏览器插件手动下载则无需填写
-- `client/qbittorrent` : qbittorrent客户端webapi信息
-- `key/themoviedb` : themoviedb的webapi访问秘钥，需要注册申请
+- `setting/client/qbittorrent` : 必填，qbittorrent客户端webapi信息
+- `setting/feed/mikan/url` : Mikan订阅url，如果仅使用浏览器插件手动下载则无需填写
+- `setting/save_path`: 下载保存路径
+- `setting/data_path`: 程序所需数据文件路径，可以通过修改此项，移动程序自动生成的`data`文件夹
 - 其余配置项根据需求修改
 
 ### 3.启动程序
 ```shell
-AnimeGo -config=./data/config/animego.yaml
+./AnimeGo -config=data/animego.yaml
 ```
-> 可选`-debug`，启用后将输出更详细的日志
+> 可选`-debug`，启用后将输出更详细的日志  
+> 如不修改`data/animego.yaml`位置，直接启动程序即可
 
 可以使用如screen等工具放至后台执行，也可以创建服务并启动
 ### 更多待补充...
@@ -80,14 +78,22 @@ AnimeGo -config=./data/config/animego.yaml
   - [ ] ...
 
 ## 版本计划
-### v0.4.0
-- [ ] 每种数据缓存时间自定义
-- [ ] 资源文件自动释放
-- [ ] 配置文件局部升级
+### v0.5.0
+- [ ] 使用bangumi archive数据
+- [ ] 自动更新
+- [ ] 文件名解析改为外部js插件，允许自定义
 - [ ] 修复bug
 
 
 ## 开发日志
+
+### v0.4.0 (2022.11.6)
+- **配置文件版本号为`1.0.0`**
+- 修复下载路径为相对路径时，qbt下载位置错误的问题
+- 首次使用自动释放资源
+- 配置文件动态创建
+- 支持缓存时间自定义
+- 彩色日志输出
 
 ### 2022.10.30 (v0.3.0)
 - 修改配置文件结构

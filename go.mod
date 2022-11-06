@@ -10,6 +10,7 @@ require (
 	github.com/mmcdole/gofeed v1.1.3
 	github.com/parnurzeal/gorequest v0.2.16
 	github.com/stretchr/testify v1.7.2
+	github.com/wetor/yaml-encoder v1.0.0
 	go.uber.org/zap v1.21.0
 	golang.org/x/net v0.0.0-20211005215030-d2e5035098b3
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0

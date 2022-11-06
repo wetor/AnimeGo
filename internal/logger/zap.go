@@ -12,49 +12,55 @@ const (
 	logTmFmt = "2006-01-02 15:04:05"
 )
 
-var (
-	debug bool
-)
-
 func GetLogger(opt *InitOptions) {
-	debug = opt.Debug
-	Encoder := GetEncoder()
 	level := zapcore.DebugLevel
-	if !debug {
+	if !opt.Debug {
 		level = zapcore.InfoLevel
 	}
 	newCore := zapcore.NewTee(
-		zapcore.NewCore(Encoder, GetWriteSyncer(opt.File), zapcore.DebugLevel), // 写入文件
-		zapcore.NewCore(Encoder, zapcore.Lock(os.Stdout), level),               // 写入控制台
+		zapcore.NewCore(GetEncoder(true, opt.Debug), GetWriteSyncer(opt.File), level), // 写入文件
+		zapcore.NewCore(GetEncoder(false, opt.Debug), zapcore.Lock(os.Stdout), level), // 写入控制台
 	)
 	logger := zap.New(newCore, zap.AddCaller())
 	zap.ReplaceGlobals(logger)
 }
 
 // GetEncoder 自定义的Encoder
-func GetEncoder() zapcore.Encoder {
-	return zapcore.NewConsoleEncoder(
-		zapcore.EncoderConfig{
-			TimeKey:        "ts",
-			LevelKey:       "level",
-			NameKey:        "logger",
-			CallerKey:      "caller_line",
-			FunctionKey:    zapcore.OmitKey,
-			MessageKey:     "msg",
-			StacktraceKey:  "stacktrace",
-			LineEnding:     zapcore.DefaultLineEnding,
-			EncodeLevel:    cEncodeLevel,
-			EncodeTime:     cEncodeTime,
-			EncodeDuration: zapcore.SecondsDurationEncoder,
-			EncodeCaller:   cEncodeCaller,
-		})
+func GetEncoder(file, debug bool) zapcore.Encoder {
+	conf := zapcore.EncoderConfig{
+		TimeKey:        "ts",
+		LevelKey:       "level",
+		NameKey:        "logger",
+		CallerKey:      "caller_line",
+		FunctionKey:    zapcore.OmitKey,
+		MessageKey:     "msg",
+		StacktraceKey:  "stacktrace",
+		LineEnding:     zapcore.DefaultLineEnding,
+		EncodeLevel:    cEncodeLevel,
+		EncodeTime:     cEncodeTime,
+		EncodeDuration: zapcore.SecondsDurationEncoder,
+		EncodeCaller:   cEncodeCaller,
+	}
+	if file {
+		conf.EncodeLevel = cEncodeLevel
+	} else {
+		conf.EncodeLevel = zapcore.CapitalColorLevelEncoder
+	}
+
+	if debug {
+		conf.EncodeCaller = cEncodeCaller
+	} else {
+		conf.EncodeCaller = nil
+	}
+
+	return zapcore.NewConsoleEncoder(conf)
 }
 
 // GetWriteSyncer 自定义的WriteSyncer
 func GetWriteSyncer(file string) zapcore.WriteSyncer {
 	lumberJackLogger := &lumberjack.Logger{
 		Filename:   file,
-		MaxSize:    50,
+		MaxSize:    16,
 		MaxBackups: 10,
 		MaxAge:     30,
 	}
@@ -73,8 +79,5 @@ func cEncodeTime(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
 
 // cEncodeCaller 自定义行号显示
 func cEncodeCaller(caller zapcore.EntryCaller, enc zapcore.PrimitiveArrayEncoder) {
-	if debug {
-		enc.AppendString("[" + caller.TrimmedPath() + "]")
-	}
-
+	enc.AppendString("[" + caller.TrimmedPath() + "]")
 }

@@ -12,6 +12,9 @@ import (
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/store"
 	pkgAnisource "github.com/wetor/AnimeGo/pkg/anisource"
+	pkgBangumi "github.com/wetor/AnimeGo/pkg/anisource/bangumi"
+	pkgMikan "github.com/wetor/AnimeGo/pkg/anisource/mikan"
+	pkgThemoviedb "github.com/wetor/AnimeGo/pkg/anisource/themoviedb"
 )
 
 type Mikan struct {
@@ -38,6 +41,11 @@ func (p *Mikan) Run(ctx context.Context) {
 
 	anisource.Init(&pkgAnisource.Options{
 		Cache: store.Cache,
+		CacheTime: map[string]int64{
+			pkgMikan.Bucket:      int64(store.Config.Advanced.Cache.MikanCacheHour * 60 * 60),
+			pkgBangumi.Bucket:    int64(store.Config.Advanced.Cache.BangumiCacheHour * 60 * 60),
+			pkgThemoviedb.Bucket: int64(store.Config.Advanced.Cache.ThemoviedbCacheHour * 60 * 60),
+		},
 	})
 
 	p.downloaderMgr = downloader.NewManager(qbt, store.Cache, downloadChan)

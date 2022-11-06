@@ -38,7 +38,7 @@ func (js JavaScript) initFunc() Object {
 func (js JavaScript) initVar() Object {
 	return Object{
 		"variable": Object{
-			"version": os.Getenv("animego_version"),
+			"version": os.Getenv("ANIMEGO_VERSION"),
 			"name":    currName,
 		},
 	}

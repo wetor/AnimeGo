@@ -11,10 +11,9 @@ import (
 )
 
 var (
-	Host               = "https://api.bgm.tv"
-	Bucket             = "bangumi"
-	MatchEpRange       = 10
-	CacheSecond  int64 = 3 * 24 * 60 * 60
+	Host         = "https://api.bgm.tv"
+	Bucket       = "bangumi"
+	MatchEpRange = 10
 )
 
 type Bangumi struct {
@@ -57,13 +56,15 @@ func (b Bangumi) ParseCache(bangumiID, ep int) (entity *Entity, epInfo *Ep, err 
 	}
 	results := mem.NewResults("entity", &Entity{}, "epInfo", &Ep{})
 
-	err = b.cacheParseAnimeInfo(mem.NewParams("bangumiID", bangumiID).TTL(CacheSecond), results)
+	err = b.cacheParseAnimeInfo(mem.NewParams("bangumiID", bangumiID).
+		TTL(anisource.CacheTime[Bucket]), results)
 	if err != nil {
 		return nil, nil, err
 	}
 	entity = results.Get("entity").(*Entity)
 	err = b.cacheParseAnimeEpInfo(
-		mem.NewParams("bangumiID", bangumiID, "ep", ep, "eps", entity.Eps).TTL(CacheSecond), results)
+		mem.NewParams("bangumiID", bangumiID, "ep", ep, "eps", entity.Eps).
+			TTL(anisource.CacheTime[Bucket]), results)
 	if err != nil {
 		return nil, nil, err
 	}

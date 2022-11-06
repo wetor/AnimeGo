@@ -3,7 +3,7 @@ package themoviedb
 import (
 	"encoding/csv"
 	"fmt"
-	"github.com/wetor/AnimeGo/data"
+	"github.com/wetor/AnimeGo/key"
 	"github.com/wetor/AnimeGo/pkg/anisource"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"io"
@@ -33,7 +33,7 @@ func TestThemoviedb_Parse(t1 *testing.T) {
 		// TODO: Add test cases.
 		{
 			name:       "海贼王",
-			fields:     fields{Key: data.ThemoviedbKey},
+			fields:     fields{Key: key.ThemoviedbKey},
 			args:       args{name: "ONE PIECE", airDate: "1999-10-20"},
 			wantTmdbID: 37854,
 			wantSeason: 1,
@@ -41,7 +41,7 @@ func TestThemoviedb_Parse(t1 *testing.T) {
 		},
 		{
 			name:       "在地下城寻求邂逅是否搞错了什么 Ⅳ 新章 迷宫篇",
-			fields:     fields{Key: data.ThemoviedbKey},
+			fields:     fields{Key: key.ThemoviedbKey},
 			args:       args{name: "ダンジョンに出会いを求めるのは間違っているだろうか Ⅳ 新章 迷宮篇", airDate: "2022-07-21"},
 			wantTmdbID: 62745,
 			wantSeason: 4,
@@ -49,7 +49,7 @@ func TestThemoviedb_Parse(t1 *testing.T) {
 		},
 		{
 			name:       "来自深渊 烈日的黄金乡",
-			fields:     fields{Key: data.ThemoviedbKey},
+			fields:     fields{Key: key.ThemoviedbKey},
 			args:       args{name: "メイドインアビス 烈日の黄金郷", airDate: "2022-07-06"},
 			wantTmdbID: 72636,
 			wantSeason: 2,
@@ -57,7 +57,7 @@ func TestThemoviedb_Parse(t1 *testing.T) {
 		},
 		{
 			name:       "OVERLORD IV",
-			fields:     fields{Key: data.ThemoviedbKey},
+			fields:     fields{Key: key.ThemoviedbKey},
 			args:       args{name: "オーバーロードIV", airDate: "2022-07-05"},
 			wantTmdbID: 64196,
 			wantSeason: 4,
@@ -65,7 +65,7 @@ func TestThemoviedb_Parse(t1 *testing.T) {
 		},
 		{
 			name:       "福星小子",
-			fields:     fields{Key: data.ThemoviedbKey},
+			fields:     fields{Key: key.ThemoviedbKey},
 			args:       args{name: "うる星やつら", airDate: "2022-10-14"},
 			wantTmdbID: 154524,
 			wantSeason: 1,
@@ -77,7 +77,7 @@ func TestThemoviedb_Parse(t1 *testing.T) {
 	db.Open("bolt.db")
 	anisource.Init(&anisource.Options{Cache: db})
 	t := &Themoviedb{
-		Key: data.ThemoviedbKey,
+		Key: key.ThemoviedbKey,
 	}
 	for _, tt := range tests {
 		t1.Run(tt.name, func(t1 *testing.T) {
@@ -141,7 +141,7 @@ func TestThemoviedb_ParseByFile(t1 *testing.T) {
 		})
 	}
 	t := &Themoviedb{
-		Key: data.ThemoviedbKey,
+		Key: key.ThemoviedbKey,
 	}
 	for _, tt := range tests {
 		t1.Run(tt.name, func(t1 *testing.T) {

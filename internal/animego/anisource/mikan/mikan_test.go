@@ -2,9 +2,9 @@ package mikan
 
 import (
 	"encoding/json"
-	"github.com/wetor/AnimeGo/data"
 	"github.com/wetor/AnimeGo/internal/animego/anisource"
 	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/key"
 	pkgAnisource "github.com/wetor/AnimeGo/pkg/anisource"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"testing"
@@ -57,7 +57,7 @@ func TestParseMikan(t *testing.T) {
 	})
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotAnime := ParseMikan(tt.args.name, tt.args.url, data.ThemoviedbKey)
+			gotAnime := ParseMikan(tt.args.name, tt.args.url, key.ThemoviedbKey)
 			data1, _ := json.Marshal(gotAnime)
 			t.Log(string(data1))
 			if gotAnime.MikanID != tt.wantAnime.MikanID {

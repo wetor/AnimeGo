@@ -24,24 +24,28 @@ import (
 )
 
 const (
-	AnimeGoVersion = "0.3.2"
-	AnimeGoGithub  = "https://github.com/wetor/AnimeGo"
+	AnimeGoVersion       = "0.4.0"
+	AnimeGoConfigVersion = "1.0.0"
+	AnimeGoGithub        = "https://github.com/wetor/AnimeGo"
+
+	DefaultConfigFile = "./data/animego.yaml"
 )
 
 var ctx, cancel = context.WithCancel(context.Background())
 var configFile string
 var debug bool
 
-var rootPath string
-var replace bool
-
 func init() {
 	var err error
-	err = os.Setenv("animego_version", AnimeGoVersion)
+	err = os.Setenv("ANIMEGO_VERSION", AnimeGoVersion)
 	if err != nil {
 		panic(err)
 	}
-	err = os.Setenv("animego_github", AnimeGoGithub)
+	err = os.Setenv("ANIMEGO_CONFIG_VERSION", AnimeGoConfigVersion)
+	if err != nil {
+		panic(err)
+	}
+	err = os.Setenv("ANIMEGO_GITHUB", AnimeGoGithub)
 	if err != nil {
 		panic(err)
 	}
@@ -50,17 +54,11 @@ func init() {
 func main() {
 	printInfo()
 
-	flag.StringVar(&configFile, "config", "data/config/animego.yaml", "配置文件路径；配置文件中的相对路径均是相对与程序的位置")
-	flag.BoolVar(&debug, "debug", false, "Debug模式，将会输出更多的日志")
-
-	flag.StringVar(&rootPath, "init-path", "", "[初始化]输出资源/配置文件到的根目录")
-	flag.BoolVar(&replace, "init-replace", false, "[初始化]输出资源/配置文件时是否自动替换")
+	flag.StringVar(&configFile, "config", DefaultConfigFile, "配置文件路径；配置文件中的相对路径均是相对与程序的位置")
+	flag.BoolVar(&debug, "debug", false, "Debug模式，将会显示更多的日志")
 	flag.Parse()
-	if len(rootPath) > 0 {
-		copyDir(assets.Plugin, "plugin", path.Join(rootPath, "plugin"), replace)
-		copyDir(assets.Config, "config", path.Join(rootPath, "config"), replace)
-		return
-	}
+
+	InitData()
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGQUIT)
@@ -78,18 +76,54 @@ func main() {
 	Main(ctx)
 }
 
+func InitData() {
+	if utils.IsExist(configFile) {
+		return
+	}
+
+	fmt.Printf("未找到配置文件（%s），开始初始化默认配置\n", configFile)
+	conf := configs.DefaultConfig()
+	if utils.IsExist(conf.Setting.DataPath) {
+		fmt.Printf("默认data_path文件夹（%s）已存在，无法完成初始化\n", conf.Setting.DataPath)
+		os.Exit(0)
+	}
+	err := utils.CreateMutiDir(conf.Setting.DataPath)
+	if err != nil {
+		panic(err)
+	}
+	err = configs.DefaultFile(DefaultConfigFile)
+	if err != nil {
+		panic(err)
+	}
+	copyDir(assets.Plugin, "plugin", path.Join(conf.Setting.DataPath, "plugin"), true)
+	fmt.Printf("初始化默认配置完成（%s）\n", conf.Setting.DataPath)
+	fmt.Println("--------------------------------------------------")
+	return
+}
+
 func doExit() {
 	zap.S().Infof("正在退出...")
 	cancel()
 }
 
 func printInfo() {
-	fmt.Printf("github.com/wetor/AnimeGo %s (%s)\n", os.Getenv("animego_version"), os.Getenv("animego_github"))
+	fmt.Println(`--------------------------------------------------
+    ___            _                   ______     
+   /   |   ____   (_)____ ___   ___   / ____/____ 
+  / /| |  / __ \ / // __ \__ \ / _ \ / / __ / __ \
+ / ___ | / / / // // / / / / //  __// /_/ // /_/ /
+/_/  |_|/_/ /_//_//_/ /_/ /_/ \___/ \____/ \____/
+    `)
+	fmt.Printf("AnimeGo v%s\n", os.Getenv("ANIMEGO_VERSION"))
+	fmt.Printf("AnimeGo config v%s\n", os.Getenv("ANIMEGO_CONFIG_VERSION"))
+	fmt.Printf("%s\n", os.Getenv("ANIMEGO_GITHUB"))
+	fmt.Println("--------------------------------------------------")
 }
 
 func Main(ctx context.Context) {
 
 	config := configs.Init(configFile)
+	config.InitDir()
 
 	logger.Init(&logger.InitOptions{
 		File:    config.Advanced.Path.LogFile,

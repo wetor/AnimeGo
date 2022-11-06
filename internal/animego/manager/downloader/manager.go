@@ -105,12 +105,11 @@ func (m *Manager) download(animes []*models.AnimeEntity, ctx context.Context) {
 		}
 
 		m.bangumi[anime.Hash] = anime
-
 		m.client.Add(&models.ClientAddOptions{
 			Urls:        []string{anime.Url},
-			SavePath:    store.Config.SavePath,
-			Category:    store.Config.Category,
-			Tag:         store.Config.Tag(anime),
+			SavePath:    store.Config.Setting.SavePath,
+			Category:    store.Config.Setting.Category,
+			Tag:         store.Config.Setting.Tag(anime),
 			SeedingTime: store.Config.Advanced.Download.SeedingTime,
 			Rename:      anime.FullName(),
 		})

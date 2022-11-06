@@ -3,11 +3,12 @@ package configs
 import (
 	"fmt"
 	"github.com/wetor/AnimeGo/internal/models"
+	"os"
 	"testing"
 )
 
 func TestNewConfig(t *testing.T) {
-	c := Init("/Users/wetor/GoProjects/AnimeGo/data/config/conf.yaml")
+	c := Init("../assets/config/animego.yaml")
 	fmt.Println(c)
 }
 
@@ -21,4 +22,9 @@ func TestSettings_Tag(t *testing.T) {
 		},
 	})
 	fmt.Println(str)
+}
+
+func TestDefaultConfig(t *testing.T) {
+	os.Setenv("ANIMEGO_CONFIG_VERSION", "1.0.0")
+	os.WriteFile("../assets/config/default.yaml", Default(), 0666)
 }

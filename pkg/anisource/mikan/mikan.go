@@ -24,9 +24,8 @@ const (
 )
 
 var (
-	Host              = "https://mikanani.me"
-	Bucket            = "mikan"
-	CacheSecond int64 = 30 * 24 * 60 * 60
+	Host   = "https://mikanani.me"
+	Bucket = "mikan"
 )
 
 type Mikan struct {
@@ -75,7 +74,8 @@ func (m Mikan) CacheParseMikanInfo(url string) (mikanInfo *MikanInfo, err error)
 		m.RegisterCache()
 	}
 	results := mem.NewResults("mikanInfo", &MikanInfo{})
-	err = m.cacheParseMikanInfoVar(mem.NewParams("mikanUrl", url).TTL(CacheSecond), results)
+	err = m.cacheParseMikanInfoVar(mem.NewParams("mikanUrl", url).
+		TTL(anisource.CacheTime[Bucket]), results)
 	if err != nil {
 		return
 	}
@@ -88,7 +88,8 @@ func (m Mikan) CacheParseMikanBangumiID(mikanID int) (bangumiID int, err error) 
 		m.RegisterCache()
 	}
 	results := mem.NewResults("bangumiID", 0)
-	err = m.cacheParseMikanBangumiIDVar(mem.NewParams("mikanID", mikanID).TTL(CacheSecond), results)
+	err = m.cacheParseMikanBangumiIDVar(mem.NewParams("mikanID", mikanID).
+		TTL(anisource.CacheTime[Bucket]), results)
 	if err != nil {
 		return
 	}

@@ -15,7 +15,6 @@ func Run(ctx context.Context) {
 	go func() {
 		defer store.WG.Done()
 		r := gin.New()
-
 		r.Use(Cors())             // 跨域中间件
 		r.Use(GinLogger(zap.S())) // 日志中间件
 		r.Use(GinRecovery(zap.S(), true, func(c *gin.Context, recovered interface{}) {
@@ -27,11 +26,6 @@ func Run(ctx context.Context) {
 				c.JSON(ErrSvr(recovered.(string)))
 			}
 		})) // 错误处理中间件
-		if Debug {
-			gin.SetMode(gin.DebugMode)
-		} else {
-			gin.SetMode(gin.ReleaseMode)
-		}
 		r.GET("/ping", Ping)
 		apiRoot := r.Group("/api")
 		apiRoot.Use(KeyAuth())
@@ -48,7 +42,7 @@ func Run(ctx context.Context) {
 				zap.S().Warn("启动web服务失败")
 			}
 		}()
-		zap.S().Infof("github.com/wetor/AnimeGo Web服务已启动: http://%s", s.Addr)
+		zap.S().Infof("AnimeGo Web服务已启动: http://%s", s.Addr)
 		select {
 		case <-ctx.Done():
 			if err := s.Close(); err != nil {

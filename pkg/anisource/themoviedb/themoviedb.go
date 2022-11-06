@@ -11,7 +11,6 @@ var (
 	Host                    = "https://api.themoviedb.org"
 	Bucket                  = "themoviedb"
 	MatchSeasonDays         = 90
-	CacheSecond     int64   = 7 * 24 * 60 * 60
 	MinSimilar      float64 = 0.75
 )
 
@@ -52,12 +51,14 @@ func (t Themoviedb) ParseCache(name, airDate string) (tmdbID int, season int, er
 	}
 	results := mem.NewResults("tmdbID", 0, "season", 0)
 
-	err = t.cacheParseThemoviedbID(mem.NewParams("name", name).TTL(CacheSecond), results)
+	err = t.cacheParseThemoviedbID(mem.NewParams("name", name).
+		TTL(anisource.CacheTime[Bucket]), results)
 	if err != nil {
 		return
 	}
 	tmdbID = results.Get("tmdbID").(int)
-	err = t.cacheParseAnimeSeason(mem.NewParams("tmdbID", tmdbID, "airDate", airDate).TTL(CacheSecond), results)
+	err = t.cacheParseAnimeSeason(mem.NewParams("tmdbID", tmdbID, "airDate", airDate).
+		TTL(anisource.CacheTime[Bucket]), results)
 	if err != nil {
 		return
 	}

@@ -26,7 +26,7 @@ func Init(opt *InitOptions) {
 	RetryWait = opt.RetryWait
 	Timeout = opt.Timeout
 	Proxy = opt.Proxy
-	UserAgent = fmt.Sprintf("%s/AnimeGo (%s)", os.Getenv("animego_version"), os.Getenv("animego_github"))
+	UserAgent = fmt.Sprintf("%s/AnimeGo (%s)", os.Getenv("ANIMEGO_VERSION"), os.Getenv("ANIMEGO_GITHUB"))
 }
 
 func get(uri string) *gorequest.SuperAgent {

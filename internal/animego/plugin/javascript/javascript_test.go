@@ -33,7 +33,7 @@ function sum(a, b) {
 
 func TestJs2(t *testing.T) {
 	test.TestInit()
-	os.Setenv("animego_version", "0.2.2")
+	os.Setenv("ANIMEGO_VERSION", "0.2.2")
 	js := &JavaScript{}
 	js.SetSchema([]string{"feedItems"}, []string{"index", "error"})
 	execute, err := js.Execute("/Users/wetor/GoProjects/AnimeGo/internal/animego/plugin/javascript/test.js",
