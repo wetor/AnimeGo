@@ -9,8 +9,7 @@ import (
 )
 
 func TestInit() {
-	config := configs.Init("/Users/wetor/GoProjects/AnimeGo/data/config/animego.yaml")
-	config.InitDir()
+	config := configs.Init("/Users/wetor/GoProjects/AnimeGo/data/animego.yaml")
 
 	logger.Init(&logger.InitOptions{
 		File:    config.Advanced.Path.LogFile,

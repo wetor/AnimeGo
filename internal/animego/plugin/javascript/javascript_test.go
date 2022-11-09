@@ -51,7 +51,7 @@ func TestJavaScript_Execute(t *testing.T) {
 
 	js := &JavaScript{}
 	js.SetSchema([]string{"feedItems"}, []string{"index", "error"})
-	execute, err := js.Execute("/Users/wetor/GoProjects/AnimeGo/data/plugin/filter/default.js",
+	execute, err := js.Execute("/Users/wetor/GoProjects/AnimeGo/data/plugin/filter/test",
 		Object{
 			"feedItems": []*models.FeedItem{
 				{

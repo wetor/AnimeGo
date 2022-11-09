@@ -22,7 +22,7 @@ type Setting struct {
 	SavePath string `yaml:"save_path" comment:"下载保存根目录"`
 	DataPath string `yaml:"data_path" comment:"数据存储根目录，用于保存数据库、插件登数据"`
 	Filter   struct {
-		JavaScript []string `yaml:"javascript" comment:"js插件文件的相对路径"`
+		JavaScript []string `yaml:"javascript" comment_key:"filter_javascript"`
 	} `yaml:"filter" comment:"过滤器设置，用来筛选符合条件的项目进行解析下载"`
 	Category string `yaml:"category" comment:"分类名，仅qBittorrent有效"`
 	TagSrc   string `yaml:"tag" comment_key:"tag_help"`

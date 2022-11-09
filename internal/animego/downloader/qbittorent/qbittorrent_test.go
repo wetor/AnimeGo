@@ -23,6 +23,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestQBittorrent_Run(t *testing.T) {
+	time.Sleep(3 * time.Second)
 	go func() {
 		for {
 			fmt.Println("ver", qbt.Version())

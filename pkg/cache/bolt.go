@@ -5,8 +5,9 @@ import (
 	"encoding/binary"
 	"encoding/gob"
 	"github.com/wetor/AnimeGo/pkg/errors"
+	bolt "go.etcd.io/bbolt"
+	"sync"
 
-	"github.com/boltdb/bolt"
 	"go.uber.org/zap"
 	"time"
 )
@@ -26,7 +27,6 @@ func (c *Bolt) Open(path string) {
 		zap.S().Warn("打开bolt数据库失败")
 		return
 	}
-
 	c.db = db
 }
 
@@ -59,15 +59,55 @@ func (c *Bolt) Put(bucket string, key, val interface{}, ttl int64) {
 		return
 	}
 	var expire int64
+	if ttl > 0 {
+		expire = time.Now().Unix() + ttl
+	} else {
+		expire = 0
+	}
+	dbKey := c.toBytes(key, -1)
+	dbVal := c.toBytes(val, expire)
 	err := c.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
-		if ttl > 0 {
-			expire = time.Now().Unix() + ttl
-		} else {
-			expire = 0
+		return b.Put(dbKey, dbVal)
+	})
+	if err != nil {
+		zap.S().Debug(errors.NewAniErrorD(err))
+		zap.S().Warn("bolt添加数据失败")
+		return
+	}
+}
+
+func (c *Bolt) BatchPut(bucket string, key, val []interface{}, ttl int64) {
+	if val == nil || len(key) != len(val) {
+		return
+	}
+	var expire int64
+	if ttl > 0 {
+		expire = time.Now().Unix() + ttl
+	} else {
+		expire = 0
+	}
+	dbKeys := make([][]byte, len(key))
+	dbVals := make([][]byte, len(key))
+	wg := sync.WaitGroup{}
+	wg.Add(len(key))
+	for i := 0; i < len(key); i++ {
+		go func(i int) {
+			dbKeys[i] = c.toBytes(key[i], -1)
+			dbVals[i] = c.toBytes(val[i], expire)
+			wg.Done()
+		}(i)
+	}
+	wg.Wait()
+	err := c.db.Batch(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(bucket))
+		for i := 0; i < len(key); i++ {
+			err := b.Put(dbKeys[i], dbVals[i])
+			if err != nil {
+				return err
+			}
 		}
-		err := b.Put(c.toBytes(key, -1), c.toBytes(val, expire))
-		return err
+		return nil
 	})
 	if err != nil {
 		zap.S().Debug(errors.NewAniErrorD(err))
@@ -78,20 +118,22 @@ func (c *Bolt) Put(bucket string, key, val interface{}, ttl int64) {
 
 func (c *Bolt) Get(bucket string, key, val interface{}) error {
 	var ttl int64
+	var dbVal []byte
+	dbKey := c.toBytes(key, -1)
 	err := c.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
-		v := b.Get(c.toBytes(key, -1))
-		if v == nil {
+		dbVal = b.Get(dbKey)
+		if dbVal == nil {
 			return errors.NewAniError("Key不存在")
-		}
-		ttl = c.toValue(v, val)
-		if ttl != 0 && ttl <= time.Now().Unix() {
-			return errors.NewAniError("Key已过期")
 		}
 		return nil
 	})
 	if err != nil {
 		return err
+	}
+	ttl = c.toValue(dbVal, val)
+	if ttl != 0 && ttl <= time.Now().Unix() {
+		return errors.NewAniError("Key已过期")
 	}
 	return nil
 }

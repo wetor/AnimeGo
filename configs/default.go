@@ -12,9 +12,10 @@ var (
 )
 
 func defaultSettingComment() {
-	configComment["themoviedb_key"] = `theMovieDB APIkey
-可以自行申请链接（需注册）：https://www.themoviedb.org/settings/api?language=zh-CN
-以下为wetor的个人APIkey，仅用于AnimeGo使用`
+	configComment["filter_javascript"] = `js插件的文件名列表，依次执行。路径相对于data_path
+插件名可以忽略'.js'后缀；插件名也可以使用上层文件夹名，会自动加载文件夹内部的 'main.js' 或 'plugin.js'
+如设置为 'plugin/test'，会依次尝试加载 'plugin/test/main.js', 'plugin/test/plugin.js', 'plugin/test.js'
+`
 
 	configComment["tag_help"] = `标签表达式，仅qBittorrent有效
 可用通配符列表：
@@ -25,6 +26,10 @@ func defaultSettingComment() {
   {ep} int 番剧当前剧集序号，从1开始
   {week} int 番剧更新星期数，取值为[1, 2, 3, 4, 5, 6, 7]
   {week_name} string 番剧更新星期名，取值为[星期一, 星期二, 星期三, 星期四, 星期五, 星期六, 星期日]`
+
+	configComment["themoviedb_key"] = `theMovieDB APIkey
+可以自行申请链接（需注册）：https://www.themoviedb.org/settings/api?language=zh-CN
+以下为wetor的个人APIkey，仅用于AnimeGo使用`
 }
 
 func defaultSetting() {
