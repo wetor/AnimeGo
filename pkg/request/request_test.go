@@ -9,7 +9,7 @@ import (
 func TestGet(t *testing.T) {
 	Init(&InitOptions{})
 
-	err, str := GetString("http://pv.sohu.com/cityjson?ie=utf-8")
+	str, err := GetString("http://pv.sohu.com/cityjson?ie=utf-8")
 	if err != nil {
 		panic(err)
 	}
@@ -25,7 +25,7 @@ func TestGetRetry(t *testing.T) {
 		Timeout:   3,
 		Debug:     true,
 	})
-	err, str := GetString("https://www.baidu.com/aaa/test")
+	str, err := GetString("https://www.baidu.com/aaa/test")
 	fmt.Println(str)
 	if err != nil {
 		panic(err)

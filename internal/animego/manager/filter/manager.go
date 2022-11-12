@@ -10,9 +10,8 @@ import (
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/store"
 	"github.com/wetor/AnimeGo/internal/utils"
-	"sync"
-
 	"go.uber.org/zap"
+	"sync"
 )
 
 const (
@@ -82,11 +81,11 @@ func (m *Manager) Update(ctx context.Context, items []*models.FeedItem) {
 					Date: _item.Date,
 				})
 				if anime != nil {
-					if anime.TorrentInfo == nil {
-						anime.TorrentInfo = &models.TorrentInfo{}
+					if anime.DownloadInfo == nil {
+						anime.DownloadInfo = &models.DownloadInfo{}
 					}
-					anime.Url = _item.Torrent
-					anime.Hash = _item.Hash
+					anime.Url = _item.Download
+					anime.Hash = _item.Hash()
 
 					animeList[_i] = anime
 

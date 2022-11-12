@@ -6,6 +6,7 @@ import (
 	"github.com/wetor/AnimeGo/key"
 	"github.com/wetor/AnimeGo/pkg/anisource"
 	"github.com/wetor/AnimeGo/pkg/cache"
+	"github.com/wetor/AnimeGo/pkg/request"
 	"io"
 	"log"
 	"os"
@@ -71,6 +72,14 @@ func TestThemoviedb_Parse(t1 *testing.T) {
 			wantSeason: 1,
 			wantErr:    false,
 		},
+		{
+			name:       "Mairimashita! Iruma-kun 3rd Season",
+			fields:     fields{Key: key.ThemoviedbKey},
+			args:       args{name: "Mairimashita! Iruma-kun 3rd Season", airDate: "2022-11-14"},
+			wantTmdbID: 154524,
+			wantSeason: 1,
+			wantErr:    false,
+		},
 		//
 	}
 	db := cache.NewBolt()
@@ -79,17 +88,20 @@ func TestThemoviedb_Parse(t1 *testing.T) {
 	t := &Themoviedb{
 		Key: key.ThemoviedbKey,
 	}
+	request.Init(&request.InitOptions{
+		Proxy: "http://127.0.0.1:7890",
+	})
 	for _, tt := range tests {
 		t1.Run(tt.name, func(t1 *testing.T) {
-			gotTmdbID, gotSeason, err := t.Parse(tt.args.name, tt.args.airDate)
+			gotTmdbID, gotSeason, err := t.ParseCache(tt.args.name, tt.args.airDate)
 			if (err != nil) != tt.wantErr {
 				t1.Errorf("Parse() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if gotTmdbID != tt.wantTmdbID {
+			if gotTmdbID.ID != tt.wantTmdbID {
 				t1.Errorf("Parse() gotTmdbID = %v, want %v", gotTmdbID, tt.wantTmdbID)
 			}
-			if gotSeason != tt.wantSeason {
+			if gotSeason.Season != tt.wantSeason {
 				t1.Errorf("Parse() gotSeason = %v, want %v", gotSeason, tt.wantSeason)
 			}
 		})
@@ -151,10 +163,10 @@ func TestThemoviedb_ParseByFile(t1 *testing.T) {
 				t1.Errorf("Parse() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if gotTmdbID != tt.wantTmdbID {
+			if gotTmdbID.ID != tt.wantTmdbID {
 				t1.Errorf("Parse() gotTmdbID = %v, want %v", gotTmdbID, tt.wantTmdbID)
 			}
-			if gotSeason != tt.wantSeason {
+			if gotSeason.Season != tt.wantSeason {
 				t1.Errorf("Parse() gotSeason = %v, want %v", gotSeason, tt.wantSeason)
 			}
 			time.Sleep(time.Duration(caseSleepMS) * time.Millisecond)

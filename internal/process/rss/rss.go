@@ -1,11 +1,11 @@
-package mikan
+package rss
 
 import (
 	"context"
 	"github.com/wetor/AnimeGo/internal/animego/anisource"
 	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
 	"github.com/wetor/AnimeGo/internal/animego/downloader/qbittorent"
-	mikanRss "github.com/wetor/AnimeGo/internal/animego/feed/mikan"
+	feedRss "github.com/wetor/AnimeGo/internal/animego/feed/rss"
 	"github.com/wetor/AnimeGo/internal/animego/filter/javascript"
 	"github.com/wetor/AnimeGo/internal/animego/manager/downloader"
 	filterManager "github.com/wetor/AnimeGo/internal/animego/manager/filter"
@@ -17,21 +17,21 @@ import (
 	pkgThemoviedb "github.com/wetor/AnimeGo/pkg/anisource/themoviedb"
 )
 
-type Mikan struct {
+type Rss struct {
 	downloaderMgr *downloader.Manager
 	filterMgr     *filterManager.Manager
 	ctx           context.Context
 }
 
-func NewMikan() *Mikan {
-	return &Mikan{}
+func NewRssProcess() *Rss {
+	return &Rss{}
 }
 
-func (p *Mikan) UpdateFeed(items []*models.FeedItem) {
+func (p *Rss) UpdateFeed(items []*models.FeedItem) {
 	p.filterMgr.Update(p.ctx, items)
 }
 
-func (p *Mikan) Run(ctx context.Context) {
+func (p *Rss) Run(ctx context.Context) {
 
 	qbtConf := store.Config.Setting.Client.QBittorrent
 	qbt := qbittorent.NewQBittorrent(qbtConf.Url, qbtConf.Username, qbtConf.Password)
@@ -51,7 +51,7 @@ func (p *Mikan) Run(ctx context.Context) {
 	p.downloaderMgr = downloader.NewManager(qbt, store.Cache, downloadChan)
 
 	p.filterMgr = filterManager.NewManager(&javascript.JavaScript{},
-		mikanRss.NewRss(store.Config.Setting.Feed.Mikan.Url, store.Config.Setting.Feed.Mikan.Name),
+		feedRss.NewRss(store.Config.Setting.Feed.Mikan.Url, store.Config.Setting.Feed.Mikan.Name),
 		mikan.MikanAdapter{ThemoviedbKey: store.Config.Setting.Key.Themoviedb},
 		downloadChan)
 	p.ctx = ctx

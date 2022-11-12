@@ -34,19 +34,12 @@ func Download1(m *Manager) {
 		NameCN:  "哆啦A梦",
 		AirDate: "2005-04-15",
 		Eps:     0,
-		AnimeSeason: &models.AnimeSeason{
-			Season: 1,
-		},
-		AnimeEp: &models.AnimeEp{
-			Ep:   712,
-			Date: "2022-06-27",
-			EpID: 1114366,
-		},
-		AnimeExtra: &models.AnimeExtra{
-			MikanID:  681,
-			MikanUrl: "https://mikanani.me/Home/Episode/171f3b402fa4cf770ef267c0744a81b6b9ad77f2",
-		},
-		TorrentInfo: &models.TorrentInfo{
+		Season:  1,
+		Ep:      712,
+		Date:    "2022-06-27",
+		EpID:    1114366,
+		MikanID: 681,
+		DownloadInfo: &models.DownloadInfo{
 			Url:  "https://mikanani.me/Download/20220626/171f3b402fa4cf770ef267c0744a81b6b9ad77f2.torrent",
 			Hash: "171f3b402fa4cf770ef267c0744a81b6b9ad77f2",
 		},
@@ -62,19 +55,12 @@ func Download2(m *Manager) {
 		NameCN:  "海贼王",
 		AirDate: "2005-04-15",
 		Eps:     0,
-		AnimeSeason: &models.AnimeSeason{
-			Season: 1,
-		},
-		AnimeEp: &models.AnimeEp{
-			Ep:   1026,
-			Date: "2022-06-27",
-			EpID: 1114366,
-		},
-		AnimeExtra: &models.AnimeExtra{
-			MikanID:  228,
-			MikanUrl: "https://mikanani.me/Home/Episode/193f881098f1a2a4347e8b04512118090f79345d",
-		},
-		TorrentInfo: &models.TorrentInfo{
+		Season:  1,
+		Ep:      1026,
+		Date:    "2022-06-27",
+		EpID:    1114366,
+		MikanID: 228,
+		DownloadInfo: &models.DownloadInfo{
 			Url:  "https://mikanani.me/Download/20220725/193f881098f1a2a4347e8b04512118090f79345d.torrent",
 			Hash: "193f881098f1a2a4347e8b04512118090f79345d",
 		},

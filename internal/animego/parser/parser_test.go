@@ -3,8 +3,26 @@ package parser
 import (
 	"fmt"
 	"github.com/stretchr/testify/assert"
+	"github.com/wetor/AnimeGo/third_party/poketto"
 	"testing"
 )
+
+func TestParseTitle(t *testing.T) {
+	titles := []string{
+		"[桜都字幕組] 入間同學入魔了！ 第3季 / Mairimashita! Iruma-kun 3rd Season [05][1080p][繁體內嵌]",
+		"[Clarita] 不道德公会 / 无良公会 / Futoku no Guild - 05 [无修版 Uncensored ver.][WebRip 1080p HEVC-10bit AAC][简繁内封字幕]",
+		"[Lilith-Raws] 聖劍傳說 / Seiken Densetsu：Legend of Mana - The Teardrop Crystal - 06 [Baha][WEB-DL][1080p][AVC AAC][CHT][MP4]",
+		"[NC-Raws] 两不疑 第二季 / No Doubt In Us S2 - 04 (B-Global Donghua 1920x1080 HEVC AAC MKV)",
+	}
+	for _, title := range titles {
+		parse := poketto.NewEpisode(title)
+		parse.TryParse()
+		if parse.ParseErr != nil {
+			return
+		}
+		fmt.Println(parse.Name, parse.Season, parse.Ep)
+	}
+}
 
 func TestBangumiEp_Parse(t *testing.T) {
 	ep, err := ParseTitle("【幻樱字幕组】【4月新番】【古见同学有交流障碍症 第二季 Komi-san wa, Komyushou Desu. S02】【22】【GB_MP4】【1920X1080】")

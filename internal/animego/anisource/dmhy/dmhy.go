@@ -1,14 +1,15 @@
-package mikan
+package dmhy
 
 import (
 	"github.com/wetor/AnimeGo/internal/animego/anisource"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/store"
+	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/third_party/poketto"
 	"go.uber.org/zap"
 )
 
-func ParseMikan(name, url, tmdbKey string) (anime *models.AnimeEntity) {
+func ParseDmhy(name, pubDate, tmdbKey string) (anime *models.AnimeEntity) {
 	zap.S().Infof("获取「%s」信息开始...", name)
 	// ------------------- 解析文件名获取ep -------------------
 	match := poketto.NewEpisode(name)
@@ -17,29 +18,22 @@ func ParseMikan(name, url, tmdbKey string) (anime *models.AnimeEntity) {
 		zap.S().Warn("解析ep信息失败，结束此流程")
 		return nil
 	}
-	// ------------------- 获取mikanID -------------------
-	zap.S().Debugf("步骤1，解析Mikan，%s", url)
-	mikanID, bangumiID, err := anisource.Mikan().ParseCache(url)
-	if err != nil {
-		zap.S().Debug(err)
-		zap.S().Warn("解析Mikan获取bangumi id失败，结束此流程")
+	if len(match.Name) == 0 {
+		zap.S().Warn("解析番剧名信息失败，结束此流程")
 		return nil
 	}
 
-	// ------------------- 获取bangumi信息 -------------------
-	zap.S().Debugf("步骤2，解析Bangumi，%d, %d", bangumiID, match.Ep)
-	entity, epInfo, err := anisource.Bangumi().ParseCache(bangumiID, match.Ep)
-	if err != nil {
-		zap.S().Debug(err)
-		zap.S().Warn("解析bangumi获取番剧信息失败失败，结束此流程")
-		return nil
-	}
+	pubDate = utils.UTCToTimeStr(pubDate)
 	// ------------------- 获取tmdb信息(季度信息) -------------------
-	zap.S().Debugf("步骤3，解析Themoviedb，%s, %s", entity.Name, entity.AirDate)
-	tmdbEntity, tmdbSeason, err := anisource.Themoviedb(tmdbKey).ParseCache(entity.Name, entity.AirDate)
+	zap.S().Debugf("步骤3，解析Themoviedb，%s", match.Name)
+	tmdbEntity, tmdbSeason, err := anisource.Themoviedb(tmdbKey).ParseCache(match.Name, pubDate)
 	season := 1
 	if err != nil {
 		zap.S().Debug(err)
+		if tmdbEntity == nil {
+			zap.S().Warn("解析失败，结束此流程")
+			return nil
+		}
 		if store.Config.Default.TMDBFailSkip {
 			zap.S().Warn("无法获取准确的季度信息，结束此流程")
 			return nil
@@ -62,17 +56,19 @@ func ParseMikan(name, url, tmdbKey string) (anime *models.AnimeEntity) {
 	}
 
 	anime = &models.AnimeEntity{
-		ID:           entity.ID,
+		ID:           0,
 		ThemoviedbID: tmdbEntity.ID,
-		MikanID:      mikanID,
-		Name:         entity.Name,
-		NameCN:       entity.NameCN,
+		MikanID:      0,
+		Name:         tmdbEntity.Name,
+		NameCN:       tmdbEntity.NameCN,
 		Season:       season,
-		Ep:           epInfo.Ep,
-		EpID:         epInfo.ID,
-		Eps:          entity.Eps,
-		AirDate:      entity.AirDate,
-		Date:         epInfo.AirDate,
+		Ep:           match.Ep,
+		EpID:         0,
+		Date:         "",
+	}
+	if tmdbSeason != nil {
+		anime.Eps = tmdbSeason.Eps
+		anime.AirDate = tmdbSeason.AirDate
 	}
 	zap.S().Infof("获取「%s」信息成功！原名「%s」", anime.FullName(), anime.Name)
 	return anime

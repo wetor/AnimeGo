@@ -28,11 +28,9 @@ func TestParseMikan(t *testing.T) {
 				name: "OPFans枫雪动漫][ONE PIECE 海贼王][第1029话][1080p][周日版][MP4][简体] [299.5MB]",
 			},
 			wantAnime: &models.AnimeEntity{
-				AnimeExtra: &models.AnimeExtra{
-					MikanID:      228,
-					ThemoviedbID: 37854,
-				},
-				ID: 975,
+				MikanID:      228,
+				ThemoviedbID: 37854,
+				ID:           975,
 			},
 		},
 		{
@@ -42,11 +40,9 @@ func TestParseMikan(t *testing.T) {
 				name: "[ANi] Classroom of the Elite S2 - 欢迎来到实力至上主义的教室 第二季 - 07 [1080P][Baha][WEB-DL][AAC AVC][CHT][MP4] [254.26 MB]",
 			},
 			wantAnime: &models.AnimeEntity{
-				AnimeExtra: &models.AnimeExtra{
-					MikanID:      2775,
-					ThemoviedbID: 72517,
-				},
-				ID: 371546,
+				MikanID:      2775,
+				ThemoviedbID: 72517,
+				ID:           371546,
 			},
 		},
 	}

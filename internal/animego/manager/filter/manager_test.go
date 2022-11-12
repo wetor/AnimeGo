@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/wetor/AnimeGo/internal/animego/anisource"
 	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
-	mikanRss "github.com/wetor/AnimeGo/internal/animego/feed/mikan"
+	mikanRss "github.com/wetor/AnimeGo/internal/animego/feed/rss"
 	"github.com/wetor/AnimeGo/internal/animego/filter"
 	"github.com/wetor/AnimeGo/internal/store"
 	pkgAnisource "github.com/wetor/AnimeGo/pkg/anisource"

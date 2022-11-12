@@ -8,7 +8,7 @@ import (
 	"github.com/wetor/AnimeGo/assets"
 	"github.com/wetor/AnimeGo/configs"
 	"github.com/wetor/AnimeGo/internal/logger"
-	"github.com/wetor/AnimeGo/internal/process/mikan"
+	"github.com/wetor/AnimeGo/internal/process/rss"
 	"github.com/wetor/AnimeGo/internal/store"
 	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/internal/web"
@@ -147,7 +147,7 @@ func Main(ctx context.Context) {
 		Debug:     debug,
 	})
 
-	store.Process = mikan.NewMikan()
+	store.Process = rss.NewRssProcess()
 	store.Process.Run(ctx)
 
 	web.Init(&web.InitOptions{

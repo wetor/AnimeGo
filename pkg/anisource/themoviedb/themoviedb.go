@@ -1,6 +1,8 @@
 package themoviedb
 
 import (
+	"encoding/gob"
+	"fmt"
 	"github.com/wetor/AnimeGo/pkg/anisource"
 	"github.com/wetor/AnimeGo/pkg/errors"
 	mem "github.com/wetor/AnimeGo/pkg/memorizer"
@@ -27,85 +29,87 @@ func (t *Themoviedb) RegisterCache() {
 	}
 	t.cacheInit = true
 	t.cacheParseThemoviedbID = mem.Memorized(Bucket, anisource.Cache, func(params *mem.Params, results *mem.Results) error {
-		tmdbID, err := t.parseThemoviedbID(params.Get("name").(string))
+		entity, err := t.parseThemoviedbID(params.Get("name").(string))
 		if err != nil {
 			return err
 		}
-		results.Set("tmdbID", tmdbID)
+		results.Set("entity", entity)
 		return nil
 	})
 
 	t.cacheParseAnimeSeason = mem.Memorized(Bucket, anisource.Cache, func(params *mem.Params, results *mem.Results) error {
-		season, err := t.parseAnimeSeason(params.Get("tmdbID").(int), params.Get("airDate").(string))
+		seasonInfo, err := t.parseAnimeSeason(params.Get("tmdbID").(int), params.Get("airDate").(string))
 		if err != nil {
 			return err
 		}
-		results.Set("season", season)
+		results.Set("seasonInfo", seasonInfo)
 		return nil
 	})
 }
 
-func (t Themoviedb) ParseCache(name, airDate string) (tmdbID int, season int, err error) {
+func (t Themoviedb) ParseCache(name, airDate string) (entity *Entity, seasonInfo *SeasonInfo, err error) {
 	if !t.cacheInit {
 		t.RegisterCache()
 	}
-	results := mem.NewResults("tmdbID", 0, "season", 0)
+	results := mem.NewResults("entity", &Entity{}, "seasonInfo", &SeasonInfo{})
 
 	err = t.cacheParseThemoviedbID(mem.NewParams("name", name).
 		TTL(anisource.CacheTime[Bucket]), results)
 	if err != nil {
 		return
 	}
-	tmdbID = results.Get("tmdbID").(int)
-	err = t.cacheParseAnimeSeason(mem.NewParams("tmdbID", tmdbID, "airDate", airDate).
+	entity = results.Get("entity").(*Entity)
+	err = t.cacheParseAnimeSeason(mem.NewParams("tmdbID", entity.ID, "airDate", airDate).
 		TTL(anisource.CacheTime[Bucket]), results)
 	if err != nil {
 		return
 	}
-	season = results.Get("season").(int)
+	seasonInfo = results.Get("seasonInfo").(*SeasonInfo)
 	return
 }
 
-func (t Themoviedb) Parse(name, airDate string) (tmdbID int, season int, err error) {
-	tmdbID, err = t.parseThemoviedbID(name)
+func (t Themoviedb) Parse(name, airDate string) (entity *Entity, seasonInfo *SeasonInfo, err error) {
+	entity, err = t.parseThemoviedbID(name)
 	if err != nil {
 		return
 	}
-	season, err = t.parseAnimeSeason(tmdbID, airDate)
+	seasonInfo, err = t.parseAnimeSeason(entity.ID, airDate)
 	if err != nil {
 		return
 	}
 	return
 }
 
-func (t Themoviedb) parseThemoviedbID(name string) (tmdbID int, err error) {
+func (t Themoviedb) parseThemoviedbID(name string) (entity *Entity, err error) {
 	resp := FindResponse{}
 	result, err := RemoveNameSuffix(name, func(innerName string) (interface{}, error) {
+		fmt.Println(idApi(t.Key, innerName))
 		err := request.Get(idApi(t.Key, innerName), &resp)
 		if err != nil {
-			return 0, err
+			return nil, err
 		}
 		if resp.TotalResults == 1 {
-			return resp.Result[0].ID, nil
+			return resp.Result[0], nil
 		} else if resp.TotalResults > 1 {
 			// 筛选与original name完全相同的番剧
 			for _, result := range resp.Result {
-				if result.OriginalName == name {
-					return result.ID, nil
+				if result.Name == name {
+					return result, nil
 				}
 			}
-			tmdbID = resp.Result[0].ID
+
 			// 按照相似度排序筛选
+			temp := &Entity{}
 			maxSimilar := float64(0)
 			for _, result := range resp.Result {
-				similar := SimilarText(result.OriginalName, name)
+				similar := SimilarText(result.Name, name)
 				if similar > maxSimilar {
 					maxSimilar = similar
-					tmdbID = result.ID
+					temp = result
 				}
 			}
 			if maxSimilar >= MinSimilar {
-				return tmdbID, nil
+				return temp, nil
 			}
 			return 0, errors.NewAniError("匹配Seasons失败，番剧名未找到")
 		} else {
@@ -114,34 +118,41 @@ func (t Themoviedb) parseThemoviedbID(name string) (tmdbID int, err error) {
 		}
 	})
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
-	return result.(int), nil
+
+	return result.(*Entity), nil
 }
 
-func (t Themoviedb) parseAnimeSeason(tmdbID int, airDate string) (season int, err error) {
+func (t Themoviedb) parseAnimeSeason(tmdbID int, airDate string) (seasonInfo *SeasonInfo, err error) {
 	resp := InfoResponse{}
 	err = request.Get(infoApi(t.Key, tmdbID), &resp)
 	if err != nil {
-		return 0, err
+		return nil, err
 	}
 	if resp.Seasons == nil || len(resp.Seasons) == 0 {
-		return 0, errors.NewAniError("匹配Seasons失败，可能此番剧未开播")
+		return nil, errors.NewAniError("匹配Seasons失败，可能此番剧未开播")
 	}
-	season = resp.Seasons[0].SeasonNumber
+	seasonInfo = resp.Seasons[0]
 	min := 36500
 	for _, r := range resp.Seasons {
-		if r.SeasonNumber == 0 || r.Name == "Specials" {
+		if r.Season == 0 || r.EpName == "Specials" {
 			continue
 		}
 		// TODO: 待优化，通过比较此季度番剧的初放送日期，筛选差值最小的季
 		if s := StrTimeSubAbs(r.AirDate, airDate); s < min {
 			min = s
-			season = r.SeasonNumber
+			seasonInfo = r
 		}
 	}
 	if min > MatchSeasonDays {
-		return 0, errors.NewAniError("匹配Seasons失败，可能此番剧未开播")
+		return nil, errors.NewAniError("匹配Seasons失败，可能此番剧未开播")
 	}
-	return season, nil
+	seasonInfo.EpName = ""
+	return seasonInfo, nil
+}
+
+func init() {
+	gob.Register(&Entity{})
+	gob.Register(&SeasonInfo{})
 }

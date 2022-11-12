@@ -112,3 +112,8 @@ func Sha256(src string) string {
 	res := hex.EncodeToString(m.Sum(nil))
 	return res
 }
+
+func UTCToTimeStr(t1 string) string {
+	time1, _ := time.Parse("Mon, 02 Jan 2006 15:04:05 -0700", t1)
+	return time1.Format("2006-01-02")
+}

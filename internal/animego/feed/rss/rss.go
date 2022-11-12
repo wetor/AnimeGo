@@ -1,6 +1,6 @@
-// Package mikan
-// @Description: 获取并解析mikan rss
-package mikan
+// Package rss
+// @Description: 获取并解析rss
+package rss
 
 import (
 	"github.com/wetor/AnimeGo/internal/models"
@@ -91,14 +91,7 @@ func (f *Rss) Parse() (items []*models.FeedItem, err error) {
 			zap.S().Warn("Torrent Enclosures错误，跳过")
 			continue
 		}
-		_, hash := path.Split(item.Enclosures[0].URL)
-		if len(hash) < 40 {
-			zap.S().Debug(errors.NewAniErrorf("Torrent URL错误，%s", item.Title))
-			zap.S().Warn("Torrent URL错误")
-			hash = ""
-		} else {
-			hash = hash[:40]
-		}
+
 		length, err = strconv.ParseInt(item.Enclosures[0].Length, 10, 64)
 		if err != nil {
 			zap.S().Debug(errors.NewAniErrorD(err))
@@ -106,12 +99,12 @@ func (f *Rss) Parse() (items []*models.FeedItem, err error) {
 		}
 
 		items[i] = &models.FeedItem{
-			Url:     item.Link,
-			Name:    item.Title,
-			Date:    date,
-			Torrent: item.Enclosures[0].URL,
-			Hash:    hash,
-			Length:  length,
+			Url:      item.Link,
+			Name:     item.Title,
+			Date:     date,
+			Type:     item.Enclosures[0].Type,
+			Download: item.Enclosures[0].URL,
+			Length:   length,
 		}
 	}
 	return items, nil

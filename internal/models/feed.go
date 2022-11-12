@@ -1,10 +1,53 @@
 package models
 
+import (
+	"github.com/wetor/AnimeGo/internal/utils"
+	"path"
+)
+
+const (
+	MagnetType  = "magnet"
+	TorrentType = "torrent"
+)
+
 type FeedItem struct {
-	Url     string `json:"url"`     // Link，详情页连接，用于下一步解析番剧信息
-	Name    string `json:"name"`    // 种子名
-	Date    string `json:"date"`    // 发布日期
-	Torrent string `json:"torrent"` // 种子连接
-	Hash    string `json:"hash"`    // 种子hash，唯一ID
-	Length  int64  `json:"length"`  // 种子大小
+	Url      string `json:"url"`      // Link，详情页连接，用于下一步解析番剧信息
+	Name     string `json:"name"`     // 种子名
+	Date     string `json:"date"`     // 发布日期
+	Type     string `json:"type"`     // 下载类型，[application/x-bittorrent]
+	Download string `json:"download"` // 下载链接
+	Length   int64  `json:"length"`   // 种子大小
+}
+
+// DownloadType
+//  @Description: 下载链接类型，[torrent, magnet, unknown]
+//  @receiver FeedItem
+//  @return string
+//
+func (i FeedItem) DownloadType() string {
+	if len(i.Download) > 8 {
+		if i.Download[:8] == "magnet:?" {
+			return MagnetType
+		}
+
+		if i.Download[len(i.Download)-8:] == ".torrent" {
+			return TorrentType
+		}
+	}
+	return ""
+}
+
+// Hash
+//  @Description: torrent 类型的hash
+//  @receiver FeedItem
+//  @return string
+//
+func (i FeedItem) Hash() string {
+	if i.DownloadType() == TorrentType {
+		_, hash := path.Split(i.Download)
+		if len(hash) >= 40 {
+			return hash[:40]
+		}
+	}
+	return "ItemUrl_" + utils.Md5Str(i.Url)
 }

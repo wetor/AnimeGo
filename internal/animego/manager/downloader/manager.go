@@ -135,7 +135,7 @@ func (m *Manager) canDownload(anime *models.AnimeEntity) bool {
 		}
 		// 同一集不同资源
 		// 如果AllowDuplicateDownload == true，即允许同一集重复下载，则返回true，否则则不允许下载
-		if anime.ID == b.ID && anime.Season == b.Season && anime.Ep == b.Ep {
+		if anime.FullName() == b.FullName() {
 			return store.Config.Advanced.Download.AllowDuplicateDownload
 		}
 	}

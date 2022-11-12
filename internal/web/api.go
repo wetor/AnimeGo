@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/wetor/AnimeGo/internal/animego/feed/mikan"
+	"github.com/wetor/AnimeGo/internal/animego/feed/rss"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/store"
 	"github.com/wetor/AnimeGo/pkg/errors"
@@ -28,7 +28,7 @@ func Rss(c *gin.Context) {
 	if !checkRequest(c, &request) {
 		return
 	}
-	rss := mikan.NewRss(request.Rss.Url, "")
+	rss := rss.NewRss(request.Rss.Url, "")
 
 	items, _ := rss.Parse()
 	if request.IsSelectEp {

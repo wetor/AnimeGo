@@ -7,40 +7,32 @@ import (
 	"strconv"
 )
 
+// AnimeEntity 动画信息结构体
+//  必须要有的值
+//    NameCN: 用于保存文件名，可用 Name 和 ID 替代
+//    Season: 用于保存文件名
+//    Ep: 用于保存文件名
+//  可选值
+//    ID: bangumi id，用于生成nfo文件
+//    ThemoviedbID: themoviedb id，用于生成nfo文件
 type AnimeEntity struct {
-	ID      int    // bangumi id
-	Name    string // 名称，从bgm获取
-	NameCN  string // 中文名称，从bgm获取
-	AirDate string // 最初播放日期，从bgm获取
-	Eps     int    // 总集数，从bgm获取
-	*AnimeSeason
-	*AnimeEp
-	*AnimeExtra
-	*TorrentInfo
-}
-
-type AnimeSeason struct {
-	Season int // 当前季，从themoviedb获取
-}
-type AnimeEp struct {
-	Ep       int    // 当前集，从下载文件名解析
-	Date     string // 当前集播放日期，从bgm获取
-	Duration string // 当前集时长
-	EpDesc   string // 当前集简介
-	EpName   string // 当前集标题
-	EpNameCN string // 当前集中文标题
-	EpID     int    // 当前集bgm id
-
-}
-type AnimeExtra struct {
+	ID           int    // bangumi id
 	ThemoviedbID int    // themoviedb ID
-	MikanID      int    // mikan id
-	MikanUrl     string // mikan当前集的url
+	MikanID      int    // [暂时无用] rss id
+	Name         string // 名称，从bgm获取
+	NameCN       string // 中文名称，从bgm获取
+	Season       int    // 当前季，从themoviedb获取
+	Ep           int    // 当前集，从下载文件名解析
+	EpID         int    // [暂时无用] 当前集bangumi ep id
+	Eps          int    // [暂时无用] 总集数，从bgm获取
+	AirDate      string // [暂时无用] 最初播放日期，从bgm获取
+	Date         string // [暂时无用] 当前集播放日期，从bgm获取
+	*DownloadInfo
 }
 
-type TorrentInfo struct {
-	Url  string // 当前集种子链接
-	Hash string // 当前集种子Hash，唯一ID
+type DownloadInfo struct {
+	Url  string // 当前集下载链接
+	Hash string // 当前集Hash，唯一ID
 }
 
 func (b *AnimeEntity) FullName() string {

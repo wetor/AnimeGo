@@ -1,4 +1,4 @@
-package mikan
+package rss
 
 import (
 	"context"
@@ -19,7 +19,7 @@ func TestMain(m *testing.M) {
 
 func TestMikanProcess(t *testing.T) {
 
-	m := NewMikan()
+	m := NewRssProcess()
 	ctx, cancel := context.WithCancel(context.Background())
 	m.Run(ctx)
 	store.WG.Add(2)

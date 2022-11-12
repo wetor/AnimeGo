@@ -3,7 +3,7 @@ package javascript
 import (
 	"fmt"
 	"github.com/wetor/AnimeGo/internal/animego/anisource"
-	mikanRss "github.com/wetor/AnimeGo/internal/animego/feed/mikan"
+	mikanRss "github.com/wetor/AnimeGo/internal/animego/feed/rss"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/store"
 	pkgAnisource "github.com/wetor/AnimeGo/pkg/anisource"

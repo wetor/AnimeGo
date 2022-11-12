@@ -70,13 +70,13 @@ func handleError(resp gorequest.Response, errs []error) (err error) {
 	return nil
 }
 
-func GetString(uri string) (error, string) {
+func GetString(uri string) (string, error) {
 	resp, str, errs := get(uri).End()
 	err := handleError(resp, errs)
 	if err != nil {
-		return err, ""
+		return "", err
 	}
-	return nil, str
+	return str, nil
 }
 
 func Get(uri string, body interface{}) error {

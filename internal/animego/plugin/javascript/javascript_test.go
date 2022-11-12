@@ -55,14 +55,14 @@ func TestJavaScript_Execute(t *testing.T) {
 		Object{
 			"feedItems": []*models.FeedItem{
 				{
-					Url:     "localhost",
-					Name:    "【喵萌奶茶屋】★04月新番★[相合之物/Deaimon][09][720p][简体][招募翻译校对]",
-					Torrent: "asdasdasd",
+					Url:      "localhost",
+					Name:     "【喵萌奶茶屋】★04月新番★[相合之物/Deaimon][09][720p][简体][招募翻译校对]",
+					Download: "asdasdasd",
 				},
 				{
-					Url:     "localhost:99",
-					Name:    "[悠哈璃羽字幕社] [国王排名_Ousama Ranking] [22] [x264 1080p] [CHT]",
-					Torrent: "asdasasdaddasd",
+					Url:      "localhost:99",
+					Name:     "[悠哈璃羽字幕社] [国王排名_Ousama Ranking] [22] [x264 1080p] [CHT]",
+					Download: "asdasasdaddasd",
 				},
 			},
 		})
