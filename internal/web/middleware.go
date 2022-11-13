@@ -2,11 +2,13 @@ package web
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/wetor/AnimeGo/internal/web/models"
 	"go.uber.org/zap"
 	"net"
 	"net/http"
 	"net/http/httputil"
 	"os"
+	"path"
 	"runtime/debug"
 	"strings"
 	"time"
@@ -19,7 +21,7 @@ func KeyAuth() gin.HandlerFunc {
 		if len(tokenRaw) == 0 {
 			tokenRaw = ctx.Request.Header.Get("Access-Key") // header 查找 access_key
 			if len(tokenRaw) == 0 {
-				ctx.JSON(ErrJwt("未发现access_key"))
+				ctx.JSON(models.ErrJwt("未发现access_key"))
 				ctx.Abort()
 				return
 			}
@@ -60,20 +62,23 @@ func Cors() gin.HandlerFunc {
 func GinLogger(logger *zap.SugaredLogger) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		start := time.Now()
-		path := c.Request.URL.Path
+		reqPath := c.Request.URL.Path
 		query := c.Request.URL.RawQuery
 		c.Next()
-
+		ext := path.Ext(reqPath)
+		if ext != "" && ext != ".html" {
+			return
+		}
 		cost := time.Since(start)
-		logger.Info(path,
-			zap.Int("status", c.Writer.Status()),
-			zap.String("method", c.Request.Method),
-			zap.String("path", path),
-			zap.String("query", query),
+		logger.Infof("%s %s {query %s}, %v, %v, 响应: %d, 耗时: %dms",
+			c.Request.Method,
+			reqPath,
+			query,
 			zap.String("ip", c.ClientIP()),
-			zap.String("user-agent", c.Request.UserAgent()),
+			// zap.String("user-agent", c.Request.UserAgent()),
 			zap.String("errors", c.Errors.ByType(gin.ErrorTypePrivate).String()),
-			zap.Duration("cost", cost),
+			c.Writer.Status(),
+			cost.Milliseconds(),
 		)
 	}
 }

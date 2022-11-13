@@ -83,11 +83,11 @@ func defaultAdvanced() {
 	defaultConfig.Advanced.Download.QueueMaxNum = 20
 	defaultConfig.Advanced.Download.QueueDelaySecond = 5
 	defaultConfig.Advanced.Download.AllowDuplicateDownload = false
-	defaultConfig.Advanced.Download.SeedingTime = 30
+	defaultConfig.Advanced.Download.SeedingTimeMinute = 30
 	defaultConfig.Advanced.Download.IgnoreSizeMaxKb = 1024
 
 	defaultConfig.Advanced.Feed.UpdateDelayMinute = 15
-	defaultConfig.Advanced.Feed.Delay = 5
+	defaultConfig.Advanced.Feed.DelaySecond = 5
 	defaultConfig.Advanced.Feed.MultiGoroutine.Enable = false
 	defaultConfig.Advanced.Feed.MultiGoroutine.GoroutineMax = 4
 
@@ -131,6 +131,19 @@ func Default() []byte {
 		encoder.WithCommentsMap(configComment),
 	)
 	content, err := yaml.Encode()
+	if err != nil {
+		panic(err)
+	}
+	return content
+}
+
+func DefaultDoc() []byte {
+	defaultAll()
+	yaml := encoder.NewEncoder(defaultConfig,
+		encoder.WithComments(encoder.CommentsOnHead),
+		encoder.WithCommentsMap(configComment),
+	)
+	content, err := yaml.EncodeDoc()
 	if err != nil {
 		panic(err)
 	}

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/wetor/AnimeGo/assets"
 	"github.com/wetor/AnimeGo/configs"
+	_ "github.com/wetor/AnimeGo/docs"
 	"github.com/wetor/AnimeGo/internal/logger"
 	"github.com/wetor/AnimeGo/internal/process/rss"
 	"github.com/wetor/AnimeGo/internal/store"
@@ -14,17 +15,16 @@ import (
 	"github.com/wetor/AnimeGo/internal/web"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/request"
+	"go.uber.org/zap"
 	"os"
 	"os/signal"
 	"path"
 	"strings"
 	"syscall"
-
-	"go.uber.org/zap"
 )
 
 const (
-	AnimeGoVersion       = "0.4.0"
+	AnimeGoVersion       = "0.4.3"
 	AnimeGoConfigVersion = "1.0.0"
 	AnimeGoGithub        = "https://github.com/wetor/AnimeGo"
 

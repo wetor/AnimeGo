@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/wetor/AnimeGo/internal/store"
+	"github.com/wetor/AnimeGo/internal/web/api"
+	"github.com/wetor/AnimeGo/internal/web/models"
 	"github.com/wetor/AnimeGo/pkg/errors"
 	"go.uber.org/zap"
 	"net/http"
@@ -20,18 +22,23 @@ func Run(ctx context.Context) {
 		r.Use(GinRecovery(zap.S(), true, func(c *gin.Context, recovered interface{}) {
 			if err, ok := recovered.(error); ok {
 				zap.S().Debugf("服务器错误，err: %v", errors.NewAniErrorD(err))
-				c.JSON(ErrSvr("服务器错误"))
+				c.JSON(models.ErrSvr("服务器错误"))
 			} else {
 				zap.S().Debug(recovered.(string))
-				c.JSON(ErrSvr(recovered.(string)))
+				c.JSON(models.ErrSvr(recovered.(string)))
 			}
 		})) // 错误处理中间件
-		r.GET("/ping", Ping)
+		r.GET("/ping", api.Ping)
+		r.GET("/sha256", api.SHA256)
+		InitSwagger(r)
 		apiRoot := r.Group("/api")
 		apiRoot.Use(KeyAuth())
-		apiRoot.POST("/rss", Rss)
-		apiRoot.POST("/plugin/config", PluginConfigPost)
-		apiRoot.GET("/plugin/config", PluginConfigGet)
+		apiRoot.POST("/rss", api.Rss)
+		apiRoot.POST("/plugin/config", api.PluginConfigPost)
+		apiRoot.GET("/plugin/config", api.PluginConfigGet)
+
+		apiRoot.GET("/config", api.Config)
+
 		s := &http.Server{
 			Addr:    fmt.Sprintf("%s:%d", store.Config.WebApi.Host, store.Config.WebApi.Port),
 			Handler: r,

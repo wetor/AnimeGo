@@ -12,24 +12,41 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-func Init(path string) *Config {
-	if len(path) == 0 {
-		path = "../data/config/animego.yaml"
+var ConfigFile = "./data/animego.yaml"
+
+func Init(file string) *Config {
+	if len(file) == 0 {
+		file = ConfigFile
 	}
-	data, err := os.ReadFile(path)
+
+	data, err := os.ReadFile(file)
 	if err != nil {
 		log.Fatal("配置文件加载错误：", err)
 	}
+	ConfigFile = file
+
 	conf := &Config{}
 	err = yaml.Unmarshal(data, conf)
 	if err != nil {
 		log.Fatal("配置文件加载错误：", err)
 	}
+
+	conf.Path.TempPath = path.Join(conf.DataPath, conf.Path.TempPath)
+	absPath, err := filepath.Abs(conf.SavePath)
+	if err != nil {
+		log.Fatalf("save_path不是正确的路径，%s", conf.SavePath)
+	}
+	conf.SavePath = absPath
+
+	conf.Path.DbFile = path.Join(conf.DataPath, conf.Path.DbFile)
+	conf.Path.LogFile = path.Join(conf.DataPath, conf.Path.LogFile)
+	for i := range conf.Filter.JavaScript {
+		conf.Filter.JavaScript[i] = path.Join(conf.DataPath, conf.Filter.JavaScript[i])
+	}
 	return conf
 }
 
 func (c *Config) InitDir() {
-	c.Path.TempPath = path.Join(c.DataPath, c.Path.TempPath)
 
 	err := utils.CreateMutiDir(c.DataPath)
 	if err != nil {
@@ -39,30 +56,20 @@ func (c *Config) InitDir() {
 	if err != nil {
 		log.Fatalf("创建文件夹失败，%s", c.SavePath)
 	}
-	absPath, err := filepath.Abs(c.SavePath)
-	if err != nil {
-		log.Fatalf("save_path不是正确的路径，%s", c.SavePath)
-	}
-	c.SavePath = absPath
+
 	err = utils.CreateMutiDir(c.Path.TempPath)
 	if err != nil {
 		log.Fatalf("创建文件夹失败，%s", c.Path.TempPath)
 	}
-	dbDir := path.Join(c.DataPath, path.Dir(c.Path.DbFile))
+	dbDir := path.Dir(c.Path.DbFile)
 	err = utils.CreateMutiDir(dbDir)
 	if err != nil {
 		log.Fatalf("创建文件夹失败，%s", dbDir)
 	}
-	logDir := path.Join(c.DataPath, path.Dir(c.Path.LogFile))
+	logDir := path.Dir(c.Path.LogFile)
 	err = utils.CreateMutiDir(logDir)
 	if err != nil {
 		log.Fatalf("创建文件夹失败，%s", logDir)
-	}
-
-	c.Path.DbFile = path.Join(c.DataPath, c.Path.DbFile)
-	c.Path.LogFile = path.Join(c.DataPath, c.Path.LogFile)
-	for i := range c.Filter.JavaScript {
-		c.Filter.JavaScript[i] = path.Join(c.DataPath, c.Filter.JavaScript[i])
 	}
 }
 

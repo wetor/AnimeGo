@@ -94,7 +94,7 @@ func (m *Manager) Update(ctx context.Context, items []*models.FeedItem) {
 					m.downloadChan <- anime
 
 				}
-				utils.Sleep(store.Config.Advanced.Feed.Delay, ctx)
+				utils.Sleep(store.Config.Advanced.Feed.DelaySecond, ctx)
 			}
 			<-working
 			wg.Done()

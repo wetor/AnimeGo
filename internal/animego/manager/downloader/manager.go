@@ -110,7 +110,7 @@ func (m *Manager) download(animes []*models.AnimeEntity, ctx context.Context) {
 			SavePath:    store.Config.Setting.SavePath,
 			Category:    store.Config.Setting.Category,
 			Tag:         store.Config.Setting.Tag(anime),
-			SeedingTime: store.Config.Advanced.Download.SeedingTime,
+			SeedingTime: store.Config.Advanced.Download.SeedingTimeMinute,
 			Rename:      anime.FullName(),
 		})
 		// 通过gb下载的番剧，将存储与缓存中

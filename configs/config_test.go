@@ -24,5 +24,5 @@ func TestSettings_Tag(t *testing.T) {
 
 func TestDefaultConfig(t *testing.T) {
 	os.Setenv("ANIMEGO_CONFIG_VERSION", "1.0.0")
-	os.WriteFile("../assets/default.yaml", Default(), 0666)
+	os.WriteFile("../assets/default.json", DefaultDoc(), 0666)
 }

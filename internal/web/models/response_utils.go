@@ -3,7 +3,7 @@
 // @Author		zxysilent
 // @Update		zxysilent
 
-package web
+package models
 
 // Response  format
 type Response struct {
