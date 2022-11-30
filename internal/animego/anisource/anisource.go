@@ -3,11 +3,11 @@
 package anisource
 
 import (
+	"github.com/wetor/AnimeGo/internal/animego/anidata"
+	"github.com/wetor/AnimeGo/internal/animego/anidata/bangumi"
+	"github.com/wetor/AnimeGo/internal/animego/anidata/mikan"
+	"github.com/wetor/AnimeGo/internal/animego/anidata/themoviedb"
 	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/pkg/anisource"
-	"github.com/wetor/AnimeGo/pkg/anisource/bangumi"
-	"github.com/wetor/AnimeGo/pkg/anisource/mikan"
-	"github.com/wetor/AnimeGo/pkg/anisource/themoviedb"
 )
 
 type AniSource interface {
@@ -26,11 +26,11 @@ var (
 //  @param cache cache.Cache
 //  @param proxy string
 //
-func Init(opts *anisource.Options) {
+func Init(opts *anidata.Options) {
 	mikanInstance = nil
 	bangumiInstance = nil
 	themoviedbInstance = nil
-	anisource.Init(opts)
+	anidata.Init(opts)
 }
 
 func Mikan() *mikan.Mikan {

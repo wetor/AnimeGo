@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"path"
-	"runtime"
 )
 
 type AniError struct {
@@ -13,12 +12,6 @@ type AniError struct {
 	File string //file
 	Func string //func
 	Line int
-}
-
-func GetCaller(skip int) (string, string, int) {
-	pc, file, line, _ := runtime.Caller(skip + 1)
-	pcName := runtime.FuncForPC(pc).Name()
-	return file, pcName, line
 }
 
 func NewAniError(msg string) *AniError {

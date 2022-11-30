@@ -40,11 +40,7 @@ func TestMikan_Parse(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			gotMikanID, gotBangumiID, err := m.ParseCache(tt.args.url)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Parse() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
+			gotMikanID, gotBangumiID := m.ParseCache(tt.args.url)
 			if gotMikanID != tt.wantMikanID {
 				t.Errorf("Parse() gotMikanID = %v, want %v", gotMikanID, tt.wantMikanID)
 			}

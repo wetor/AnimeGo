@@ -39,7 +39,7 @@ func (js *JavaScript) preExecute() error {
 //  @Description: 执行脚本
 //  @receiver *JavaScript
 //  @param file string
-//  @return result interface{}
+//  @return result any
 //  @return err error
 //
 func (js *JavaScript) execute(file string) error {
@@ -118,7 +118,7 @@ func (js *JavaScript) checkParams(params Object) error {
 	return nil
 }
 
-func (js *JavaScript) checkResult(result interface{}) error {
+func (js *JavaScript) checkResult(result any) error {
 	resultMap, ok := result.(Object)
 	if !ok {
 		return errors.NewAniError("返回类型错误")
@@ -137,7 +137,7 @@ func (js *JavaScript) SetSchema(paramsSchema, resultSchema []string) {
 	js.resultSchema = resultSchema
 }
 
-func (js *JavaScript) Execute(file string, params Object) (result interface{}, err error) {
+func (js *JavaScript) Execute(file string, params Object) (result any, err error) {
 	err = js.checkParams(params)
 	if err != nil {
 		return

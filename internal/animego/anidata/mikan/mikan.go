@@ -36,63 +36,48 @@ type Mikan struct {
 
 func (m *Mikan) RegisterCache() {
 	if anidata.Cache == nil {
-		panic(errors.NewAniError("需要先调用anidata.Init初始化缓存"))
+		errors.NewAniError("需要先调用anidata.Init初始化缓存").TryPanic()
 	}
 	m.cacheInit = true
 	m.cacheParseMikanInfoVar = mem.Memorized(Bucket, anidata.Cache, func(params *mem.Params, results *mem.Results) error {
-		mikan, err := m.parseMikanInfo(params.Get("mikanUrl").(string))
-		if err != nil {
-			return err
-		}
+		mikan := m.parseMikanInfo(params.Get("mikanUrl").(string))
 		results.Set("mikanInfo", mikan)
 		return nil
 	})
 
 	m.cacheParseMikanBangumiIDVar = mem.Memorized(Bucket, anidata.Cache, func(params *mem.Params, results *mem.Results) error {
-		bangumiID, err := m.parseMikanBangumiID(params.Get("mikanID").(int))
-		if err != nil {
-			return err
-		}
+		bangumiID := m.parseMikanBangumiID(params.Get("mikanID").(int))
 		results.Set("bangumiID", bangumiID)
 		return nil
 	})
 }
 
-func (m Mikan) ParseCache(url string) (mikanID int, bangumiID int, err error) {
-	mikan, err := m.CacheParseMikanInfo(url)
-	if err != nil {
-		err = err
-		return
-	}
-	mikanID = mikan.ID
-	bangumiID, err = m.CacheParseMikanBangumiID(mikanID)
+func (m Mikan) ParseCache(url string) (mikanID int, bangumiID int) {
+	mikanID = m.CacheParseMikanInfo(url).ID
+	bangumiID = m.CacheParseMikanBangumiID(mikanID)
 	return
 }
 
-func (m Mikan) CacheParseMikanInfo(url string) (mikanInfo *MikanInfo, err error) {
+func (m Mikan) CacheParseMikanInfo(url string) (mikanInfo *MikanInfo) {
 	if !m.cacheInit {
 		m.RegisterCache()
 	}
 	results := mem.NewResults("mikanInfo", &MikanInfo{})
-	err = m.cacheParseMikanInfoVar(mem.NewParams("mikanUrl", url).
+	err := m.cacheParseMikanInfoVar(mem.NewParams("mikanUrl", url).
 		TTL(anidata.CacheTime[Bucket]), results)
-	if err != nil {
-		return
-	}
+	errors.NewAniErrorD(err).TryPanic()
 	mikanInfo = results.Get("mikanInfo").(*MikanInfo)
 	return
 }
 
-func (m Mikan) CacheParseMikanBangumiID(mikanID int) (bangumiID int, err error) {
+func (m Mikan) CacheParseMikanBangumiID(mikanID int) (bangumiID int) {
 	if !m.cacheInit {
 		m.RegisterCache()
 	}
 	results := mem.NewResults("bangumiID", 0)
-	err = m.cacheParseMikanBangumiIDVar(mem.NewParams("mikanID", mikanID).
+	err := m.cacheParseMikanBangumiIDVar(mem.NewParams("mikanID", mikanID).
 		TTL(anidata.CacheTime[Bucket]), results)
-	if err != nil {
-		return
-	}
+	errors.NewAniErrorD(err).TryPanic()
 	bangumiID = results.Get("bangumiID").(int)
 	return
 }
@@ -105,30 +90,21 @@ func (m Mikan) CacheParseMikanBangumiID(mikanID int) (bangumiID int, err error) 
 //  @return bangumiID int
 //  @return err error
 //
-func (m Mikan) Parse(url string) (mikanID int, bangumiID int, err error) {
-	mikan, err := m.parseMikanInfo(url)
-	if err != nil {
-		return
-	}
+func (m Mikan) Parse(url string) (mikanID int, bangumiID int) {
+	mikan := m.parseMikanInfo(url)
 	mikanID = mikan.ID
-	bangumiID, err = m.parseMikanBangumiID(mikan.ID)
-	if err != nil {
-		return
-	}
+	bangumiID = m.parseMikanBangumiID(mikan.ID)
 	return
 }
 
-func (m Mikan) loadHtml(url string) (*html.Node, error) {
+func (m Mikan) loadHtml(url string) *html.Node {
 	buf := bytes.NewBuffer(nil)
 	err := request.GetWriter(url, buf)
-	if err != nil {
-		return nil, err
-	}
+	errors.NewAniErrorD(err).TryPanic()
 	doc, err := htmlquery.Parse(buf)
-	if err != nil {
-		return nil, errors.NewAniErrorD(err)
-	}
-	return doc, nil
+	errors.NewAniErrorD(err).TryPanic()
+
+	return doc
 }
 
 // parseMikanID
@@ -136,36 +112,27 @@ func (m Mikan) loadHtml(url string) (*html.Node, error) {
 //  @receiver Mikan
 //  @param mikanUrl string
 //  @return mikan *MikanInfo
-//  @return err error
 //
-func (m Mikan) parseMikanInfo(mikanUrl string) (mikan *MikanInfo, err error) {
-	doc, err := m.loadHtml(mikanUrl)
-	if err != nil {
-		err = errors.NewAniErrorD(err)
-		return
-	}
+func (m Mikan) parseMikanInfo(mikanUrl string) (mikan *MikanInfo) {
+	doc := m.loadHtml(mikanUrl)
+
 	miaknLink := htmlquery.FindOne(doc, IdXPath)
 	href := htmlquery.SelectAttr(miaknLink, "href")
 	u, err := url.Parse(href)
-	if err != nil {
-		err = errors.NewAniErrorD(err)
-		return
-	}
+	errors.NewAniErrorD(err).TryPanic()
+
 	mikan = &MikanInfo{}
 	query := u.Query()
 	if query.Has("bangumiId") {
 		mikan.ID, err = strconv.Atoi(query.Get("bangumiId"))
-		if err != nil {
-			err = errors.NewAniErrorD(err)
-			return
-		}
+		errors.NewAniErrorD(err).TryPanic()
+
 		mikan.SubGroupID, err = strconv.Atoi(query.Get("subgroupid"))
 		if err != nil {
-			err = nil
 			mikan.SubGroupID = 0
 		}
 	} else {
-		return nil, errors.NewAniError("解析Mikan ID失败")
+		errors.NewAniError("解析Bangumi ID失败").TryPanic()
 	}
 
 	group := htmlquery.FindOne(doc, GroupXPath)
@@ -175,10 +142,8 @@ func (m Mikan) parseMikanInfo(mikanUrl string) (mikan *MikanInfo, err error) {
 	href = htmlquery.SelectAttr(group, "href")
 	_, groupId := path.Split(href)
 	mikan.PubGroupID, err = strconv.Atoi(groupId)
-	if err != nil {
-		err = errors.NewAniErrorD(err)
-		return
-	}
+	errors.NewAniErrorD(err).TryPanic()
+
 	mikan.GroupName = group.FirstChild.Data
 	return
 }
@@ -190,23 +155,18 @@ func (m Mikan) parseMikanInfo(mikanUrl string) (mikan *MikanInfo, err error) {
 //  @return bangumiID int
 //  @return err error
 //
-func (m Mikan) parseMikanBangumiID(mikanID int) (bangumiID int, err error) {
+func (m Mikan) parseMikanBangumiID(mikanID int) (bangumiID int) {
 	url_ := fmt.Sprintf("%s/Home/bangumi/%d", Host, mikanID)
-	doc, err := m.loadHtml(url_)
-	if err != nil {
-		err = errors.NewAniErrorD(err)
-		return
-	}
+	doc := m.loadHtml(url_)
+
 	bangumiUrl := htmlquery.FindOne(doc, BangumiUrlXPath)
 	href := htmlquery.SelectAttr(bangumiUrl, "href")
 
 	hrefSplit := strings.Split(href, "/")
-	bangumiID, err = strconv.Atoi(hrefSplit[len(hrefSplit)-1])
-	if err != nil {
-		err = errors.NewAniErrorD(err)
-		return
-	}
-	return
+	bangumiID, err := strconv.Atoi(hrefSplit[len(hrefSplit)-1])
+	errors.NewAniErrorD(err).TryPanic()
+
+	return bangumiID
 }
 
 func init() {

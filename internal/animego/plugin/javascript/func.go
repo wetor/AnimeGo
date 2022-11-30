@@ -2,8 +2,9 @@ package javascript
 
 import (
 	"fmt"
+	"github.com/wetor/AnimeGo/internal/animego/anidata/mikan"
 	"github.com/wetor/AnimeGo/internal/animego/anisource"
-	"github.com/wetor/AnimeGo/pkg/anisource/mikan"
+	"github.com/wetor/AnimeGo/pkg/errors"
 	"github.com/wetor/AnimeGo/third_party/poketto"
 	"go.uber.org/zap"
 	"os"
@@ -44,7 +45,7 @@ func (js JavaScript) initVar() Object {
 	}
 }
 
-func (js JavaScript) Print(params ...interface{}) {
+func (js JavaScript) Print(params ...any) {
 	fmt.Println(params...)
 }
 
@@ -73,9 +74,9 @@ func (js JavaScript) ParseName(name string) (episode *poketto.Episode) {
 }
 
 func (js JavaScript) GetMikanInfo(url string) *mikan.MikanInfo {
-	info, err := anisource.Mikan().CacheParseMikanInfo(url)
-	if err != nil {
+	defer errors.HandleError(func(err error) {
 		panic(js.ToValue(err))
-	}
+	})
+	info := anisource.Mikan().CacheParseMikanInfo(url)
 	return info
 }

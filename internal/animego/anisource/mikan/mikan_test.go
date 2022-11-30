@@ -2,10 +2,10 @@ package mikan
 
 import (
 	"encoding/json"
+	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/internal/animego/anisource"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/key"
-	pkgAnisource "github.com/wetor/AnimeGo/pkg/anisource"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"testing"
 )
@@ -48,7 +48,7 @@ func TestParseMikan(t *testing.T) {
 	}
 	db := cache.NewBolt()
 	db.Open("bolt.db")
-	anisource.Init(&pkgAnisource.Options{
+	anisource.Init(&anidata.Options{
 		Cache: db,
 	})
 	for _, tt := range tests {

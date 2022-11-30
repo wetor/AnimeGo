@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-type FormatMap map[string]interface{}
+type FormatMap map[string]any
 
 func Format(format string, p FormatMap) string {
 	args, i := make([]string, len(p)*2), 0
@@ -59,7 +59,7 @@ func Sleep(second int, ctx context.Context) bool {
 	return false
 }
 
-func ConvertModel(src, dst interface{}) {
+func ConvertModel(src, dst any) {
 	vsrc := reflect.ValueOf(src).Elem()
 	vscrType := vsrc.Type()
 	vdst := reflect.ValueOf(dst).Elem()

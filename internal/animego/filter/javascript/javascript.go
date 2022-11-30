@@ -35,7 +35,7 @@ func (j *JavaScript) Filter(list []*models.FeedItem) []*models.FeedItem {
 			zap.S().Debug(err)
 		}
 		// 返回的index列表
-		resultIndex := execute.(javascript.Object)["index"].([]interface{})
+		resultIndex := execute.(javascript.Object)["index"].([]any)
 
 		filterIndex = make([]int64, 0, len(resultIndex))
 		for _, index := range resultIndex {

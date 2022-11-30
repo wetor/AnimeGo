@@ -7,16 +7,16 @@ package models
 
 // Response  format
 type Response struct {
-	Code int         `json:"code"`
-	Msg  string      `json:"msg"`
-	Data interface{} `json:"data,omitempty"`
+	Code int    `json:"code"`
+	Msg  string `json:"msg"`
+	Data any    `json:"data,omitempty"`
 }
 
 // page format
 // Message
 type page struct {
-	Count int         `json:"count"`
-	Items interface{} `json:"items"`
+	Count int `json:"count"`
+	Items any `json:"items"`
 }
 
 const (
@@ -30,7 +30,7 @@ const (
 	stExt     int = 400 //其他约定 //eg 更新 token
 )
 
-func newReply(code int, msg string, data ...interface{}) (int, Response) {
+func newReply(code int, msg string, data ...any) (int, Response) {
 	if len(data) > 0 {
 		return 200, Response{
 			Code: code,
@@ -45,17 +45,17 @@ func newReply(code int, msg string, data ...interface{}) (int, Response) {
 }
 
 // Succ 返回一个成功标识的结果格式
-func Succ(msg string, data ...interface{}) (int, Response) {
+func Succ(msg string, data ...any) (int, Response) {
 	return newReply(stSucc, msg, data...)
 }
 
 // Fail 返回一个失败标识的结果格式
-func Fail(msg string, data ...interface{}) (int, Response) {
+func Fail(msg string, data ...any) (int, Response) {
 	return newReply(stFail, msg, data...)
 }
 
 // Page 返回一个带有分页数据的结果格式
-func Page(msg string, items interface{}, count int) (int, Response) {
+func Page(msg string, items any, count int) (int, Response) {
 	return 200, Response{
 		Code: stSucc,
 		Msg:  msg,
@@ -67,31 +67,31 @@ func Page(msg string, items interface{}, count int) (int, Response) {
 }
 
 // ErrIpt 返回一个输入错误的结果格式
-func ErrIpt(msg string, data ...interface{}) (int, Response) {
+func ErrIpt(msg string, data ...any) (int, Response) {
 	return newReply(stErrIpt, msg, data...)
 }
 
 // ErrOpt 返回一个输出错误的结果格式
-func ErrOpt(msg string, data ...interface{}) (int, Response) {
+func ErrOpt(msg string, data ...any) (int, Response) {
 	return newReply(stErrOpt, msg, data...)
 }
 
 // ErrDeny 返回一个没有权限的结果格式
-func ErrDeny(msg string, data ...interface{}) (int, Response) {
+func ErrDeny(msg string, data ...any) (int, Response) {
 	return newReply(stErrDeny, msg, data...)
 }
 
 // ErrJwt 返回一个通过验证的结果格式
-func ErrJwt(msg string, data ...interface{}) (int, Response) {
+func ErrJwt(msg string, data ...any) (int, Response) {
 	return newReply(stErrJwt, msg, data...)
 }
 
 // ErrSvr 返回一个服务端错误的结果格式
-func ErrSvr(msg string, data ...interface{}) (int, Response) {
+func ErrSvr(msg string, data ...any) (int, Response) {
 	return newReply(stErrSvr, msg, data...)
 }
 
 // Ext 返回一个其他约定的结果格式
-func Ext(msg string, data ...interface{}) (int, Response) {
+func Ext(msg string, data ...any) (int, Response) {
 	return newReply(stExt, msg, data...)
 }

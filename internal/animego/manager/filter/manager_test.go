@@ -3,12 +3,12 @@ package filter
 import (
 	"context"
 	"fmt"
+	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/internal/animego/anisource"
 	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
 	mikanRss "github.com/wetor/AnimeGo/internal/animego/feed/rss"
 	"github.com/wetor/AnimeGo/internal/animego/filter"
 	"github.com/wetor/AnimeGo/internal/store"
-	pkgAnisource "github.com/wetor/AnimeGo/pkg/anisource"
 	"github.com/wetor/AnimeGo/test"
 	"testing"
 	"time"
@@ -23,7 +23,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestManager_UpdateFeed(t *testing.T) {
-	anisource.Init(&pkgAnisource.Options{
+	anisource.Init(&anidata.Options{
 		Cache: store.Cache,
 	})
 
