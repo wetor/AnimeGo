@@ -15,6 +15,12 @@ type AniError struct {
 	Line int
 }
 
+func GetCaller(skip int) (string, string, int) {
+	pc, file, line, _ := runtime.Caller(skip + 1)
+	pcName := runtime.FuncForPC(pc).Name()
+	return file, pcName, line
+}
+
 func NewAniError(msg string) *AniError {
 	return NewAniErrorSkipf(2, msg, nil)
 }
@@ -32,13 +38,12 @@ func NewAniErrorf(format string, a ...interface{}) *AniError {
 }
 
 func NewAniErrorSkipf(skip int, format string, data interface{}, a ...interface{}) *AniError {
-	pc, file, line, _ := runtime.Caller(skip)
-	pcName := runtime.FuncForPC(pc).Name()
+	file, pc, line := GetCaller(skip)
 	return &AniError{
 		Msg:  fmt.Sprintf(format, a...),
 		Data: data,
 		File: file,
-		Func: pcName,
+		Func: pc,
 		Line: line,
 	}
 }
@@ -63,4 +68,15 @@ func (e *AniError) Error() string {
 	str.WriteString(fmt.Sprintf(" [(%s) %s:%d]", e.Func, file, e.Line))
 
 	return str.String()
+}
+
+func (e *AniError) TryPanic() {
+	if e.Data == nil && len(e.Msg) == 0 {
+		return
+	}
+	file, pc, line := GetCaller(1)
+	e.File = file
+	e.Func = pc
+	e.Line = line
+	panic(e)
 }
