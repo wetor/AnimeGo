@@ -32,7 +32,7 @@ func Rss(c *gin.Context) {
 	}
 	reqRss := rss.NewRss(request.Rss.Url, "")
 
-	items, _ := reqRss.Parse()
+	items := reqRss.Parse()
 	if request.IsSelectEp {
 		set := make(map[string]bool)
 		for _, item := range request.EpLinks {

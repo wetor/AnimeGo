@@ -3,9 +3,9 @@ package test
 import (
 	"context"
 	"github.com/wetor/AnimeGo/configs"
+	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/internal/logger"
 	"github.com/wetor/AnimeGo/internal/store"
-	"github.com/wetor/AnimeGo/pkg/anisource"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/request"
 )
@@ -21,7 +21,7 @@ func TestInit() {
 
 	bolt := cache.NewBolt()
 	bolt.Open(config.Advanced.Path.DbFile)
-	anisource.Init(&anisource.Options{Cache: bolt})
+	anidata.Init(&anidata.Options{Cache: bolt})
 	store.Init(&store.InitOptions{
 		Config: config,
 		Cache:  bolt,

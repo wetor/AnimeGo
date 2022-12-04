@@ -94,60 +94,70 @@ func (c *QBittorrent) Start(ctx context.Context) {
 	}
 	store.WG.Add(2)
 	go func() {
-		defer func() {
-			if err := recover(); err != nil {
-				zap.S().Error(err)
-			}
-		}()
 		defer store.WG.Done()
 		for {
-			select {
-			case <-ctx.Done():
-				zap.S().Debug("正常退出 qbittorent 1")
-				return
-			case msg := <-c.retryChan:
-				c.connected = true
-				if msg == ChanRetryConnect && (c.client == nil || len(c.clientVersion()) == 0) {
-					if ok := c.connectFunc(); !ok {
-						c.retryNum++
-						c.connected = false
-						// 重连失败
-					} else {
-						// 重连成功
-						c.retryNum = 0
-						c.connected = true
-						zap.S().Info("连接QBittorrent成功")
+			exit := false
+			func() {
+				defer errors.HandleError(func(err error) {
+					zap.S().Error(err)
+				})
+				select {
+				case <-ctx.Done():
+					zap.S().Debug("正常退出 qbittorent 1")
+					exit = true
+					return
+				case msg := <-c.retryChan:
+					c.connected = true
+					if msg == ChanRetryConnect && (c.client == nil || len(c.clientVersion()) == 0) {
+						if ok := c.connectFunc(); !ok {
+							c.retryNum++
+							c.connected = false
+							// 重连失败
+						} else {
+							// 重连成功
+							c.retryNum = 0
+							c.connected = true
+							zap.S().Info("连接QBittorrent成功")
+						}
 					}
 				}
+			}()
+			if exit {
+				return
 			}
 		}
 	}()
 
 	go func() {
-		defer func() {
-			if err := recover(); err != nil {
-				zap.S().Error(err)
-			}
-		}()
 		defer store.WG.Done()
 		for {
-			select {
-			case <-ctx.Done():
-				zap.S().Debug("正常退出 qbittorent 2")
-				return
-			default:
-				if c.retryNum == 0 {
-					c.retryChan <- ChanRetryConnect
-					// 检查是否在线，时间长
-					utils.Sleep(store.Config.Advanced.Client.CheckTimeSecond, ctx)
-				} else if c.retryNum <= store.Config.Advanced.Client.RetryConnectNum {
-					c.retryChan <- ChanRetryConnect
-					// 失败重试，时间短
-					utils.Sleep(store.Config.Advanced.Client.ConnectTimeoutSecond, ctx)
-				} else {
-					// 超过重试次数，不在频繁重试
-					c.retryNum = 0
+			exit := false
+			func() {
+				defer errors.HandleError(func(err error) {
+					zap.S().Error(err)
+				})
+				select {
+				case <-ctx.Done():
+					zap.S().Debug("正常退出 qbittorent 2")
+					exit = true
+					return
+				default:
+					if c.retryNum == 0 {
+						c.retryChan <- ChanRetryConnect
+						// 检查是否在线，时间长
+						utils.Sleep(store.Config.Advanced.Client.CheckTimeSecond, ctx)
+					} else if c.retryNum <= store.Config.Advanced.Client.RetryConnectNum {
+						c.retryChan <- ChanRetryConnect
+						// 失败重试，时间短
+						utils.Sleep(store.Config.Advanced.Client.ConnectTimeoutSecond, ctx)
+					} else {
+						// 超过重试次数，不在频繁重试
+						c.retryNum = 0
+					}
 				}
+			}()
+			if exit {
+				return
 			}
 		}
 	}()

@@ -195,58 +195,63 @@ func (m *Manager) Start(ctx context.Context) {
 	store.WG.Add(1)
 	// 开始下载协程
 	go func() {
-		defer func() {
-			if err := recover(); err != nil {
-				zap.S().Error(err)
-			}
-		}()
 		for {
-			if len(m.downloadQueue) > 0 {
-				m.Lock()
-				list := make([]*models.AnimeEntity, len(m.downloadQueue))
-				copy(list, m.downloadQueue)
-				m.downloadQueue = m.downloadQueue[0:0]
-				m.Unlock()
-				m.download(list, ctx)
-			} else {
-				utils.Sleep(store.Config.Advanced.Download.QueueDelaySecond, ctx)
-			}
+			func() {
+				defer errors.HandleError(func(err error) {
+					zap.S().Error(err)
+				})
+				if len(m.downloadQueue) > 0 {
+					m.Lock()
+					list := make([]*models.AnimeEntity, len(m.downloadQueue))
+					copy(list, m.downloadQueue)
+					m.downloadQueue = m.downloadQueue[0:0]
+					m.Unlock()
+					m.download(list, ctx)
+				} else {
+					utils.Sleep(store.Config.Advanced.Download.QueueDelaySecond, ctx)
+				}
+			}()
 		}
 	}()
 	// 刷新信息、接收下载、接收退出指令协程
 	go func() {
-		defer func() {
-			if err := recover(); err != nil {
-				zap.S().Error(err)
-			}
-		}()
 		defer store.WG.Done()
 		for {
-			select {
-			case <-ctx.Done():
-				zap.S().Debug("正常退出 manager downloader")
-				return
-			case anime := <-m.downloadChan:
-				if m.client.Connected() {
-					zap.S().Debugf("接收到下载项:「%s」", anime.FullName())
-					m.Lock()
-					m.downloadQueue = append(m.downloadQueue, anime)
-					m.Unlock()
-				} else {
-					zap.S().Warnf("无法连接客户端，等待。已接收到%d个下载项", len(m.downloadChan))
-					go func() {
-						m.downloadChan <- anime
-					}()
-					utils.Sleep(store.Config.Advanced.Download.QueueDelaySecond, ctx)
-				}
-			default:
-				m.UpdateList()
+			exit := false
+			func() {
+				defer errors.HandleError(func(err error) {
+					zap.S().Error(err)
+				})
+				select {
+				case <-ctx.Done():
+					zap.S().Debug("正常退出 manager downloader")
+					exit = true
+					return
+				case anime := <-m.downloadChan:
+					if m.client.Connected() {
+						zap.S().Debugf("接收到下载项:「%s」", anime.FullName())
+						m.Lock()
+						m.downloadQueue = append(m.downloadQueue, anime)
+						m.Unlock()
+					} else {
+						zap.S().Warnf("无法连接客户端，等待。已接收到%d个下载项", len(m.downloadChan))
+						go func() {
+							m.downloadChan <- anime
+						}()
+						utils.Sleep(store.Config.Advanced.Download.QueueDelaySecond, ctx)
+					}
+				default:
+					m.UpdateList()
 
-				delay := store.Config.UpdateDelaySecond
-				if delay < UpdateWaitMinSecond {
-					delay = UpdateWaitMinSecond
+					delay := store.Config.UpdateDelaySecond
+					if delay < UpdateWaitMinSecond {
+						delay = UpdateWaitMinSecond
+					}
+					utils.Sleep(delay, ctx)
 				}
-				utils.Sleep(delay, ctx)
+			}()
+			if exit {
+				return
 			}
 		}
 	}()

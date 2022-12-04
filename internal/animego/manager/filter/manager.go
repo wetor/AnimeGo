@@ -10,6 +10,7 @@ import (
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/store"
 	"github.com/wetor/AnimeGo/internal/utils"
+	"github.com/wetor/AnimeGo/pkg/errors"
 	"go.uber.org/zap"
 	"sync"
 )
@@ -51,7 +52,7 @@ func NewManager(filter filter.Filter, feed feed.Feed, anisource anisource.AniSou
 func (m *Manager) Update(ctx context.Context, items []*models.FeedItem) {
 	// 筛选
 	if items == nil {
-		items, _ = m.feed.Parse()
+		items = m.feed.Parse()
 	}
 	items = m.filter.Filter(items)
 
@@ -66,11 +67,9 @@ func (m *Manager) Update(ctx context.Context, items []*models.FeedItem) {
 		working <- i //计数器+1 可能会发生阻塞
 		wg.Add(1)
 		go func(_i int, _item *models.FeedItem) {
-			defer func() {
-				if err := recover(); err != nil {
-					zap.S().Error(err)
-				}
-			}()
+			defer errors.HandleError(func(err error) {
+				zap.S().Error(err)
+			})
 			select {
 			case <-ctx.Done():
 				exit = true
@@ -111,24 +110,29 @@ func (m *Manager) Update(ctx context.Context, items []*models.FeedItem) {
 func (m *Manager) Start(ctx context.Context) {
 	store.WG.Add(1)
 	go func() {
-		defer func() {
-			if err := recover(); err != nil {
-				zap.S().Error(err)
-			}
-		}()
 		defer store.WG.Done()
 		for {
-			select {
-			case <-ctx.Done():
-				zap.S().Debug("正常退出 manager filter")
-				return
-			default:
-				m.Update(ctx, nil)
-				delay := store.Config.Advanced.Feed.UpdateDelayMinute
-				if delay < UpdateWaitMinMinute {
-					delay = UpdateWaitMinMinute
+			exit := false
+			func() {
+				defer errors.HandleError(func(err error) {
+					zap.S().Error(err)
+				})
+				select {
+				case <-ctx.Done():
+					zap.S().Debug("正常退出 manager filter")
+					exit = true
+					return
+				default:
+					m.Update(ctx, nil)
+					delay := store.Config.Advanced.Feed.UpdateDelayMinute
+					if delay < UpdateWaitMinMinute {
+						delay = UpdateWaitMinMinute
+					}
+					utils.Sleep(delay*60, ctx)
 				}
-				utils.Sleep(delay*60, ctx)
+			}()
+			if exit {
+				return
 			}
 		}
 	}()

@@ -81,7 +81,6 @@ func (b Bangumi) Parse(bangumiID, ep int) (entity *Entity, epInfo *Ep) {
 //  @receiver Bangumi
 //  @param bangumiID int
 //  @return entity *Entity
-//  @return err error
 //
 func (b Bangumi) parseAnimeInfo(bangumiID int) (entity *Entity) {
 	uri := infoApi(bangumiID)
@@ -113,7 +112,6 @@ func (b Bangumi) parseAnimeInfo(bangumiID int) (entity *Entity) {
 //  @param ep int
 //  @param eps int 总集数，用于计算筛选范围，减少遍历范围
 //  @return epInfo *Ep
-//  @return err error
 //
 func (b Bangumi) parseAnimeEpInfo(bangumiID, ep, eps int) (epInfo *Ep) {
 	defer errors.HandleError(func(err error) {
@@ -135,8 +133,8 @@ func (b Bangumi) parseAnimeEpInfo(bangumiID, ep, eps int) (epInfo *Ep) {
 		}
 	}
 	if respEp == nil {
-		errors.NewAniError("未匹配到对应ep").TryPanic()
 		epInfo = &Ep{Ep: ep}
+		errors.NewAniError("未匹配到对应ep").TryPanic()
 	} else {
 		epInfo = &Ep{
 			Ep:      int(respEp.Ep),

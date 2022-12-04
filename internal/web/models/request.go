@@ -21,10 +21,7 @@ type PluginRequest struct {
 
 func (p PluginRequest) FindFile() (string, error) {
 	file := path.Join(store.Config.DataPath, "plugin", p.Name)
-	script, err := javascript.FindScript(file)
-	if err != nil {
-		return "", err
-	}
+	script := javascript.FindScript(file)
 	return script, nil
 }
 

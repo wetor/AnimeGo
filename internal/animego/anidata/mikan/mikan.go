@@ -88,7 +88,6 @@ func (m Mikan) CacheParseMikanBangumiID(mikanID int) (bangumiID int) {
 //  @param url string mikan剧集的url
 //  @return mikanID int
 //  @return bangumiID int
-//  @return err error
 //
 func (m Mikan) Parse(url string) (mikanID int, bangumiID int) {
 	mikan := m.parseMikanInfo(url)
@@ -153,7 +152,6 @@ func (m Mikan) parseMikanInfo(mikanUrl string) (mikan *MikanInfo) {
 //  @receiver Mikan
 //  @param mikanID int
 //  @return bangumiID int
-//  @return err error
 //
 func (m Mikan) parseMikanBangumiID(mikanID int) (bangumiID int) {
 	url_ := fmt.Sprintf("%s/Home/bangumi/%d", Host, mikanID)

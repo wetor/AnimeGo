@@ -25,7 +25,6 @@ var nameRegxStep = []*regexp.Regexp{
 //					返回nil, nil进行下一步；步骤执行完则返回nil, err
 //					返回nil, err则直接结束；
 //  @return any fun返回的obj
-//  @return error
 //
 func RemoveNameSuffix(name string, fun func(string) any) any {
 	currStep := 0
