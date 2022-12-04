@@ -2,7 +2,7 @@ package bangumi
 
 import (
 	"fmt"
-	"github.com/wetor/AnimeGo/pkg/anisource"
+	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"testing"
 )
@@ -38,12 +38,8 @@ func TestBangumi_Parse(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			b := &Bangumi{}
-			gotEntity, gotEpInfo, err := b.Parse(tt.args.bangumiID, tt.args.ep)
+			gotEntity, gotEpInfo := b.Parse(tt.args.bangumiID, tt.args.ep)
 			fmt.Println(gotEntity, gotEpInfo)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Parse() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
 			if gotEntity.Eps != tt.wantEntity.Eps {
 				t.Errorf("Parse() gotEntity = %v, want %v", gotEntity, tt.wantEntity)
 			}
@@ -85,16 +81,12 @@ func TestBangumi_ParseCache(t *testing.T) {
 
 	db := cache.NewBolt()
 	db.Open("bolt.db")
-	anisource.Init(&anisource.Options{Cache: db})
+	anidata.Init(&anidata.Options{Cache: db})
 	b := &Bangumi{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			gotEntity, gotEpInfo, err := b.ParseCache(tt.args.bangumiID, tt.args.ep)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Parse() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
+			gotEntity, gotEpInfo := b.ParseCache(tt.args.bangumiID, tt.args.ep)
 			if gotEntity.Eps != tt.wantEntity.Eps {
 				t.Errorf("Parse() gotEntity = %v, want %v", gotEntity, tt.wantEntity)
 			}

@@ -2,6 +2,9 @@ package rss
 
 import (
 	"context"
+	"github.com/wetor/AnimeGo/internal/animego/anidata"
+	anidataBangumi "github.com/wetor/AnimeGo/internal/animego/anidata/bangumi"
+	anidataThemoviedb "github.com/wetor/AnimeGo/internal/animego/anidata/themoviedb"
 	"github.com/wetor/AnimeGo/internal/animego/anisource"
 	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
 	"github.com/wetor/AnimeGo/internal/animego/downloader/qbittorent"
@@ -11,10 +14,6 @@ import (
 	filterManager "github.com/wetor/AnimeGo/internal/animego/manager/filter"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/store"
-	pkgAnisource "github.com/wetor/AnimeGo/pkg/anisource"
-	pkgBangumi "github.com/wetor/AnimeGo/pkg/anisource/bangumi"
-	pkgMikan "github.com/wetor/AnimeGo/pkg/anisource/mikan"
-	pkgThemoviedb "github.com/wetor/AnimeGo/pkg/anisource/themoviedb"
 )
 
 type Rss struct {
@@ -39,12 +38,12 @@ func (p *Rss) Run(ctx context.Context) {
 
 	downloadChan := make(chan *models.AnimeEntity, 10)
 
-	anisource.Init(&pkgAnisource.Options{
+	anisource.Init(&anidata.Options{
 		Cache: store.Cache,
 		CacheTime: map[string]int64{
-			pkgMikan.Bucket:      int64(store.Config.Advanced.Cache.MikanCacheHour * 60 * 60),
-			pkgBangumi.Bucket:    int64(store.Config.Advanced.Cache.BangumiCacheHour * 60 * 60),
-			pkgThemoviedb.Bucket: int64(store.Config.Advanced.Cache.ThemoviedbCacheHour * 60 * 60),
+			anidataBangumi.Bucket:    int64(store.Config.Advanced.Cache.MikanCacheHour * 60 * 60),
+			anidataBangumi.Bucket:    int64(store.Config.Advanced.Cache.BangumiCacheHour * 60 * 60),
+			anidataThemoviedb.Bucket: int64(store.Config.Advanced.Cache.ThemoviedbCacheHour * 60 * 60),
 		},
 	})
 

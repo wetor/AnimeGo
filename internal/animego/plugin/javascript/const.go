@@ -16,4 +16,4 @@ var (
 )
 
 // Object js对象类型
-type Object map[string]interface{}
+type Object map[string]any

@@ -3,8 +3,8 @@ package themoviedb
 import (
 	"encoding/csv"
 	"fmt"
+	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/key"
-	"github.com/wetor/AnimeGo/pkg/anisource"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/request"
 	"io"
@@ -84,7 +84,7 @@ func TestThemoviedb_Parse(t1 *testing.T) {
 	}
 	db := cache.NewBolt()
 	db.Open("bolt.db")
-	anisource.Init(&anisource.Options{Cache: db})
+	anidata.Init(&anidata.Options{Cache: db})
 	t := &Themoviedb{
 		Key: key.ThemoviedbKey,
 	}
@@ -93,11 +93,8 @@ func TestThemoviedb_Parse(t1 *testing.T) {
 	})
 	for _, tt := range tests {
 		t1.Run(tt.name, func(t1 *testing.T) {
-			gotTmdbID, gotSeason, err := t.ParseCache(tt.args.name, tt.args.airDate)
-			if (err != nil) != tt.wantErr {
-				t1.Errorf("Parse() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
+			gotTmdbID, gotSeason := t.ParseCache(tt.args.name, tt.args.airDate)
+
 			if gotTmdbID.ID != tt.wantTmdbID {
 				t1.Errorf("Parse() gotTmdbID = %v, want %v", gotTmdbID, tt.wantTmdbID)
 			}
@@ -158,11 +155,8 @@ func TestThemoviedb_ParseByFile(t1 *testing.T) {
 	for _, tt := range tests {
 		t1.Run(tt.name, func(t1 *testing.T) {
 			log.Printf("搜索：「%s」", tt.args.name)
-			gotTmdbID, gotSeason, err := t.Parse(tt.args.name, tt.args.airDate)
-			if (err != nil) != tt.wantErr {
-				t1.Errorf("Parse() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
+			gotTmdbID, gotSeason := t.Parse(tt.args.name, tt.args.airDate)
+
 			if gotTmdbID.ID != tt.wantTmdbID {
 				t1.Errorf("Parse() gotTmdbID = %v, want %v", gotTmdbID, tt.wantTmdbID)
 			}

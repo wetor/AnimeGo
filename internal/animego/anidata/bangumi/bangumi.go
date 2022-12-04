@@ -2,7 +2,7 @@ package bangumi
 
 import (
 	"encoding/gob"
-	"github.com/wetor/AnimeGo/pkg/anisource"
+	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/pkg/errors"
 	mem "github.com/wetor/AnimeGo/pkg/memorizer"
 	"github.com/wetor/AnimeGo/pkg/request"
@@ -23,53 +23,43 @@ type Bangumi struct {
 }
 
 func (b *Bangumi) RegisterCache() {
-	if anisource.Cache == nil {
-		panic(errors.NewAniError("需要先调用anisource.Init初始化缓存"))
+	if anidata.Cache == nil {
+		errors.NewAniError("需要先调用anidata.Init初始化缓存").TryPanic()
 	}
 	b.cacheInit = true
-	b.cacheParseAnimeInfo = mem.Memorized(Bucket, anisource.Cache, func(params *mem.Params, results *mem.Results) error {
-		entity, err := b.parseAnimeInfo(params.Get("bangumiID").(int))
-		if err != nil {
-			return err
-		}
+	b.cacheParseAnimeInfo = mem.Memorized(Bucket, anidata.Cache, func(params *mem.Params, results *mem.Results) error {
+		entity := b.parseAnimeInfo(params.Get("bangumiID").(int))
 		results.Set("entity", entity)
 		return nil
 	})
 
-	b.cacheParseAnimeEpInfo = mem.Memorized(Bucket, anisource.Cache, func(params *mem.Params, results *mem.Results) error {
-		epInfo, err := b.parseAnimeEpInfo(
+	b.cacheParseAnimeEpInfo = mem.Memorized(Bucket, anidata.Cache, func(params *mem.Params, results *mem.Results) error {
+		epInfo := b.parseAnimeEpInfo(
 			params.Get("bangumiID").(int),
 			params.Get("ep").(int),
 			params.Get("eps").(int),
 		)
-		if err != nil {
-			return err
-		}
 		results.Set("epInfo", epInfo)
 		return nil
 	})
 }
 
-func (b Bangumi) ParseCache(bangumiID, ep int) (entity *Entity, epInfo *Ep, err error) {
+func (b Bangumi) ParseCache(bangumiID, ep int) (entity *Entity, epInfo *Ep) {
 	if !b.cacheInit {
 		b.RegisterCache()
 	}
 	results := mem.NewResults("entity", &Entity{}, "epInfo", &Ep{})
 
-	err = b.cacheParseAnimeInfo(mem.NewParams("bangumiID", bangumiID).
-		TTL(anisource.CacheTime[Bucket]), results)
-	if err != nil {
-		return nil, nil, err
-	}
+	err := b.cacheParseAnimeInfo(mem.NewParams("bangumiID", bangumiID).
+		TTL(anidata.CacheTime[Bucket]), results)
+	errors.NewAniErrorD(err).TryPanic()
 	entity = results.Get("entity").(*Entity)
 	err = b.cacheParseAnimeEpInfo(
 		mem.NewParams("bangumiID", bangumiID, "ep", ep, "eps", entity.Eps).
-			TTL(anisource.CacheTime[Bucket]), results)
-	if err != nil {
-		return nil, nil, err
-	}
+			TTL(anidata.CacheTime[Bucket]), results)
+	errors.NewAniErrorD(err).TryPanic()
 	epInfo = results.Get("epInfo").(*Ep)
-	return entity, epInfo, nil
+	return entity, epInfo
 }
 
 // Parse
@@ -79,18 +69,11 @@ func (b Bangumi) ParseCache(bangumiID, ep int) (entity *Entity, epInfo *Ep, err 
 //  @param ep int
 //  @return entity *Entity
 //  @return epInfo *Ep
-//  @return err error
 //
-func (b Bangumi) Parse(bangumiID, ep int) (entity *Entity, epInfo *Ep, err error) {
-	entity, err = b.parseAnimeInfo(bangumiID)
-	if err != nil {
-		return nil, nil, err
-	}
-	epInfo, err = b.parseAnimeEpInfo(bangumiID, ep, entity.Eps)
-	if err != nil {
-		return nil, nil, err
-	}
-	return entity, epInfo, nil
+func (b Bangumi) Parse(bangumiID, ep int) (entity *Entity, epInfo *Ep) {
+	entity = b.parseAnimeInfo(bangumiID)
+	epInfo = b.parseAnimeEpInfo(bangumiID, ep, entity.Eps)
+	return entity, epInfo
 }
 
 // parseAnimeInfo
@@ -98,16 +81,14 @@ func (b Bangumi) Parse(bangumiID, ep int) (entity *Entity, epInfo *Ep, err error
 //  @receiver Bangumi
 //  @param bangumiID int
 //  @return entity *Entity
-//  @return err error
 //
-func (b Bangumi) parseAnimeInfo(bangumiID int) (entity *Entity, err error) {
+func (b Bangumi) parseAnimeInfo(bangumiID int) (entity *Entity) {
 	uri := infoApi(bangumiID)
 	resp := res.SubjectV0{}
 
-	err = request.Get(uri, &resp)
-	if err != nil {
-		return nil, err
-	}
+	err := request.Get(uri, &resp)
+	errors.NewAniErrorD(err).TryPanic()
+
 	entity = &Entity{
 		ID:     int(resp.ID),
 		NameCN: resp.NameCN,
@@ -121,7 +102,7 @@ func (b Bangumi) parseAnimeInfo(bangumiID int) (entity *Entity, err error) {
 	if resp.Date != nil {
 		entity.AirDate = *resp.Date
 	}
-	return entity, nil
+	return entity
 }
 
 // parseBnagumiEpInfo
@@ -131,17 +112,19 @@ func (b Bangumi) parseAnimeInfo(bangumiID int) (entity *Entity, err error) {
 //  @param ep int
 //  @param eps int 总集数，用于计算筛选范围，减少遍历范围
 //  @return epInfo *Ep
-//  @return err error
 //
-func (b Bangumi) parseAnimeEpInfo(bangumiID, ep, eps int) (epInfo *Ep, err error) {
+func (b Bangumi) parseAnimeEpInfo(bangumiID, ep, eps int) (epInfo *Ep) {
+	defer errors.HandleError(func(err error) {
+		zap.S().Debug("[非必要]", err)
+	})
+
 	uri := epInfoApi(bangumiID, ep, eps)
 	resp := &res.Paged{
 		Data: make([]*res.Episode, 0, MatchEpRange*2+1),
 	}
-	err = request.Get(uri, &resp)
-	if err != nil {
-		zap.S().Debug(errors.NewAniError("[非必要]" + err.Error()))
-	}
+	err := request.Get(uri, &resp)
+	errors.NewAniErrorD(err).TryPanic()
+
 	var respEp *res.Episode = nil
 	for _, e := range resp.Data {
 		if ep == int(e.Ep) {
@@ -150,8 +133,8 @@ func (b Bangumi) parseAnimeEpInfo(bangumiID, ep, eps int) (epInfo *Ep, err error
 		}
 	}
 	if respEp == nil {
-		zap.S().Debug(errors.NewAniError("[非必要]未匹配到对应ep"))
 		epInfo = &Ep{Ep: ep}
+		errors.NewAniError("未匹配到对应ep").TryPanic()
 	} else {
 		epInfo = &Ep{
 			Ep:      int(respEp.Ep),
@@ -159,7 +142,7 @@ func (b Bangumi) parseAnimeEpInfo(bangumiID, ep, eps int) (epInfo *Ep, err error
 			ID:      int(respEp.ID),
 		}
 	}
-	return epInfo, nil
+	return epInfo
 }
 
 func init() {

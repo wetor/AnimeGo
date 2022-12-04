@@ -19,7 +19,7 @@ func Run(ctx context.Context) {
 		r := gin.New()
 		r.Use(Cors())             // 跨域中间件
 		r.Use(GinLogger(zap.S())) // 日志中间件
-		r.Use(GinRecovery(zap.S(), true, func(c *gin.Context, recovered interface{}) {
+		r.Use(GinRecovery(zap.S(), true, func(c *gin.Context, recovered any) {
 			if err, ok := recovered.(error); ok {
 				zap.S().Debugf("服务器错误，err: %v", errors.NewAniErrorD(err))
 				c.JSON(models.ErrSvr("服务器错误"))

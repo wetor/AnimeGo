@@ -42,38 +42,36 @@ func NewRss(url, name string) *Rss {
 //  Description 第一步，解析rss
 //  Receiver f *Rss
 //
-func (f *Rss) Parse() (items []*models.FeedItem, err error) {
+func (f *Rss) Parse() (items []*models.FeedItem) {
 	if len(f.url) == 0 {
-		return nil, nil
+		return nil
 	}
+
+	errMsg := ""
+	defer errors.HandleAniError(func(err *errors.AniError) {
+		zap.S().Debug(err)
+		zap.S().Warn(errMsg)
+	})
+
 	filename := path.Join(store.Config.Advanced.Path.TempPath, f.name+".xml")
 	// --------- 下载rss.xml ---------
 	zap.S().Info("获取Rss数据开始...")
-	err = request.GetFile(f.url, filename)
-	if err != nil {
-		zap.S().Debug(err)
-		zap.S().Warn("请求Rss失败")
-		return
-	}
+	errMsg = "请求Rss失败"
+	err := request.GetFile(f.url, filename)
+	errors.NewAniErrorD(err).TryPanic()
 	zap.S().Info("获取Rss数据成功！")
 
 	// --------- 解析本地rss.xml ---------
+	errMsg = "打开Rss文件失败"
 	file, err := os.Open(filename)
-	if err != nil {
-		err = errors.NewAniErrorD(err)
-		zap.S().Debug(err)
-		zap.S().Warn("打开Rss文件失败")
-		return
-	}
+	errors.NewAniErrorD(err).TryPanic()
+
 	defer file.Close()
 	fp := gofeed.NewParser()
+	errMsg = "解析ss失败"
 	feeds, err := fp.Parse(file)
-	if err != nil {
-		err = errors.NewAniErrorD(err)
-		zap.S().Debug(err)
-		zap.S().Warn("解析ss失败")
-		return
-	}
+	errors.NewAniErrorD(err).TryPanic()
+
 	regx := regexp.MustCompile(`<pubDate>(.*?)T`)
 
 	var date string
@@ -86,15 +84,14 @@ func (f *Rss) Parse() (items []*models.FeedItem, err error) {
 		} else {
 			date = strs[1]
 		}
+
 		if len(item.Enclosures) == 0 {
-			zap.S().Debug(errors.NewAniErrorf("Torrent Enclosures错误，%s", item.Title))
-			zap.S().Warn("Torrent Enclosures错误，跳过")
+			zap.S().Warnf("Torrent Enclosures错误，%s，跳过", item.Title)
 			continue
 		}
 
-		length, err = strconv.ParseInt(item.Enclosures[0].Length, 10, 64)
-		if err != nil {
-			zap.S().Debug(errors.NewAniErrorD(err))
+		length, _ = strconv.ParseInt(item.Enclosures[0].Length, 10, 64)
+		if length == 0 {
 			zap.S().Warn("Torrent Length错误")
 		}
 
@@ -107,6 +104,6 @@ func (f *Rss) Parse() (items []*models.FeedItem, err error) {
 			Length:   length,
 		}
 	}
-	return items, nil
+	return items
 
 }

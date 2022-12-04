@@ -24,18 +24,14 @@ var nameRegxStep = []*regexp.Regexp{
 // 					返回obj, nil表示成功；
 //					返回nil, nil进行下一步；步骤执行完则返回nil, err
 //					返回nil, err则直接结束；
-//  @return interface{} fun返回的obj
-//  @return error
+//  @return any fun返回的obj
 //
-func RemoveNameSuffix(name string, fun func(string) (interface{}, error)) (interface{}, error) {
+func RemoveNameSuffix(name string, fun func(string) any) any {
 	currStep := 0
 	for ; currStep < len(nameRegxStep)+1; currStep++ {
-		result, err := fun(name)
-		if err != nil {
-			return nil, err
-		}
+		result := fun(name)
 		if result != nil {
-			return result, nil
+			return result
 		}
 		if currStep < len(nameRegxStep) {
 			has := nameRegxStep[currStep].MatchString(name)
@@ -48,7 +44,8 @@ func RemoveNameSuffix(name string, fun func(string) (interface{}, error)) (inter
 			}
 		}
 	}
-	return nil, errors.NewAniError("解析番剧名失败")
+	errors.NewAniError("解析番剧名失败").TryPanic()
+	return nil
 }
 
 // SimilarText

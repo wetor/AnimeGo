@@ -13,10 +13,10 @@ import (
 // checkRequest 绑定request结构体
 //  Description 包含登录信息
 //  Param c *gin.Context
-//  Param data interface{} 返回结构体指针
+//  Param data any 返回结构体指针
 //  Return bool
 //
-func checkRequest(c *gin.Context, data interface{}) bool {
+func checkRequest(c *gin.Context, data any) bool {
 	if err := c.ShouldBind(data); err != nil {
 		zap.S().Warnf("参数错误，err: %s", errors.NewAniErrorD(err))
 		c.JSON(webModels.Fail("参数错误"))

@@ -1,4 +1,4 @@
-package anisource
+package anidata
 
 import mem "github.com/wetor/AnimeGo/pkg/memorizer"
 

@@ -12,28 +12,27 @@ import (
 //  @Description: 如设置为 'plugin/test'，会依次尝试加载 'plugin/test/main.js', 'plugin/test/plugin.js', 'plugin/test.js'
 //  @param file string
 //  @return string
-//  @return error
 //
-func FindScript(file string) (string, error) {
+func FindScript(file string) string {
 	if utils.IsDir(file) {
 		// 文件夹，在文件夹中寻找 main.js 和 plugin.js
 		if utils.IsExist(path.Join(file, "main.js")) {
-			return path.Join(file, "main.js"), nil
+			return path.Join(file, "main.js")
 		} else if utils.IsExist(path.Join(file, "plugin.js")) {
-			return path.Join(file, "plugin.js"), nil
+			return path.Join(file, "plugin.js")
 		} else {
-			return "", errors.NewAniError("插件文件夹中找不到 'main.js' 或 'plugin.js'")
+			errors.NewAniError("插件文件夹中找不到 'main.js' 或 'plugin.js'").TryPanic()
 		}
 	} else if !utils.IsExist(file) {
 		// 文件不存在，尝试增加 .js 扩展名
 		if utils.IsExist(file + ".js") {
-			return file + ".js", nil
+			return file + ".js"
 		} else {
-			return "", errors.NewAniError("插件文件不存在")
+			errors.NewAniError("插件文件不存在").TryPanic()
 		}
 	} else if path.Ext(file) != ".js" {
 		// 文件存在，判断扩展名是否为 .js
-		return "", errors.NewAniError("插件文件格式错误")
+		errors.NewAniError("插件文件格式错误").TryPanic()
 	}
-	return file, nil
+	return file
 }

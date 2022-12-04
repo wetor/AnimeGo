@@ -4,7 +4,6 @@ import (
 	"github.com/wetor/AnimeGo/internal/animego/plugin/javascript"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/store"
-	"go.uber.org/zap"
 )
 
 type JavaScript struct {
@@ -28,14 +27,11 @@ func (j *JavaScript) Filter(list []*models.FeedItem) []*models.FeedItem {
 		}
 		js := &javascript.JavaScript{}
 		js.SetSchema([]string{"feedItems"}, []string{"index", "error"})
-		execute, err := js.Execute(jsFile, javascript.Object{
+		execute := js.Execute(jsFile, javascript.Object{
 			"feedItems": inList,
 		})
-		if err != nil {
-			zap.S().Debug(err)
-		}
 		// 返回的index列表
-		resultIndex := execute.(javascript.Object)["index"].([]interface{})
+		resultIndex := execute.(javascript.Object)["index"].([]any)
 
 		filterIndex = make([]int64, 0, len(resultIndex))
 		for _, index := range resultIndex {

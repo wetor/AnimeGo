@@ -84,7 +84,7 @@ func GinLogger(logger *zap.SugaredLogger) gin.HandlerFunc {
 }
 
 // GinRecovery recover掉项目可能出现的panic
-func GinRecovery(logger *zap.SugaredLogger, stack bool, response func(*gin.Context, interface{})) gin.HandlerFunc {
+func GinRecovery(logger *zap.SugaredLogger, stack bool, response func(*gin.Context, any)) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		defer func() {
 			if err := recover(); err != nil {

@@ -1,7 +1,7 @@
 package mikan
 
 import (
-	"github.com/wetor/AnimeGo/pkg/anisource"
+	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"testing"
 )
@@ -35,16 +35,12 @@ func TestMikan_Parse(t *testing.T) {
 	}
 	db := cache.NewBolt()
 	db.Open("bolt.db")
-	anisource.Init(&anisource.Options{Cache: db})
+	anidata.Init(&anidata.Options{Cache: db})
 	m := &Mikan{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			gotMikanID, gotBangumiID, err := m.ParseCache(tt.args.url)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("Parse() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
+			gotMikanID, gotBangumiID := m.ParseCache(tt.args.url)
 			if gotMikanID != tt.wantMikanID {
 				t.Errorf("Parse() gotMikanID = %v, want %v", gotMikanID, tt.wantMikanID)
 			}
