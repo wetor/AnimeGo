@@ -1,7 +1,7 @@
 package downloader
 
 import (
-	"github.com/wetor/AnimeGo/internal/animego/downloader/qbittorent"
+	"github.com/wetor/AnimeGo/internal/animego/downloader/qbittorrent"
 	"github.com/wetor/AnimeGo/internal/models"
 )
 
@@ -23,26 +23,26 @@ const (
 //
 func stateMap(clientState string) models.TorrentState {
 	switch clientState {
-	case qbittorent.QbtAllocating, qbittorent.QbtMetaDL, qbittorent.QbtStalledDL,
-		qbittorent.QbtCheckingDL, qbittorent.QbtCheckingResumeData, qbittorent.QbtQueuedDL,
-		qbittorent.QbtForcedUP, qbittorent.QbtQueuedUP:
+	case qbittorrent.QbtAllocating, qbittorrent.QbtMetaDL, qbittorrent.QbtStalledDL,
+		qbittorrent.QbtCheckingDL, qbittorrent.QbtCheckingResumeData, qbittorrent.QbtQueuedDL,
+		qbittorrent.QbtForcedUP, qbittorrent.QbtQueuedUP:
 		// 若进度为100，则下载完成
 		return StateWaiting
-	case qbittorent.QbtDownloading, qbittorent.QbtForcedDL:
+	case qbittorrent.QbtDownloading, qbittorrent.QbtForcedDL:
 		return StateDownloading
-	case qbittorent.QbtMoving:
+	case qbittorrent.QbtMoving:
 		return StateMoving
-	case qbittorent.QbtUploading, qbittorent.QbtStalledUP:
+	case qbittorrent.QbtUploading, qbittorrent.QbtStalledUP:
 		// 已下载完成
 		return StateSeeding
-	case qbittorent.QbtPausedDL:
+	case qbittorrent.QbtPausedDL:
 		return StatePausing
-	case qbittorent.QbtPausedUP, qbittorent.QbtCheckingUP:
+	case qbittorrent.QbtPausedUP, qbittorrent.QbtCheckingUP:
 		// 已下载完成
 		return StateComplete
-	case qbittorent.QbtError, qbittorent.QbtMissingFiles:
+	case qbittorrent.QbtError, qbittorrent.QbtMissingFiles:
 		return StateError
-	case qbittorent.QbtUnknown:
+	case qbittorrent.QbtUnknown:
 		return StateUnknown
 	default:
 		return StateUnknown

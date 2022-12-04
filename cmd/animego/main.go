@@ -16,6 +16,7 @@ import (
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/request"
 	"go.uber.org/zap"
+	"log"
 	"os"
 	"os/signal"
 	"path"
@@ -25,7 +26,7 @@ import (
 
 const (
 	AnimeGoVersion       = "0.4.3"
-	AnimeGoConfigVersion = "1.0.0"
+	AnimeGoConfigVersion = "1.1.0"
 	AnimeGoGithub        = "https://github.com/wetor/AnimeGo"
 
 	DefaultConfigFile = "./data/animego.yaml"
@@ -78,13 +79,15 @@ func main() {
 
 func InitData() {
 	if utils.IsExist(configFile) {
+		// 尝试升级配置文件
+		configs.UpdateConfig(configFile)
 		return
 	}
 
-	fmt.Printf("未找到配置文件（%s），开始初始化默认配置\n", configFile)
+	log.Printf("未找到配置文件（%s），开始初始化默认配置\n", configFile)
 	conf := configs.DefaultConfig()
 	if utils.IsExist(conf.Setting.DataPath) {
-		fmt.Printf("默认data_path文件夹（%s）已存在，无法完成初始化\n", conf.Setting.DataPath)
+		log.Printf("默认data_path文件夹（%s）已存在，无法完成初始化\n", conf.Setting.DataPath)
 		os.Exit(0)
 	}
 	err := utils.CreateMutiDir(conf.Setting.DataPath)
@@ -96,8 +99,8 @@ func InitData() {
 		panic(err)
 	}
 	copyDir(assets.Plugin, "plugin", path.Join(conf.Setting.DataPath, "plugin"), true)
-	fmt.Printf("初始化默认配置完成（%s）\n", conf.Setting.DataPath)
-	fmt.Println("--------------------------------------------------")
+	log.Printf("初始化默认配置完成（%s）\n", conf.Setting.DataPath)
+	log.Println("--------------------------------------------------")
 	return
 }
 
@@ -181,7 +184,7 @@ func copyDir(fs embed.FS, src, dst string, replace bool) {
 			panic(err)
 		}
 		if !replace && utils.IsExist(dstPath) {
-			fmt.Printf("文件[%s]已存在，是否替换[y(yes)/n(no)]: ", dstPath)
+			log.Printf("文件[%s]已存在，是否替换[y(yes)/n(no)]: ", dstPath)
 			if !scanYesNo() {
 				continue
 			}

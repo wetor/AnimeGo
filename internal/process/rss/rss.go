@@ -7,7 +7,7 @@ import (
 	anidataThemoviedb "github.com/wetor/AnimeGo/internal/animego/anidata/themoviedb"
 	"github.com/wetor/AnimeGo/internal/animego/anisource"
 	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
-	"github.com/wetor/AnimeGo/internal/animego/downloader/qbittorent"
+	"github.com/wetor/AnimeGo/internal/animego/downloader/qbittorrent"
 	feedRss "github.com/wetor/AnimeGo/internal/animego/feed/rss"
 	"github.com/wetor/AnimeGo/internal/animego/filter/javascript"
 	"github.com/wetor/AnimeGo/internal/animego/manager/downloader"
@@ -33,7 +33,7 @@ func (p *Rss) UpdateFeed(items []*models.FeedItem) {
 func (p *Rss) Run(ctx context.Context) {
 
 	qbtConf := store.Config.Setting.Client.QBittorrent
-	qbt := qbittorent.NewQBittorrent(qbtConf.Url, qbtConf.Username, qbtConf.Password)
+	qbt := qbittorrent.NewQBittorrent(qbtConf.Url, qbtConf.Username, qbtConf.Password)
 	qbt.Start(ctx)
 
 	downloadChan := make(chan *models.AnimeEntity, 10)

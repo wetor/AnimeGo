@@ -41,7 +41,8 @@ func defaultSetting() {
 	defaultConfig.Setting.Client.QBittorrent.Password = "adminadmin"
 
 	defaultConfig.Setting.DataPath = "./data"
-	defaultConfig.Setting.SavePath = "./download"
+	defaultConfig.Setting.SavePath = "./download/anime"
+	defaultConfig.Setting.DownloadPath = "./download/incomplete"
 
 	defaultConfig.Setting.Filter.JavaScript = []string{
 		"plugin/filter/default.js",
@@ -71,6 +72,14 @@ func defaultAdvancedComment() {
 新增下载任务后，不会第一时间开始下载，而是放入队列中
 当队列满，添加下载操作会阻塞
 下载队列下载项时，每一项都会间隔 download_queue_delay_second 时间添加到下载客户端中`
+
+	configComment["rename"] = `重命名方式
+下载状态顺序为: 创建下载项->下载->下载完成->做种->做种完成
+可选值为: ['link', 'link_delete', 'move', 'wait_move']
+  link: 使用硬链接方式，下载完成后触发。不影响做种
+  link_delete: 使用硬链接方式，下载完成后触发。不影响做种，做种完成后删除原文件
+  move: 使用移动方式，下载完成后触发。无法做种
+  wait_move: 使用移动方式，做种完成后触发`
 }
 
 func defaultAdvanced() {
@@ -83,8 +92,9 @@ func defaultAdvanced() {
 	defaultConfig.Advanced.Download.QueueMaxNum = 20
 	defaultConfig.Advanced.Download.QueueDelaySecond = 5
 	defaultConfig.Advanced.Download.AllowDuplicateDownload = false
-	defaultConfig.Advanced.Download.SeedingTimeMinute = 30
+	defaultConfig.Advanced.Download.SeedingTimeMinute = 0
 	defaultConfig.Advanced.Download.IgnoreSizeMaxKb = 1024
+	defaultConfig.Advanced.Download.Rename = "link"
 
 	defaultConfig.Advanced.Feed.UpdateDelayMinute = 15
 	defaultConfig.Advanced.Feed.DelaySecond = 5

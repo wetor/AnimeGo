@@ -1,4 +1,4 @@
-package qbittorent
+package qbittorrent
 
 import (
 	"context"
@@ -75,6 +75,13 @@ func (c *QBittorrent) clientVersion() string {
 	return clientResp.Version
 }
 
+// Start
+//  @Description: 启动下载器协程
+//  @Description: 客户端在线监听、登录重试
+//  @Description: 客户端处理下载消息，获取下载进度
+//  @receiver *QBittorrent
+//  @param ctx context.Context
+//
 func (c *QBittorrent) Start(ctx context.Context) {
 	c.connectFunc = func() bool {
 		var err error
@@ -89,7 +96,7 @@ func (c *QBittorrent) Start(ctx context.Context) {
 			zap.S().Warnf("连接QBittorrent第%d次，失败", c.retryNum)
 			return false
 		}
-		c.SetDefaultPreferences()
+		// c.Init()
 		return true
 	}
 	store.WG.Add(2)
@@ -103,7 +110,7 @@ func (c *QBittorrent) Start(ctx context.Context) {
 				})
 				select {
 				case <-ctx.Done():
-					zap.S().Debug("正常退出 qbittorent 1")
+					zap.S().Debug("正常退出 qbittorrent 1")
 					exit = true
 					return
 				case msg := <-c.retryChan:
@@ -138,7 +145,7 @@ func (c *QBittorrent) Start(ctx context.Context) {
 				})
 				select {
 				case <-ctx.Done():
-					zap.S().Debug("正常退出 qbittorent 2")
+					zap.S().Debug("正常退出 qbittorrent 2")
 					exit = true
 					return
 				default:
@@ -201,23 +208,12 @@ func (c *QBittorrent) Version() string {
 	return fmt.Sprintf("Client: %s, API: %s", clientResp.Version, apiResp.Version)
 }
 
-func (c *QBittorrent) Preferences() *models.Preferences {
-	if !c.connected {
-		return nil
-	}
-	resp, err := c.client.GetApplicationPreferences(context.Background(), &qbapi.GetApplicationPreferencesReq{})
-	if c.checkError(err) {
-		return nil
-	}
-	retn := &models.Preferences{}
-	utils.ConvertModel(resp, retn)
-	return retn
-}
-
-func (c *QBittorrent) SetDefaultPreferences() {
+func (c *QBittorrent) Init() {
+	// 初始化设置
 	if !c.connected {
 		return
 	}
+	// 不保留子文件夹层级
 	opt := "NoSubfolder"
 	pref := &qbapi.SetApplicationPreferencesReq{
 		TorrentContentLayout: &opt,

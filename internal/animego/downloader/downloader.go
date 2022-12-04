@@ -11,8 +11,7 @@ type Client interface {
 	Connected() bool
 	Start(ctx context.Context)
 	Version() string
-	Preferences() *models.Preferences
-	SetDefaultPreferences()
+	Init()
 	List(opt *models.ClientListOptions) []*models.TorrentItem
 	Rename(opt *models.ClientRenameOptions)
 	Add(opt *models.ClientAddOptions)

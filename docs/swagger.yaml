@@ -42,9 +42,13 @@ definitions:
             type: integer
           queue_max_num:
             type: integer
+          rename:
+            type: string
           seeding_time_minute:
             type: integer
         type: object
+      download_path:
+        type: string
       feed:
         properties:
           delay_second:

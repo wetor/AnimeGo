@@ -32,7 +32,14 @@ func Init(file string) *Config {
 	}
 
 	conf.Path.TempPath = path.Join(conf.DataPath, conf.Path.TempPath)
-	absPath, err := filepath.Abs(conf.SavePath)
+
+	absPath, err := filepath.Abs(conf.DownloadPath)
+	if err != nil {
+		log.Fatalf("download_path不是正确的路径，%s", conf.DownloadPath)
+	}
+	conf.DownloadPath = absPath
+
+	absPath, err = filepath.Abs(conf.SavePath)
 	if err != nil {
 		log.Fatalf("save_path不是正确的路径，%s", conf.SavePath)
 	}
@@ -52,6 +59,12 @@ func (c *Config) InitDir() {
 	if err != nil {
 		log.Fatalf("创建文件夹失败，%s", c.DataPath)
 	}
+
+	err = utils.CreateMutiDir(c.DownloadPath)
+	if err != nil {
+		log.Fatalf("创建文件夹失败，%s", c.DownloadPath)
+	}
+
 	err = utils.CreateMutiDir(c.SavePath)
 	if err != nil {
 		log.Fatalf("创建文件夹失败，%s", c.SavePath)

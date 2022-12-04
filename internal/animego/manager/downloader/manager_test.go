@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/wetor/AnimeGo/internal/animego/downloader"
-	"github.com/wetor/AnimeGo/internal/animego/downloader/qbittorent"
+	"github.com/wetor/AnimeGo/internal/animego/downloader/qbittorrent"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/store"
 	"github.com/wetor/AnimeGo/test"
@@ -20,7 +20,7 @@ func TestMain(m *testing.M) {
 	test.TestInit()
 
 	conf := store.Config.Setting.Client.QBittorrent
-	qbt = qbittorent.NewQBittorrent(conf.Url, conf.Username, conf.Password)
+	qbt = qbittorrent.NewQBittorrent(conf.Url, conf.Username, conf.Password)
 	qbt.Start(context.Background())
 
 	m.Run()
