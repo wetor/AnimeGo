@@ -1,4 +1,4 @@
-package qbittorent
+package qbittorrent
 
 import (
 	"context"
@@ -35,12 +35,13 @@ func TestQBittorrent_Run(t *testing.T) {
 }
 
 func Test_QBittorrent(t *testing.T) {
+	time.Sleep(2 * time.Second)
 	list := qbt.List(&models.ClientListOptions{
-		Category: "test",
+		Category: "AnimeGo",
 	})
 	fmt.Println(len(list))
 	for _, i := range list {
-		fmt.Println(i.Name, i.Hash)
+		fmt.Println(i.Name, i.Hash, i.State)
 	}
 
 }

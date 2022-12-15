@@ -342,10 +342,16 @@ const docTemplate = `{
                         "queue_max_num": {
                             "type": "integer"
                         },
+                        "rename": {
+                            "type": "string"
+                        },
                         "seeding_time_minute": {
                             "type": "integer"
                         }
                     }
+                },
+                "download_path": {
+                    "type": "string"
                 },
                 "feed": {
                     "type": "object",

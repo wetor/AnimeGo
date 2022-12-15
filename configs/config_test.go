@@ -26,3 +26,9 @@ func TestDefaultConfig(t *testing.T) {
 	os.Setenv("ANIMEGO_CONFIG_VERSION", "1.0.0")
 	os.WriteFile("../assets/default.json", DefaultDoc(), 0666)
 }
+
+func TestUpdateConfig(t *testing.T) {
+	os.Setenv("ANIMEGO_CONFIG_VERSION", "1.1.0")
+
+	UpdateConfig("../data/animego.yaml")
+}

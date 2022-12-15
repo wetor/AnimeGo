@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"os"
+	"path"
 	"reflect"
 	"strings"
 	"time"
@@ -116,4 +117,32 @@ func Sha256(src string) string {
 func UTCToTimeStr(t1 string) string {
 	time1, _ := time.Parse("Mon, 02 Jan 2006 15:04:05 -0700", t1)
 	return time1.Format("2006-01-02")
+}
+
+func CreateLink(src, dst string) error {
+	dir := path.Dir(dst)
+	if err := CreateMutiDir(dir); err != nil {
+		return err
+	}
+	if IsExist(dst) {
+		if err := os.Remove(dst); err != nil {
+			return err
+		}
+	}
+	if err := os.Link(src, dst); err != nil {
+		return err
+	}
+	return nil
+}
+
+func Rename(src, dst string) error {
+	dir := path.Dir(dst)
+	if err := CreateMutiDir(dir); err != nil {
+		return err
+	}
+
+	if err := os.Rename(src, dst); err != nil {
+		return err
+	}
+	return nil
 }

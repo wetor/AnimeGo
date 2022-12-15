@@ -32,6 +32,13 @@ type ClientGetOptions struct {
 	Hash string
 }
 
+type RenameOptions struct {
+	Src      string
+	Dst      string
+	State    <-chan TorrentState
+	Callback func()
+}
+
 // =========== AnimeEntity ===========
 
 type AnimeParseOptions struct {

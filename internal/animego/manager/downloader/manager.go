@@ -107,7 +107,7 @@ func (m *Manager) download(animes []*models.AnimeEntity, ctx context.Context) {
 		m.bangumi[anime.Hash] = anime
 		m.client.Add(&models.ClientAddOptions{
 			Urls:        []string{anime.Url},
-			SavePath:    store.Config.Setting.SavePath,
+			SavePath:    store.Config.Setting.DownloadPath,
 			Category:    store.Config.Setting.Category,
 			Tag:         store.Config.Setting.Tag(anime),
 			SeedingTime: store.Config.Advanced.Download.SeedingTimeMinute,
@@ -221,6 +221,7 @@ func (m *Manager) Start(ctx context.Context) {
 			func() {
 				defer errors.HandleError(func(err error) {
 					zap.S().Error(err)
+					m.sleep(ctx)
 				})
 				select {
 				case <-ctx.Done():
@@ -242,12 +243,7 @@ func (m *Manager) Start(ctx context.Context) {
 					}
 				default:
 					m.UpdateList()
-
-					delay := store.Config.UpdateDelaySecond
-					if delay < UpdateWaitMinSecond {
-						delay = UpdateWaitMinSecond
-					}
-					utils.Sleep(delay, ctx)
+					m.sleep(ctx)
 				}
 			}()
 			if exit {
@@ -255,6 +251,14 @@ func (m *Manager) Start(ctx context.Context) {
 			}
 		}
 	}()
+}
+
+func (m *Manager) sleep(ctx context.Context) {
+	delay := store.Config.UpdateDelaySecond
+	if delay < UpdateWaitMinSecond {
+		delay = UpdateWaitMinSecond
+	}
+	utils.Sleep(delay, ctx)
 }
 
 // UpdateList
@@ -314,9 +318,9 @@ func (m *Manager) UpdateList() {
 			state.State = stateMap(item.State)
 
 			// 未完成重命名，或者首次运行（如重启下载器）
-			if !state.Renamed {
+			if !state.Init {
 				// 获取相对路径，删除绝对路径前缀
-				state.OldPath = strings.TrimPrefix(item.ContentPath, path.Clean(conf.SavePath)+"/")
+				state.OldPath = strings.TrimPrefix(item.ContentPath, path.Clean(conf.DownloadPath)+"/")
 				if state.OldPath == item.ContentPath {
 					// 删除前缀失败，读取name
 					if c := m.GetContent(item.Hash); c != nil {
@@ -326,28 +330,49 @@ func (m *Manager) UpdateList() {
 				zap.S().Infof("发现下载项「%s」", state.OldPath)
 				state.Path = path.Join(bangumi.DirName(), bangumi.FileName()+path.Ext(state.OldPath))
 				if state.Path != state.OldPath {
-					m.client.Rename(&models.ClientRenameOptions{
-						Hash:    item.Hash,
-						OldPath: state.OldPath,
-						NewPath: state.Path,
-					})
-					zap.S().Infof("重命名「%s」->「%s」", state.OldPath, state.Path)
+					state.StateChan = make(chan models.TorrentState, 3)
+					renameOpt := &models.RenameOptions{
+						Src:   path.Join(conf.DownloadPath, state.OldPath),
+						Dst:   path.Join(conf.SavePath, state.Path),
+						State: state.StateChan,
+						Callback: func() {
+							state.Renamed = true
+							state.Scraped = m.scrape(bangumi)
+						},
+					}
+					RenameAnime(renameOpt)
+					state.Init = true
+					//m.client.Rename(&models.ClientRenameOptions{
+					//	Hash:    item.Hash,
+					//	OldPath: state.OldPath,
+					//	NewPath: state.Path,
+					//})
 				}
-				state.Renamed = true
 			}
 
 			// 移动完成，但未搜刮元数据
 			if state.Renamed && !state.Scraped {
 				state.Scraped = m.scrape(bangumi)
-				if state.Scraped {
-					// TODO: 完成，是否删除下载项
+			}
+
+			// 做种，或未下载完成，但State符合下载完成状态
+			if !state.Seeded {
+				if state.State == StateSeeding ||
+					(state.State == StateWaiting && item.Progress == 1) {
+					go func() {
+						state.StateChan <- state.State
+					}()
 				}
+				state.Seeded = true
 			}
 
 			// 未下载完成，但State符合下载完成状态
 			if !state.Downloaded {
-				if state.State == StateComplete || state.State == StateSeeding ||
-					(state.State == StateWaiting && item.Progress == 1) {
+				// 完成下载
+				if state.State == StateComplete {
+					go func() {
+						state.StateChan <- state.State
+					}()
 					state.Downloaded = true
 				}
 				zap.S().Debugw("下载进度",
@@ -365,9 +390,8 @@ func (m *Manager) scrape(bangumi *models.AnimeEntity) bool {
 	nfo := path.Join(store.Config.SavePath, bangumi.DirName(), "tvshow.nfo")
 	zap.S().Infof("写入元数据文件「%s」", nfo)
 
-	_, err := os.Stat(nfo)
-	if os.IsNotExist(err) {
-		err = os.WriteFile(nfo, []byte(bangumi.Meta()), os.ModePerm)
+	if !utils.IsExist(nfo) {
+		err := os.WriteFile(nfo, []byte(bangumi.Meta()), os.ModePerm)
 		if err != nil {
 			zap.S().Debug(errors.NewAniErrorD(err))
 			zap.S().Warn("写入tvshow.nfo元文件失败")

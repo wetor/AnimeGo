@@ -19,9 +19,10 @@ type Setting struct {
 			Password string `yaml:"password" json:"password"`
 		} `yaml:"qbittorrent" json:"qbittorrent" comment:"qBittorrent客户端信息"`
 	} `yaml:"client" json:"client" comment:"下载客户端设置"`
-	SavePath string `yaml:"save_path" json:"save_path" comment:"下载保存根目录"`
-	DataPath string `yaml:"data_path" json:"data_path" comment:"数据存储根目录，用于保存数据库、插件登数据"`
-	Filter   struct {
+	DownloadPath string `yaml:"download_path" json:"download_path" comment:"下载到的根目录"`
+	SavePath     string `yaml:"save_path" json:"save_path" comment:"下载完成后移动到的根目录"`
+	DataPath     string `yaml:"data_path" json:"data_path" comment:"数据存储根目录，用于保存数据库、插件等数据"`
+	Filter       struct {
 		JavaScript []string `yaml:"javascript" json:"javascript" comment_key:"filter_javascript"`
 	} `yaml:"filter" json:"filter" comment:"过滤器设置，用来筛选符合条件的项目进行解析下载"`
 	Category string `yaml:"category" json:"category" comment:"分类名，仅qBittorrent有效"`
@@ -50,11 +51,12 @@ type Advanced struct {
 	} `yaml:"request" json:"request" comment:"网络请求设置"`
 
 	Download struct {
-		QueueMaxNum            int  `yaml:"queue_max_num" json:"queue_max_num"`
-		QueueDelaySecond       int  `yaml:"queue_delay_second" json:"queue_delay_second" comment:"从下载队列中取出下载项的间隔时间"`
-		AllowDuplicateDownload bool `yaml:"allow_duplicate_download" json:"allow_duplicate_download" comment:"允许重复下载同剧集不同资源"`
-		SeedingTimeMinute      int  `yaml:"seeding_time_minute" json:"seeding_time_minute" comment:"做种时间"`
-		IgnoreSizeMaxKb        int  `yaml:"ignore_size_max_kb" json:"ignore_size_max_kb" comment:"忽略小文件大小"`
+		QueueMaxNum            int    `yaml:"queue_max_num" json:"queue_max_num"`
+		QueueDelaySecond       int    `yaml:"queue_delay_second" json:"queue_delay_second" comment:"从下载队列中取出下载项的间隔时间"`
+		AllowDuplicateDownload bool   `yaml:"allow_duplicate_download" json:"allow_duplicate_download" comment:"允许重复下载同剧集不同资源"`
+		SeedingTimeMinute      int    `yaml:"seeding_time_minute" json:"seeding_time_minute" comment:"做种时间"`
+		IgnoreSizeMaxKb        int    `yaml:"ignore_size_max_kb" json:"ignore_size_max_kb" comment:"忽略小文件大小"`
+		Rename                 string `yaml:"rename" json:"rename" comment_key:"rename"`
 	} `yaml:"download" json:"download" comment:"下载设置"`
 
 	Feed struct {
