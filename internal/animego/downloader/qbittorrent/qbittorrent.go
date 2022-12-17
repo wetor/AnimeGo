@@ -323,10 +323,15 @@ func (c *QBittorrent) GetContent(opt *models.ClientGetOptions) []*models.Torrent
 	if c.checkError(err) {
 		return nil
 	}
+	if opt.Item == nil {
+		opt.Item = c.Get(opt)
+	}
 	retn := make([]*models.TorrentContentItem, len(contents.Contents))
 	for i := range retn {
 		retn[i] = &models.TorrentContentItem{}
 		utils.ConvertModel(contents.Contents[i], retn[i])
+		retn[i].Path = opt.Item.ContentPath
+		retn[i].Hash = opt.Item.Hash
 	}
 	return retn
 }

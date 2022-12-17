@@ -14,6 +14,8 @@ const (
 	StateSeeding     models.TorrentState = "seeding"     // 做种中
 	StateComplete    models.TorrentState = "complete"    // 完成下载
 	StateError       models.TorrentState = "error"       // 错误
+	StateNotFound    models.TorrentState = "notfound"    // 不存在
+	StateAdding      models.TorrentState = "adding"      // 添加下载项
 )
 
 // stateMap

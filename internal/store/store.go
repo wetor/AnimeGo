@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	Cache   cache.Cache
+	Cache   *cache.Bolt
 	Config  *configs.Config
 	WG      sync.WaitGroup
 	Process process.Process
@@ -16,7 +16,7 @@ var (
 
 type InitOptions struct {
 	Config *configs.Config
-	Cache  cache.Cache
+	Cache  *cache.Bolt
 }
 
 // Init

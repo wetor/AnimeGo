@@ -30,13 +30,15 @@ type ClientDeleteOptions struct {
 
 type ClientGetOptions struct {
 	Hash string
+	Item *TorrentItem
 }
 
 type RenameOptions struct {
-	Src      string
-	Dst      string
-	State    <-chan TorrentState
-	Callback func()
+	Src            string
+	Dst            string
+	State          <-chan TorrentState
+	RenameCallback func() // 重命名完成后回调
+	Callback       func() // 完成重命名所有流程后回调
 }
 
 // =========== AnimeEntity ===========

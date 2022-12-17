@@ -58,6 +58,8 @@ type TorrentContentItem struct {
 	PieceRange   []int   `json:"piece_range"`  //The first number is the starting piece index and the second number is the ending piece index (inclusive)
 	Availability float64 `json:"availability"` //Percentage of file pieces currently available (percentage/100)
 
+	Path string
+	Hash string
 }
 
 type SetApplicationPreferencesInnerReq struct {

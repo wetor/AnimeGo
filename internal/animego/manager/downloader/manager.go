@@ -31,7 +31,7 @@ var (
 
 type Manager struct {
 	client    downloader.Client
-	cache     cache.Cache
+	cache     *cache.Bolt
 	bangumi   map[string]*models.AnimeEntity // 同步缓存，主要使用其中的Hash来索引item
 	itemState map[string]*models.Torrent     // 存储当前项的状态信息，处理过的
 	items     map[string]*models.TorrentItem // 客户端下载项信息，直接获取到的
@@ -51,7 +51,7 @@ type Manager struct {
 //  @param downloadChan chan *models.AnimeEntity 下载传递通道
 //  @return *Manager
 //
-func NewManager(client downloader.Client, cache cache.Cache, downloadChan chan *models.AnimeEntity) *Manager {
+func NewManager(client downloader.Client, cache *cache.Bolt, downloadChan chan *models.AnimeEntity) *Manager {
 	m := &Manager{
 		client:        client,
 		cache:         cache,

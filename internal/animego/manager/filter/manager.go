@@ -80,11 +80,10 @@ func (m *Manager) Update(ctx context.Context, items []*models.FeedItem) {
 					Date: _item.Date,
 				})
 				if anime != nil {
-					if anime.DownloadInfo == nil {
-						anime.DownloadInfo = &models.DownloadInfo{}
+					anime.DownloadInfo = &models.DownloadInfo{
+						Url:  _item.Download,
+						Hash: _item.Hash(),
 					}
-					anime.Url = _item.Download
-					anime.Hash = _item.Hash()
 
 					animeList[_i] = anime
 
