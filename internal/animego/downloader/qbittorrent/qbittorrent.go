@@ -99,7 +99,7 @@ func (c *QBittorrent) Start(ctx context.Context) {
 		// c.Init()
 		return true
 	}
-	store.WG.Add(2)
+	store.WG.Add(1)
 	go func() {
 		defer store.WG.Done()
 		for {
@@ -134,7 +134,7 @@ func (c *QBittorrent) Start(ctx context.Context) {
 			}
 		}
 	}()
-
+	store.WG.Add(1)
 	go func() {
 		defer store.WG.Done()
 		for {

@@ -44,13 +44,15 @@ func (t Themoviedb) ParseCache(name, airDate string) (entity *Entity, seasonInfo
 	if !t.cacheInit {
 		t.RegisterCache()
 	}
-	results := mem.NewResults("entity", &Entity{}, "seasonInfo", &SeasonInfo{})
+	results := mem.NewResults("entity", &Entity{})
 
 	err := t.cacheParseThemoviedbID(mem.NewParams("name", name).
 		TTL(anidata.CacheTime[Bucket]), results)
 	errors.NewAniErrorD(err).TryPanic()
 
 	entity = results.Get("entity").(*Entity)
+
+	results = mem.NewResults("seasonInfo", &SeasonInfo{})
 	err = t.cacheParseAnimeSeason(mem.NewParams("tmdbID", entity.ID, "airDate", airDate).
 		TTL(anidata.CacheTime[Bucket]), results)
 	errors.NewAniErrorD(err).TryPanic()

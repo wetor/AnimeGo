@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/gob"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/wetor/AnimeGo/pkg/errors"
 	bolt "go.etcd.io/bbolt"
 	"sync"
@@ -11,6 +12,8 @@ import (
 	"go.uber.org/zap"
 	"time"
 )
+
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 type Bolt struct {
 	db *bolt.DB
@@ -149,7 +152,7 @@ func (c *Bolt) GetAll(bucket string, tk, tv interface{}, fn func(k, v interface{
 		b := tx.Bucket([]byte(bucket))
 
 		_ = b.ForEach(func(k, v []byte) error {
-			GobToValue(k, tk)
+			_ = json.Unmarshal(k, tk)
 			ttl := c.toValue(v, tv)
 			if ttl != 0 && ttl <= time.Now().Unix() {
 				return nil
@@ -187,14 +190,23 @@ func (c *Bolt) toBytes(val interface{}, extra int64) []byte {
 		binary.LittleEndian.PutUint64(b, uint64(extra))
 		buf.Write(b)
 	}
-	buf.Write(GobToBytes(val))
+	data, err := json.Marshal(val)
+	if err != nil {
+		zap.S().Debug(errors.NewAniErrorD(err))
+		zap.S().Error("Json Encode失败")
+	}
+	buf.Write(data)
 	return buf.Bytes()
 }
 
 func (c *Bolt) toValue(data []byte, val interface{}) (extra int64) {
 	_ = data[8]
 	extra = int64(binary.LittleEndian.Uint64(data[0:8]))
-	GobToValue(data[8:], val)
+	err := json.Unmarshal(data[8:], val)
+	if err != nil {
+		zap.S().Debug(errors.NewAniErrorD(err))
+		zap.S().Error("Json Decode失败")
+	}
 	return extra
 }
 

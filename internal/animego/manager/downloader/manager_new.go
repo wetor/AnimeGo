@@ -60,7 +60,6 @@ func NewManagerNew(client downloader.Client, cache *cache.Bolt, downloadChan cha
 	}
 	m.downloadChan = downloadChan
 
-	m.cache.Add(Bucket)
 	m.cache.Add(Name2EntityBucket)
 	m.cache.Add(Name2StatusBucket)
 	m.cache.Add(Hash2NameBucket)
