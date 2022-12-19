@@ -30,7 +30,7 @@ const (
 	Hash2NameBucket        = "hash2name"
 )
 
-type ManagerNew struct {
+type Manager struct {
 	client downloader.Client
 	cache  *cache.Bolt
 
@@ -42,15 +42,15 @@ type ManagerNew struct {
 	sync.Mutex
 }
 
-// NewManagerNew
+// NewManager
 //  @Description: 初始化下载管理器
 //  @param client downloader.Client 下载客户端
 //  @param cache cache.Cache 缓存
 //  @param downloadChan chan *models.AnimeEntity 下载传递通道
-//  @return *ManagerNew
+//  @return *Manager
 //
-func NewManagerNew(client downloader.Client, cache *cache.Bolt, downloadChan chan *models.AnimeEntity) *ManagerNew {
-	m := &ManagerNew{
+func NewManager(client downloader.Client, cache *cache.Bolt, downloadChan chan *models.AnimeEntity) *Manager {
+	m := &Manager{
 		client:      client,
 		cache:       cache,
 		name2chan:   make(map[string]chan models.TorrentState),
@@ -72,7 +72,7 @@ func NewManagerNew(client downloader.Client, cache *cache.Bolt, downloadChan cha
 	return m
 }
 
-func (m *ManagerNew) loadCache() {
+func (m *Manager) loadCache() {
 	// 同步name2status
 	keyType := ""
 	valueType := models.DownloadStatus{}
@@ -90,14 +90,14 @@ func (m *ManagerNew) loadCache() {
 // Download
 //  @Description: 将下载任务加入到下载队列中
 //  @Description: 如果队列满，调用此方法会阻塞
-//  @receiver *ManagerNew
+//  @receiver *Manager
 //  @param bangumi *models.AnimeEntity
 //
-func (m *ManagerNew) Download(anime *models.AnimeEntity) {
+func (m *Manager) Download(anime *models.AnimeEntity) {
 	m.downloadChan <- anime
 }
 
-func (m *ManagerNew) download(anime *models.AnimeEntity) {
+func (m *Manager) download(anime *models.AnimeEntity) {
 	m.Lock()
 	defer m.Unlock()
 	name := anime.FullName()
@@ -141,7 +141,7 @@ func (m *ManagerNew) download(anime *models.AnimeEntity) {
 //  @Description: 更新种子下载状态
 //  @receiver m
 //
-func (m *ManagerNew) Get(hash string) *models.TorrentItem {
+func (m *Manager) Get(hash string) *models.TorrentItem {
 	//conf := store.Config.Setting
 	item := m.client.Get(&models.ClientGetOptions{
 		Hash: hash,
@@ -149,7 +149,7 @@ func (m *ManagerNew) Get(hash string) *models.TorrentItem {
 	return item
 }
 
-func (m *ManagerNew) GetContent(opt *models.ClientGetOptions) *models.TorrentContentItem {
+func (m *Manager) GetContent(opt *models.ClientGetOptions) *models.TorrentContentItem {
 	cs := m.client.GetContent(opt)
 	if len(cs) == 0 {
 		return nil
@@ -175,10 +175,10 @@ func (m *ManagerNew) GetContent(opt *models.ClientGetOptions) *models.TorrentCon
 
 // Start
 //  @Description: 下载管理器主循环
-//  @receiver *ManagerNew
+//  @receiver *Manager
 //  @param exit chan bool 退出后的回调chan，manager结束后会返回true
 //
-func (m *ManagerNew) Start(ctx context.Context) {
+func (m *Manager) Start(ctx context.Context) {
 	store.WG.Add(1)
 	// 刷新信息、接收下载、接收退出指令协程
 	go func() {
@@ -218,7 +218,7 @@ func (m *ManagerNew) Start(ctx context.Context) {
 	}()
 }
 
-func (m *ManagerNew) sleep(ctx context.Context) {
+func (m *Manager) sleep(ctx context.Context) {
 	delay := store.Config.UpdateDelaySecond
 	if delay < UpdateWaitMinSecond {
 		delay = UpdateWaitMinSecond
@@ -226,7 +226,7 @@ func (m *ManagerNew) sleep(ctx context.Context) {
 	utils.Sleep(delay, ctx)
 }
 
-func (m *ManagerNew) UpdateDownloadItem(status *models.DownloadStatus, anime *models.AnimeEntity, item *models.TorrentItem) {
+func (m *Manager) UpdateDownloadItem(status *models.DownloadStatus, anime *models.AnimeEntity, item *models.TorrentItem) {
 	status.State = stateMap(item.State)
 	name := anime.FullName()
 
@@ -300,7 +300,7 @@ func (m *ManagerNew) UpdateDownloadItem(status *models.DownloadStatus, anime *mo
 	}
 }
 
-func (m *ManagerNew) UpdateList() {
+func (m *Manager) UpdateList() {
 	m.Lock()
 	defer m.Unlock()
 
@@ -378,7 +378,7 @@ func (m *ManagerNew) UpdateList() {
 	}
 }
 
-func (m *ManagerNew) scrape(bangumi *models.AnimeEntity) bool {
+func (m *Manager) scrape(bangumi *models.AnimeEntity) bool {
 	nfo := path.Join(store.Config.SavePath, bangumi.DirName(), "tvshow.nfo")
 	zap.S().Infof("写入元数据文件「%s」", nfo)
 

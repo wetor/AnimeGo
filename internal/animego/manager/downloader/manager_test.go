@@ -95,8 +95,8 @@ func TestNewManager(t *testing.T) {
 	fmt.Println(hash, len(hash))
 }
 
-func TestManagerNew_Update(t *testing.T) {
-	m := NewManagerNew(qbt, store.Cache, nil)
+func TestManager2_Update(t *testing.T) {
+	m := NewManager(qbt, store.Cache, nil)
 	//animes := &models.AnimeEntity{
 	//	ID:      18692,
 	//	Name:    "ドラえもん",

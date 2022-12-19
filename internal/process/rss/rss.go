@@ -47,7 +47,7 @@ func (p *Rss) Run(ctx context.Context) {
 		},
 	})
 
-	p.downloaderMgr = downloader.NewManagerNew(qbt, store.Cache, downloadChan)
+	p.downloaderMgr = downloader.NewManager(qbt, store.Cache, downloadChan)
 
 	p.filterMgr = filterManager.NewManager(&javascript.JavaScript{},
 		feedRss.NewRss(store.Config.Setting.Feed.Mikan.Url, store.Config.Setting.Feed.Mikan.Name),
