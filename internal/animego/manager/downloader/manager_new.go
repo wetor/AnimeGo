@@ -21,11 +21,13 @@ import (
 )
 
 const (
-	DownloadStateChan = 5
-	NotFoundExpireDay = 7
-	Name2EntityBucket = "name2entity"
-	Name2StatusBucket = "name2status"
-	Hash2NameBucket   = "hash2name"
+	UpdateWaitMinSecond    = 2  // 允许的最短刷新时间
+	DownloadChanDefaultCap = 10 // 下载通道默认容量
+	DownloadStateChan      = 5
+	NotFoundExpireDay      = 7
+	Name2EntityBucket      = "name2entity"
+	Name2StatusBucket      = "name2status"
+	Hash2NameBucket        = "hash2name"
 )
 
 type ManagerNew struct {
