@@ -95,6 +95,7 @@ type ThemoviedbResponse struct {
 	OriginalName     string                    `json:"original_name"`
 	Seasons          []*ThemoviedbItemResponse `json:"seasons"`
 }
+
 type ThemoviedbItemResponse struct {
 	AirDate       string `json:"air_date"`
 	EpisodeNumber int    `json:"episode_number"`

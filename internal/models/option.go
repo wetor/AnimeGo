@@ -8,12 +8,6 @@ type ClientListOptions struct {
 	Tag      string
 }
 
-type ClientRenameOptions struct {
-	Hash    string
-	OldPath string
-	NewPath string
-}
-
 type ClientAddOptions struct {
 	Urls        []string
 	SavePath    string
