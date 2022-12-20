@@ -16,23 +16,23 @@ import (
 //    ID: bangumi id，用于生成nfo文件
 //    ThemoviedbID: themoviedb id，用于生成nfo文件
 type AnimeEntity struct {
-	ID           int    // bangumi id
-	ThemoviedbID int    // themoviedb ID
-	MikanID      int    // [暂时无用] rss id
-	Name         string // 名称，从bgm获取
-	NameCN       string // 中文名称，从bgm获取
-	Season       int    // 当前季，从themoviedb获取
-	Ep           int    // 当前集，从下载文件名解析
-	EpID         int    // [暂时无用] 当前集bangumi ep id
-	Eps          int    // [暂时无用] 总集数，从bgm获取
-	AirDate      string // [暂时无用] 最初播放日期，从bgm获取
-	Date         string // [暂时无用] 当前集播放日期，从bgm获取
+	ID           int    `json:"id"`            // bangumi id
+	ThemoviedbID int    `json:"themoviedb_id"` // themoviedb ID
+	MikanID      int    `json:"mikan_id"`      // [暂时无用] rss id
+	Name         string `json:"name"`          // 名称，从bgm获取
+	NameCN       string `json:"name_cn"`       // 中文名称，从bgm获取
+	Season       int    `json:"season"`        // 当前季，从themoviedb获取
+	Ep           int    `json:"ep"`            // 当前集，从下载文件名解析
+	EpID         int    `json:"ep_id"`         // [暂时无用] 当前集bangumi ep id
+	Eps          int    `json:"eps"`           // [暂时无用] 总集数，从bgm获取
+	AirDate      string `json:"air_date"`      // [暂时无用] 最初播放日期，从bgm获取
+	Date         string `json:"date"`          // [暂时无用] 当前集播放日期，从bgm获取
 	*DownloadInfo
 }
 
 type DownloadInfo struct {
-	Url  string // 当前集下载链接
-	Hash string // 当前集Hash，唯一ID
+	Url  string `json:"url"`  // 当前集下载链接
+	Hash string `json:"hash"` // 当前集Hash，唯一ID
 }
 
 func (b *AnimeEntity) FullName() string {

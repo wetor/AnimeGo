@@ -1,7 +1,6 @@
 package themoviedb
 
 import (
-	"encoding/gob"
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/pkg/errors"
 	mem "github.com/wetor/AnimeGo/pkg/memorizer"
@@ -44,13 +43,15 @@ func (t Themoviedb) ParseCache(name, airDate string) (entity *Entity, seasonInfo
 	if !t.cacheInit {
 		t.RegisterCache()
 	}
-	results := mem.NewResults("entity", &Entity{}, "seasonInfo", &SeasonInfo{})
+	results := mem.NewResults("entity", &Entity{})
 
 	err := t.cacheParseThemoviedbID(mem.NewParams("name", name).
 		TTL(anidata.CacheTime[Bucket]), results)
 	errors.NewAniErrorD(err).TryPanic()
 
 	entity = results.Get("entity").(*Entity)
+
+	results = mem.NewResults("seasonInfo", &SeasonInfo{})
 	err = t.cacheParseAnimeSeason(mem.NewParams("tmdbID", entity.ID, "airDate", airDate).
 		TTL(anidata.CacheTime[Bucket]), results)
 	errors.NewAniErrorD(err).TryPanic()
@@ -129,9 +130,4 @@ func (t Themoviedb) parseAnimeSeason(tmdbID int, airDate string) (seasonInfo *Se
 	}
 	seasonInfo.EpName = ""
 	return seasonInfo
-}
-
-func init() {
-	gob.Register(&Entity{})
-	gob.Register(&SeasonInfo{})
 }

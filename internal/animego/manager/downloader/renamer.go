@@ -10,6 +10,9 @@ import (
 )
 
 func RenameAnime(opt *models.RenameOptions) {
+	if opt.Src == opt.Dst {
+		return
+	}
 	var err error
 	rename := store.Config.Advanced.Download.Rename
 	go func() {
@@ -21,8 +24,19 @@ func RenameAnime(opt *models.RenameOptions) {
 				})
 				state := <-opt.State
 
-				if !utils.IsExist(opt.Src) {
+				existSrc := utils.IsExist(opt.Src)
+				existDst := utils.IsExist(opt.Dst)
+
+				if !existSrc && !existDst {
 					errors.NewAniError("未找到文件：" + opt.Src).TryPanic()
+				} else if !existSrc && existDst {
+					// 已经移动完成
+					zap.S().Warnf("[跳过重命名] 可能已经移动完成「%s」->「%s」", opt.Src, opt.Dst)
+					opt.RenameCallback()
+					if state == StateComplete {
+						exit = true
+						return
+					}
 				}
 
 				switch rename {
@@ -30,7 +44,7 @@ func RenameAnime(opt *models.RenameOptions) {
 					zap.S().Infof("[重命名] 链接「%s」->「%s」", opt.Src, opt.Dst)
 					err = utils.CreateLink(opt.Src, opt.Dst)
 					errors.NewAniErrorD(err).TryPanic()
-					opt.Callback()
+					opt.RenameCallback()
 					if rename == "link" {
 						exit = true
 					}
@@ -38,7 +52,7 @@ func RenameAnime(opt *models.RenameOptions) {
 					zap.S().Infof("[重命名] 移动「%s」->「%s」", opt.Src, opt.Dst)
 					err = utils.Rename(opt.Src, opt.Dst)
 					errors.NewAniErrorD(err).TryPanic()
-					opt.Callback()
+					opt.RenameCallback()
 					exit = true
 				}
 
@@ -48,14 +62,14 @@ func RenameAnime(opt *models.RenameOptions) {
 						zap.S().Infof("[重命名] 移动「%s」->「%s」", opt.Src, opt.Dst)
 						err = utils.Rename(opt.Src, opt.Dst)
 						errors.NewAniErrorD(err).TryPanic()
-						opt.Callback()
+						opt.RenameCallback()
 						exit = true
 					case "link_delete":
 						if !utils.IsExist(opt.Dst) {
 							zap.S().Infof("[重命名] 链接「%s」->「%s」", opt.Src, opt.Dst)
 							err = utils.CreateLink(opt.Src, opt.Dst)
 							errors.NewAniErrorD(err).TryPanic()
-							opt.Callback()
+							opt.RenameCallback()
 						}
 						zap.S().Infof("[重命名] 删除「%s」", opt.Src)
 						err = os.Remove(opt.Src)
@@ -65,6 +79,7 @@ func RenameAnime(opt *models.RenameOptions) {
 				}
 			}()
 			if exit {
+				opt.Callback()
 				return
 			}
 		}

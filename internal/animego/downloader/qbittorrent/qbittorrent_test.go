@@ -22,18 +22,6 @@ func TestMain(m *testing.M) {
 	fmt.Println("end")
 }
 
-func TestQBittorrent_Run(t *testing.T) {
-	time.Sleep(3 * time.Second)
-	go func() {
-		for {
-			fmt.Println("ver", qbt.Version())
-			time.Sleep(1 * time.Second)
-		}
-	}()
-
-	store.WG.Wait()
-}
-
 func Test_QBittorrent(t *testing.T) {
 	time.Sleep(2 * time.Second)
 	list := qbt.List(&models.ClientListOptions{
@@ -72,12 +60,4 @@ func TestQBittorrent_Get(t *testing.T) {
 
 	a := qbt.Get(&models.ClientGetOptions{Hash: "171f3b402fa4cf770ef267c0744a81b6b9ad77f2"})
 	fmt.Println(a)
-}
-
-func TestQBittorrent_Rename(t *testing.T) {
-	qbt.Rename(&models.ClientRenameOptions{
-		Hash:    "171f3b402fa4cf770ef267c0744a81b6b9ad77f2",
-		OldPath: "[夜莺家族&YYQ字幕组]New Doraemon 哆啦A梦新番[712][2022.06.25][AVC][1080P][GB_JP]/[夜莺家族&YYQ字幕组]New Doraemon 哆啦A梦新番[712][2022.06.25][AVC][1080P][GB_JP].mp4",
-		NewPath: "[夜莺家族&YYQ字幕组]New Doraemon 哆啦A梦新番[712][2022.06.25][AVC][1080P][GB_JP]/哆啦A梦[第1季][第712集].mp4",
-	})
 }

@@ -1,8 +1,8 @@
 package cache
 
 import (
-	"encoding/gob"
 	"fmt"
+	bolt "go.etcd.io/bbolt"
 	"testing"
 )
 
@@ -22,8 +22,6 @@ type AnimeExtra struct {
 }
 
 func TestBolt_Put(t *testing.T) {
-	gob.Register(&AnimeEntity{})
-	gob.Register(&AnimeExtra{})
 	db := NewBolt()
 	db.Open("1.db")
 	e := AnimeEntity{
@@ -53,8 +51,6 @@ func TestBolt_Get(t *testing.T) {
 }
 
 func TestBolt_BatchPut(t *testing.T) {
-	gob.Register(&AnimeEntity{})
-	gob.Register(&AnimeExtra{})
 	db := NewBolt()
 	db.Open("1.db")
 	es := []interface{}{
@@ -97,4 +93,31 @@ func TestBolt_BatchPut(t *testing.T) {
 	}
 	db.Add("test")
 	db.BatchPut("test", ks, es, 0)
+}
+
+func TestBolt_List(t *testing.T) {
+	db := NewBolt()
+	db.Open("/Users/wetor/GoProjects/AnimeGo/data/cache/bolt.db")
+	db.db.View(func(tx *bolt.Tx) error {
+		// Assume bucket exists and has keys
+		b := tx.Bucket([]byte("hash2name"))
+
+		b.ForEach(func(k, v []byte) error {
+			fmt.Printf("key=%s, value=%s\n", k[1:], v[8:])
+			return nil
+		})
+		return nil
+	})
+}
+
+func TestBolt_GetAll(t *testing.T) {
+	db := NewBolt()
+	db.Open("/Users/wetor/GoProjects/AnimeGo/data/cache/bolt.db")
+	v := ""
+	k := ""
+	db.GetAll("hash2name", &k, &v, func(k1, v1 interface{}) {
+		fmt.Println("-----")
+		fmt.Println(*k1.(*string))
+		fmt.Println(*v1.(*string))
+	})
 }

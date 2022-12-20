@@ -1,7 +1,6 @@
 package bangumi
 
 import (
-	"encoding/gob"
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/pkg/errors"
 	mem "github.com/wetor/AnimeGo/pkg/memorizer"
@@ -48,12 +47,14 @@ func (b Bangumi) ParseCache(bangumiID, ep int) (entity *Entity, epInfo *Ep) {
 	if !b.cacheInit {
 		b.RegisterCache()
 	}
-	results := mem.NewResults("entity", &Entity{}, "epInfo", &Ep{})
+	results := mem.NewResults("entity", &Entity{})
 
 	err := b.cacheParseAnimeInfo(mem.NewParams("bangumiID", bangumiID).
 		TTL(anidata.CacheTime[Bucket]), results)
 	errors.NewAniErrorD(err).TryPanic()
 	entity = results.Get("entity").(*Entity)
+
+	results = mem.NewResults("epInfo", &Ep{})
 	err = b.cacheParseAnimeEpInfo(
 		mem.NewParams("bangumiID", bangumiID, "ep", ep, "eps", entity.Eps).
 			TTL(anidata.CacheTime[Bucket]), results)
@@ -143,9 +144,4 @@ func (b Bangumi) parseAnimeEpInfo(bangumiID, ep, eps int) (epInfo *Ep) {
 		}
 	}
 	return epInfo
-}
-
-func init() {
-	gob.Register(&Entity{})
-	gob.Register(&Ep{})
 }

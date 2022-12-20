@@ -68,11 +68,6 @@ func defaultAdvancedComment() {
 在下载项较多、等待时间过少时会出现请求超时，所以有个最小等待时间为2秒的限制
 默认为10，最小值为2`
 
-	configComment["queue_max_num"] = `下载队列最大容量
-新增下载任务后，不会第一时间开始下载，而是放入队列中
-当队列满，添加下载操作会阻塞
-下载队列下载项时，每一项都会间隔 download_queue_delay_second 时间添加到下载客户端中`
-
 	configComment["rename"] = `重命名方式
 下载状态顺序为: 创建下载项->下载->下载完成->做种->做种完成
 可选值为: ['link', 'link_delete', 'move', 'wait_move']
@@ -89,12 +84,10 @@ func defaultAdvanced() {
 	defaultConfig.Advanced.Request.RetryNum = 3
 	defaultConfig.Advanced.Request.RetryWaitSecond = 5
 
-	defaultConfig.Advanced.Download.QueueMaxNum = 20
-	defaultConfig.Advanced.Download.QueueDelaySecond = 5
 	defaultConfig.Advanced.Download.AllowDuplicateDownload = false
 	defaultConfig.Advanced.Download.SeedingTimeMinute = 0
 	defaultConfig.Advanced.Download.IgnoreSizeMaxKb = 1024
-	defaultConfig.Advanced.Download.Rename = "link"
+	defaultConfig.Advanced.Download.Rename = "link_delete"
 
 	defaultConfig.Advanced.Feed.UpdateDelayMinute = 15
 	defaultConfig.Advanced.Feed.DelaySecond = 5

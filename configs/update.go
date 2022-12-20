@@ -75,8 +75,11 @@ func update_100_110(file string) {
 	log.Printf("[变动] 配置项(setting.save_path)：'%s' => '%s'\n", tmp, updateConfig.Setting.SavePath)
 	updateConfig.Setting.DownloadPath = path.Join(tmp, "incomplete")
 	log.Printf("[新增] 配置项(setting.download_path)：'%s'\n", updateConfig.Setting.DownloadPath)
-	updateConfig.Advanced.Download.Rename = "link"
+	updateConfig.Advanced.Download.Rename = "link_delete"
 	log.Printf("[新增] 配置项(setting.advanced.download.rename)：%v\n", updateConfig.Advanced.Download.Rename)
+
+	log.Printf("[移除] 配置项(setting.advanced.download.queue_max_num)\n")
+	log.Printf("[移除] 配置项(setting.advanced.download.queue_delay_second)\n")
 
 	content, err := encodeConfig(updateConfig)
 	if err != nil {

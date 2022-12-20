@@ -3,7 +3,7 @@ package cache
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/gob"
+	jsoniter "github.com/json-iterator/go"
 	"github.com/wetor/AnimeGo/pkg/errors"
 	bolt "go.etcd.io/bbolt"
 	"sync"
@@ -11,6 +11,8 @@ import (
 	"go.uber.org/zap"
 	"time"
 )
+
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 type Bolt struct {
 	db *bolt.DB
@@ -120,22 +122,58 @@ func (c *Bolt) Get(bucket string, key, val interface{}) error {
 	var ttl int64
 	var dbVal []byte
 	dbKey := c.toBytes(key, -1)
-	err := c.db.View(func(tx *bolt.Tx) error {
+	_ = c.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
 		dbVal = b.Get(dbKey)
-		if dbVal == nil {
-			return errors.NewAniError("Key不存在")
-		}
 		return nil
 	})
-	if err != nil {
-		return err
+	if dbVal == nil {
+		return errors.NewAniError("Key不存在")
 	}
 	ttl = c.toValue(dbVal, val)
 	if ttl != 0 && ttl <= time.Now().Unix() {
+		c.Delete(bucket, key)
 		return errors.NewAniError("Key已过期")
 	}
 	return nil
+}
+
+// GetAll
+//  @Description: 获取bucket所有kv数据
+//  @receiver *Bolt
+//  @param bucket string
+//  @param tk interface{} key类型转换临时变量
+//  @param tv interface{} value类型转换临时变量
+//  @param fn func(k, v interface{})
+//
+func (c *Bolt) GetAll(bucket string, tk, tv interface{}, fn func(k, v interface{})) {
+	_ = c.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(bucket))
+
+		_ = b.ForEach(func(k, v []byte) error {
+			_ = json.Unmarshal(k, tk)
+			ttl := c.toValue(v, tv)
+			if ttl != 0 && ttl <= time.Now().Unix() {
+				return nil
+			}
+			fn(tk, tv)
+			return nil
+		})
+		return nil
+	})
+}
+
+func (c *Bolt) Delete(bucket string, key interface{}) {
+	dbKey := c.toBytes(key, -1)
+	err := c.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(bucket))
+		err := b.Delete(dbKey)
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+	errors.NewAniErrorD(err).TryPanic()
 }
 
 // toBytes
@@ -151,34 +189,22 @@ func (c *Bolt) toBytes(val interface{}, extra int64) []byte {
 		binary.LittleEndian.PutUint64(b, uint64(extra))
 		buf.Write(b)
 	}
-	buf.Write(GobToBytes(val))
+	data, err := json.Marshal(val)
+	if err != nil {
+		zap.S().Debug(errors.NewAniErrorD(err))
+		zap.S().Error("Json Encode失败")
+	}
+	buf.Write(data)
 	return buf.Bytes()
 }
 
 func (c *Bolt) toValue(data []byte, val interface{}) (extra int64) {
 	_ = data[8]
 	extra = int64(binary.LittleEndian.Uint64(data[0:8]))
-	GobToValue(data[8:], val)
+	err := json.Unmarshal(data[8:], val)
+	if err != nil {
+		zap.S().Debug(errors.NewAniErrorD(err))
+		zap.S().Error("Json Decode失败")
+	}
 	return extra
-}
-
-func GobToBytes(val interface{}) []byte {
-	buf2 := bytes.NewBuffer(nil)
-	enc := gob.NewEncoder(buf2)
-	err := enc.Encode(val)
-	if err != nil {
-		zap.S().Debug(errors.NewAniErrorD(err))
-		zap.S().Error("Gob Encode失败")
-	}
-	return buf2.Bytes()
-}
-
-func GobToValue(data []byte, val interface{}) {
-	buf := bytes.NewBuffer(data)
-	dec := gob.NewDecoder(buf)
-	err := dec.Decode(val)
-	if err != nil {
-		zap.S().Debug(errors.NewAniErrorD(err))
-		zap.S().Error("Gob Decode失败")
-	}
 }

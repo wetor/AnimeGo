@@ -1,11 +1,10 @@
-// Package downloader
-// @Description: 接收到下载项后，调用client进行下载，并对下载条目做一定处理
 package downloader
 
 import (
 	"context"
 	"fmt"
 	"github.com/wetor/AnimeGo/internal/animego/downloader"
+	"github.com/wetor/AnimeGo/internal/animego/downloader/qbittorrent"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/store"
 	"github.com/wetor/AnimeGo/internal/utils"
@@ -14,8 +13,8 @@ import (
 	"os"
 	"path"
 	"regexp"
-	"strings"
 	"sync"
+	"time"
 
 	"go.uber.org/zap"
 )
@@ -23,23 +22,21 @@ import (
 const (
 	UpdateWaitMinSecond    = 2  // 允许的最短刷新时间
 	DownloadChanDefaultCap = 10 // 下载通道默认容量
-)
-
-var (
-	Bucket = "manager"
+	DownloadStateChan      = 5
+	NotFoundExpireDay      = 7
+	Name2EntityBucket      = "name2entity"
+	Name2StatusBucket      = "name2status"
+	Hash2NameBucket        = "hash2name"
 )
 
 type Manager struct {
-	client    downloader.Client
-	cache     cache.Cache
-	bangumi   map[string]*models.AnimeEntity // 同步缓存，主要使用其中的Hash来索引item
-	itemState map[string]*models.Torrent     // 存储当前项的状态信息，处理过的
-	items     map[string]*models.TorrentItem // 客户端下载项信息，直接获取到的
-
-	downloadQueue []*models.AnimeEntity // 下载队列，存满或者到下一个刷新时间会进行下载
+	client downloader.Client
+	cache  *cache.Bolt
 
 	// 通过管道传递下载项
 	downloadChan chan *models.AnimeEntity
+	name2chan    map[string]chan models.TorrentState
+	name2status  map[string]*models.DownloadStatus // 同时存在于db和内存中
 
 	sync.Mutex
 }
@@ -51,119 +48,96 @@ type Manager struct {
 //  @param downloadChan chan *models.AnimeEntity 下载传递通道
 //  @return *Manager
 //
-func NewManager(client downloader.Client, cache cache.Cache, downloadChan chan *models.AnimeEntity) *Manager {
+func NewManager(client downloader.Client, cache *cache.Bolt, downloadChan chan *models.AnimeEntity) *Manager {
 	m := &Manager{
-		client:        client,
-		cache:         cache,
-		downloadQueue: make([]*models.AnimeEntity, 0, store.Config.Advanced.Download.QueueMaxNum),
-		bangumi:       make(map[string]*models.AnimeEntity),
-		itemState:     make(map[string]*models.Torrent),
-		items:         make(map[string]*models.TorrentItem),
+		client:      client,
+		cache:       cache,
+		name2chan:   make(map[string]chan models.TorrentState),
+		name2status: make(map[string]*models.DownloadStatus),
 	}
-	m.cache.Add(Bucket)
+
 	if downloadChan == nil || cap(downloadChan) <= 1 {
 		downloadChan = make(chan *models.AnimeEntity, DownloadChanDefaultCap)
 	}
 	m.downloadChan = downloadChan
-	// 首次运行将同步缓存与下载器下载项
+
+	m.cache.Add(Name2EntityBucket)
+	m.cache.Add(Name2StatusBucket)
+	m.cache.Add(Hash2NameBucket)
+
+	m.loadCache()
+
 	m.UpdateList()
 	return m
+}
+
+func (m *Manager) loadCache() {
+	// 同步name2status
+	keyType := ""
+	valueType := models.DownloadStatus{}
+	m.cache.GetAll(Name2StatusBucket, &keyType, &valueType, func(k, v interface{}) {
+		nv := &models.DownloadStatus{}
+		utils.ConvertModel(v.(*models.DownloadStatus), nv)
+		m.name2status[*k.(*string)] = nv
+	})
+
+	for _, status := range m.name2status {
+		status.Init = false
+	}
 }
 
 // Download
 //  @Description: 将下载任务加入到下载队列中
 //  @Description: 如果队列满，调用此方法会阻塞
 //  @receiver *Manager
-//  @param bangumi *models.AnimeEntity
+//  @param anime *models.AnimeEntity
 //
 func (m *Manager) Download(anime *models.AnimeEntity) {
 	m.downloadChan <- anime
 }
 
-// download
-//  @Description: 批量下载队列
-//  @receiver *Manager
-//  @param animes []*models.AnimeEntity
-//  @param finish chan bool 添加下载完成后发送消息
-//
-func (m *Manager) download(animes []*models.AnimeEntity, ctx context.Context) {
-	// 去重
-	set := make(map[string]struct{})
-	setIndex := make([]int, 0, len(animes))
-	for i, anime := range animes {
-		if _, has := set[anime.FullName()]; !has {
-			set[anime.FullName()] = struct{}{}
-			setIndex = append(setIndex, i)
+func (m *Manager) download(anime *models.AnimeEntity) {
+	m.Lock()
+	defer m.Unlock()
+	name := anime.FullName()
+	zap.S().Infof("开始下载「%s」", name)
+	if status, has := m.name2status[name]; has {
+		// 已有下载记录
+		if status.State != StateNotFound {
+			// 文件已存在
+			if len(status.Path) != 0 && utils.IsExist(path.Join(store.Config.Setting.SavePath, status.Path)) {
+				zap.S().Infof("发现已下载「%s」", status.Path)
+			} else if status.Init {
+				zap.S().Infof("发现正在下载「%s」", name)
+			}
+			if !store.Config.Advanced.Download.AllowDuplicateDownload {
+				zap.S().Infof("取消下载「%s」", name)
+				return
+			}
 		}
 	}
-	for _, i := range setIndex {
-		anime := animes[i]
-		zap.S().Infof("开始下载「%s」", anime.FullName())
-		if !m.canDownload(anime) {
-			zap.S().Infof("取消下载，发现重复「%s」", anime.FullName())
-			continue
-		}
 
-		m.bangumi[anime.Hash] = anime
-		m.client.Add(&models.ClientAddOptions{
-			Urls:        []string{anime.Url},
-			SavePath:    store.Config.Setting.DownloadPath,
-			Category:    store.Config.Setting.Category,
-			Tag:         store.Config.Setting.Tag(anime),
-			SeedingTime: store.Config.Advanced.Download.SeedingTimeMinute,
-			Rename:      anime.FullName(),
-		})
-		// 通过gb下载的番剧，将存储与缓存中
-		m.cache.Put(Bucket, anime.Hash, anime, 0)
-		utils.Sleep(store.Config.Advanced.Download.QueueDelaySecond, ctx)
-	}
-}
-
-// canDownload
-//  @Description: 此资源能否下载
-//  @Description: 如果hash已存在，则不会下载
-//  @Description: 如果hash不存在，会判断bangumi ID、Season和ep，如果相同会判断是否允许重复下载
-//  @receiver *Manager
-//  @param bangumi *models.AnimeEntity
-//  @return bool
-//
-func (m *Manager) canDownload(anime *models.AnimeEntity) bool {
-	for _, b := range m.bangumi {
-		if anime.Hash == b.Hash {
-			// 同一资源，不重复下载
-			return false
-		}
-		// 同一集不同资源
-		// 如果AllowDuplicateDownload == true，即允许同一集重复下载，则返回true，否则则不允许下载
-		if anime.FullName() == b.FullName() {
-			return store.Config.Advanced.Download.AllowDuplicateDownload
-		}
-	}
-	return true
-}
-
-// Get
-//  @Description: 更新种子下载状态
-//  @receiver m
-//
-func (m *Manager) Get(hash string) *models.TorrentItem {
-	//conf := store.Config.Setting
-	item := m.client.Get(&models.ClientGetOptions{
-		Hash: hash,
+	m.client.Add(&models.ClientAddOptions{
+		Urls:        []string{anime.Url},
+		SavePath:    store.Config.Setting.DownloadPath,
+		Category:    store.Config.Setting.Category,
+		Tag:         store.Config.Setting.Tag(anime),
+		SeedingTime: store.Config.Advanced.Download.SeedingTimeMinute,
+		Rename:      name,
 	})
-	return item
+	m.cache.Put(Hash2NameBucket, anime.Hash, name, 0)
+	m.cache.Put(Name2EntityBucket, name, anime, 0)
+
+	status := &models.DownloadStatus{
+		Hash:  anime.Hash,
+		State: StateAdding,
+	}
+	m.name2status[name] = status
+	m.cache.Put(Name2StatusBucket, name, status, 0)
 }
 
-// GetContent
-//  @Description: 返回最大的一个content
-//  @receiver *Manager
-//  @param hash string
-//  @return *models.TorrentContentItem
-//
-func (m *Manager) GetContent(hash string) *models.TorrentContentItem {
-	cs := m.client.GetContent(&models.ClientGetOptions{
-		Hash: hash,
-	})
+func (m *Manager) GetContent(opt *models.ClientGetOptions) *models.TorrentContentItem {
+	cs := m.client.GetContent(opt)
 	if len(cs) == 0 {
 		return nil
 	}
@@ -189,30 +163,10 @@ func (m *Manager) GetContent(hash string) *models.TorrentContentItem {
 // Start
 //  @Description: 下载管理器主循环
 //  @receiver *Manager
-//  @param exit chan bool 退出后的回调chan，manager结束后会返回true
+//  @param ctx context.Context
 //
 func (m *Manager) Start(ctx context.Context) {
 	store.WG.Add(1)
-	// 开始下载协程
-	go func() {
-		for {
-			func() {
-				defer errors.HandleError(func(err error) {
-					zap.S().Error(err)
-				})
-				if len(m.downloadQueue) > 0 {
-					m.Lock()
-					list := make([]*models.AnimeEntity, len(m.downloadQueue))
-					copy(list, m.downloadQueue)
-					m.downloadQueue = m.downloadQueue[0:0]
-					m.Unlock()
-					m.download(list, ctx)
-				} else {
-					utils.Sleep(store.Config.Advanced.Download.QueueDelaySecond, ctx)
-				}
-			}()
-		}
-	}()
 	// 刷新信息、接收下载、接收退出指令协程
 	go func() {
 		defer store.WG.Done()
@@ -231,15 +185,13 @@ func (m *Manager) Start(ctx context.Context) {
 				case anime := <-m.downloadChan:
 					if m.client.Connected() {
 						zap.S().Debugf("接收到下载项:「%s」", anime.FullName())
-						m.Lock()
-						m.downloadQueue = append(m.downloadQueue, anime)
-						m.Unlock()
+						m.download(anime)
 					} else {
 						zap.S().Warnf("无法连接客户端，等待。已接收到%d个下载项", len(m.downloadChan))
 						go func() {
 							m.downloadChan <- anime
 						}()
-						utils.Sleep(store.Config.Advanced.Download.QueueDelaySecond, ctx)
+						m.sleep(ctx)
 					}
 				default:
 					m.UpdateList()
@@ -261,128 +213,155 @@ func (m *Manager) sleep(ctx context.Context) {
 	utils.Sleep(delay, ctx)
 }
 
-// UpdateList
-//  @Description: 遍历下载器列表，与缓存中的数据进行对比、合并
-//  @receiver *Manager
-//
+func (m *Manager) UpdateDownloadItem(status *models.DownloadStatus, anime *models.AnimeEntity, item *models.TorrentItem) {
+	status.State = stateMap(item.State)
+	name := anime.FullName()
+
+	if !status.Init {
+		content := m.GetContent(&models.ClientGetOptions{
+			Hash: status.Hash,
+			Item: item,
+		})
+
+		renamePath := path.Join(anime.DirName(), anime.FileName()+path.Ext(content.Path))
+		m.name2chan[name] = make(chan models.TorrentState, DownloadStateChan)
+		renameOpt := &models.RenameOptions{
+			Src:   content.Path,
+			Dst:   path.Join(store.Config.Setting.SavePath, renamePath),
+			State: m.name2chan[name],
+			RenameCallback: func() {
+				status.Path = renamePath
+				status.Scraped = m.scrape(anime)
+			},
+			Callback: func() {
+				status.Renamed = true
+				if c, ok := m.client.(*qbittorrent.QBittorrent); ok {
+					// qbt需要手动删除列表记录，否则无法重复下载
+					c.Delete(&models.ClientDeleteOptions{
+						Hash:       []string{status.Hash},
+						DeleteFile: false,
+					})
+				}
+			},
+		}
+		RenameAnime(renameOpt)
+		if status.State == StateSeeding || status.State == StateComplete {
+			go func() {
+				m.name2chan[name] <- status.State
+			}()
+		}
+		status.Init = true
+	}
+
+	// 移动完成，且搜刮元数据失败
+	if status.Renamed && !status.Scraped {
+		status.Scraped = m.scrape(anime)
+	}
+
+	// 做种，或未下载完成，但State符合下载完成状态
+	if !status.Seeded {
+		if status.State == StateSeeding ||
+			(status.State == StateWaiting && item.Progress == 1) {
+			go func() {
+				m.name2chan[name] <- status.State
+			}()
+			status.Seeded = true
+		}
+	}
+
+	// 未下载完成，但State符合下载完成状态
+	if !status.Downloaded {
+		// 完成下载
+		if status.State == StateComplete {
+			go func() {
+				m.name2chan[name] <- status.State
+			}()
+			status.Downloaded = true
+		}
+		zap.S().Debugw("下载进度",
+			"名称", name,
+			"进度", fmt.Sprintf("%.1f", item.Progress*100),
+			"qbt状态", item.State,
+			"状态", status.State,
+		)
+	}
+}
+
 func (m *Manager) UpdateList() {
-	// 涉及到bangumi list的清空与重建，运行在协程中，需要加锁
 	m.Lock()
 	defer m.Unlock()
-	conf := store.Config.Setting
+
 	// 获取客户端下载列表
 	items := m.client.List(&models.ClientListOptions{
-		Category: conf.Category,
+		Category: store.Config.Setting.Category,
 	})
-	if items == nil {
-		return
-	}
-
-	// 清空bangumi map，重新同步缓存
-	m.bangumi = make(map[string]*models.AnimeEntity, len(items))
-	// 内存list不清空
-	if m.itemState == nil {
-		m.itemState = make(map[string]*models.Torrent, len(items))
-	}
-	if m.items == nil {
-		m.items = make(map[string]*models.TorrentItem, len(items))
-	}
-	// 从缓存中读取对应的信息
-	// 遍历下载器的下载列表（包括已完成）
-	// 根据下载项hash在缓存中查找记录，如已存在则将信息重新加入到list中
-	// 如不存在，则其不是通过gb下载的，忽略
+	hash2item := make(map[string]*models.TorrentItem)
 	for _, item := range items {
-		bangumi := &models.AnimeEntity{}
-		err := m.cache.Get(Bucket, item.Hash, bangumi)
-		if err == nil {
-			if !m.canDownload(bangumi) {
-				m.client.Delete(&models.ClientDeleteOptions{
-					Hash: []string{item.Hash},
-				})
-				zap.S().Infof("删除下载，发现重复「%s」", bangumi.FullName())
-				continue
-			}
-			// item 缓存
-			m.items[item.Hash] = item
+		hash2item[item.Hash] = item
+	}
 
-			// 把从缓存数据库中存的bangumi信息加入到map中
-			if _, has := m.bangumi[bangumi.Hash]; !has {
-				m.bangumi[bangumi.Hash] = bangumi
-			}
-
-			// 初始化itemState
-			if _, has := m.itemState[item.Hash]; !has {
-				m.itemState[item.Hash] = &models.Torrent{Hash: item.Hash}
-			}
-			state := m.itemState[item.Hash]
-			state.State = stateMap(item.State)
-
-			// 未完成重命名，或者首次运行（如重启下载器）
-			if !state.Init {
-				// 获取相对路径，删除绝对路径前缀
-				state.OldPath = strings.TrimPrefix(item.ContentPath, path.Clean(conf.DownloadPath)+"/")
-				if state.OldPath == item.ContentPath {
-					// 删除前缀失败，读取name
-					if c := m.GetContent(item.Hash); c != nil {
-						state.OldPath = c.Name
-					}
+	for name, status := range m.name2status {
+		if status.State == StateAdding {
+			continue
+		}
+		// 文件是否存在
+		if len(status.Path) == 0 || utils.IsExist(path.Join(store.Config.Setting.SavePath, status.Path)) ||
+			(!status.Init || !status.Renamed || !status.Scraped) {
+			itemStatus, has := hash2item[status.Hash]
+			// 是否存在于下载列表
+			if has {
+				// 同步下载列表
+				status.ExpireAt = 0
+				anime := &models.AnimeEntity{}
+				err := m.cache.Get(Name2EntityBucket, name, anime)
+				if err == nil {
+					m.UpdateDownloadItem(status, anime, itemStatus)
 				}
-				zap.S().Infof("发现下载项「%s」", state.OldPath)
-				state.Path = path.Join(bangumi.DirName(), bangumi.FileName()+path.Ext(state.OldPath))
-				if state.Path != state.OldPath {
-					state.StateChan = make(chan models.TorrentState, 3)
-					renameOpt := &models.RenameOptions{
-						Src:   path.Join(conf.DownloadPath, state.OldPath),
-						Dst:   path.Join(conf.SavePath, state.Path),
-						State: state.StateChan,
-						Callback: func() {
-							state.Renamed = true
-							state.Scraped = m.scrape(bangumi)
-						},
-					}
-					RenameAnime(renameOpt)
-					state.Init = true
-					//m.client.Rename(&models.ClientRenameOptions{
-					//	Hash:    item.Hash,
-					//	OldPath: state.OldPath,
-					//	NewPath: state.Path,
-					//})
-				}
+			} else {
+				// 不在下载列表中，标记完成
+				status.State = StateComplete
 			}
-
-			// 移动完成，但未搜刮元数据
-			if state.Renamed && !state.Scraped {
-				state.Scraped = m.scrape(bangumi)
-			}
-
-			// 做种，或未下载完成，但State符合下载完成状态
-			if !state.Seeded {
-				if state.State == StateSeeding ||
-					(state.State == StateWaiting && item.Progress == 1) {
-					go func() {
-						state.StateChan <- state.State
-					}()
-				}
-				state.Seeded = true
-			}
-
-			// 未下载完成，但State符合下载完成状态
-			if !state.Downloaded {
-				// 完成下载
-				if state.State == StateComplete {
-					go func() {
-						state.StateChan <- state.State
-					}()
-					state.Downloaded = true
-				}
-				zap.S().Debugw("下载进度",
-					"名称", bangumi.FullName(),
-					"进度", fmt.Sprintf("%.1f", item.Progress*100),
-					"qbt状态", item.State,
-					"状态", state.State,
-				)
+			m.cache.Put(Name2StatusBucket, name, status, 0)
+		} else {
+			// 文件不存在，检查过期时间
+			if status.ExpireAt <= 0 {
+				// 未设置过期，设置7天过期
+				status.ExpireAt = time.Now().Add(NotFoundExpireDay * 24 * time.Hour).Unix()
+				status.State = StateNotFound
+				m.cache.Put(Name2StatusBucket, name, status, 0)
+			} else if status.ExpireAt-time.Now().Unix() <= 0 {
+				// 已过期，删除
+				delete(m.name2status, name)
+				m.cache.Delete(Name2StatusBucket, name)
+				m.cache.Delete(Name2EntityBucket, name)
 			}
 		}
+		delete(hash2item, status.Hash)
+	}
+
+	// 处理新增
+	for _, item := range items {
+		// 尝试从已下载中查找name
+		name := ""
+		err := m.cache.Get(Hash2NameBucket, item.Hash, &name)
+		if err != nil {
+			continue
+		}
+		// 判断是否已下载
+		if status, has := m.name2status[name]; has {
+			// 已下载
+			if status.State != StateNotFound && status.State != StateAdding {
+				// 文件存在，跳过下载
+				continue
+			}
+		}
+		status := &models.DownloadStatus{
+			Hash:     item.Hash,
+			State:    stateMap(item.State),
+			ExpireAt: 0,
+		}
+		m.name2status[name] = status
+		m.cache.Put(Name2StatusBucket, name, status, 0)
 	}
 }
 

@@ -94,3 +94,38 @@ func TestNewManager(t *testing.T) {
 	hash := file[:40]
 	fmt.Println(hash, len(hash))
 }
+
+func TestManager2_Update(t *testing.T) {
+	m := NewManager(qbt, store.Cache, nil)
+	//animes := &models.AnimeEntity{
+	//	ID:      18692,
+	//	Name:    "ドラえもん",
+	//	NameCN:  "哆啦A梦444",
+	//	AirDate: "2005-04-15",
+	//	Eps:     0,
+	//	Season:  1,
+	//	Ep:      712,
+	//	Date:    "2022-06-27",
+	//	EpID:    1114366,
+	//	MikanID: 681,
+	//	DownloadInfo: &models.DownloadInfo{
+	//		Url:  "https://mikanani.me/Download/20221126/1474455a9238e328691c4eadbbab8cde7191df7a.torrent",
+	//		Hash: "1474455a9238e328691c4eadbbab8cde7191df7a",
+	//	},
+	//}
+	//m.Download(animes)
+	exit := make(chan bool)
+	ctx, cancel := context.WithCancel(context.Background())
+	m.Start(ctx)
+
+	go func() {
+		time.Sleep(200 * time.Second)
+		cancel()
+		exit <- true
+	}()
+
+	time.Sleep(10 * time.Second)
+
+	<-exit
+
+}
