@@ -1,7 +1,6 @@
 package bangumi
 
 import (
-	"encoding/gob"
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/pkg/errors"
 	mem "github.com/wetor/AnimeGo/pkg/memorizer"
@@ -145,9 +144,4 @@ func (b Bangumi) parseAnimeEpInfo(bangumiID, ep, eps int) (epInfo *Ep) {
 		}
 	}
 	return epInfo
-}
-
-func init() {
-	gob.Register(&Entity{})
-	gob.Register(&Ep{})
 }

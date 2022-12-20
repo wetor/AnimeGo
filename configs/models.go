@@ -51,8 +51,6 @@ type Advanced struct {
 	} `yaml:"request" json:"request" comment:"网络请求设置"`
 
 	Download struct {
-		QueueMaxNum            int    `yaml:"queue_max_num" json:"queue_max_num"`
-		QueueDelaySecond       int    `yaml:"queue_delay_second" json:"queue_delay_second" comment:"从下载队列中取出下载项的间隔时间"`
 		AllowDuplicateDownload bool   `yaml:"allow_duplicate_download" json:"allow_duplicate_download" comment:"允许重复下载同剧集不同资源"`
 		SeedingTimeMinute      int    `yaml:"seeding_time_minute" json:"seeding_time_minute" comment:"做种时间"`
 		IgnoreSizeMaxKb        int    `yaml:"ignore_size_max_kb" json:"ignore_size_max_kb" comment:"忽略小文件大小"`

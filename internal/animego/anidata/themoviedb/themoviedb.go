@@ -1,7 +1,6 @@
 package themoviedb
 
 import (
-	"encoding/gob"
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/pkg/errors"
 	mem "github.com/wetor/AnimeGo/pkg/memorizer"
@@ -131,9 +130,4 @@ func (t Themoviedb) parseAnimeSeason(tmdbID int, airDate string) (seasonInfo *Se
 	}
 	seasonInfo.EpName = ""
 	return seasonInfo
-}
-
-func init() {
-	gob.Register(&Entity{})
-	gob.Register(&SeasonInfo{})
 }

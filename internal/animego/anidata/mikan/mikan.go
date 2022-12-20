@@ -2,7 +2,6 @@ package mikan
 
 import (
 	"bytes"
-	"encoding/gob"
 	"fmt"
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/pkg/errors"
@@ -165,8 +164,4 @@ func (m Mikan) parseMikanBangumiID(mikanID int) (bangumiID int) {
 	errors.NewAniErrorD(err).TryPanic()
 
 	return bangumiID
-}
-
-func init() {
-	gob.Register(&MikanInfo{})
 }

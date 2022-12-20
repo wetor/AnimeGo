@@ -3,7 +3,6 @@ package cache
 import (
 	"bytes"
 	"encoding/binary"
-	"encoding/gob"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/wetor/AnimeGo/pkg/errors"
 	bolt "go.etcd.io/bbolt"
@@ -208,25 +207,4 @@ func (c *Bolt) toValue(data []byte, val interface{}) (extra int64) {
 		zap.S().Error("Json Decode失败")
 	}
 	return extra
-}
-
-func GobToBytes(val interface{}) []byte {
-	buf2 := bytes.NewBuffer(nil)
-	enc := gob.NewEncoder(buf2)
-	err := enc.Encode(val)
-	if err != nil {
-		zap.S().Debug(errors.NewAniErrorD(err))
-		zap.S().Error("Gob Encode失败")
-	}
-	return buf2.Bytes()
-}
-
-func GobToValue(data []byte, val interface{}) {
-	buf := bytes.NewBuffer(data)
-	dec := gob.NewDecoder(buf)
-	err := dec.Decode(val)
-	if err != nil {
-		zap.S().Debug(errors.NewAniErrorD(err))
-		zap.S().Error("Gob Decode失败")
-	}
 }

@@ -2,7 +2,6 @@ package qbittorrent
 
 import (
 	"context"
-	"fmt"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/store"
 	"github.com/wetor/AnimeGo/internal/utils"
@@ -193,37 +192,6 @@ func (c *QBittorrent) checkError(err error) bool {
 	return true
 }
 
-func (c *QBittorrent) Version() string {
-	if !c.connected {
-		return ""
-	}
-	clientResp, err := c.client.GetApplicationVersion(context.Background(), &qbapi.GetApplicationVersionReq{})
-	if c.checkError(err) {
-		return ""
-	}
-	apiResp, err := c.client.GetAPIVersion(context.Background(), &qbapi.GetAPIVersionReq{})
-	if c.checkError(err) {
-		return ""
-	}
-	return fmt.Sprintf("Client: %s, API: %s", clientResp.Version, apiResp.Version)
-}
-
-func (c *QBittorrent) Init() {
-	// 初始化设置
-	if !c.connected {
-		return
-	}
-	// 不保留子文件夹层级
-	opt := "NoSubfolder"
-	pref := &qbapi.SetApplicationPreferencesReq{
-		TorrentContentLayout: &opt,
-	}
-	_, err := c.client.SetApplicationPreferences(context.Background(), pref)
-	if c.checkError(err) {
-		return
-	}
-}
-
 func (c *QBittorrent) List(opt *models.ClientListOptions) []*models.TorrentItem {
 	if !c.connected {
 		return nil
@@ -249,20 +217,6 @@ func (c *QBittorrent) List(opt *models.ClientListOptions) []*models.TorrentItem 
 		utils.ConvertModel(listResp.Items[i], retn[i])
 	}
 	return retn
-}
-
-func (c *QBittorrent) Rename(opt *models.ClientRenameOptions) {
-	if !c.connected {
-		return
-	}
-	_, err := c.client.RenameFile(context.Background(), &qbapi.RenameFileReq{
-		Hash:    opt.Hash,
-		OldPath: opt.OldPath,
-		NewPath: opt.NewPath,
-	})
-	if c.checkError(err) {
-		return
-	}
 }
 
 func (c *QBittorrent) Add(opt *models.ClientAddOptions) {

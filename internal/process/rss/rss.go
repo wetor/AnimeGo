@@ -17,7 +17,7 @@ import (
 )
 
 type Rss struct {
-	downloaderMgr downloader.Downloader
+	downloaderMgr *downloader.Manager
 	filterMgr     *filterManager.Manager
 	ctx           context.Context
 }

@@ -2,7 +2,6 @@ package downloader
 
 import (
 	"context"
-	"encoding/gob"
 	"fmt"
 	"github.com/wetor/AnimeGo/internal/animego/downloader"
 	"github.com/wetor/AnimeGo/internal/animego/downloader/qbittorrent"
@@ -91,7 +90,7 @@ func (m *Manager) loadCache() {
 //  @Description: 将下载任务加入到下载队列中
 //  @Description: 如果队列满，调用此方法会阻塞
 //  @receiver *Manager
-//  @param bangumi *models.AnimeEntity
+//  @param anime *models.AnimeEntity
 //
 func (m *Manager) Download(anime *models.AnimeEntity) {
 	m.downloadChan <- anime
@@ -137,18 +136,6 @@ func (m *Manager) download(anime *models.AnimeEntity) {
 	m.cache.Put(Name2StatusBucket, name, status, 0)
 }
 
-// Get
-//  @Description: 更新种子下载状态
-//  @receiver m
-//
-func (m *Manager) Get(hash string) *models.TorrentItem {
-	//conf := store.Config.Setting
-	item := m.client.Get(&models.ClientGetOptions{
-		Hash: hash,
-	})
-	return item
-}
-
 func (m *Manager) GetContent(opt *models.ClientGetOptions) *models.TorrentContentItem {
 	cs := m.client.GetContent(opt)
 	if len(cs) == 0 {
@@ -176,7 +163,7 @@ func (m *Manager) GetContent(opt *models.ClientGetOptions) *models.TorrentConten
 // Start
 //  @Description: 下载管理器主循环
 //  @receiver *Manager
-//  @param exit chan bool 退出后的回调chan，manager结束后会返回true
+//  @param ctx context.Context
 //
 func (m *Manager) Start(ctx context.Context) {
 	store.WG.Add(1)
@@ -204,7 +191,7 @@ func (m *Manager) Start(ctx context.Context) {
 						go func() {
 							m.downloadChan <- anime
 						}()
-						utils.Sleep(store.Config.Advanced.Download.QueueDelaySecond, ctx)
+						m.sleep(ctx)
 					}
 				default:
 					m.UpdateList()
@@ -410,9 +397,4 @@ func (m *Manager) scrape(bangumi *models.AnimeEntity) bool {
 		return false
 	}
 	return true
-}
-
-func init() {
-	gob.Register(&models.AnimeEntity{})
-	gob.Register(&models.DownloadStatus{})
 }

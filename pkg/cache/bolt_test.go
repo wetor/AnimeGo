@@ -1,9 +1,7 @@
 package cache
 
 import (
-	"encoding/gob"
 	"fmt"
-	"github.com/wetor/AnimeGo/internal/animego/anidata/mikan"
 	bolt "go.etcd.io/bbolt"
 	"testing"
 )
@@ -24,8 +22,6 @@ type AnimeExtra struct {
 }
 
 func TestBolt_Put(t *testing.T) {
-	gob.Register(&AnimeEntity{})
-	gob.Register(&AnimeExtra{})
 	db := NewBolt()
 	db.Open("1.db")
 	e := AnimeEntity{
@@ -55,8 +51,6 @@ func TestBolt_Get(t *testing.T) {
 }
 
 func TestBolt_BatchPut(t *testing.T) {
-	gob.Register(&AnimeEntity{})
-	gob.Register(&AnimeExtra{})
 	db := NewBolt()
 	db.Open("1.db")
 	es := []interface{}{
@@ -117,7 +111,6 @@ func TestBolt_List(t *testing.T) {
 }
 
 func TestBolt_GetAll(t *testing.T) {
-	gob.Register(&mikan.MikanInfo{})
 	db := NewBolt()
 	db.Open("/Users/wetor/GoProjects/AnimeGo/data/cache/bolt.db")
 	v := ""
