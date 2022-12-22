@@ -27,6 +27,7 @@ const (
 	Name2EntityBucket      = "name2entity"
 	Name2StatusBucket      = "name2status"
 	Hash2NameBucket        = "hash2name"
+	SleepUpdateMaxCount    = 10
 )
 
 type Manager struct {
@@ -38,6 +39,7 @@ type Manager struct {
 	name2chan    map[string]chan models.TorrentState
 	name2status  map[string]*models.DownloadStatus // 同时存在于db和内存中
 
+	sleepUpdateCount int // UpdateList 休眠倒计数，当不存在正在下载、做种以及下载完成的项目时，在 SleepUpdateMaxCount 后停止更新
 	sync.Mutex
 }
 
@@ -50,10 +52,11 @@ type Manager struct {
 //
 func NewManager(client downloader.Client, cache *cache.Bolt, downloadChan chan *models.AnimeEntity) *Manager {
 	m := &Manager{
-		client:      client,
-		cache:       cache,
-		name2chan:   make(map[string]chan models.TorrentState),
-		name2status: make(map[string]*models.DownloadStatus),
+		client:           client,
+		cache:            cache,
+		name2chan:        make(map[string]chan models.TorrentState),
+		name2status:      make(map[string]*models.DownloadStatus),
+		sleepUpdateCount: SleepUpdateMaxCount,
 	}
 
 	if downloadChan == nil || cap(downloadChan) <= 1 {
@@ -100,7 +103,7 @@ func (m *Manager) download(anime *models.AnimeEntity) {
 	m.Lock()
 	defer m.Unlock()
 	name := anime.FullName()
-	zap.S().Infof("开始下载「%s」", name)
+
 	if status, has := m.name2status[name]; has {
 		// 已有下载记录
 		if status.State != StateNotFound {
@@ -111,12 +114,11 @@ func (m *Manager) download(anime *models.AnimeEntity) {
 				zap.S().Infof("发现正在下载「%s」", name)
 			}
 			if !store.Config.Advanced.Download.AllowDuplicateDownload {
-				zap.S().Infof("取消下载「%s」", name)
 				return
 			}
 		}
 	}
-
+	zap.S().Infof("开始下载「%s」", name)
 	m.client.Add(&models.ClientAddOptions{
 		Urls:        []string{anime.Url},
 		SavePath:    store.Config.Setting.DownloadPath,
@@ -298,6 +300,14 @@ func (m *Manager) UpdateList() {
 	hash2item := make(map[string]*models.TorrentItem)
 	for _, item := range items {
 		hash2item[item.Hash] = item
+		if state := stateMap(item.State); state == StateDownloading || state == StateSeeding || state == StateComplete {
+			m.sleepUpdateCount = SleepUpdateMaxCount
+		}
+	}
+	if m.sleepUpdateCount <= 0 {
+		return
+	} else {
+		m.sleepUpdateCount--
 	}
 
 	for name, status := range m.name2status {
@@ -307,16 +317,14 @@ func (m *Manager) UpdateList() {
 		// 文件是否存在
 		if len(status.Path) == 0 || utils.IsExist(path.Join(store.Config.Setting.SavePath, status.Path)) ||
 			(!status.Init || !status.Renamed || !status.Scraped) {
-			itemStatus, has := hash2item[status.Hash]
 			// 是否存在于下载列表
-			if has {
+			if item, has := hash2item[status.Hash]; has {
 				// 同步下载列表
 				status.ExpireAt = 0
 				anime := &models.AnimeEntity{}
 				err := m.cache.Get(Name2EntityBucket, name, anime)
 				if err == nil {
-					_ = itemStatus
-					m.UpdateDownloadItem(status, anime, itemStatus)
+					m.UpdateDownloadItem(status, anime, item)
 				}
 			} else {
 				// 不在下载列表中，标记完成
