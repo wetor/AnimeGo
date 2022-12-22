@@ -138,6 +138,29 @@ func (c *Bolt) Get(bucket string, key, val interface{}) error {
 	return nil
 }
 
+func (c *Bolt) GetValue(bucket string, key string) (int64, string, error) {
+	var dbVal []byte
+	dbKey := []byte(key)
+	_ = c.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(bucket))
+		dbVal = b.Get(dbKey)
+		return nil
+	})
+	if dbVal == nil {
+		return 0, "", errors.NewAniError("Key不存在")
+	}
+	if len(dbVal) <= 8 {
+		return 0, "", nil
+	}
+	ttl := int64(binary.LittleEndian.Uint64(dbVal[0:8]))
+	if ttl != 0 && ttl <= time.Now().Unix() {
+		c.Delete(bucket, key)
+		return 0, "", errors.NewAniError("Key已过期")
+	}
+	val := string(dbVal[8:])
+	return ttl, val, nil
+}
+
 // GetAll
 //  @Description: 获取bucket所有kv数据
 //  @receiver *Bolt
@@ -207,4 +230,29 @@ func (c *Bolt) toValue(data []byte, val interface{}) (extra int64) {
 		zap.S().Error("Json Decode失败")
 	}
 	return extra
+}
+
+func (c *Bolt) ListBucket() []string {
+	list := make([]string, 0, 8)
+	_ = c.db.View(func(tx *bolt.Tx) error {
+		err := tx.ForEach(func(nm []byte, b *bolt.Bucket) error {
+			list = append(list, string(nm))
+			return nil
+		})
+		return err
+	})
+	return list
+}
+
+func (c *Bolt) ListKey(bucket string) []string {
+	list := make([]string, 0, 16)
+	_ = c.db.View(func(tx *bolt.Tx) error {
+		b := tx.Bucket([]byte(bucket))
+		err := b.ForEach(func(k, v []byte) error {
+			list = append(list, string(k))
+			return nil
+		})
+		return err
+	})
+	return list
 }

@@ -42,3 +42,19 @@ type ConfigGetRequest struct {
 	//   comment 获取所有配置项的注释文本
 	Key string `json:"key" form:"key" default:"all"`
 }
+
+type BoltRequest struct {
+	DB string `json:"db" form:"db" default:"bolt"` // bolt, bolt_sub
+}
+
+type BoltListRequest struct {
+	BoltRequest
+	Type   string `json:"type" form:"type" binding:"required"` // bucket, key
+	Bucket string `json:"bucket" form:"bucket"`                // 当type=key时，需要此参数
+}
+
+type BoltGetRequest struct {
+	BoltRequest
+	Bucket string `json:"bucket" form:"bucket" binding:"required"`
+	Key    string `json:"key" form:"key" binding:"required"`
+}

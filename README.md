@@ -50,7 +50,7 @@
 ## 文档
 1. [配置文件](assets/config/animego.yaml)
 2. [插件函数文档（仅过滤器）](internal/animego/plugin/javascript/README.md)
-3. [webapi接口文档](internal/web/README.md)
+3. [webapi(Swagger)接口文档](internal/web/README.md)
 
 ## 目的
 - 简化部署和使用，以及模块化扩展
@@ -86,6 +86,11 @@
 
 
 ## 开发日志
+### v0.5.3 (2022.12.21)
+- 修复重复打开bolt导致死锁的问题
+- 新增查询数据库相关接口
+  - GET /api/bolt
+  - GET /api/bolt/value
 
 ### v0.5.2 (2022.12.21)
 - 增加休眠机制

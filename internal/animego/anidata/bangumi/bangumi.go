@@ -7,12 +7,11 @@ import (
 	mem "github.com/wetor/AnimeGo/pkg/memorizer"
 	"github.com/wetor/AnimeGo/pkg/request"
 	"github.com/wetor/AnimeGo/third_party/bangumi/res"
-	"path"
+	"go.uber.org/zap"
 )
 
 const (
 	SubjectBucket = "bangumi_sub"
-	SubjectDB     = "bolt_sub.db"
 )
 
 var (
@@ -26,9 +25,6 @@ type Bangumi struct {
 }
 
 func (b *Bangumi) RegisterCache() {
-	dir := path.Dir(store.Config.Advanced.Path.DbFile)
-	store.BangumiSubjectCache.Open(path.Join(dir, SubjectDB))
-
 	if anidata.Cache == nil {
 		errors.NewAniError("需要先调用anidata.Init初始化缓存").TryPanic()
 	}
@@ -45,12 +41,10 @@ func (b Bangumi) ParseCache(bangumiID int) (entity *Entity) {
 		b.RegisterCache()
 	}
 
-	if e1, err := b.loadAnimeInfo(bangumiID); err == nil {
-		entity = e1
-	}
-
-	if entity != nil {
-		return
+	if e, err := b.loadAnimeInfo(bangumiID); err == nil {
+		if e != nil {
+			return e
+		}
 	}
 
 	results := mem.NewResults("entity", &Entity{})
@@ -105,6 +99,7 @@ func (b Bangumi) parseAnimeInfo(bangumiID int) (entity *Entity) {
 
 func (b Bangumi) loadAnimeInfo(bangumiID int) (entity *Entity, err error) {
 	entity = &Entity{}
-	err = store.BangumiSubjectCache.Get(SubjectBucket, bangumiID, entity)
+	zap.S().Debug("使用Bangumi Archive，", bangumiID)
+	err = store.BangumiCache.Get(SubjectBucket, bangumiID, entity)
 	return entity, err
 }

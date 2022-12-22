@@ -114,6 +114,7 @@ func (m *Manager) download(anime *models.AnimeEntity) {
 				zap.S().Infof("发现正在下载「%s」", name)
 			}
 			if !store.Config.Advanced.Download.AllowDuplicateDownload {
+				zap.S().Infof("取消下载，不允许重复「%s」", name)
 				return
 			}
 		}

@@ -38,10 +38,6 @@ definitions:
             type: boolean
           ignore_size_max_kb:
             type: integer
-          queue_delay_second:
-            type: integer
-          queue_max_num:
-            type: integer
           rename:
             type: string
           seeding_time_minute:
@@ -118,6 +114,28 @@ definitions:
             type: integer
         type: object
     type: object
+  models.BoltGetResponse:
+    properties:
+      bucket:
+        type: string
+      key:
+        type: string
+      ttl:
+        type: integer
+      value: {}
+    type: object
+  models.BoltListResponse:
+    properties:
+      bucket:
+        type: string
+      data:
+        items:
+          type: string
+        type: array
+      type:
+        description: bucket, key
+        type: string
+    type: object
   models.ConfigResponse:
     properties:
       config:
@@ -174,6 +192,89 @@ info:
     url: https://www.mit-license.org/
   termsOfService: https://github.com/wetor/AnimeGo
 paths:
+  /api/bolt:
+    get:
+      consumes:
+      - application/json
+      description: 获取Bolt数据库的Bucket列表，或指定Bucket下的key列表
+      parameters:
+      - description: 当type=key时，需要此参数
+        in: query
+        name: bucket
+        type: string
+      - default: bolt
+        description: bolt, bolt_sub
+        in: query
+        name: db
+        type: string
+      - description: bucket, key
+        in: query
+        name: type
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.BoltListResponse'
+              type: object
+        "300":
+          description: Multiple Choices
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: 获取Bolt数据库的Bucket列表或key列表
+      tags:
+      - bolt
+  /api/bolt/value:
+    get:
+      consumes:
+      - application/json
+      description: |-
+        获取Bolt数据库指定Bucket和key所储存的值
+        不可忽略key中可能存在的'[', '"'等符号
+      parameters:
+      - in: query
+        name: bucket
+        required: true
+        type: string
+      - default: bolt
+        description: bolt, bolt_sub
+        in: query
+        name: db
+        type: string
+      - in: query
+        name: key
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.BoltGetResponse'
+              type: object
+        "300":
+          description: Multiple Choices
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: 获取Bolt数据库的值
+      tags:
+      - bolt
   /api/config:
     get:
       consumes:

@@ -117,8 +117,8 @@ func (t *BangumiTask) Run(force bool) {
 
 	time.Sleep(time.Second)
 	// 重新加载bolt
-	dir := path.Dir(store.Config.Advanced.Path.DbFile)
-	store.BangumiSubjectCache.Open(path.Join(dir, SubjectDB))
+	store.BangumiCache.Close()
+	store.BangumiCache.Open(path.Join(path.Dir(store.Config.Advanced.Path.DbFile), SubjectDB))
 
 	zap.S().Infof("[定时任务] %s 执行完毕，下次执行时间: %s", t.Name(), t.NextTime())
 }

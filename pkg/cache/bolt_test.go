@@ -2,6 +2,7 @@ package cache
 
 import (
 	"fmt"
+	jsoniter "github.com/json-iterator/go"
 	bolt "go.etcd.io/bbolt"
 	"testing"
 )
@@ -154,4 +155,31 @@ func TestBolt_GetAll_Sub(t *testing.T) {
 	val := &Entity{}
 	db.Get("bangumi_sub", key, val)
 	fmt.Println(val)
+}
+
+func TestBolt_ListBucket(t *testing.T) {
+	db := NewBolt()
+	db.Open("/Users/wetor/GoProjects/AnimeGo/data/cache/bolt.db")
+	list := db.ListBucket()
+	fmt.Println(list)
+}
+
+func TestBolt_ListKey(t *testing.T) {
+	db := NewBolt()
+	db.Open("/Users/wetor/GoProjects/AnimeGo/data/cache/bolt.db")
+	fmt.Println(db.ListKey("themoviedb"))
+}
+
+func TestBolt_GetValue(t *testing.T) {
+	db := NewBolt()
+	db.Open("/Users/wetor/GoProjects/AnimeGo/data/cache/bolt.db")
+	_, val, _ := db.GetValue("name2entity", "\"无良公会[第1季][第2集]\"")
+	fmt.Println(val)
+	m := make(map[string]any)
+	err := jsoniter.Unmarshal([]byte(val), &m)
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(m)
+
 }

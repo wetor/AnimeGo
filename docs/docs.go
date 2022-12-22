@@ -21,6 +21,141 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/bolt": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "获取Bolt数据库的Bucket列表，或指定Bucket下的key列表",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bolt"
+                ],
+                "summary": "获取Bolt数据库的Bucket列表或key列表",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "当type=key时，需要此参数",
+                        "name": "bucket",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "bolt",
+                        "description": "bolt, bolt_sub",
+                        "name": "db",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "bucket, key",
+                        "name": "type",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/models.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.BoltListResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "300": {
+                        "description": "Multiple Choices",
+                        "schema": {
+                            "$ref": "#/definitions/models.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/bolt/value": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "获取Bolt数据库指定Bucket和key所储存的值\n不可忽略key中可能存在的'[', '\"'等符号",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bolt"
+                ],
+                "summary": "获取Bolt数据库的值",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "bucket",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "bolt",
+                        "description": "bolt, bolt_sub",
+                        "name": "db",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "key",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/models.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.BoltGetResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "300": {
+                        "description": "Multiple Choices",
+                        "schema": {
+                            "$ref": "#/definitions/models.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/config": {
             "get": {
                 "security": [
@@ -336,12 +471,6 @@ const docTemplate = `{
                         "ignore_size_max_kb": {
                             "type": "integer"
                         },
-                        "queue_delay_second": {
-                            "type": "integer"
-                        },
-                        "queue_max_num": {
-                            "type": "integer"
-                        },
                         "rename": {
                             "type": "string"
                         },
@@ -458,6 +587,39 @@ const docTemplate = `{
                             "type": "integer"
                         }
                     }
+                }
+            }
+        },
+        "models.BoltGetResponse": {
+            "type": "object",
+            "properties": {
+                "bucket": {
+                    "type": "string"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "ttl": {
+                    "type": "integer"
+                },
+                "value": {}
+            }
+        },
+        "models.BoltListResponse": {
+            "type": "object",
+            "properties": {
+                "bucket": {
+                    "type": "string"
+                },
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "type": {
+                    "description": "bucket, key",
+                    "type": "string"
                 }
             }
         },

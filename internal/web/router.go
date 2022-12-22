@@ -39,6 +39,9 @@ func Run(ctx context.Context) {
 
 		apiRoot.GET("/config", api.Config)
 
+		apiRoot.GET("/bolt", api.BoltList)
+		apiRoot.GET("/bolt/value", api.Bolt)
+
 		s := &http.Server{
 			Addr:    fmt.Sprintf("%s:%d", store.Config.WebApi.Host, store.Config.WebApi.Port),
 			Handler: r,

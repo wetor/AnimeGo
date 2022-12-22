@@ -141,10 +141,13 @@ func Main(ctx context.Context) {
 
 	bolt := cache.NewBolt()
 	bolt.Open(config.Advanced.Path.DbFile)
+	bangumiCache := cache.NewBolt()
+	bangumiCache.Open(path.Join(path.Dir(config.Advanced.Path.DbFile), "bolt_sub.db"))
 
 	store.Init(&store.InitOptions{
-		Config: config,
-		Cache:  bolt,
+		Config:       config,
+		Cache:        bolt,
+		BangumiCache: bangumiCache,
 	})
 
 	request.Init(&request.InitOptions{
