@@ -33,7 +33,7 @@ func ParseMikan(name, url, tmdbKey string) (anime *models.AnimeEntity) {
 	// ------------------- 获取bangumi信息 -------------------
 	zap.S().Debugf("步骤2，解析Bangumi，%d, %d", bangumiID, match.Ep)
 	errMsg = "解析bangumi获取番剧信息失败失败，结束此流程"
-	entity, epInfo := anisource.Bangumi().ParseCache(bangumiID, match.Ep)
+	entity := anisource.Bangumi().ParseCache(bangumiID)
 
 	// ------------------- 获取tmdb信息(季度信息) -------------------
 	zap.S().Debugf("步骤3，解析Themoviedb，%s, %s", entity.Name, entity.AirDate)
@@ -72,11 +72,9 @@ func ParseMikan(name, url, tmdbKey string) (anime *models.AnimeEntity) {
 		Name:         entity.Name,
 		NameCN:       entity.NameCN,
 		Season:       season,
-		Ep:           epInfo.Ep,
-		EpID:         epInfo.ID,
+		Ep:           match.Ep,
 		Eps:          entity.Eps,
 		AirDate:      entity.AirDate,
-		Date:         epInfo.AirDate,
 	}
 	zap.S().Infof("获取「%s」信息成功！原名「%s」", anime.FullName(), anime.Name)
 	return anime

@@ -103,7 +103,7 @@ func TestBolt_List(t *testing.T) {
 		b := tx.Bucket([]byte("hash2name"))
 
 		b.ForEach(func(k, v []byte) error {
-			fmt.Printf("key=%s, value=%s\n", k[1:], v[8:])
+			fmt.Printf("key=%s, value=%s\n", k, v[8:])
 			return nil
 		})
 		return nil
@@ -120,4 +120,38 @@ func TestBolt_GetAll(t *testing.T) {
 		fmt.Println(*k1.(*string))
 		fmt.Println(*v1.(*string))
 	})
+}
+
+func TestBolt_List_Sub(t *testing.T) {
+	db := NewBolt()
+	db.Open("/Users/wetor/GoProjects/AnimeGo/data/cache/bolt_sub.db")
+	db.db.View(func(tx *bolt.Tx) error {
+		// Assume bucket exists and has keys
+		b := tx.Bucket([]byte("bangumi_sub"))
+
+		b.ForEach(func(k, v []byte) error {
+			fmt.Printf("key=%s, value=%s\n", k, v[8:])
+			return nil
+		})
+		return nil
+	})
+}
+
+func TestBolt_GetAll_Sub(t *testing.T) {
+	type Entity struct {
+		ID      int    `json:"id"`      // Bangumi ID
+		NameCN  string `json:"name_cn"` // 中文名
+		Name    string `json:"name"`    // 原名
+		Eps     int    `json:"eps"`     // 集数
+		AirDate string `json:"airdate"` // 可空
+
+		Type     int `json:"type"`
+		Platform int `json:"platform"`
+	}
+	db := NewBolt()
+	db.Open("/Users/wetor/GoProjects/AnimeGo/data/cache/bolt_sub.db")
+	key := 302286
+	val := &Entity{}
+	db.Get("bangumi_sub", key, val)
+	fmt.Println(val)
 }

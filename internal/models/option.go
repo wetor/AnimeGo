@@ -44,17 +44,3 @@ type AnimeParseOptions struct {
 	Date string
 	Ep   int
 }
-
-// =========== Parser ===========
-
-type ParseOptions struct {
-	Name      string
-	StartStep int
-}
-
-// =========== Process ===========
-
-type ProcessBangumiOptions struct {
-	Url  string
-	Name string
-}

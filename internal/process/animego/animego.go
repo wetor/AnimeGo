@@ -1,4 +1,4 @@
-package rss
+package animego
 
 import (
 	"context"
@@ -13,24 +13,30 @@ import (
 	"github.com/wetor/AnimeGo/internal/animego/manager/downloader"
 	filterManager "github.com/wetor/AnimeGo/internal/animego/manager/filter"
 	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/schedule"
 	"github.com/wetor/AnimeGo/internal/store"
 )
 
-type Rss struct {
+type AnimeGo struct {
 	downloaderMgr *downloader.Manager
 	filterMgr     *filterManager.Manager
+	schedule      *schedule.Schedule
 	ctx           context.Context
 }
 
-func NewRssProcess() *Rss {
-	return &Rss{}
+func NewAnimeGo() *AnimeGo {
+	return &AnimeGo{}
 }
 
-func (p *Rss) UpdateFeed(items []*models.FeedItem) {
+func (p *AnimeGo) Update(data any) {
+	items := data.([]*models.FeedItem)
 	p.filterMgr.Update(p.ctx, items)
 }
 
-func (p *Rss) Run(ctx context.Context) {
+func (p *AnimeGo) Run(ctx context.Context) {
+
+	p.schedule = schedule.NewSchedule()
+	p.schedule.Start(ctx)
 
 	qbtConf := store.Config.Setting.Client.QBittorrent
 	qbt := qbittorrent.NewQBittorrent(qbtConf.Url, qbtConf.Username, qbtConf.Password)

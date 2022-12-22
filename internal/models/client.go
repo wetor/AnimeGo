@@ -61,10 +61,3 @@ type TorrentContentItem struct {
 	Path string
 	Hash string
 }
-
-type SetApplicationPreferencesInnerReq struct {
-	Json string `json:"json"`
-}
-type SetApplicationPreferencesReq struct {
-	TorrentContentLayout *string `json:"torrent_content_layout,omitempty"`
-}

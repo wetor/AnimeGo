@@ -315,6 +315,7 @@ func (m *Manager) UpdateList() {
 				anime := &models.AnimeEntity{}
 				err := m.cache.Get(Name2EntityBucket, name, anime)
 				if err == nil {
+					_ = itemStatus
 					m.UpdateDownloadItem(status, anime, itemStatus)
 				}
 			} else {

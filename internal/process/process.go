@@ -2,10 +2,9 @@ package process
 
 import (
 	"context"
-	"github.com/wetor/AnimeGo/internal/models"
 )
 
 type Process interface {
-	UpdateFeed(items []*models.FeedItem)
+	Update(data any)
 	Run(ctx context.Context)
 }

@@ -2,26 +2,33 @@ package bangumi
 
 import (
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
+	"github.com/wetor/AnimeGo/internal/store"
 	"github.com/wetor/AnimeGo/pkg/errors"
 	mem "github.com/wetor/AnimeGo/pkg/memorizer"
 	"github.com/wetor/AnimeGo/pkg/request"
 	"github.com/wetor/AnimeGo/third_party/bangumi/res"
-	"go.uber.org/zap"
+	"path"
+)
+
+const (
+	SubjectBucket = "bangumi_sub"
+	SubjectDB     = "bolt_sub.db"
 )
 
 var (
-	Host         = "https://api.bgm.tv"
-	Bucket       = "bangumi"
-	MatchEpRange = 10
+	Host   = "https://api.bgm.tv"
+	Bucket = "bangumi"
 )
 
 type Bangumi struct {
-	cacheInit             bool
-	cacheParseAnimeInfo   mem.Func
-	cacheParseAnimeEpInfo mem.Func
+	cacheInit           bool
+	cacheParseAnimeInfo mem.Func
 }
 
 func (b *Bangumi) RegisterCache() {
+	dir := path.Dir(store.Config.Advanced.Path.DbFile)
+	store.BangumiSubjectCache.Open(path.Join(dir, SubjectDB))
+
 	if anidata.Cache == nil {
 		errors.NewAniError("需要先调用anidata.Init初始化缓存").TryPanic()
 	}
@@ -31,36 +38,28 @@ func (b *Bangumi) RegisterCache() {
 		results.Set("entity", entity)
 		return nil
 	})
-
-	b.cacheParseAnimeEpInfo = mem.Memorized(Bucket, anidata.Cache, func(params *mem.Params, results *mem.Results) error {
-		epInfo := b.parseAnimeEpInfo(
-			params.Get("bangumiID").(int),
-			params.Get("ep").(int),
-			params.Get("eps").(int),
-		)
-		results.Set("epInfo", epInfo)
-		return nil
-	})
 }
 
-func (b Bangumi) ParseCache(bangumiID, ep int) (entity *Entity, epInfo *Ep) {
+func (b Bangumi) ParseCache(bangumiID int) (entity *Entity) {
 	if !b.cacheInit {
 		b.RegisterCache()
 	}
-	results := mem.NewResults("entity", &Entity{})
 
+	if e1, err := b.loadAnimeInfo(bangumiID); err == nil {
+		entity = e1
+	}
+
+	if entity != nil {
+		return
+	}
+
+	results := mem.NewResults("entity", &Entity{})
 	err := b.cacheParseAnimeInfo(mem.NewParams("bangumiID", bangumiID).
 		TTL(anidata.CacheTime[Bucket]), results)
 	errors.NewAniErrorD(err).TryPanic()
 	entity = results.Get("entity").(*Entity)
 
-	results = mem.NewResults("epInfo", &Ep{})
-	err = b.cacheParseAnimeEpInfo(
-		mem.NewParams("bangumiID", bangumiID, "ep", ep, "eps", entity.Eps).
-			TTL(anidata.CacheTime[Bucket]), results)
-	errors.NewAniErrorD(err).TryPanic()
-	epInfo = results.Get("epInfo").(*Ep)
-	return entity, epInfo
+	return entity
 }
 
 // Parse
@@ -69,12 +68,10 @@ func (b Bangumi) ParseCache(bangumiID, ep int) (entity *Entity, epInfo *Ep) {
 //  @param bangumiID int
 //  @param ep int
 //  @return entity *Entity
-//  @return epInfo *Ep
 //
-func (b Bangumi) Parse(bangumiID, ep int) (entity *Entity, epInfo *Ep) {
+func (b Bangumi) Parse(bangumiID int) (entity *Entity) {
 	entity = b.parseAnimeInfo(bangumiID)
-	epInfo = b.parseAnimeEpInfo(bangumiID, ep, entity.Eps)
-	return entity, epInfo
+	return entity
 }
 
 // parseAnimeInfo
@@ -106,42 +103,8 @@ func (b Bangumi) parseAnimeInfo(bangumiID int) (entity *Entity) {
 	return entity
 }
 
-// parseBnagumiEpInfo
-//  @Description: 解析番剧ep信息。TODO:暂时无用，所以不会抛出错误
-//  @receiver Bangumi
-//  @param bangumiID int
-//  @param ep int
-//  @param eps int 总集数，用于计算筛选范围，减少遍历范围
-//  @return epInfo *Ep
-//
-func (b Bangumi) parseAnimeEpInfo(bangumiID, ep, eps int) (epInfo *Ep) {
-	defer errors.HandleError(func(err error) {
-		zap.S().Debug("[非必要]", err)
-	})
-
-	uri := epInfoApi(bangumiID, ep, eps)
-	resp := &res.Paged{
-		Data: make([]*res.Episode, 0, MatchEpRange*2+1),
-	}
-	err := request.Get(uri, &resp)
-	errors.NewAniErrorD(err).TryPanic()
-
-	var respEp *res.Episode = nil
-	for _, e := range resp.Data {
-		if ep == int(e.Ep) {
-			respEp = e
-			break
-		}
-	}
-	if respEp == nil {
-		epInfo = &Ep{Ep: ep}
-		errors.NewAniError("未匹配到对应ep").TryPanic()
-	} else {
-		epInfo = &Ep{
-			Ep:      int(respEp.Ep),
-			AirDate: respEp.Airdate,
-			ID:      int(respEp.ID),
-		}
-	}
-	return epInfo
+func (b Bangumi) loadAnimeInfo(bangumiID int) (entity *Entity, err error) {
+	entity = &Entity{}
+	err = store.BangumiSubjectCache.Get(SubjectBucket, bangumiID, entity)
+	return entity, err
 }

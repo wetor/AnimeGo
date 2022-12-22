@@ -8,10 +8,11 @@ import (
 )
 
 var (
-	Cache   *cache.Bolt
-	Config  *configs.Config
-	WG      sync.WaitGroup
-	Process process.Process
+	Cache               *cache.Bolt
+	Config              *configs.Config
+	WG                  sync.WaitGroup
+	Process             process.Process
+	BangumiSubjectCache *cache.Bolt
 )
 
 type InitOptions struct {
@@ -27,5 +28,5 @@ func Init(opt *InitOptions) {
 
 	Config = opt.Config
 	Cache = opt.Cache
-
+	BangumiSubjectCache = cache.NewBolt()
 }

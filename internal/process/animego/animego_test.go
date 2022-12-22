@@ -1,4 +1,4 @@
-package rss
+package animego
 
 import (
 	"context"
@@ -19,7 +19,7 @@ func TestMain(m *testing.M) {
 
 func TestMikanProcess(t *testing.T) {
 
-	m := NewRssProcess()
+	m := NewAnimeGo()
 	ctx, cancel := context.WithCancel(context.Background())
 	m.Run(ctx)
 	store.WG.Add(2)

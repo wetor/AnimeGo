@@ -1,7 +1,7 @@
 package models
 
 import (
-	"github.com/wetor/AnimeGo/internal/animego/plugin/javascript"
+	"github.com/wetor/AnimeGo/internal/plugin/javascript"
 	"github.com/wetor/AnimeGo/internal/store"
 	"path"
 )

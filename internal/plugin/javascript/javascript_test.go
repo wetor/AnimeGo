@@ -36,13 +36,10 @@ func TestJs2(t *testing.T) {
 	os.Setenv("ANIMEGO_VERSION", "0.2.2")
 	js := &JavaScript{}
 	js.SetSchema([]string{"feedItems"}, []string{"index", "error"})
-	execute, err := js.Execute("/Users/wetor/GoProjects/AnimeGo/internal/animego/plugin/javascript/test.js",
+	execute := js.Execute("/Users/wetor/GoProjects/AnimeGo/internal/animego/plugin/javascript/test.js",
 		Object{
 			"feedItems": []*models.FeedItem{},
 		})
-	if err != nil {
-		panic(err)
-	}
 	fmt.Println(execute)
 }
 
@@ -51,7 +48,7 @@ func TestJavaScript_Execute(t *testing.T) {
 
 	js := &JavaScript{}
 	js.SetSchema([]string{"feedItems"}, []string{"index", "error"})
-	execute, err := js.Execute("/Users/wetor/GoProjects/AnimeGo/data/plugin/filter/test",
+	execute := js.Execute("/Users/wetor/GoProjects/AnimeGo/data/plugin/filter/test",
 		Object{
 			"feedItems": []*models.FeedItem{
 				{
@@ -66,8 +63,5 @@ func TestJavaScript_Execute(t *testing.T) {
 				},
 			},
 		})
-	if err != nil {
-		panic(err)
-	}
 	fmt.Println(execute)
 }

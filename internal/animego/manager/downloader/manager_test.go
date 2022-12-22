@@ -36,8 +36,6 @@ func Download1(m *Manager) {
 		Eps:     0,
 		Season:  1,
 		Ep:      712,
-		Date:    "2022-06-27",
-		EpID:    1114366,
 		MikanID: 681,
 		DownloadInfo: &models.DownloadInfo{
 			Url:  "https://mikanani.me/Download/20220626/171f3b402fa4cf770ef267c0744a81b6b9ad77f2.torrent",
@@ -57,8 +55,6 @@ func Download2(m *Manager) {
 		Eps:     0,
 		Season:  1,
 		Ep:      1026,
-		Date:    "2022-06-27",
-		EpID:    1114366,
 		MikanID: 228,
 		DownloadInfo: &models.DownloadInfo{
 			Url:  "https://mikanani.me/Download/20220725/193f881098f1a2a4347e8b04512118090f79345d.torrent",

@@ -46,7 +46,7 @@ func Rss(c *gin.Context) {
 		}
 		items = selectItems
 	}
-	go store.Process.UpdateFeed(items)
+	go store.Process.Update(items)
 	c.JSON(webModels.Succ(fmt.Sprintf("开始处理%d个下载项", len(items))))
 }
 

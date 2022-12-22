@@ -9,7 +9,7 @@ import (
 	"github.com/wetor/AnimeGo/configs"
 	_ "github.com/wetor/AnimeGo/docs"
 	"github.com/wetor/AnimeGo/internal/logger"
-	"github.com/wetor/AnimeGo/internal/process/rss"
+	"github.com/wetor/AnimeGo/internal/process/animego"
 	"github.com/wetor/AnimeGo/internal/store"
 	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/internal/web"
@@ -22,6 +22,7 @@ import (
 	"path"
 	"strings"
 	"syscall"
+	"time"
 )
 
 const (
@@ -107,6 +108,10 @@ func InitData() {
 func doExit() {
 	zap.S().Infof("正在退出...")
 	cancel()
+	go func() {
+		time.Sleep(5 * time.Second)
+		os.Exit(0)
+	}()
 }
 
 func printInfo() {
@@ -150,7 +155,7 @@ func Main(ctx context.Context) {
 		Debug:     debug,
 	})
 
-	store.Process = rss.NewRssProcess()
+	store.Process = animego.NewAnimeGo()
 	store.Process.Run(ctx)
 
 	web.Init(&web.InitOptions{
