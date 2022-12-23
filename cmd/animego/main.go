@@ -101,7 +101,8 @@ func InitData() {
 	}
 	copyDir(assets.Plugin, "plugin", path.Join(conf.Setting.DataPath, "plugin"), true)
 	log.Printf("初始化默认配置完成（%s）\n", conf.Setting.DataPath)
-	log.Println("--------------------------------------------------")
+	log.Println("请设置配置后重新启动")
+	os.Exit(0)
 	return
 }
 

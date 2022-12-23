@@ -92,6 +92,18 @@ func IsExist(path string) bool {
 	return true
 }
 
+//FileSize 获取文件大小，文件不存返回-1
+func FileSize(path string) int64 {
+	s, err := os.Stat(path) //os.Stat获取文件信息
+	if err != nil {
+		if os.IsExist(err) {
+			return s.Size()
+		}
+		return -1
+	}
+	return s.Size()
+}
+
 //IsDir 判断所给路径是否为文件夹
 func IsDir(path string) bool {
 	s, err := os.Stat(path)

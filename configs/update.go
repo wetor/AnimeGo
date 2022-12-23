@@ -64,6 +64,8 @@ func UpdateConfig(oldFile string) {
 	}
 	log.Println("===========子流程结束===========")
 	log.Printf("配置文件升级完成：%s => %s\n", oldVer, newVer)
+	log.Println("请确认配置后重新启动")
+	os.Exit(0)
 
 }
 
