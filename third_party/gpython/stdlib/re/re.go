@@ -11,12 +11,12 @@ import (
 
 func init() {
 	methods := []*py.Method{
-		py.MustNewMethod("match", match, 0, "match"),
-		py.MustNewMethod("search", search, 0, "match"),
-		py.MustNewMethod("sub", sub, 0, "match"),
-		py.MustNewMethod("split", split, 0, "match"),
-		py.MustNewMethod("findall", findAll, 0, "match"),
-		py.MustNewMethod("compile", compile, 0, "match"),
+		py.MustNewMethod("match", match, 0, "match(pattern, string)"),
+		py.MustNewMethod("search", search, 0, "search(pattern, string)"),
+		py.MustNewMethod("sub", sub, 0, "sub(pattern, repl, string[, count=0])"),
+		py.MustNewMethod("split", split, 0, "split(pattern, string[, maxsplit=0])"),
+		py.MustNewMethod("findall", findAll, 0, "findall(pattern, string[, pos[, endpos]])"),
+		py.MustNewMethod("compile", compile, 0, "compile(pattern)"),
 	}
 
 	py.RegisterModule(&py.ModuleImpl{
@@ -50,7 +50,7 @@ func split(self py.Object, arg py.Tuple) (py.Object, error) {
 
 func findAll(self py.Object, arg py.Tuple) (py.Object, error) {
 	pattern := string(arg[0].(py.String))
-	return _compile(pattern).findAll(arg[1])
+	return _compile(pattern).findAll(arg[1:])
 }
 
 func compile(self py.Object, arg py.Object) (py.Object, error) {

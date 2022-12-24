@@ -1,24 +1,59 @@
-# Copyright 2022 The go-python Authors.  All rights reserved.
-# Use of this source code is governed by a BSD-style
-# license that can be found in the LICENSE file.
-
 import re
 
-EPISODE_RE = re.compile(r"\d+")
-TITLE_RE = re.compile(
-    r"(.*|\[.*])( -? \d+ |\[\d+]|\[\d+.?[vV]\d{1}]|[第]\d+[话話集]|\[\d+.?END])(.*)"
-)
-RESOLUTION_RE = re.compile(r"1080|720|2160|4K")
-SOURCE_RE = re.compile(r"B-Global|[Bb]aha|[Bb]ilibili|AT-X|Web")
-SUB_RE = re.compile(r"[简繁日字幕]|CH|BIG5|GB")
+# ======== match ========
+line = "Cats are smarter than dogs"
+# .* 表示任意匹配除换行符（\n、\r）之外的任何单个或多个字符
+# (.*?) 表示"非贪婪"模式，只保存第一个匹配到的子串
+matchObj = re.match(r'(.*) are (.*?) .*', line)
 
-txt = "[梦蓝字幕组]New Doraemon 哆啦A梦新番[716][2022.07.23][AVC][10080P][GB_JP]"
+if matchObj:
+    print("matchObj.group() : ", matchObj.group())
+    print("matchObj.group(1) : ", matchObj.group(1))
+    print("matchObj.group(2) : ", matchObj.group(2))
+else:
+    print("No match!!")
 
-# match_obj = TITLE_RE.match(txt)  # 处理标题
-#
-# for group in match_obj.groups():
-#     print(group)
+# ======== search ========
+line = "Cats are smarter than dogs"
 
-print(re.split(r"[一-龥]{2,}", "asd梦蓝字幕组aasd"))
+searchObj = re.search(r'(.*) are (.*?) .*', line)
+
+if searchObj:
+    print("searchObj.group() : ", searchObj.group())
+    print("searchObj.group(1) : ", searchObj.group(1))
+    print("searchObj.group(2) : ", searchObj.group(2))
+else:
+    print("Nothing found!!")
+
+# ======== sub1 ========
+phone = "2004-959-559# 这是一个电话号码"
+
+# 删除注释
+num = re.sub(r'#.*$', "", phone)
+print("电话号码 : ", num)
+
+# 移除非数字的内容
+num = re.sub(r'\D', "", phone)
+print("电话号码 : ", num)
 
 
+# ======== sub2 ========
+# 将匹配的数字乘以 2
+def double(matched):
+    value = int(matched.group(0))
+    return str(value * 2)
+
+
+s = 'A23G4HFD567'
+print(re.sub('(?P<value>\d+)', double, s))
+
+# ======== findall ========
+result1 = re.findall(r'\d+','runoob 123 google 456')
+
+pattern = re.compile(r'\d+')   # 查找数字
+result2 = pattern.findall('runoob 123 google 456')
+result3 = pattern.findall('run88oob123google456', 0, 10)
+
+print(result1)
+print(result2)
+print(result3)

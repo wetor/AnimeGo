@@ -44,33 +44,65 @@ func (p *Pattern) search(arg py.Object) (py.Object, error) {
 }
 
 func (p *Pattern) sub(arg py.Tuple) (py.Object, error) {
-	repl := string(arg[0].(py.String))
+	var method func(s string) string
+	var err error
+
+	switch val := arg[0].(type) {
+	case py.String:
+		method = func(s string) string {
+			return p.regx.ReplaceAllString(s, string(val))
+		}
+	case *py.Function:
+		method = func(s string) string {
+			ret, e := val.M__call__(py.Tuple{_match([]string{s})}, nil)
+			err = e
+			if ret == nil {
+				return ""
+			}
+			return string(ret.(py.String))
+		}
+	}
+
 	str := string(arg[1].(py.String))
 	count := -1
 	if len(arg) >= 3 {
 		count = int(arg[2].(py.Int))
+		if count == 0 {
+			count = -1
+		}
 	}
 	return py.String(p.regx.ReplaceAllStringFunc(str, func(s string) string {
 		if count == 0 {
 			return s
 		}
 		count--
-		return p.regx.ReplaceAllString(s, repl)
-	})), nil
+		return method(s)
+	})), err
 }
 
-func (p *Pattern) split(arg py.Tuple) (py.Object, error) {
-	str := string(arg[0].(py.String))
+func (p *Pattern) split(args py.Tuple) (py.Object, error) {
+	str := string(args[0].(py.String))
 	maxSplit := -1
-	if len(arg) >= 2 {
-		maxSplit = int(arg[1].(py.Int))
+	if len(args) >= 2 {
+		maxSplit = int(args[1].(py.Int))
+		if maxSplit == 0 {
+			maxSplit = -1
+		}
 	}
 	return py.NewListFromStrings(p.regx.Split(str, maxSplit)), nil
 }
 
-func (p *Pattern) findAll(arg py.Object) (py.Object, error) {
-	str := string(arg.(py.String))
-	result := p.regx.FindAllStringSubmatch(str, -1)
+func (p *Pattern) findAll(args py.Tuple) (py.Object, error) {
+	str := string(args[0].(py.String))
+	pos := 0
+	end := len(str)
+	if len(args) >= 2 {
+		pos = int(args[1].(py.Int))
+	}
+	if len(args) >= 3 {
+		end = int(args[2].(py.Int))
+	}
+	result := p.regx.FindAllStringSubmatch(str[pos:end], -1)
 	tuple := make([]py.Object, len(result))
 	for i, list := range result {
 		tuple[i] = _match(list)
@@ -81,22 +113,22 @@ func (p *Pattern) findAll(arg py.Object) (py.Object, error) {
 func init() {
 	PatternType.Dict["match"] = py.MustNewMethod("match", func(self py.Object, arg py.Object) (py.Object, error) {
 		return self.(*Pattern).match(arg)
-	}, 0, `pattern`)
+	}, 0, `match(string)`)
 
 	PatternType.Dict["search"] = py.MustNewMethod("search", func(self py.Object, arg py.Object) (py.Object, error) {
 		return self.(*Pattern).search(arg)
-	}, 0, `pattern`)
+	}, 0, `search(string)`)
 
 	PatternType.Dict["sub"] = py.MustNewMethod("sub", func(self py.Object, args py.Tuple) (py.Object, error) {
 		return self.(*Pattern).sub(args)
-	}, 0, `pattern`)
+	}, 0, `sub(repl, string[, count=0])`)
 
 	PatternType.Dict["split"] = py.MustNewMethod("split", func(self py.Object, args py.Tuple) (py.Object, error) {
 		return self.(*Pattern).split(args)
-	}, 0, `pattern`)
+	}, 0, `split(string[, maxsplit=0])`)
 
-	PatternType.Dict["findall"] = py.MustNewMethod("findall", func(self py.Object, arg py.Object) (py.Object, error) {
-		return self.(*Pattern).findAll(arg)
-	}, 0, `pattern`)
+	PatternType.Dict["findall"] = py.MustNewMethod("findall", func(self py.Object, args py.Tuple) (py.Object, error) {
+		return self.(*Pattern).findAll(args)
+	}, 0, `findall(string[, pos[, endpos]])`)
 
 }
