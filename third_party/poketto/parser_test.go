@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"encoding/csv"
 	"fmt"
-	"github.com/wetor/AnimeGo/internal/animego/parser"
 	"os"
 	"testing"
 )
@@ -20,12 +19,13 @@ func TestParser(t *testing.T) {
 	var eps []*Episode
 	for sc.Scan() {
 		title := sc.Text()
-		cmp, err := parser.ParseTitle(title)
+		cmp := NewEpisode(title)
+		cmp.TryParse()
 		ep := NewEpisode(title)
 		ep.TryParse()
 		if ep.ParseErr == nil && err == nil {
 			fmt.Printf("ep: [%v %v], dpi: [%v %v], sub: [%v %v], source: [%v %v], err: [%v %v]\n",
-				ep.Ep, cmp.Ep, ep.Definition, cmp.Definition, ep.Sub, cmp.Subtitle, ep.Source, cmp.Source, ep.ParseErr, err)
+				ep.Ep, cmp.Ep, ep.Definition, cmp.Definition, ep.Sub, cmp.Sub, ep.Source, cmp.Source, ep.ParseErr, err)
 		} else {
 			fmt.Println(ep.ParseErr, err)
 		}
