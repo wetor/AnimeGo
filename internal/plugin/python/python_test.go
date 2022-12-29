@@ -7,8 +7,8 @@ import (
 
 func TestRe1(t *testing.T) {
 	gpython.Init()
-	pyFile := "./script/raw_parser.py"
-	err := RunWithFile(pyFile)
+	pyFile := "./data/raw_parser.py"
+	err := RunWithFile(pyFile, true)
 	if err != nil {
 		panic(err)
 	}

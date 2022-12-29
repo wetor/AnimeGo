@@ -1,37 +1,40 @@
-package javascript
+package plugin
 
 import (
 	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/internal/plugin/javascript"
-	"github.com/wetor/AnimeGo/internal/store"
+	"github.com/wetor/AnimeGo/internal/plugin"
 )
 
-type JavaScript struct {
+type Filter struct {
 	ScriptFile []string
+	plugin     plugin.Plugin
 }
 
-func (j *JavaScript) Filter(list []*models.FeedItem) []*models.FeedItem {
-	if len(j.ScriptFile) == 0 {
-		j.ScriptFile = store.Config.Filter.JavaScript
+func NewPluginFilter(plugin plugin.Plugin, files []string) *Filter {
+	return &Filter{
+		ScriptFile: files,
+		plugin:     plugin,
 	}
+}
+
+func (p *Filter) Filter(list []*models.FeedItem) []*models.FeedItem {
 	// 过滤出的index列表
 	filterIndex := make([]int64, 0, len(list))
 	for i := range list {
 		filterIndex = append(filterIndex, int64(i))
 	}
-	for _, jsFile := range j.ScriptFile {
+	for _, jsFile := range p.ScriptFile {
 		// 入参
 		inList := make([]*models.FeedItem, 0)
 		for _, i := range filterIndex {
 			inList = append(inList, list[i])
 		}
-		js := &javascript.JavaScript{}
-		js.SetSchema([]string{"feedItems"}, []string{"index", "error"})
-		execute := js.Execute(jsFile, javascript.Object{
+		p.plugin.SetSchema([]string{"feedItems"}, []string{"index", "error"})
+		execute := p.plugin.Execute(jsFile, plugin.Object{
 			"feedItems": inList,
 		})
 		// 返回的index列表
-		resultIndex := execute.(javascript.Object)["index"].([]any)
+		resultIndex := execute.(plugin.Object)["index"].([]any)
 
 		filterIndex = make([]int64, 0, len(resultIndex))
 		for _, index := range resultIndex {

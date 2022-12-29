@@ -49,7 +49,7 @@
 
 ## 文档
 1. [配置文件](assets/config/animego.yaml)
-2. [插件函数文档（仅过滤器）](internal/animego/plugin/javascript/README.md)
+2. [插件函数文档（仅过滤器）](internal/animego/plugin/README.md)
 3. [webapi(Swagger)接口文档](internal/web/README.md)
 
 ## 目的

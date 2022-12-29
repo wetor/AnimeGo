@@ -44,6 +44,7 @@ class Episode:
                (self.title_en, self.title_zh, self.title_jp, self.season, self.season_raw,
                 self.episode, self.sub, self.resolution, self.source, self.group)
 
+
 class RawParser:
     @staticmethod
     def get_group(name):
@@ -157,8 +158,17 @@ class RawParser:
         return Episode(name_en, name_zh, name_jp, season, sr, episode, sub, group, dpi, source)
 
 
-test = RawParser()
-test_txt = "[梦蓝字幕组]New Doraemon 哆啦A梦新番[716][2022.07.23][AVC][10080P][GB_JP]"
-ep = test.analyse(test_txt)
-print(ep)
-print("en:%s, zh:%s, jp:%s, group:%s" % (ep.title_en, ep.title_zh, ep.title_jp, ep.group))
+parser = RawParser()
+
+
+def main(args):
+    ep = parser.analyse(args['title'])
+    return ep
+
+
+def __test__():
+    test_txt = "[梦蓝字幕组]New Doraemon 哆啦A梦新番[716][2022.07.23][AVC][10080P][GB_JP]"
+    ep = parser.analyse(test_txt)
+    print(ep)
+    print("en:%s, zh:%s, jp:%s, group:%s" % (ep.title_en, ep.title_zh, ep.title_jp, ep.group))
+    return ep

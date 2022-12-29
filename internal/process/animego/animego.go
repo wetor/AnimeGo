@@ -9,10 +9,11 @@ import (
 	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
 	"github.com/wetor/AnimeGo/internal/animego/downloader/qbittorrent"
 	feedRss "github.com/wetor/AnimeGo/internal/animego/feed/rss"
-	"github.com/wetor/AnimeGo/internal/animego/filter/javascript"
+	"github.com/wetor/AnimeGo/internal/animego/filter/plugin"
 	"github.com/wetor/AnimeGo/internal/animego/manager/downloader"
 	filterManager "github.com/wetor/AnimeGo/internal/animego/manager/filter"
 	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/plugin/javascript"
 	"github.com/wetor/AnimeGo/internal/schedule"
 	"github.com/wetor/AnimeGo/internal/store"
 )
@@ -55,7 +56,8 @@ func (p *AnimeGo) Run(ctx context.Context) {
 
 	p.downloaderMgr = downloader.NewManager(qbt, store.Cache, downloadChan)
 
-	p.filterMgr = filterManager.NewManager(&javascript.JavaScript{},
+	p.filterMgr = filterManager.NewManager(
+		plugin.NewPluginFilter(&javascript.JavaScript{}, store.Config.Filter.JavaScript),
 		feedRss.NewRss(store.Config.Setting.Feed.Mikan.Url, store.Config.Setting.Feed.Mikan.Name),
 		mikan.MikanAdapter{ThemoviedbKey: store.Config.Setting.Key.Themoviedb},
 		downloadChan)

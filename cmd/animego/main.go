@@ -60,8 +60,6 @@ func main() {
 	flag.BoolVar(&debug, "debug", false, "Debug模式，将会显示更多的日志")
 	flag.Parse()
 
-	InitData()
-
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGQUIT)
 	go func() {
@@ -78,13 +76,12 @@ func main() {
 	Main(ctx)
 }
 
-func InitData() {
+func InitDefaultConfig() {
 	if utils.IsExist(configFile) {
 		// 尝试升级配置文件
 		configs.UpdateConfig(configFile)
 		return
 	}
-
 	log.Printf("未找到配置文件（%s），开始初始化默认配置\n", configFile)
 	conf := configs.DefaultConfig()
 	if utils.IsExist(conf.Setting.DataPath) {
@@ -99,11 +96,16 @@ func InitData() {
 	if err != nil {
 		panic(err)
 	}
-	copyDir(assets.Plugin, "plugin", path.Join(conf.Setting.DataPath, "plugin"), true)
+
+	InitDefaultAssets(conf)
+
 	log.Printf("初始化默认配置完成（%s）\n", conf.Setting.DataPath)
 	log.Println("请设置配置后重新启动")
 	os.Exit(0)
-	return
+}
+
+func InitDefaultAssets(conf *configs.Config) {
+	copyDir(assets.Plugin, "plugin", path.Join(conf.Setting.DataPath, "plugin"), true, true)
 }
 
 func doExit() {
@@ -130,9 +132,12 @@ func printInfo() {
 }
 
 func Main(ctx context.Context) {
+	InitDefaultConfig()
 
 	config := configs.Init(configFile)
 	config.InitDir()
+
+	InitDefaultAssets(config)
 
 	logger.Init(&logger.InitOptions{
 		File:    config.Advanced.Path.LogFile,
@@ -170,7 +175,7 @@ func Main(ctx context.Context) {
 	store.WG.Wait()
 }
 
-func copyDir(fs embed.FS, src, dst string, replace bool) {
+func copyDir(fs embed.FS, src, dst string, replace bool, skip bool) {
 	files, err := fs.ReadDir(src)
 	if err != nil {
 		panic(err)
@@ -182,24 +187,32 @@ func copyDir(fs embed.FS, src, dst string, replace bool) {
 	}
 
 	for _, file := range files {
+		writeFile := true
 		srcPath := path.Join(src, file.Name())
 		dstPath := path.Join(dst, file.Name())
 		if file.IsDir() {
-			copyDir(fs, srcPath, dstPath, replace)
+			copyDir(fs, srcPath, dstPath, replace, skip)
 			continue
 		}
 		fileContent, err := fs.ReadFile(srcPath)
 		if err != nil {
 			panic(err)
 		}
-		if !replace && utils.IsExist(dstPath) {
-			log.Printf("文件[%s]已存在，是否替换[y(yes)/n(no)]: ", dstPath)
-			if !scanYesNo() {
-				continue
+		if utils.IsExist(dstPath) {
+			if !replace {
+				log.Printf("文件[%s]已存在，是否替换[y(yes)/n(no)]: ", dstPath)
+				if !scanYesNo() {
+					continue
+				}
+			}
+			if skip {
+				writeFile = false
 			}
 		}
-		if err := os.WriteFile(dstPath, fileContent, os.ModePerm); err != nil {
-			panic(err)
+		if writeFile {
+			if err := os.WriteFile(dstPath, fileContent, os.ModePerm); err != nil {
+				panic(err)
+			}
 		}
 	}
 }

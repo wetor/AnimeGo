@@ -2,6 +2,7 @@ package javascript
 
 import (
 	"github.com/dop251/goja"
+	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/pkg/errors"
 	"os"
 	"path"
@@ -10,7 +11,7 @@ import (
 
 type JavaScript struct {
 	*goja.Runtime
-	main         func(Object) Object // 主函数
+	main         func(plugin.Object) plugin.Object // 主函数
 	paramsSchema []string
 	resultSchema []string
 }
@@ -81,7 +82,7 @@ func (js *JavaScript) registerVar() {
 	}
 }
 
-func (js *JavaScript) checkParams(params Object) {
+func (js *JavaScript) checkParams(params plugin.Object) {
 	for _, field := range js.paramsSchema {
 		_, has := params[field]
 		if !has {
@@ -91,7 +92,7 @@ func (js *JavaScript) checkParams(params Object) {
 }
 
 func (js *JavaScript) checkResult(result any) {
-	resultMap, ok := result.(Object)
+	resultMap, ok := result.(plugin.Object)
 	if !ok {
 		errors.NewAniError("返回类型错误").TryPanic()
 	}
@@ -108,7 +109,7 @@ func (js *JavaScript) SetSchema(paramsSchema, resultSchema []string) {
 	js.resultSchema = resultSchema
 }
 
-func (js *JavaScript) Execute(file string, params Object) (result any) {
+func (js *JavaScript) Execute(file string, params plugin.Object) (result any) {
 	js.checkParams(params)
 
 	js.preExecute()

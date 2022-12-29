@@ -1,9 +1,10 @@
-package javascript
+package plugin
 
 import (
 	"fmt"
 	mikanRss "github.com/wetor/AnimeGo/internal/animego/feed/rss"
 	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/plugin/javascript"
 	"github.com/wetor/AnimeGo/internal/store"
 	"github.com/wetor/AnimeGo/test"
 	"testing"
@@ -15,7 +16,7 @@ func TestJavaScript_Filter(t *testing.T) {
 	feed := mikanRss.NewRss(store.Config.Setting.Feed.Mikan.Url, store.Config.Setting.Feed.Mikan.Name)
 	items := feed.Parse()
 	fmt.Println(len(items))
-	js := &JavaScript{}
+	js := NewPluginFilter(&javascript.JavaScript{}, store.Config.Filter.JavaScript)
 	result := js.Filter(items)
 	fmt.Println(len(result))
 	for _, r := range result {
@@ -39,11 +40,9 @@ func TestJavaScript_Filter2(t *testing.T) {
 			Name: "3333",
 		},
 	}
-	js := &JavaScript{
-		ScriptFile: []string{
-			"/Users/wetor/GoProjects/AnimeGo/data/plugin/filter/regexp.js",
-		},
-	}
+	js := NewPluginFilter(&javascript.JavaScript{}, []string{
+		"/Users/wetor/GoProjects/AnimeGo/data/plugin/filter/regexp.js",
+	})
 	result := js.Filter(list)
 	fmt.Println(len(result))
 	for _, r := range result {

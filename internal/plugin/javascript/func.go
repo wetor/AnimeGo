@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/wetor/AnimeGo/internal/animego/anidata/mikan"
 	"github.com/wetor/AnimeGo/internal/animego/anisource"
+	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/pkg/errors"
 	"github.com/wetor/AnimeGo/third_party/poketto"
 	"go.uber.org/zap"
@@ -15,30 +16,30 @@ import (
 
 // initFunc
 //  @Description: 获取js需要注册的函数列表
-//  @return Object
+//  @return plugin.Object
 //
-func (js JavaScript) initFunc() Object {
-	return Object{
+func (js JavaScript) initFunc() plugin.Object {
+	return plugin.Object{
 		"print": js.Print,
 		"sleep": js.Sleep,
-		"os": Object{
+		"os": plugin.Object{
 			"readFile": js.ReadFile,
 		},
-		"goLog": Object{
+		"goLog": plugin.Object{
 			"debug": zap.S().Debug,
 			"info":  zap.S().Info,
 			"error": zap.S().Error,
 		},
-		"animeGo": Object{
+		"animeGo": plugin.Object{
 			"parseName":    js.ParseName,
 			"getMikanInfo": js.GetMikanInfo,
 		},
 	}
 }
 
-func (js JavaScript) initVar() Object {
-	return Object{
-		"variable": Object{
+func (js JavaScript) initVar() plugin.Object {
+	return plugin.Object{
+		"variable": plugin.Object{
 			"version": os.Getenv("ANIMEGO_VERSION"),
 			"name":    currName,
 		},
