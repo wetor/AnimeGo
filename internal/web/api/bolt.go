@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	jsoniter "github.com/json-iterator/go"
 	"github.com/wetor/AnimeGo/internal/store"
@@ -58,7 +57,6 @@ func BoltList(c *gin.Context) {
 // Bolt godoc
 //  @Summary 获取Bolt数据库的值
 //  @Description 获取Bolt数据库指定Bucket和key所储存的值
-//  @Description 不可忽略key中可能存在的'[', '"'等符号
 //  @Tags bolt
 //  @Accept  json
 //  @Produce  json
@@ -90,14 +88,56 @@ func Bolt(c *gin.Context) {
 	m := make(map[string]any)
 	err = jsoniter.Unmarshal([]byte(val), &m)
 	if err != nil {
-		c.JSON(webModels.Fail("转换失败，" + err.Error()))
+		str := ""
+		err = jsoniter.Unmarshal([]byte(val), &str)
+		if err != nil {
+			c.JSON(webModels.Fail("转换失败，" + err.Error()))
+			return
+		}
+		c.JSON(webModels.Succ("查询结果", webModels.BoltGetResponse{
+			Bucket: request.Bucket,
+			Key:    request.Key,
+			Value:  str,
+			TTL:    ttl,
+		}))
 		return
 	}
-	fmt.Println(m)
 	c.JSON(webModels.Succ("查询结果", webModels.BoltGetResponse{
 		Bucket: request.Bucket,
 		Key:    request.Key,
 		Value:  m,
 		TTL:    ttl,
 	}))
+}
+
+// BoltDelete godoc
+//  @Summary 删除Bolt数据库的值
+//  @Description 删除Bolt数据库指定Bucket和key所储存的值
+//  @Tags bolt
+//  @Accept  json
+//  @Produce  json
+//  @Param type query webModels.BoltDeleteRequest true "删除bolt数据库值"
+//  @Success 200 {object} webModels.Response{data=webModels.BoltGetResponse}
+//  @Failure 300 {object} webModels.Response
+//  @Security ApiKeyAuth
+//  @Router /api/bolt/value [delete]
+func BoltDelete(c *gin.Context) {
+	var request webModels.BoltDeleteRequest
+	if !checkRequest(c, &request) {
+		return
+	}
+	var db *cache.Bolt
+	if request.DB == "bolt" {
+		db = store.Cache
+	} else {
+		c.JSON(webModels.Fail("参数错误，只能删除 bolt 数据库中的数据"))
+		return
+	}
+
+	err := db.Delete(request.Bucket, request.Key)
+	if err != nil {
+		c.JSON(webModels.Fail("删除失败，" + err.Error()))
+		return
+	}
+	c.JSON(webModels.Succ("删除成功"))
 }

@@ -135,15 +135,18 @@ func (c *Bolt) Get(bucket string, key, val interface{}) error {
 	}
 	ttl = c.toValue(dbVal, val)
 	if ttl != 0 && ttl <= time.Now().Unix() {
-		c.Delete(bucket, key)
+		err := c.Delete(bucket, key)
+		if err != nil {
+			return errors.NewAniErrorD(err)
+		}
 		return errors.NewAniError("Key已过期")
 	}
 	return nil
 }
 
-func (c *Bolt) GetValue(bucket string, key string) (int64, string, error) {
+func (c *Bolt) GetValue(bucket string, key interface{}) (int64, string, error) {
 	var dbVal []byte
-	dbKey := []byte(key)
+	dbKey := c.toBytes(key, -1)
 	_ = c.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
 		dbVal = b.Get(dbKey)
@@ -157,7 +160,10 @@ func (c *Bolt) GetValue(bucket string, key string) (int64, string, error) {
 	}
 	ttl := int64(binary.LittleEndian.Uint64(dbVal[0:8]))
 	if ttl != 0 && ttl <= time.Now().Unix() {
-		c.Delete(bucket, key)
+		err := c.Delete(bucket, key)
+		if err != nil {
+			return 0, "", errors.NewAniErrorD(err)
+		}
 		return 0, "", errors.NewAniError("Key已过期")
 	}
 	val := string(dbVal[8:])
@@ -189,17 +195,14 @@ func (c *Bolt) GetAll(bucket string, tk, tv interface{}, fn func(k, v interface{
 	})
 }
 
-func (c *Bolt) Delete(bucket string, key interface{}) {
+func (c *Bolt) Delete(bucket string, key interface{}) error {
 	dbKey := c.toBytes(key, -1)
 	err := c.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
 		err := b.Delete(dbKey)
-		if err != nil {
-			return err
-		}
-		return nil
+		return err
 	})
-	errors.NewAniErrorD(err).TryPanic()
+	return err
 }
 
 // toBytes
@@ -252,7 +255,9 @@ func (c *Bolt) ListKey(bucket string) []string {
 	_ = c.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
 		err := b.ForEach(func(k, v []byte) error {
-			list = append(list, string(k))
+			str := ""
+			_ = json.Unmarshal(k, &str)
+			list = append(list, str)
 			return nil
 		})
 		return err

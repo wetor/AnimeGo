@@ -7,6 +7,8 @@ import (
 	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/errors"
 	"go.uber.org/zap"
+	"os"
+	"strings"
 )
 
 type Python struct {
@@ -16,9 +18,18 @@ type Python struct {
 	main         func(params models.Object) models.Object // 主函数
 }
 
-func (py *Python) preExecute() {
+func (py *Python) preExecute(file string) {
 	if py.ctx == nil {
 		py.ctx = gpy.NewContext(gpy.DefaultContextOpts())
+		code, err := os.ReadFile(file)
+		if err != nil {
+			errors.NewAniErrorD(err).TryPanic()
+		}
+		codeStr := strings.ReplaceAll(string(code), "\r\n", "\n")
+		err = os.WriteFile(file, []byte(codeStr), os.ModePerm)
+		if err != nil {
+			errors.NewAniErrorD(err).TryPanic()
+		}
 	}
 }
 
@@ -84,7 +95,7 @@ func (py *Python) Execute(file string, params models.Object) (result any) {
 		})
 		py.checkParams(params)
 
-		py.preExecute()
+		py.preExecute(file)
 
 		file = utils.FindScript(file, models.PyExt)
 		py.execute(file)

@@ -86,6 +86,11 @@
 
 
 ## 开发日志
+### v0.6.1
+- 修复python脚本中使用CRLF导致无法执行的问题
+- 增加bolt delete API
+- API返回值和参数修复，去除 " 和 [ 等符号
+
 ### v0.6.0 (2023.1.2)
 - 支持[gpython](https://github.com/go-python/gpython)扩展
   - 不完整的Python3.4

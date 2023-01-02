@@ -234,12 +234,49 @@ paths:
       tags:
       - bolt
   /api/bolt/value:
+    delete:
+      consumes:
+      - application/json
+      description: 删除Bolt数据库指定Bucket和key所储存的值
+      parameters:
+      - in: query
+        name: bucket
+        required: true
+        type: string
+      - default: bolt
+        description: bolt, bolt_sub
+        in: query
+        name: db
+        type: string
+      - in: query
+        name: key
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.BoltGetResponse'
+              type: object
+        "300":
+          description: Multiple Choices
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: 删除Bolt数据库的值
+      tags:
+      - bolt
     get:
       consumes:
       - application/json
-      description: |-
-        获取Bolt数据库指定Bucket和key所储存的值
-        不可忽略key中可能存在的'[', '"'等符号
+      description: 获取Bolt数据库指定Bucket和key所储存的值
       parameters:
       - in: query
         name: bucket

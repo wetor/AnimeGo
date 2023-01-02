@@ -41,6 +41,7 @@ func Run(ctx context.Context) {
 
 		apiRoot.GET("/bolt", api.BoltList)
 		apiRoot.GET("/bolt/value", api.Bolt)
+		apiRoot.DELETE("/bolt/value", api.BoltDelete)
 
 		s := &http.Server{
 			Addr:    fmt.Sprintf("%s:%d", store.Config.WebApi.Host, store.Config.WebApi.Port),

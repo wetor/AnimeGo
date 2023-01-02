@@ -129,9 +129,11 @@ class RawParser:
         content_title = self.pre_process(raw_title)  # 预处理标题
         group = self.get_group(content_title)  # 翻译组的名字
         match_obj = TITLE_RE.match(content_title)  # 处理标题
-        season_info, episode_info, other = list(map(
-            lambda x: x.strip(), match_obj.groups()
-        ))
+        season_info, episode_info, other = "", "", ""
+        if match_obj:
+            season_info, episode_info, other = list(map(
+                lambda x: x.strip(), match_obj.groups()
+            ))
         raw_name, season_raw, season = self.season_process(season_info)  # 处理 第n季
         name_en, name_zh, name_jp = "", "", ""
         try:

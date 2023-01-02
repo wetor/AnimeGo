@@ -63,3 +63,9 @@ type BoltGetRequest struct {
 	Bucket string `json:"bucket" form:"bucket" binding:"required"`
 	Key    string `json:"key" form:"key" binding:"required"`
 }
+
+type BoltDeleteRequest struct {
+	BoltRequest
+	Bucket string `json:"bucket" form:"bucket" binding:"required"`
+	Key    string `json:"key" form:"key" binding:"required"`
+}

@@ -96,7 +96,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "获取Bolt数据库指定Bucket和key所储存的值\n不可忽略key中可能存在的'[', '\"'等符号",
+                "description": "获取Bolt数据库指定Bucket和key所储存的值",
                 "consumes": [
                     "application/json"
                 ],
@@ -107,6 +107,71 @@ const docTemplate = `{
                     "bolt"
                 ],
                 "summary": "获取Bolt数据库的值",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "name": "bucket",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "bolt",
+                        "description": "bolt, bolt_sub",
+                        "name": "db",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "name": "key",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/models.Response"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/definitions/models.BoltGetResponse"
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "300": {
+                        "description": "Multiple Choices",
+                        "schema": {
+                            "$ref": "#/definitions/models.Response"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "删除Bolt数据库指定Bucket和key所储存的值",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "bolt"
+                ],
+                "summary": "删除Bolt数据库的值",
                 "parameters": [
                     {
                         "type": "string",

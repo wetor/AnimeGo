@@ -343,8 +343,10 @@ func (m *Manager) UpdateList() {
 			} else if status.ExpireAt-time.Now().Unix() <= 0 {
 				// 已过期，删除
 				delete(m.name2status, name)
-				m.cache.Delete(Name2StatusBucket, name)
-				m.cache.Delete(Name2EntityBucket, name)
+				err := m.cache.Delete(Name2StatusBucket, name)
+				errors.NewAniErrorD(err).TryPanic()
+				err = m.cache.Delete(Name2EntityBucket, name)
+				errors.NewAniErrorD(err).TryPanic()
 			}
 		}
 		delete(hash2item, status.Hash)
