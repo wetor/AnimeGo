@@ -2,13 +2,44 @@ package mikan
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
-	"github.com/wetor/AnimeGo/internal/animego/anisource"
 	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/plugin/public"
+	"github.com/wetor/AnimeGo/internal/store"
 	"github.com/wetor/AnimeGo/key"
 	"github.com/wetor/AnimeGo/pkg/cache"
+	"github.com/wetor/AnimeGo/pkg/request"
+	"github.com/wetor/AnimeGo/test"
+	"github.com/wetor/AnimeGo/third_party/gpython"
 	"testing"
 )
+
+func TestMain(m *testing.M) {
+	fmt.Println("begin")
+	test.TestInit()
+
+	db := cache.NewBolt()
+	db.Open("data/bolt.db")
+	anidata.Init(&anidata.Options{Cache: db})
+	bangumiCache := cache.NewBolt()
+	bangumiCache.Open("data/bolt_sub.db")
+
+	store.Init(&store.InitOptions{
+		Cache:        db,
+		BangumiCache: bangumiCache,
+	})
+	public.Init(&public.Options{
+		PluginPath: "/Users/wetor/GoProjects/AnimeGo/data/plugin",
+	})
+	gpython.Init()
+
+	request.Init(&request.InitOptions{
+		Proxy: "http://127.0.0.1:7890",
+	})
+	m.Run()
+	fmt.Println("end")
+}
 
 func TestParseMikan(t *testing.T) {
 	type args struct {
@@ -46,11 +77,7 @@ func TestParseMikan(t *testing.T) {
 			},
 		},
 	}
-	db := cache.NewBolt()
-	db.Open("bolt.db")
-	anisource.Init(&anidata.Options{
-		Cache: db,
-	})
+
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			gotAnime := ParseMikan(tt.args.name, tt.args.url, key.ThemoviedbKey)

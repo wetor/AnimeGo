@@ -7,6 +7,7 @@ import (
 	"github.com/wetor/AnimeGo/key"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/request"
+	"go.uber.org/zap"
 	"io"
 	"log"
 	"os"
@@ -14,6 +15,14 @@ import (
 	"testing"
 	"time"
 )
+
+func TestMain(m *testing.M) {
+	fmt.Println("begin")
+	logger, _ := zap.NewDevelopment()
+	zap.ReplaceGlobals(logger)
+	m.Run()
+	fmt.Println("end")
+}
 
 func TestThemoviedb_Parse(t1 *testing.T) {
 	type fields struct {
@@ -76,14 +85,14 @@ func TestThemoviedb_Parse(t1 *testing.T) {
 			name:       "Mairimashita! Iruma-kun 3rd Season",
 			fields:     fields{Key: key.ThemoviedbKey},
 			args:       args{name: "Mairimashita! Iruma-kun 3rd Season", airDate: "2022-11-14"},
-			wantTmdbID: 154524,
-			wantSeason: 1,
+			wantTmdbID: 91801,
+			wantSeason: 3,
 			wantErr:    false,
 		},
 		//
 	}
 	db := cache.NewBolt()
-	db.Open("bolt.db")
+	db.Open("data/bolt.db")
 	anidata.Init(&anidata.Options{Cache: db})
 	t := &Themoviedb{
 		Key: key.ThemoviedbKey,
@@ -106,7 +115,7 @@ func TestThemoviedb_Parse(t1 *testing.T) {
 }
 
 func TestThemoviedb_ParseByFile(t1 *testing.T) {
-	filename := "./data/202207[20220904].csv"
+	filename := "data/202207[20220904].csv"
 	// 每个用例间隔 ms
 	caseSleepMS := 100
 	type args struct {
@@ -149,13 +158,19 @@ func TestThemoviedb_ParseByFile(t1 *testing.T) {
 			wantErr:    hasErr,
 		})
 	}
+	db := cache.NewBolt()
+	db.Open("data/bolt.db")
+	anidata.Init(&anidata.Options{Cache: db})
 	t := &Themoviedb{
 		Key: key.ThemoviedbKey,
 	}
+	request.Init(&request.InitOptions{
+		Proxy: "http://127.0.0.1:7890",
+	})
 	for _, tt := range tests {
 		t1.Run(tt.name, func(t1 *testing.T) {
 			log.Printf("搜索：「%s」", tt.args.name)
-			gotTmdbID, gotSeason := t.Parse(tt.args.name, tt.args.airDate)
+			gotTmdbID, gotSeason := t.ParseCache(tt.args.name, tt.args.airDate)
 
 			if gotTmdbID.ID != tt.wantTmdbID {
 				t1.Errorf("Parse() gotTmdbID = %v, want %v", gotTmdbID, tt.wantTmdbID)

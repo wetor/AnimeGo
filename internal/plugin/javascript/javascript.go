@@ -2,7 +2,10 @@ package javascript
 
 import (
 	"github.com/dop251/goja"
+	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/errors"
+	"go.uber.org/zap"
 	"os"
 	"path"
 	"strings"
@@ -10,15 +13,11 @@ import (
 
 type JavaScript struct {
 	*goja.Runtime
-	main         func(Object) Object // 主函数
+	main         func(models.Object) models.Object // 主函数
 	paramsSchema []string
 	resultSchema []string
 }
 
-// preExecute
-//  @Description: 前置处理：初始化js虚拟机，注册函数，执行基础脚本
-//  @receiver *JavaScript
-//
 func (js *JavaScript) preExecute() {
 	if js.Runtime == nil {
 		js.Runtime = goja.New()
@@ -28,12 +27,6 @@ func (js *JavaScript) preExecute() {
 	}
 }
 
-// execute
-//  @Description: 执行脚本
-//  @receiver *JavaScript
-//  @param file string
-//  @return result any
-//
 func (js *JavaScript) execute(file string) {
 	raw, err := os.ReadFile(file)
 	errors.NewAniErrorD(err).TryPanic()
@@ -49,18 +42,10 @@ func (js *JavaScript) execute(file string) {
 	errors.NewAniErrorD(err).TryPanic()
 }
 
-// endExecute
-//  @Description: 后置处理
-//  @receiver *JavaScript
-//
 func (js *JavaScript) endExecute() {
 	js.registerVar()
 }
 
-// registerFunc
-//  @Description: 注册函数
-//  @receiver *JavaScript
-//
 func (js *JavaScript) registerFunc() {
 	funcMap := js.initFunc()
 	for name, method := range funcMap {
@@ -69,10 +54,6 @@ func (js *JavaScript) registerFunc() {
 	}
 }
 
-// registerVar
-//  @Description: 注册全局变量
-//  @receiver *JavaScript
-//
 func (js *JavaScript) registerVar() {
 	varMap := js.initVar()
 	for name, v := range varMap {
@@ -81,7 +62,7 @@ func (js *JavaScript) registerVar() {
 	}
 }
 
-func (js *JavaScript) checkParams(params Object) {
+func (js *JavaScript) checkParams(params models.Object) {
 	for _, field := range js.paramsSchema {
 		_, has := params[field]
 		if !has {
@@ -91,7 +72,7 @@ func (js *JavaScript) checkParams(params Object) {
 }
 
 func (js *JavaScript) checkResult(result any) {
-	resultMap, ok := result.(Object)
+	resultMap, ok := result.(models.Object)
 	if !ok {
 		errors.NewAniError("返回类型错误").TryPanic()
 	}
@@ -108,17 +89,22 @@ func (js *JavaScript) SetSchema(paramsSchema, resultSchema []string) {
 	js.resultSchema = resultSchema
 }
 
-func (js *JavaScript) Execute(file string, params Object) (result any) {
-	js.checkParams(params)
+func (js *JavaScript) Execute(file string, params models.Object) (result any) {
+	func() {
+		defer errors.HandleError(func(err error) {
+			zap.S().Error(err)
+		})
+		js.checkParams(params)
 
-	js.preExecute()
+		js.preExecute()
 
-	file = FindScript(file)
-	js.execute(file)
+		file = utils.FindScript(file, models.JSExt)
+		js.execute(file)
 
-	js.endExecute()
+		js.endExecute()
 
-	result = js.main(params)
-	js.checkResult(result)
+		result = js.main(params)
+		js.checkResult(result)
+	}()
 	return result
 }

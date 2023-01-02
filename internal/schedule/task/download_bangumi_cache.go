@@ -56,14 +56,14 @@ func (t *BangumiTask) download(url, name string) string {
 	_, data, errs := req.Get(url).EndBytes()
 	if errs != nil {
 		zap.S().Debug(errors.NewAniErrorD(errs))
-		zap.S().Warnf("使用ghproxy下载%s失败", name)
+		zap.S().Errorf("使用ghproxy下载%s失败", name)
 		return ""
 	}
 	file := path.Join(t.savePath, name)
 	err := os.WriteFile(file, data, 0644)
 	if err != nil {
 		zap.S().Debug(errors.NewAniErrorD(err))
-		zap.S().Warnf("保存文件到%s失败", name)
+		zap.S().Errorf("保存文件到%s失败", name)
 		return ""
 	}
 	return file
@@ -107,7 +107,10 @@ func (t *BangumiTask) Run(force bool) {
 	defer errors.HandleError(func(err error) {
 		zap.S().Error(err)
 	})
-	if force && utils.IsExist(path.Join(t.savePath, SubjectDB)) {
+	db := path.Join(t.savePath, SubjectDB)
+	stat, _ := os.Stat(db)
+	// 上次修改时间小于24小时，且文件大小大于512kb，跳过
+	if force && time.Now().Unix()-stat.ModTime().Unix() <= 24*60*60 && stat.Size() > 512*1024 {
 		return
 	}
 	zap.S().Infof("[定时任务] %s 开始执行", t.Name())
@@ -115,10 +118,13 @@ func (t *BangumiTask) Run(force bool) {
 	file := t.download(subUrl, Subject)
 	t.unzip(file)
 
-	time.Sleep(time.Second)
-	// 重新加载bolt
-	store.BangumiCache.Close()
-	store.BangumiCache.Open(path.Join(path.Dir(store.Config.Advanced.Path.DbFile), SubjectDB))
+	if utils.FileSize(db) <= 512*1024 {
+		zap.S().Infof("[定时任务] %s 执行失败", t.Name())
+	} else {
+		// 重新加载bolt
+		store.BangumiCache.Close()
+		store.BangumiCache.Open(db)
 
-	zap.S().Infof("[定时任务] %s 执行完毕，下次执行时间: %s", t.Name(), t.NextTime())
+		zap.S().Infof("[定时任务] %s 执行完毕，下次执行时间: %s", t.Name(), t.NextTime())
+	}
 }

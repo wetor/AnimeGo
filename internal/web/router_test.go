@@ -4,20 +4,14 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"github.com/wetor/AnimeGo/internal/animego/anisource"
 	"github.com/wetor/AnimeGo/internal/store"
 	"github.com/wetor/AnimeGo/internal/utils"
-	pkgAnisource "github.com/wetor/AnimeGo/pkg/anisource"
 	"github.com/wetor/AnimeGo/test"
 	"testing"
 )
 
 func TestInitRouter(t *testing.T) {
 	test.TestInit()
-
-	anisource.Init(&pkgAnisource.Options{
-		Cache: store.Cache,
-	})
 
 	Run(context.Background())
 

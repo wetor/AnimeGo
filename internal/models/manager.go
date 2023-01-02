@@ -1,7 +1,5 @@
 package models
 
-type TorrentState string
-
 type DownloadStatus struct {
 	Hash     string       `json:"hash"`
 	State    TorrentState `json:"state"`

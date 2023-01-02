@@ -1,12 +1,11 @@
-package javascript
+package plugin
 
 import (
 	"fmt"
-	"github.com/wetor/AnimeGo/internal/animego/anisource"
 	mikanRss "github.com/wetor/AnimeGo/internal/animego/feed/rss"
 	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/plugin/javascript"
 	"github.com/wetor/AnimeGo/internal/store"
-	pkgAnisource "github.com/wetor/AnimeGo/pkg/anisource"
 	"github.com/wetor/AnimeGo/test"
 	"testing"
 )
@@ -14,14 +13,10 @@ import (
 func TestJavaScript_Filter(t *testing.T) {
 	test.TestInit()
 
-	anisource.Init(&pkgAnisource.Options{
-		Cache: store.Cache,
-	})
-
 	feed := mikanRss.NewRss(store.Config.Setting.Feed.Mikan.Url, store.Config.Setting.Feed.Mikan.Name)
-	items, _ := feed.Parse()
+	items := feed.Parse()
 	fmt.Println(len(items))
-	js := &JavaScript{}
+	js := NewPluginFilter(&javascript.JavaScript{}, store.Config.Filter.JavaScript)
 	result := js.Filter(items)
 	fmt.Println(len(result))
 	for _, r := range result {
@@ -45,11 +40,9 @@ func TestJavaScript_Filter2(t *testing.T) {
 			Name: "3333",
 		},
 	}
-	js := &JavaScript{
-		ScriptFile: []string{
-			"/Users/wetor/GoProjects/AnimeGo/data/plugin/filter/regexp.js",
-		},
-	}
+	js := NewPluginFilter(&javascript.JavaScript{}, []string{
+		"/Users/wetor/GoProjects/AnimeGo/data/plugin/filter/regexp.js",
+	})
 	result := js.Filter(list)
 	fmt.Println(len(result))
 	for _, r := range result {

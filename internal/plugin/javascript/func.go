@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"github.com/wetor/AnimeGo/internal/animego/anidata/mikan"
 	"github.com/wetor/AnimeGo/internal/animego/anisource"
+	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/plugin/public"
 	"github.com/wetor/AnimeGo/pkg/errors"
-	"github.com/wetor/AnimeGo/third_party/poketto"
 	"go.uber.org/zap"
 	"os"
 	"path"
@@ -15,30 +16,30 @@ import (
 
 // initFunc
 //  @Description: 获取js需要注册的函数列表
-//  @return Object
+//  @return models.Object
 //
-func (js JavaScript) initFunc() Object {
-	return Object{
+func (js JavaScript) initFunc() models.Object {
+	return models.Object{
 		"print": js.Print,
 		"sleep": js.Sleep,
-		"os": Object{
+		"os": models.Object{
 			"readFile": js.ReadFile,
 		},
-		"goLog": Object{
+		"goLog": models.Object{
 			"debug": zap.S().Debug,
 			"info":  zap.S().Info,
 			"error": zap.S().Error,
 		},
-		"animeGo": Object{
+		"animeGo": models.Object{
 			"parseName":    js.ParseName,
 			"getMikanInfo": js.GetMikanInfo,
 		},
 	}
 }
 
-func (js JavaScript) initVar() Object {
-	return Object{
-		"variable": Object{
+func (js JavaScript) initVar() models.Object {
+	return models.Object{
+		"variable": models.Object{
 			"version": os.Getenv("ANIMEGO_VERSION"),
 			"name":    currName,
 		},
@@ -64,11 +65,10 @@ func (js *JavaScript) ReadFile(filename string) string {
 	return string(file)
 }
 
-func (js JavaScript) ParseName(name string) (episode *poketto.Episode) {
-	episode = poketto.NewEpisode(name)
-	episode.TryParse()
-	if episode.ParseErr != nil {
-		panic(js.ToValue(episode.ParseErr))
+func (js JavaScript) ParseName(name string) (episode *public.Episode) {
+	episode = public.ParserName(name)
+	if episode.Ep == 0 {
+		panic(js.ToValue(errors.NewAniError("解析ep信息失败")))
 	}
 	return
 }

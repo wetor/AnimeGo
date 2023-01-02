@@ -49,7 +49,7 @@
 
 ## 文档
 1. [配置文件](assets/config/animego.yaml)
-2. [插件函数文档（仅过滤器）](internal/animego/plugin/javascript/README.md)
+2. [插件函数文档（仅过滤器）](internal/plugin/README.md)
 3. [webapi(Swagger)接口文档](internal/web/README.md)
 
 ## 目的
@@ -58,7 +58,7 @@
 
 ## 目前进度
 - 可使用配置、筛选和下载等基本功能
-- javascript编写筛选器，[帮助文档](internal/animego/plugin/javascript/README.md)
+- javascript编写筛选器，[帮助文档](internal/plugin/README.md)
 - 支持Tampermonkey(油猴)插件 [AnimeGo\[Mikan快速订阅\]](https://greasyfork.org/zh-CN/scripts/449596) 快速订阅下载
 - Jellyfin支持
 
@@ -86,6 +86,23 @@
 
 
 ## 开发日志
+### v0.6.0 (2023.1.2)
+- 支持[gpython](https://github.com/go-python/gpython)扩展
+  - 不完整的Python3.4
+  - 增加re正则表达式库
+  - 暂未开放设置接口
+- 使用[Auto_Bangumi](https://github.com/EstrellaXD/Auto_Bangumi)的[raw_parser.py](https://github.com/EstrellaXD/Auto_Bangumi/blob/main/src/parser/analyser/raw_parser.py)进行解析番剧名
+  - 移除poketto依赖
+  - 稍微修改以适配gpython
+- 修改部分单测，使用单独测试数据
+- 更改部分代码结构
+- 修复torrent内含有多个文件时，重命名失败的问题
+  - TODO: 支持外挂字幕文件的重命名和移动
+- 启动时检查bangumi缓存修改时间，大于24小时则执行更新
+
+### v0.5.4
+- 初始化或升级配置文件后直接退出
+
 ### v0.5.3 (2022.12.21)
 - 修复重复打开bolt导致死锁的问题
 - 新增查询数据库相关接口

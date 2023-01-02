@@ -2,25 +2,25 @@ package main
 
 import (
 	"context"
-	"embed"
 	"flag"
 	"fmt"
 	"github.com/wetor/AnimeGo/assets"
 	"github.com/wetor/AnimeGo/configs"
 	_ "github.com/wetor/AnimeGo/docs"
 	"github.com/wetor/AnimeGo/internal/logger"
+	"github.com/wetor/AnimeGo/internal/plugin/public"
 	"github.com/wetor/AnimeGo/internal/process/animego"
 	"github.com/wetor/AnimeGo/internal/store"
 	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/internal/web"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/request"
+	"github.com/wetor/AnimeGo/third_party/gpython"
 	"go.uber.org/zap"
 	"log"
 	"os"
 	"os/signal"
 	"path"
-	"strings"
 	"syscall"
 	"time"
 )
@@ -60,8 +60,6 @@ func main() {
 	flag.BoolVar(&debug, "debug", false, "Debug模式，将会显示更多的日志")
 	flag.Parse()
 
-	InitData()
-
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGQUIT)
 	go func() {
@@ -78,13 +76,14 @@ func main() {
 	Main(ctx)
 }
 
-func InitData() {
+func InitDefaultConfig() {
 	if utils.IsExist(configFile) {
 		// 尝试升级配置文件
-		configs.UpdateConfig(configFile)
+		if configs.UpdateConfig(configFile, true) {
+			os.Exit(0)
+		}
 		return
 	}
-
 	log.Printf("未找到配置文件（%s），开始初始化默认配置\n", configFile)
 	conf := configs.DefaultConfig()
 	if utils.IsExist(conf.Setting.DataPath) {
@@ -99,10 +98,16 @@ func InitData() {
 	if err != nil {
 		panic(err)
 	}
-	copyDir(assets.Plugin, "plugin", path.Join(conf.Setting.DataPath, "plugin"), true)
+
+	InitDefaultAssets(conf)
+
 	log.Printf("初始化默认配置完成（%s）\n", conf.Setting.DataPath)
-	log.Println("--------------------------------------------------")
-	return
+	log.Println("请设置配置后重新启动")
+	os.Exit(0)
+}
+
+func InitDefaultAssets(conf *configs.Config) {
+	utils.CopyDir(assets.Plugin, "plugin", path.Join(conf.Setting.DataPath, "plugin"), true, true)
 }
 
 func doExit() {
@@ -129,9 +134,12 @@ func printInfo() {
 }
 
 func Main(ctx context.Context) {
+	InitDefaultConfig()
 
 	config := configs.Init(configFile)
 	config.InitDir()
+
+	InitDefaultAssets(config)
 
 	logger.Init(&logger.InitOptions{
 		File:    config.Advanced.Path.LogFile,
@@ -157,6 +165,11 @@ func Main(ctx context.Context) {
 		RetryWait: store.Config.Advanced.Request.RetryWaitSecond,
 		Debug:     debug,
 	})
+	gpython.Init()
+
+	public.Init(&public.Options{
+		PluginPath: path.Join(store.Config.DataPath, "plugin"),
+	})
 
 	store.Process = animego.NewAnimeGo()
 	store.Process.Run(ctx)
@@ -167,53 +180,4 @@ func Main(ctx context.Context) {
 
 	web.Run(ctx)
 	store.WG.Wait()
-}
-
-func copyDir(fs embed.FS, src, dst string, replace bool) {
-	files, err := fs.ReadDir(src)
-	if err != nil {
-		panic(err)
-	}
-
-	err = utils.CreateMutiDir(dst)
-	if err != nil {
-		panic(err)
-	}
-
-	for _, file := range files {
-		srcPath := path.Join(src, file.Name())
-		dstPath := path.Join(dst, file.Name())
-		if file.IsDir() {
-			copyDir(fs, srcPath, dstPath, replace)
-			continue
-		}
-		fileContent, err := fs.ReadFile(srcPath)
-		if err != nil {
-			panic(err)
-		}
-		if !replace && utils.IsExist(dstPath) {
-			log.Printf("文件[%s]已存在，是否替换[y(yes)/n(no)]: ", dstPath)
-			if !scanYesNo() {
-				continue
-			}
-		}
-		if err := os.WriteFile(dstPath, fileContent, os.ModePerm); err != nil {
-			panic(err)
-		}
-	}
-}
-
-func scanYesNo() bool {
-	var s string
-	_, err := fmt.Scanln(&s)
-	if err != nil {
-		panic(err)
-	}
-	s = strings.TrimSpace(s)
-	s = strings.ToLower(s)
-
-	if s == "y" || s == "yes" {
-		return true
-	}
-	return false
 }

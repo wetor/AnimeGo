@@ -6,6 +6,8 @@ import (
 	jsoniter "github.com/json-iterator/go"
 	"github.com/wetor/AnimeGo/pkg/errors"
 	bolt "go.etcd.io/bbolt"
+	"os"
+	"path"
 	"sync"
 
 	"go.uber.org/zap"
@@ -22,8 +24,9 @@ func NewBolt() *Bolt {
 	return &Bolt{}
 }
 
-func (c *Bolt) Open(path string) {
-	db, err := bolt.Open(path, 0600, nil)
+func (c *Bolt) Open(file string) {
+	_ = os.MkdirAll(path.Dir(file), os.ModePerm)
+	db, err := bolt.Open(file, 0600, nil)
 	if err != nil {
 		zap.S().Debug(errors.NewAniErrorD(err))
 		zap.S().Warn("打开bolt数据库失败")
@@ -188,7 +191,7 @@ func (c *Bolt) GetAll(bucket string, tk, tv interface{}, fn func(k, v interface{
 
 func (c *Bolt) Delete(bucket string, key interface{}) {
 	dbKey := c.toBytes(key, -1)
-	err := c.db.View(func(tx *bolt.Tx) error {
+	err := c.db.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
 		err := b.Delete(dbKey)
 		if err != nil {

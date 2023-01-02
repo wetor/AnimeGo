@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/wetor/AnimeGo/pkg/cache"
+	"go.uber.org/zap"
 	"strconv"
 	"testing"
 	"time"
@@ -19,6 +20,14 @@ type Type2 struct {
 	Str2 string
 }
 
+func TestMain(m *testing.M) {
+	fmt.Println("begin")
+	logger, _ := zap.NewDevelopment()
+	zap.ReplaceGlobals(logger)
+	m.Run()
+	fmt.Println("end")
+}
+
 func toString(in interface{}) string {
 	data, _ := json.Marshal(in)
 	return string(data)
@@ -26,6 +35,7 @@ func toString(in interface{}) string {
 
 func DoSomething(params *Params, results *Results) error {
 
+	fmt.Print("not cache: ")
 	mikanID := params.Get("mikanID").(int)
 	bangumiID := params.Get("bangumiID").(int)
 
@@ -41,7 +51,7 @@ func DoSomething(params *Params, results *Results) error {
 
 func TestMemorized(t *testing.T) {
 	db := cache.NewBolt()
-	db.Open("bolt.db")
+	db.Open("data/bolt.db")
 	dosomething := Memorized("test", db, DoSomething)
 
 	res := NewResults("ThemovieID", &Type{})
@@ -53,6 +63,6 @@ func TestMemorized(t *testing.T) {
 
 	time.Sleep(2 * time.Second)
 
-	dosomething(NewParams("mikanID", 1001, "bangumiID", 3333), res)
+	dosomething(NewParams("mikanID", 1001, "bangumiID", 3333).TTL(1), res)
 	fmt.Println(toString(res))
 }

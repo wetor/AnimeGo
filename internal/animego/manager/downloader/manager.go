@@ -160,6 +160,7 @@ func (m *Manager) GetContent(opt *models.ClientGetOptions) *models.TorrentConten
 		return nil
 	}
 	// TODO: 支持多内容返回
+	// TODO: 支持外挂字幕
 	return cs[index]
 }
 
@@ -226,10 +227,10 @@ func (m *Manager) UpdateDownloadItem(status *models.DownloadStatus, anime *model
 			Item: item,
 		})
 
-		renamePath := path.Join(anime.DirName(), anime.FileName()+path.Ext(content.Path))
+		renamePath := path.Join(anime.DirName(), anime.FileName()+path.Ext(content.Name))
 		m.name2chan[name] = make(chan models.TorrentState, DownloadStateChan)
 		renameOpt := &models.RenameOptions{
-			Src:   content.Path,
+			Src:   path.Join(store.Config.DownloadPath, content.Name),
 			Dst:   path.Join(store.Config.Setting.SavePath, renamePath),
 			State: m.name2chan[name],
 			RenameCallback: func() {
