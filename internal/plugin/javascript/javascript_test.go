@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/dop251/goja"
 	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/test"
 	"os"
 	"testing"
@@ -38,7 +37,7 @@ func TestJs2(t *testing.T) {
 	js := &JavaScript{}
 	js.SetSchema([]string{"feedItems"}, []string{"index", "error"})
 	execute := js.Execute("data/test.js",
-		plugin.Object{
+		models.Object{
 			"feedItems": []*models.FeedItem{},
 		})
 	fmt.Println(execute)
@@ -50,7 +49,7 @@ func TestJavaScript_Execute(t *testing.T) {
 	js := &JavaScript{}
 	js.SetSchema([]string{"feedItems"}, []string{"index", "error"})
 	execute := js.Execute("/Users/wetor/GoProjects/AnimeGo/data/plugin/filter/test",
-		plugin.Object{
+		models.Object{
 			"feedItems": []*models.FeedItem{
 				{
 					Url:      "localhost",

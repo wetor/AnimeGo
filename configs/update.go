@@ -22,7 +22,7 @@ var (
 	updateConfig *Config
 )
 
-func UpdateConfig(oldFile string) {
+func UpdateConfig(oldFile string, backup bool) (restart bool) {
 	// 载入配置文件
 	data, err := os.ReadFile(oldFile)
 	if err != nil {
@@ -49,12 +49,14 @@ func UpdateConfig(oldFile string) {
 
 	// 版本号相同，无需升级
 	if oldIndex == newIndex {
-		return
+		return false
 	}
 	log.Printf("配置文件升级：%s => %s\n", oldVer, newVer)
-	err = backupConfig(oldFile)
-	if err != nil {
-		log.Fatal("配置文件备份失败：", err)
+	if backup {
+		err = backupConfig(oldFile)
+		if err != nil {
+			log.Fatal("配置文件备份失败：", err)
+		}
 	}
 
 	log.Println("===========升级子流程===========")
@@ -65,8 +67,7 @@ func UpdateConfig(oldFile string) {
 	log.Println("===========子流程结束===========")
 	log.Printf("配置文件升级完成：%s => %s\n", oldVer, newVer)
 	log.Println("请确认配置后重新启动")
-	os.Exit(0)
-
+	return true
 }
 
 func update_100_110(file string) {

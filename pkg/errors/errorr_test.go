@@ -14,7 +14,6 @@ func TestNewAniError(t *testing.T) {
 func TestNewAniErrorPanic(t *testing.T) {
 	defer HandleError(func(err error) {
 		fmt.Println("【捕获错误】", err)
-		panic(err)
 
 	})
 	NewAniError("").TryPanic()

@@ -10,7 +10,10 @@ type Match struct {
 	groupStr []string
 }
 
-func _match(group []string) *Match {
+func _match(group []string) py.Object {
+	if len(group) == 0 {
+		return py.None
+	}
 	return &Match{
 		groupStr: group,
 	}

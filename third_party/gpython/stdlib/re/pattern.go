@@ -105,7 +105,15 @@ func (p *Pattern) findAll(args py.Tuple) (py.Object, error) {
 	result := p.regx.FindAllStringSubmatch(str[pos:end], -1)
 	tuple := make([]py.Object, len(result))
 	for i, list := range result {
-		tuple[i] = _match(list)
+		if len(list) > 1 {
+			t := make(py.Tuple, len(list))
+			for j, s := range list {
+				t[j] = py.String(s)
+			}
+			tuple[i] = t
+		} else if len(list) == 1 {
+			tuple[i] = py.String(list[0])
+		}
 	}
 	return py.NewListFromItems(tuple), nil
 }

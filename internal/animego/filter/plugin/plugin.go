@@ -30,11 +30,11 @@ func (p *Filter) Filter(list []*models.FeedItem) []*models.FeedItem {
 			inList = append(inList, list[i])
 		}
 		p.plugin.SetSchema([]string{"feedItems"}, []string{"index", "error"})
-		execute := p.plugin.Execute(jsFile, plugin.Object{
+		execute := p.plugin.Execute(jsFile, models.Object{
 			"feedItems": inList,
 		})
 		// 返回的index列表
-		resultIndex := execute.(plugin.Object)["index"].([]any)
+		resultIndex := execute.(models.Object)["index"].([]any)
 
 		filterIndex = make([]int64, 0, len(resultIndex))
 		for _, index := range resultIndex {

@@ -4,9 +4,9 @@ import (
 	"github.com/wetor/AnimeGo/internal/animego/anidata/themoviedb"
 	"github.com/wetor/AnimeGo/internal/animego/anisource"
 	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/plugin/public"
 	"github.com/wetor/AnimeGo/internal/store"
 	"github.com/wetor/AnimeGo/pkg/errors"
-	"github.com/wetor/AnimeGo/third_party/poketto"
 	"go.uber.org/zap"
 )
 
@@ -19,9 +19,8 @@ func ParseMikan(name, url, tmdbKey string) (anime *models.AnimeEntity) {
 
 	zap.S().Infof("获取「%s」信息开始...", name)
 	// ------------------- 解析文件名获取ep -------------------
-	match := poketto.NewEpisode(name)
-	match.TryParse()
-	if match.ParseErr == poketto.CannotParseEpErr {
+	match := public.ParserName(name)
+	if match.Ep == 0 {
 		zap.S().Warn("解析ep信息失败，结束此流程")
 		return nil
 	}

@@ -1,10 +1,20 @@
 package mikan
 
 import (
+	"fmt"
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/pkg/cache"
+	"go.uber.org/zap"
 	"testing"
 )
+
+func TestMain(m *testing.M) {
+	fmt.Println("begin")
+	logger, _ := zap.NewDevelopment()
+	zap.ReplaceGlobals(logger)
+	m.Run()
+	fmt.Println("end")
+}
 
 func TestMikan_Parse(t *testing.T) {
 	type args struct {
@@ -34,7 +44,7 @@ func TestMikan_Parse(t *testing.T) {
 		},
 	}
 	db := cache.NewBolt()
-	db.Open("bolt.db")
+	db.Open("data/bolt.db")
 	anidata.Init(&anidata.Options{Cache: db})
 	m := &Mikan{}
 	for _, tt := range tests {

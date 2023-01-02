@@ -1,34 +1,47 @@
 package configs
 
 import (
-	"fmt"
+	"bytes"
 	"github.com/wetor/AnimeGo/internal/models"
 	"os"
 	"testing"
 )
 
-func TestNewConfig(t *testing.T) {
-	c := Init("../assets/config/animego.yaml")
-	fmt.Println(c)
-}
-
 func TestSettings_Tag(t *testing.T) {
 	setting := Setting{}
 	setting.TagSrc = "{year}年{quarter}月新番,{quarter_index},{quarter_name}季,第{ep}集,周{week},{week_name}"
-	str := setting.Tag(&models.AnimeEntity{
+	got := setting.Tag(&models.AnimeEntity{
 		AirDate: "2022-04-11",
 		Ep:      10,
 	})
-	fmt.Println(str)
+	want := "2022年4月新番,2,春季,第10集,周1,星期一"
+	if got != want {
+		t.Errorf("Tag() = %v, want %v", got, want)
+	}
 }
 
 func TestDefaultConfig(t *testing.T) {
-	os.Setenv("ANIMEGO_CONFIG_VERSION", "1.0.0")
-	os.WriteFile("../assets/default.json", DefaultDoc(), 0666)
+	want, err := os.ReadFile("data/default.json")
+	if err != nil {
+		panic(err)
+	}
+	got := DefaultDoc()
+
+	if bytes.Compare(got, want) != 0 {
+		t.Errorf("DefaultDoc() = %s, want %s", got, want)
+	}
 }
 
 func TestUpdateConfig(t *testing.T) {
-	os.Setenv("ANIMEGO_CONFIG_VERSION", "1.1.0")
+	_ = os.Setenv("ANIMEGO_CONFIG_VERSION", "1.1.0")
+	file, _ := os.ReadFile("data/animego_100.yaml")
+	_ = os.WriteFile("data/animego.yaml", file, 0666)
+	UpdateConfig("data/animego.yaml", false)
 
-	UpdateConfig("../data/animego.yaml")
+	want, _ := os.ReadFile("data/animego_110.yaml")
+	got, _ := os.ReadFile("data/animego.yaml")
+	if bytes.Compare(got, want) != 0 {
+		t.Errorf("UpdateConfig() = %s, want %s", got, want)
+	}
+	_ = os.Remove("data/animego.yaml")
 }

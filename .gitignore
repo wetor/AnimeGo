@@ -17,7 +17,6 @@
 data/
 key/
 download/
-!test/data
 log/
 *.log
 *.db

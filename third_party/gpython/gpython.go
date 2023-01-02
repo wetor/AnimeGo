@@ -7,5 +7,5 @@ import (
 )
 
 func Init() {
-
+	Hook()
 }

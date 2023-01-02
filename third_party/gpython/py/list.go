@@ -11,7 +11,7 @@ func init() {
 				break
 			}
 		}
-		return py.NoneType{}, nil
+		return py.None, nil
 	}, 0, "remove(item)")
 
 }
