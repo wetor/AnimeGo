@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/antchfx/htmlquery v1.2.5
+	github.com/brahma-adshonor/gohook v1.1.9
 	github.com/dop251/goja v0.0.0-20220915101355-d79e1b125a30
 	github.com/gin-gonic/gin v1.8.1
 	github.com/go-python/gpython v0.1.1-0.20221005072539-6f8e06a46607
@@ -29,7 +30,6 @@ require (
 	github.com/PuerkitoBio/goquery v1.5.1 // indirect
 	github.com/andybalholm/cascadia v1.1.0 // indirect
 	github.com/antchfx/xpath v1.2.1 // indirect
-	github.com/brahma-adshonor/gohook v1.1.9 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dlclark/regexp2 v1.7.0 // indirect
 	github.com/elazarl/goproxy v0.0.0-20221015165544-a0805db90819 // indirect

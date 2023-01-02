@@ -108,7 +108,9 @@ func (t *BangumiTask) Run(force bool) {
 		zap.S().Error(err)
 	})
 	db := path.Join(t.savePath, SubjectDB)
-	if force && utils.FileSize(db) > 512*1024 {
+	stat, _ := os.Stat(db)
+	// 上次修改时间小于24小时，且文件大小大于512kb，跳过
+	if force && time.Now().Unix()-stat.ModTime().Unix() <= 24*60*60 && stat.Size() > 512*1024 {
 		return
 	}
 	zap.S().Infof("[定时任务] %s 开始执行", t.Name())
