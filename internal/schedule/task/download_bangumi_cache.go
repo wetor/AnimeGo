@@ -31,7 +31,7 @@ type BangumiTask struct {
 func NewBangumiTask(savePath string, parser *cron.Parser) *BangumiTask {
 	return &BangumiTask{
 		savePath: savePath,
-		cron:     "0 0 4 * * 4", // 每周四4点
+		cron:     "0 0 12 * * 3", // 每周三12点
 		parser:   parser,
 	}
 }
@@ -116,14 +116,15 @@ func (t *BangumiTask) Run(force bool) {
 	zap.S().Infof("[定时任务] %s 开始执行", t.Name())
 	subUrl := CDN1 + ArchiveReleaseBase + Subject
 	file := t.download(subUrl, Subject)
+	store.BangumiCacheLock.Lock()
+	store.BangumiCache.Close()
 	t.unzip(file)
-
+	// 重新加载bolt
+	store.BangumiCache.Open(db)
+	store.BangumiCacheLock.Unlock()
 	if utils.FileSize(db) <= 512*1024 {
 		zap.S().Infof("[定时任务] %s 执行失败", t.Name())
 	} else {
-		// 重新加载bolt
-		store.BangumiCache.Close()
-		store.BangumiCache.Open(db)
 
 		zap.S().Infof("[定时任务] %s 执行完毕，下次执行时间: %s", t.Name(), t.NextTime())
 	}

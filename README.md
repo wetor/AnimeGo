@@ -86,6 +86,11 @@
 
 
 ## 开发日志
+### v0.6.2
+- 新增更新配置文件web api
+- 修改获取配置文件web api
+- 修复下载Bangumi缓存定时任务解压失败的问题
+
 ### v0.6.1
 - 修复python脚本中使用CRLF导致无法执行的问题
 - 增加bolt delete API

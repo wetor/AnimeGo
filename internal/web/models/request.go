@@ -1,6 +1,7 @@
 package models
 
 import (
+	"github.com/wetor/AnimeGo/configs"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/store"
 	"github.com/wetor/AnimeGo/internal/utils"
@@ -40,12 +41,23 @@ type PluginConfigDownloadRequest struct {
 }
 
 type ConfigGetRequest struct {
-	// Key 使用目录方式获取指定yaml key内容
-	//   [暂不支持] 如 setting/save_path, advanced/download/queue_max_num
+	// Key 使用路径方式获取指定yaml key内容
+	//   [暂不支持] 如 setting.save_path, advanced.download.queue_max_num
 	//   all 获取所有配置项，json格式
-	//   raw 获取所有配置项，yaml文本格式
-	//   comment 获取所有配置项的注释文本
+	//   default 获取默认值配置项，json格式
+	//   comment 获取所有配置项的注释文本，json格式
+	//   raw 获取所有配置项，yaml文件内容，base64编码
 	Key string `json:"key" form:"key" default:"all"`
+}
+
+type ConfigPutRequest struct {
+	// Key 用路径方式更新指定yaml key内容
+	//   [暂不支持] 如 setting/save_path, advanced/download/queue_max_num
+	//   all 更新所有配置项，json格式
+	Key string `json:"key" form:"key" default:"all"`
+	// Backup 备份原配置文件
+	Backup bool            `json:"backup" form:"backup" default:"true"`
+	Config *configs.Config `json:"config"`
 }
 
 type BoltRequest struct {

@@ -28,7 +28,9 @@ func BoltList(c *gin.Context) {
 	if request.DB == "bolt" {
 		db = store.Cache
 	} else if request.DB == "bolt_sub" {
+		store.BangumiCacheLock.Lock()
 		db = store.BangumiCache
+		store.BangumiCacheLock.Unlock()
 	} else {
 		c.JSON(webModels.Fail("参数错误，未找到数据库"))
 		return
@@ -74,7 +76,9 @@ func Bolt(c *gin.Context) {
 	if request.DB == "bolt" {
 		db = store.Cache
 	} else if request.DB == "bolt_sub" {
+		store.BangumiCacheLock.Lock()
 		db = store.BangumiCache
+		store.BangumiCacheLock.Unlock()
 	} else {
 		c.JSON(webModels.Fail("参数错误，未找到数据库"))
 		return

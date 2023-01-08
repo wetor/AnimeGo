@@ -26,7 +26,6 @@ func TestDefaultConfig(t *testing.T) {
 		panic(err)
 	}
 	got := DefaultDoc()
-
 	if bytes.Compare(got, want) != 0 {
 		t.Errorf("DefaultDoc() = %s, want %s", got, want)
 	}
@@ -43,5 +42,5 @@ func TestUpdateConfig(t *testing.T) {
 	if bytes.Compare(got, want) != 0 {
 		t.Errorf("UpdateConfig() = %s, want %s", got, want)
 	}
-	_ = os.Remove("data/animego.yaml")
+	//_ = os.Remove("data/animego.yaml")
 }

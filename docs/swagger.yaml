@@ -136,11 +136,20 @@ definitions:
         description: bucket, key
         type: string
     type: object
-  models.ConfigResponse:
+  models.ConfigPutRequest:
     properties:
+      backup:
+        default: true
+        description: Backup 备份原配置文件
+        type: boolean
       config:
         $ref: '#/definitions/configs.Config'
-      data:
+      key:
+        default: all
+        description: |-
+          Key 用路径方式更新指定yaml key内容
+            [暂不支持] 如 setting/save_path, advanced/download/queue_max_num
+            all 更新所有配置项，json格式
         type: string
     type: object
   models.PluginConfigUploadRequest:
@@ -316,15 +325,16 @@ paths:
     get:
       consumes:
       - application/json
-      description: 将待下载项组合成rss发送给AnimeGo
+      description: 获取AnimeGo的配置文件内容
       parameters:
       - default: all
         description: |-
-          Key 使用目录方式获取指定yaml key内容
-            [暂不支持] 如 setting/save_path, advanced/download/queue_max_num
+          Key 使用路径方式获取指定yaml key内容
+            [暂不支持] 如 setting.save_path, advanced.download.queue_max_num
             all 获取所有配置项，json格式
-            raw 获取所有配置项，yaml文本格式
-            comment 获取所有配置项的注释文本
+            default 获取默认值配置项，json格式
+            comment 获取所有配置项的注释文本，json格式
+            raw 获取所有配置项，yaml文件内容，base64编码
         in: query
         name: key
         type: string
@@ -334,12 +344,7 @@ paths:
         "200":
           description: OK
           schema:
-            allOf:
-            - $ref: '#/definitions/models.Response'
-            - properties:
-                data:
-                  $ref: '#/definitions/models.ConfigResponse'
-              type: object
+            $ref: '#/definitions/models.Response'
         "300":
           description: Multiple Choices
           schema:
@@ -347,6 +352,33 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: 获取设置
+      tags:
+      - config
+    put:
+      consumes:
+      - application/json
+      description: 更新AnimeGo的配置文件内容
+      parameters:
+      - description: 更新配置文件
+        in: body
+        name: type
+        required: true
+        schema:
+          $ref: '#/definitions/models.ConfigPutRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Response'
+        "300":
+          description: Multiple Choices
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: 更新设置
       tags:
       - config
   /api/plugin/config:

@@ -2,7 +2,7 @@ package configs
 
 import (
 	"fmt"
-	encoder "github.com/wetor/yaml-encoder"
+	encoder "github.com/wetor/AnimeGo/third_party/yaml-encoder"
 	"gopkg.in/yaml.v3"
 	"log"
 	"os"
@@ -53,7 +53,7 @@ func UpdateConfig(oldFile string, backup bool) (restart bool) {
 	}
 	log.Printf("配置文件升级：%s => %s\n", oldVer, newVer)
 	if backup {
-		err = backupConfig(oldFile)
+		err = BackupConfig(oldFile)
 		if err != nil {
 			log.Fatal("配置文件备份失败：", err)
 		}
@@ -112,7 +112,7 @@ func encodeConfig(conf *Config) ([]byte, error) {
 	return content, nil
 }
 
-func backupConfig(file string) error {
+func BackupConfig(file string) error {
 	dir, name := path.Split(file)
 	ext := path.Ext(name)
 	name = strings.TrimSuffix(name, ext)

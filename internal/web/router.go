@@ -37,7 +37,8 @@ func Run(ctx context.Context) {
 		apiRoot.POST("/plugin/config", api.PluginConfigPost)
 		apiRoot.GET("/plugin/config", api.PluginConfigGet)
 
-		apiRoot.GET("/config", api.Config)
+		apiRoot.GET("/config", api.ConfigGet)
+		apiRoot.PUT("/config", api.ConfigPut)
 
 		apiRoot.GET("/bolt", api.BoltList)
 		apiRoot.GET("/bolt/value", api.Bolt)

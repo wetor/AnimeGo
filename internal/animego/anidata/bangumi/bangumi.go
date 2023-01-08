@@ -100,6 +100,8 @@ func (b Bangumi) parseAnimeInfo(bangumiID int) (entity *Entity) {
 func (b Bangumi) loadAnimeInfo(bangumiID int) (entity *Entity, err error) {
 	entity = &Entity{}
 	zap.S().Debug("使用Bangumi Archive，", bangumiID)
+	store.BangumiCacheLock.Lock()
 	err = store.BangumiCache.Get(SubjectBucket, bangumiID, entity)
+	store.BangumiCacheLock.Unlock()
 	return entity, err
 }

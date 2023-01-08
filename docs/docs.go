@@ -228,7 +228,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "将待下载项组合成rss发送给AnimeGo",
+                "description": "获取AnimeGo的配置文件内容",
                 "consumes": [
                     "application/json"
                 ],
@@ -243,7 +243,7 @@ const docTemplate = `{
                     {
                         "type": "string",
                         "default": "all",
-                        "description": "Key 使用目录方式获取指定yaml key内容\n  [暂不支持] 如 setting/save_path, advanced/download/queue_max_num\n  all 获取所有配置项，json格式\n  raw 获取所有配置项，yaml文本格式\n  comment 获取所有配置项的注释文本",
+                        "description": "Key 使用路径方式获取指定yaml key内容\n  [暂不支持] 如 setting.save_path, advanced.download.queue_max_num\n  all 获取所有配置项，json格式\n  default 获取默认值配置项，json格式\n  comment 获取所有配置项的注释文本，json格式\n  raw 获取所有配置项，yaml文件内容，base64编码",
                         "name": "key",
                         "in": "query"
                     }
@@ -252,19 +252,50 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "allOf": [
-                                {
-                                    "$ref": "#/definitions/models.Response"
-                                },
-                                {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/definitions/models.ConfigResponse"
-                                        }
-                                    }
-                                }
-                            ]
+                            "$ref": "#/definitions/models.Response"
+                        }
+                    },
+                    "300": {
+                        "description": "Multiple Choices",
+                        "schema": {
+                            "$ref": "#/definitions/models.Response"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "更新AnimeGo的配置文件内容",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "config"
+                ],
+                "summary": "更新设置",
+                "parameters": [
+                    {
+                        "description": "更新配置文件",
+                        "name": "type",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.ConfigPutRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Response"
                         }
                     },
                     "300": {
@@ -688,14 +719,21 @@ const docTemplate = `{
                 }
             }
         },
-        "models.ConfigResponse": {
+        "models.ConfigPutRequest": {
             "type": "object",
             "properties": {
+                "backup": {
+                    "description": "Backup 备份原配置文件",
+                    "type": "boolean",
+                    "default": true
+                },
                 "config": {
                     "$ref": "#/definitions/configs.Config"
                 },
-                "data": {
-                    "type": "string"
+                "key": {
+                    "description": "Key 用路径方式更新指定yaml key内容\n  [暂不支持] 如 setting/save_path, advanced/download/queue_max_num\n  all 更新所有配置项，json格式",
+                    "type": "string",
+                    "default": "all"
                 }
             }
         },

@@ -8,11 +8,12 @@ import (
 )
 
 var (
-	Cache        *cache.Bolt
-	Config       *configs.Config
-	WG           sync.WaitGroup
-	Process      process.Process
-	BangumiCache *cache.Bolt
+	Cache            *cache.Bolt
+	Config           *configs.Config
+	WG               sync.WaitGroup
+	Process          process.Process
+	BangumiCache     *cache.Bolt
+	BangumiCacheLock sync.Mutex
 )
 
 type InitOptions struct {
