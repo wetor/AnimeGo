@@ -72,7 +72,6 @@ func (t *BangumiTask) download(url, name string) string {
 func (t *BangumiTask) unzip(filename string) {
 	zr, err := zip.OpenReader(filename)
 	errors.NewAniErrorD(err).TryPanic()
-	defer zr.Close()
 
 	// 遍历 zr ，将文件写入到磁盘
 	for _, file := range zr.File {
@@ -99,6 +98,7 @@ func (t *BangumiTask) unzip(filename string) {
 		fw.Close()
 		fr.Close()
 	}
+	zr.Close()
 	err = os.Remove(filename)
 	errors.NewAniErrorD(err).TryPanic()
 }

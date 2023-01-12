@@ -27,3 +27,4 @@ main
 .idea/
 modules/proxy/
 note_*.*
+.vscode/
