@@ -4,7 +4,7 @@ import (
 	"github.com/go-python/gpython/py"
 )
 
-func init() {
+func Init() {
 	methods := []*py.Method{
 		py.MustNewMethod("map", builtin_map, 0, "map"),
 		py.MustNewMethod("filter", builtin_filter, 0, "filter"),

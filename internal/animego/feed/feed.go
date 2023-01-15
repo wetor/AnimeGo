@@ -9,3 +9,15 @@ import (
 type Feed interface {
 	Parse() []*models.FeedItem
 }
+
+var (
+	TempPath string
+)
+
+type Options struct {
+	TempPath string
+}
+
+func Init(opts *Options) {
+	TempPath = opts.TempPath
+}

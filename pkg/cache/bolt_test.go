@@ -2,10 +2,11 @@ package cache
 
 import (
 	"fmt"
-	bolt "go.etcd.io/bbolt"
-	"go.uber.org/zap"
 	"reflect"
 	"testing"
+
+	bolt "go.etcd.io/bbolt"
+	"go.uber.org/zap"
 )
 
 type AnimeEntity struct {
@@ -23,17 +24,35 @@ type AnimeExtra struct {
 	MikanUrl     string // mikan当前集的url
 }
 
+type Entity struct {
+	ID      int    `json:"id"`      // Bangumi ID
+	NameCN  string `json:"name_cn"` // 中文名
+	Name    string `json:"name"`    // 原名
+	Eps     int    `json:"eps"`     // 集数
+	AirDate string `json:"airdate"` // 可空
+
+	Type     int `json:"type"`
+	Platform int `json:"platform"`
+}
+
+var (
+	db     = NewBolt()
+	db_sub = NewBolt()
+)
+
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
 	logger, _ := zap.NewDevelopment()
 	zap.ReplaceGlobals(logger)
+	db.Open("data/1.db")
+	db_sub.Open("testdata/bolt_sub.bolt")
 	m.Run()
+	db.Close()
+	db_sub.Close()
 	fmt.Println("end")
 }
 
 func TestBolt_Put(t *testing.T) {
-	db := NewBolt()
-	db.Open("data/1.db")
 	want := &AnimeEntity{
 		ID:      666,
 		Name:    "测试番剧名称",
@@ -58,8 +77,6 @@ func TestBolt_Put(t *testing.T) {
 }
 
 func TestBolt_BatchPut(t *testing.T) {
-	db := NewBolt()
-	db.Open("data/1.db")
 	want := []interface{}{
 		&AnimeEntity{
 			ID:      666,
@@ -113,8 +130,6 @@ func TestBolt_BatchPut(t *testing.T) {
 }
 
 func TestBolt_List(t *testing.T) {
-	db := NewBolt()
-	db.Open("data/1.db")
 	db.db.View(func(tx *bolt.Tx) error {
 		// Assume bucket exists and has keys
 		b := tx.Bucket([]byte("test"))
@@ -128,39 +143,25 @@ func TestBolt_List(t *testing.T) {
 }
 
 func TestBolt_GetAll(t *testing.T) {
-	db := NewBolt()
-	db.Open("data/1.db")
-	k := ""
-	v := AnimeEntity{}
-	db.GetAll("test", &k, &v, func(k1, v1 interface{}) {
-		fmt.Println("-----")
-		fmt.Println(*k1.(*string))
-		fmt.Println(*v1.(*AnimeEntity))
+	k := 10
+	v := Entity{}
+	db_sub.GetAll("bangumi_sub", &k, &v, func(k1, v1 interface{}) {
+		fmt.Println(*k1.(*int))
+		fmt.Println(*v1.(*Entity))
 	})
 }
 
 func TestBolt_GetAll_Sub(t *testing.T) {
-	type Entity struct {
-		ID      int    `json:"id"`      // Bangumi ID
-		NameCN  string `json:"name_cn"` // 中文名
-		Name    string `json:"name"`    // 原名
-		Eps     int    `json:"eps"`     // 集数
-		AirDate string `json:"airdate"` // 可空
 
-		Type     int `json:"type"`
-		Platform int `json:"platform"`
-	}
-	db := NewBolt()
-	db.Open("data/bolt_sub.db")
-	key := 302286
+	key := 51
 	got := &Entity{}
-	db.Get("bangumi_sub", key, got)
+	db_sub.Get("bangumi_sub", key, got)
 	want := &Entity{
-		ID:       302286,
-		NameCN:   "死神 千年血战篇",
-		Name:     "BLEACH 千年血戦篇",
-		Eps:      13,
-		AirDate:  "2022-10-10",
+		ID:       51,
+		NameCN:   "CLANNAD",
+		Name:     "CLANNAD -クラナド-",
+		Eps:      22,
+		AirDate:  "2007-10-04",
 		Type:     2,
 		Platform: 1,
 	}

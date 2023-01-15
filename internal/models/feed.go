@@ -1,8 +1,9 @@
 package models
 
 import (
-	"github.com/wetor/AnimeGo/internal/utils"
 	"path"
+
+	"github.com/wetor/AnimeGo/internal/utils"
 )
 
 const (

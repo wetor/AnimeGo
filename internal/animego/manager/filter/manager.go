@@ -4,15 +4,17 @@ package filter
 
 import (
 	"context"
+	"sync"
+
+	"go.uber.org/zap"
+
 	"github.com/wetor/AnimeGo/internal/animego/anisource"
 	"github.com/wetor/AnimeGo/internal/animego/feed"
 	"github.com/wetor/AnimeGo/internal/animego/filter"
+	"github.com/wetor/AnimeGo/internal/animego/manager"
 	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/internal/store"
 	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/errors"
-	"go.uber.org/zap"
-	"sync"
 )
 
 const (
@@ -30,12 +32,12 @@ type Manager struct {
 }
 
 // NewManager
-//  @Description:
-//  @param filter *filter.Filter
-//  @param feed feed.Feed
-//  @param anisource anisource.AniSource
-//  @return *Manager
 //
+//	@Description:
+//	@param filter *filter.Filter
+//	@param feed feed.Feed
+//	@param anisource anisource.AniSource
+//	@return *Manager
 func NewManager(filter filter.Filter, feed feed.Feed, anisource anisource.AniSource, downloadChan chan *models.AnimeEntity) *Manager {
 	m := &Manager{
 		filter:    filter,
@@ -57,7 +59,7 @@ func (m *Manager) Update(ctx context.Context, items []*models.FeedItem) {
 	items = m.filter.Filter(items)
 
 	animeList := make([]*models.AnimeEntity, len(items))
-	working := make(chan int, store.Config.Advanced.Feed.MultiGoroutine.GoroutineMax) // 限制同时执行个数
+	working := make(chan int, manager.FilterConf.MultiGoroutineMax) // 限制同时执行个数
 	wg := sync.WaitGroup{}
 	exit := false
 	for i, item := range items {
@@ -92,13 +94,13 @@ func (m *Manager) Update(ctx context.Context, items []*models.FeedItem) {
 					m.downloadChan <- anime
 
 				}
-				utils.Sleep(store.Config.Advanced.Feed.DelaySecond, ctx)
+				utils.Sleep(manager.FilterConf.DelaySecond, ctx)
 			}
 			<-working
 			wg.Done()
 		}(i, item)
 
-		if !exit && !store.Config.Advanced.Feed.MultiGoroutine.Enable {
+		if !exit && !manager.FilterConf.MultiGoroutineEnabled {
 			wg.Wait()
 		}
 	}
@@ -107,9 +109,9 @@ func (m *Manager) Update(ctx context.Context, items []*models.FeedItem) {
 }
 
 func (m *Manager) Start(ctx context.Context) {
-	store.WG.Add(1)
+	manager.WG.Add(1)
 	go func() {
-		defer store.WG.Done()
+		defer manager.WG.Done()
 		for {
 			exit := false
 			func() {
@@ -123,7 +125,7 @@ func (m *Manager) Start(ctx context.Context) {
 					return
 				default:
 					m.Update(ctx, nil)
-					delay := store.Config.Advanced.Feed.UpdateDelayMinute
+					delay := manager.FilterConf.UpdateDelayMinute
 					if delay < UpdateWaitMinMinute {
 						delay = UpdateWaitMinMinute
 					}

@@ -1,9 +1,11 @@
 package themoviedb
 
 import (
-	"github.com/wetor/AnimeGo/pkg/errors"
-	"go.uber.org/zap"
 	"regexp"
+
+	"go.uber.org/zap"
+
+	"github.com/wetor/AnimeGo/pkg/errors"
 )
 
 var nameRegxStep = []*regexp.Regexp{

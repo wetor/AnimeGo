@@ -2,13 +2,14 @@ package configs
 
 import (
 	"fmt"
-	encoder "github.com/wetor/AnimeGo/third_party/yaml-encoder"
-	"gopkg.in/yaml.v3"
 	"log"
 	"os"
 	"path"
 	"strings"
 	"time"
+
+	encoder "github.com/wetor/AnimeGo/third_party/yaml-encoder"
+	"gopkg.in/yaml.v3"
 )
 
 var (

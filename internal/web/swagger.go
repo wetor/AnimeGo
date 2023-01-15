@@ -2,12 +2,13 @@ package web
 
 import (
 	"fmt"
+	"os"
+
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+
 	"github.com/wetor/AnimeGo/docs"
-	"github.com/wetor/AnimeGo/internal/store"
-	"os"
 )
 
 // @termsOfService https://github.com/wetor/AnimeGo
@@ -22,7 +23,7 @@ func InitSwagger(r *gin.Engine) {
 	docs.SwaggerInfo.Title = "AnimeGo"
 	docs.SwaggerInfo.Description = "Golang开发的自动追番与下载工具"
 	docs.SwaggerInfo.Version = os.Getenv("ANIMEGO_VERSION")
-	docs.SwaggerInfo.Host = fmt.Sprintf("%s:%d", store.Config.Setting.WebApi.Host, store.Config.Setting.WebApi.Port)
+	docs.SwaggerInfo.Host = fmt.Sprintf("%s:%d", Host, Port)
 	docs.SwaggerInfo.BasePath = ""
 	docs.SwaggerInfo.Schemes = []string{"http"}
 	// use ginSwagger middleware to serve the API docs

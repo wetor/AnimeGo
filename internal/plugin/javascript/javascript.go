@@ -1,14 +1,16 @@
 package javascript
 
 import (
-	"github.com/dop251/goja"
-	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/internal/utils"
-	"github.com/wetor/AnimeGo/pkg/errors"
-	"go.uber.org/zap"
 	"os"
 	"path"
 	"strings"
+
+	"github.com/dop251/goja"
+	"go.uber.org/zap"
+
+	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/utils"
+	"github.com/wetor/AnimeGo/pkg/errors"
 )
 
 type JavaScript struct {

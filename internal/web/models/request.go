@@ -1,11 +1,11 @@
 package models
 
 import (
+	"path"
+
 	"github.com/wetor/AnimeGo/configs"
 	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/internal/store"
 	"github.com/wetor/AnimeGo/internal/utils"
-	"path"
 )
 
 type SelectEpRequest struct {
@@ -21,8 +21,8 @@ type PluginRequest struct {
 	Name string `json:"name" form:"name" binding:"required"` //插件文件名
 }
 
-func (p PluginRequest) FindFile() (string, error) {
-	file := path.Join(store.Config.DataPath, "plugin", p.Name)
+func (p PluginRequest) FindFile(dataPath string) (string, error) {
+	file := path.Join(dataPath, "plugin", p.Name)
 	ext := path.Ext(file)
 	if len(ext) == 0 {
 		ext = models.JSExt

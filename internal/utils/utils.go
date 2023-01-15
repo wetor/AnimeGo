@@ -40,13 +40,28 @@ func Filename(filename string) string {
 	return Format(filename, filenameMap)
 }
 
+func Tag(tagSrc string, airDate string, ep int) string {
+	date, _ := time.Parse("2006-01-02", airDate)
+	mouth := (int(date.Month()) + 2) / 3
+	tag := Format(tagSrc, FormatMap{
+		"year":          date.Year(),
+		"quarter":       (mouth-1)*3 + 1,
+		"quarter_index": mouth,
+		"quarter_name":  []string{"冬", "春", "夏", "秋"}[mouth-1],
+		"ep":            ep,
+		"week":          (int(date.Weekday())+6)%7 + 1,
+		"week_name":     []string{"星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"}[date.Weekday()],
+	})
+	return tag
+}
+
 // Sleep
-//  @Description: 信号计时器，每秒检测一次信号，避免长时间等待无法接收信号
-//  @Description: 收到exit信号后，会返回true；倒计时结束，会返回false
-//  @param second int
-//  @param exit chan bool
-//  @return bool
 //
+//	@Description: 信号计时器，每秒检测一次信号，避免长时间等待无法接收信号
+//	@Description: 收到exit信号后，会返回true；倒计时结束，会返回false
+//	@param second int
+//	@param exit chan bool
+//	@return bool
 func Sleep(second int, ctx context.Context) bool {
 	for second > 0 {
 		select {
@@ -72,7 +87,7 @@ func ConvertModel(src, dst any) {
 	}
 }
 
-//CreateMutiDir 调用os.MkdirAll递归创建文件夹
+// CreateMutiDir 调用os.MkdirAll递归创建文件夹
 func CreateMutiDir(filePath string) error {
 	if !IsExist(filePath) {
 		return os.MkdirAll(filePath, os.ModePerm)
@@ -80,19 +95,16 @@ func CreateMutiDir(filePath string) error {
 	return nil
 }
 
-//IsExist 判断所给路径文件/文件夹是否存在(返回true是存在)
+// IsExist 判断所给路径文件/文件夹是否存在(返回true是存在)
 func IsExist(path string) bool {
 	_, err := os.Stat(path) //os.Stat获取文件信息
 	if err != nil {
-		if os.IsExist(err) {
-			return true
-		}
-		return false
+		return os.IsExist(err)
 	}
 	return true
 }
 
-//FileSize 获取文件大小，文件不存返回-1
+// FileSize 获取文件大小，文件不存返回-1
 func FileSize(path string) int64 {
 	s, err := os.Stat(path) //os.Stat获取文件信息
 	if err != nil {
@@ -104,7 +116,7 @@ func FileSize(path string) int64 {
 	return s.Size()
 }
 
-//IsDir 判断所给路径是否为文件夹
+// IsDir 判断所给路径是否为文件夹
 func IsDir(path string) bool {
 	s, err := os.Stat(path)
 	if err != nil {

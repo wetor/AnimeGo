@@ -3,15 +3,16 @@ package api
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/wetor/AnimeGo/internal/animego/feed/rss"
-	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/internal/store"
-	webModels "github.com/wetor/AnimeGo/internal/web/models"
-	"github.com/wetor/AnimeGo/pkg/errors"
-	"go.uber.org/zap"
 	"os"
 	"strings"
+
+	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
+
+	"github.com/wetor/AnimeGo/internal/animego/feed/rss"
+	"github.com/wetor/AnimeGo/internal/models"
+	webModels "github.com/wetor/AnimeGo/internal/web/models"
+	"github.com/wetor/AnimeGo/pkg/errors"
 )
 
 // Rss godoc
@@ -46,7 +47,7 @@ func Rss(c *gin.Context) {
 		}
 		items = selectItems
 	}
-	go store.Process.Update(items)
+	go FilterManager.Update(Ctx, items)
 	c.JSON(webModels.Succ(fmt.Sprintf("开始处理%d个下载项", len(items))))
 }
 
@@ -69,7 +70,7 @@ func PluginConfigPost(c *gin.Context) {
 	if !checkRequest(c, &request) {
 		return
 	}
-	file, err := request.FindFile()
+	file, err := request.FindFile(DataPath)
 	if err != nil {
 		zap.S().Debug(err)
 		c.JSON(webModels.Fail(err.Error()))
@@ -115,7 +116,7 @@ func PluginConfigGet(c *gin.Context) {
 	if !checkRequest(c, &request) {
 		return
 	}
-	file, err := request.FindFile()
+	file, err := request.FindFile(DataPath)
 	if err != nil {
 		zap.S().Debug(err)
 		c.JSON(webModels.Fail(err.Error()))

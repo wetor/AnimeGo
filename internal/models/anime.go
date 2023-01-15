@@ -2,9 +2,10 @@ package models
 
 import (
 	"fmt"
-	"github.com/wetor/AnimeGo/internal/utils"
 	"path"
 	"strconv"
+
+	"github.com/wetor/AnimeGo/internal/utils"
 )
 
 // AnimeEntity 动画信息结构体

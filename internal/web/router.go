@@ -3,19 +3,20 @@ package web
 import (
 	"context"
 	"fmt"
+	"net/http"
+
 	"github.com/gin-gonic/gin"
-	"github.com/wetor/AnimeGo/internal/store"
+	"go.uber.org/zap"
+
 	"github.com/wetor/AnimeGo/internal/web/api"
 	"github.com/wetor/AnimeGo/internal/web/models"
 	"github.com/wetor/AnimeGo/pkg/errors"
-	"go.uber.org/zap"
-	"net/http"
 )
 
 func Run(ctx context.Context) {
-	store.WG.Add(1)
+	WG.Add(1)
 	go func() {
-		defer store.WG.Done()
+		defer WG.Done()
 		r := gin.New()
 		r.Use(Cors())             // 跨域中间件
 		r.Use(GinLogger(zap.S())) // 日志中间件
@@ -45,7 +46,7 @@ func Run(ctx context.Context) {
 		apiRoot.DELETE("/bolt/value", api.BoltDelete)
 
 		s := &http.Server{
-			Addr:    fmt.Sprintf("%s:%d", store.Config.WebApi.Host, store.Config.WebApi.Port),
+			Addr:    fmt.Sprintf("%s:%d", Host, Port),
 			Handler: r,
 		}
 		go func() {

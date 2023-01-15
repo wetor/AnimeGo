@@ -1,10 +1,12 @@
 package task
 
 import (
-	"github.com/robfig/cron/v3"
-	"github.com/wetor/AnimeGo/pkg/errors"
-	"go.uber.org/zap"
 	"time"
+
+	"github.com/robfig/cron/v3"
+	"go.uber.org/zap"
+
+	"github.com/wetor/AnimeGo/pkg/errors"
 )
 
 type JSPluginTask struct {
@@ -14,7 +16,7 @@ type JSPluginTask struct {
 
 func NewJSPluginTask(parser *cron.Parser) *JSPluginTask {
 	return &JSPluginTask{
-		cron:   "*/5 * * * * ?", // 每周四4点
+		cron:   "*/5 * * * * ?", // 5s 执行一次
 		parser: parser,
 	}
 }
@@ -37,7 +39,7 @@ func (t *JSPluginTask) Run(force bool) {
 	defer errors.HandleError(func(err error) {
 		zap.S().Error(err)
 	})
-	//zap.S().Infof("[定时任务] %s 开始执行", t.Name())
+	zap.S().Infof("[定时任务] %s 开始执行", t.Name())
 
-	//zap.S().Infof("[定时任务] %s 执行完毕，下次执行时间: %s", t.Name(), t.NextTime())
+	zap.S().Infof("[定时任务] %s 执行完毕，下次执行时间: %s", t.Name(), t.NextTime())
 }

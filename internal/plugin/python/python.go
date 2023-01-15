@@ -1,14 +1,16 @@
 package python
 
 import (
+	"os"
+	"strings"
+
 	gpy "github.com/go-python/gpython/py"
 	_ "github.com/go-python/gpython/stdlib"
+	"go.uber.org/zap"
+
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/errors"
-	"go.uber.org/zap"
-	"os"
-	"strings"
 )
 
 type Python struct {

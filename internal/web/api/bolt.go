@@ -3,9 +3,9 @@ package api
 import (
 	"github.com/gin-gonic/gin"
 	jsoniter "github.com/json-iterator/go"
-	"github.com/wetor/AnimeGo/internal/store"
+
+	"github.com/wetor/AnimeGo/internal/api"
 	webModels "github.com/wetor/AnimeGo/internal/web/models"
-	"github.com/wetor/AnimeGo/pkg/cache"
 )
 
 // BoltList godoc
@@ -24,18 +24,16 @@ func BoltList(c *gin.Context) {
 	if !checkRequest(c, &request) {
 		return
 	}
-	var db *cache.Bolt
+	var db api.CacheGetter
 	if request.DB == "bolt" {
-		db = store.Cache
+		db = Cache
 	} else if request.DB == "bolt_sub" {
-		store.BangumiCacheLock.Lock()
-		db = store.BangumiCache
-		store.BangumiCacheLock.Unlock()
+		db = BangumiCache
 	} else {
 		c.JSON(webModels.Fail("参数错误，未找到数据库"))
 		return
 	}
-
+	BangumiCacheLock.Lock()
 	var list []string
 	if request.Type == "bucket" {
 		list = db.ListBucket()
@@ -49,6 +47,7 @@ func BoltList(c *gin.Context) {
 		c.JSON(webModels.Fail("参数错误，不支持的type：" + request.Type + "，目前仅支持 bucket 和 key"))
 		return
 	}
+	BangumiCacheLock.Unlock()
 	c.JSON(webModels.Succ("列表", webModels.BoltListResponse{
 		Type:   request.Type,
 		Bucket: request.Bucket,
@@ -72,19 +71,18 @@ func Bolt(c *gin.Context) {
 	if !checkRequest(c, &request) {
 		return
 	}
-	var db *cache.Bolt
+	var db api.CacheGetter
 	if request.DB == "bolt" {
-		db = store.Cache
+		db = Cache
 	} else if request.DB == "bolt_sub" {
-		store.BangumiCacheLock.Lock()
-		db = store.BangumiCache
-		store.BangumiCacheLock.Unlock()
+		db = BangumiCache
 	} else {
 		c.JSON(webModels.Fail("参数错误，未找到数据库"))
 		return
 	}
-
+	BangumiCacheLock.Lock()
 	ttl, val, err := db.GetValue(request.Bucket, request.Key)
+	BangumiCacheLock.Unlock()
 	if err != nil {
 		c.JSON(webModels.Fail("查询失败，" + err.Error()))
 		return
@@ -130,9 +128,9 @@ func BoltDelete(c *gin.Context) {
 	if !checkRequest(c, &request) {
 		return
 	}
-	var db *cache.Bolt
+	var db api.CacheSetter
 	if request.DB == "bolt" {
-		db = store.Cache
+		db = Cache
 	} else {
 		c.JSON(webModels.Fail("参数错误，只能删除 bolt 数据库中的数据"))
 		return

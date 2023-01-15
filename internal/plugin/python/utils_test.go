@@ -2,9 +2,11 @@ package python
 
 import (
 	"fmt"
-	"github.com/go-python/gpython/py"
-	"github.com/wetor/AnimeGo/internal/models"
 	"testing"
+
+	"github.com/go-python/gpython/py"
+
+	"github.com/wetor/AnimeGo/internal/models"
 )
 
 func TestPyObject2Object(t *testing.T) {

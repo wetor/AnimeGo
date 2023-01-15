@@ -1,11 +1,12 @@
 package public
 
 import (
+	"path"
+
 	"github.com/wetor/AnimeGo/assets"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin/python"
 	"github.com/wetor/AnimeGo/internal/utils"
-	"path"
 )
 
 var (

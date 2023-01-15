@@ -2,12 +2,21 @@ package javascript
 
 import (
 	"fmt"
-	"github.com/dop251/goja"
-	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/test"
-	"os"
 	"testing"
+
+	"github.com/dop251/goja"
+	"go.uber.org/zap"
+
+	"github.com/wetor/AnimeGo/internal/models"
 )
+
+func TestMain(m *testing.M) {
+	fmt.Println("begin")
+	logger, _ := zap.NewDevelopment()
+	zap.ReplaceGlobals(logger)
+	m.Run()
+	fmt.Println("end")
+}
 
 func TestJs(t *testing.T) {
 	vm := goja.New()
@@ -31,24 +40,10 @@ function sum(a, b) {
 	fmt.Println(res)
 }
 
-func TestJs2(t *testing.T) {
-	test.TestInit()
-	os.Setenv("ANIMEGO_VERSION", "0.2.2")
-	js := &JavaScript{}
-	js.SetSchema([]string{"feedItems"}, []string{"index", "error"})
-	execute := js.Execute("data/test.js",
-		models.Object{
-			"feedItems": []*models.FeedItem{},
-		})
-	fmt.Println(execute)
-}
-
 func TestJavaScript_Execute(t *testing.T) {
-	test.TestInit()
-
 	js := &JavaScript{}
 	js.SetSchema([]string{"feedItems"}, []string{"index", "error"})
-	execute := js.Execute("/Users/wetor/GoProjects/AnimeGo/data/plugin/filter/test",
+	execute := js.Execute("testdata/test.js",
 		models.Object{
 			"feedItems": []*models.FeedItem{
 				{
