@@ -2,14 +2,15 @@ package qbittorrent
 
 import (
 	"context"
-	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/internal/store"
-	"github.com/wetor/AnimeGo/internal/utils"
-	"github.com/wetor/AnimeGo/pkg/errors"
-	"github.com/wetor/AnimeGo/third_party/qbapi"
 	"time"
 
 	"go.uber.org/zap"
+
+	"github.com/wetor/AnimeGo/internal/animego/downloader"
+	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/utils"
+	"github.com/wetor/AnimeGo/pkg/errors"
+	"github.com/wetor/AnimeGo/third_party/qbapi"
 )
 
 const (
@@ -55,7 +56,7 @@ func NewQBittorrent(url, username, password string) *QBittorrent {
 
 	qbt.option = append(qbt.option, qbapi.WithAuth(username, password))
 	qbt.option = append(qbt.option, qbapi.WithHost(url))
-	qbt.option = append(qbt.option, qbapi.WithTimeout(time.Duration(store.Config.Advanced.Client.ConnectTimeoutSecond)*time.Second))
+	qbt.option = append(qbt.option, qbapi.WithTimeout(time.Duration(downloader.ConnectTimeoutSecond)*time.Second))
 	qbt.retryNum = 1
 	qbt.connected = false
 	qbt.retryChan <- ChanRetryConnect
@@ -75,12 +76,12 @@ func (c *QBittorrent) clientVersion() string {
 }
 
 // Start
-//  @Description: 启动下载器协程
-//  @Description: 客户端在线监听、登录重试
-//  @Description: 客户端处理下载消息，获取下载进度
-//  @receiver *QBittorrent
-//  @param ctx context.Context
 //
+//	@Description: 启动下载器协程
+//	@Description: 客户端在线监听、登录重试
+//	@Description: 客户端处理下载消息，获取下载进度
+//	@receiver *QBittorrent
+//	@param ctx context.Context
 func (c *QBittorrent) Start(ctx context.Context) {
 	c.connectFunc = func() bool {
 		var err error
@@ -98,9 +99,9 @@ func (c *QBittorrent) Start(ctx context.Context) {
 		// c.Init()
 		return true
 	}
-	store.WG.Add(1)
+	downloader.WG.Add(1)
 	go func() {
-		defer store.WG.Done()
+		defer downloader.WG.Done()
 		for {
 			exit := false
 			func() {
@@ -133,9 +134,9 @@ func (c *QBittorrent) Start(ctx context.Context) {
 			}
 		}
 	}()
-	store.WG.Add(1)
+	downloader.WG.Add(1)
 	go func() {
-		defer store.WG.Done()
+		defer downloader.WG.Done()
 		for {
 			exit := false
 			func() {
@@ -151,11 +152,11 @@ func (c *QBittorrent) Start(ctx context.Context) {
 					if c.retryNum == 0 {
 						c.retryChan <- ChanRetryConnect
 						// 检查是否在线，时间长
-						utils.Sleep(store.Config.Advanced.Client.CheckTimeSecond, ctx)
-					} else if c.retryNum <= store.Config.Advanced.Client.RetryConnectNum {
+						utils.Sleep(downloader.CheckTimeSecond, ctx)
+					} else if c.retryNum <= downloader.RetryConnectNum {
 						c.retryChan <- ChanRetryConnect
 						// 失败重试，时间短
-						utils.Sleep(store.Config.Advanced.Client.ConnectTimeoutSecond, ctx)
+						utils.Sleep(downloader.ConnectTimeoutSecond, ctx)
 					} else {
 						// 超过重试次数，不在频繁重试
 						c.retryNum = 0
@@ -171,11 +172,11 @@ func (c *QBittorrent) Start(ctx context.Context) {
 }
 
 // checkError
-//  @Description: 检查错误，返回是否需要结束流程
-//  @receiver *QBittorrent
-//  @param err error
-//  @return bool
 //
+//	@Description: 检查错误，返回是否需要结束流程
+//	@receiver *QBittorrent
+//	@param err error
+//	@return bool
 func (c *QBittorrent) checkError(err error) bool {
 	if err == nil {
 		return false

@@ -2,21 +2,24 @@ package plugin
 
 import (
 	"fmt"
+	"testing"
+
+	"github.com/wetor/AnimeGo/internal/animego/feed"
 	mikanRss "github.com/wetor/AnimeGo/internal/animego/feed/rss"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin/javascript"
-	"github.com/wetor/AnimeGo/internal/store"
-	"github.com/wetor/AnimeGo/test"
-	"testing"
+	"github.com/wetor/AnimeGo/internal/utils"
 )
 
 func TestJavaScript_Filter(t *testing.T) {
-	test.TestInit()
-
-	feed := mikanRss.NewRss(store.Config.Setting.Feed.Mikan.Url, store.Config.Setting.Feed.Mikan.Name)
-	items := feed.Parse()
+	_ = utils.CreateMutiDir("data")
+	feed.Init(&feed.Options{
+		TempPath: "data",
+	})
+	rss := mikanRss.NewRss("https://mikanani.me/RSS/MyBangumi?token=ky5DTt%2fMyAjCH2oKEN81FQ%3d%3d", "Mikan")
+	items := rss.Parse()
 	fmt.Println(len(items))
-	js := NewPluginFilter(&javascript.JavaScript{}, store.Config.Filter.JavaScript)
+	js := NewPluginFilter(&javascript.JavaScript{}, []string{"testdata/test.js"})
 	result := js.Filter(items)
 	fmt.Println(len(result))
 	for _, r := range result {
@@ -41,7 +44,7 @@ func TestJavaScript_Filter2(t *testing.T) {
 		},
 	}
 	js := NewPluginFilter(&javascript.JavaScript{}, []string{
-		"/Users/wetor/GoProjects/AnimeGo/data/plugin/filter/regexp.js",
+		"testdata/regexp.js",
 	})
 	result := js.Filter(list)
 	fmt.Println(len(result))

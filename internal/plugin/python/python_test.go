@@ -3,12 +3,14 @@ package python
 import (
 	"bufio"
 	"fmt"
-	"github.com/go-python/gpython/py"
-	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/third_party/gpython"
 	"os"
 	"strconv"
 	"testing"
+
+	"github.com/go-python/gpython/py"
+
+	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/third_party/gpython"
 )
 
 func TestRe1(t *testing.T) {

@@ -2,13 +2,15 @@ package request
 
 import (
 	"fmt"
-	"github.com/parnurzeal/gorequest"
-	"github.com/wetor/AnimeGo/pkg/errors"
-	"go.uber.org/zap"
 	"io"
 	"net/http"
 	"os"
 	"time"
+
+	"github.com/parnurzeal/gorequest"
+	"go.uber.org/zap"
+
+	"github.com/wetor/AnimeGo/pkg/errors"
 )
 
 var (
@@ -16,11 +18,28 @@ var (
 	RetryWait int
 	Timeout   int
 	Proxy     string
-	UserAgent string
+	UserAgent string = "default/AnimeGo (https://github.com/wetor/AnimeGo)"
 	Debug     bool
 )
 
-func Init(opt *InitOptions) {
+type Options struct {
+	Proxy     string // 使用代理
+	Retry     int    // 额外重试次数，默认为不做重试
+	RetryWait int    // 重试等待时间，最小3秒
+	Timeout   int    // 超时时间，最小3秒
+	Debug     bool
+}
+
+func (o *Options) Default() {
+	if o.RetryWait < 3 {
+		o.RetryWait = 3
+	}
+	if o.Timeout < 3 {
+		o.Timeout = 3
+	}
+}
+
+func Init(opt *Options) {
 	opt.Default()
 	Retry = opt.Retry
 	RetryWait = opt.RetryWait

@@ -3,11 +3,6 @@
 package rss
 
 import (
-	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/internal/store"
-	"github.com/wetor/AnimeGo/internal/utils"
-	"github.com/wetor/AnimeGo/pkg/errors"
-	"github.com/wetor/AnimeGo/pkg/request"
 	"os"
 	"path"
 	"regexp"
@@ -15,6 +10,12 @@ import (
 
 	"github.com/mmcdole/gofeed"
 	"go.uber.org/zap"
+
+	"github.com/wetor/AnimeGo/internal/animego/feed"
+	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/utils"
+	"github.com/wetor/AnimeGo/pkg/errors"
+	"github.com/wetor/AnimeGo/pkg/request"
 )
 
 type Rss struct {
@@ -39,9 +40,9 @@ func NewRss(url, name string) *Rss {
 }
 
 // Parse
-//  Description 第一步，解析rss
-//  Receiver f *Rss
 //
+//	Description 第一步，解析rss
+//	Receiver f *Rss
 func (f *Rss) Parse() (items []*models.FeedItem) {
 	if len(f.url) == 0 {
 		return nil
@@ -53,7 +54,7 @@ func (f *Rss) Parse() (items []*models.FeedItem) {
 		zap.S().Warn(errMsg)
 	})
 
-	filename := path.Join(store.Config.Advanced.Path.TempPath, f.name+".xml")
+	filename := path.Join(feed.TempPath, f.name+".xml")
 	// --------- 下载rss.xml ---------
 	zap.S().Info("获取Rss数据开始...")
 	errMsg = "请求Rss失败"

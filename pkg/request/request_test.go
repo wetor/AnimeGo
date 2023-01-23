@@ -2,8 +2,9 @@ package request
 
 import (
 	"fmt"
-	"go.uber.org/zap"
 	"testing"
+
+	"go.uber.org/zap"
 )
 
 func TestMain(m *testing.M) {
@@ -15,20 +16,18 @@ func TestMain(m *testing.M) {
 }
 
 func TestGet(t *testing.T) {
-	Init(&InitOptions{})
-
+	Init(&Options{})
 	str, err := GetString("http://pv.sohu.com/cityjson?ie=utf-8")
-	fmt.Println(str, err.Error())
+	fmt.Println(str, err)
 }
 
 func TestGetRetry(t *testing.T) {
-	Init(&InitOptions{
-		Proxy:     "http://127.0.0.1:7890",
+	Init(&Options{
 		Retry:     1,
 		RetryWait: 0,
-		Timeout:   1,
+		Timeout:   0,
 		Debug:     true,
 	})
 	str, err := GetString("https://www.baidu.com/aaa/test")
-	fmt.Println(str, err.Error())
+	fmt.Println(str, err)
 }

@@ -3,17 +3,18 @@ package mikan
 import (
 	"bytes"
 	"fmt"
-	"github.com/wetor/AnimeGo/internal/animego/anidata"
-	"github.com/wetor/AnimeGo/pkg/errors"
-	mem "github.com/wetor/AnimeGo/pkg/memorizer"
-	"github.com/wetor/AnimeGo/pkg/request"
-	"golang.org/x/net/html"
 	"net/url"
 	"path"
 	"strconv"
 	"strings"
 
 	"github.com/antchfx/htmlquery"
+	"golang.org/x/net/html"
+
+	"github.com/wetor/AnimeGo/internal/animego/anidata"
+	"github.com/wetor/AnimeGo/pkg/errors"
+	mem "github.com/wetor/AnimeGo/pkg/memorizer"
+	"github.com/wetor/AnimeGo/pkg/request"
 )
 
 const (

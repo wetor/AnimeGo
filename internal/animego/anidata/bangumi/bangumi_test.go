@@ -2,17 +2,36 @@ package bangumi
 
 import (
 	"fmt"
-	"github.com/wetor/AnimeGo/internal/animego/anidata"
-	"github.com/wetor/AnimeGo/internal/store"
-	"github.com/wetor/AnimeGo/pkg/cache"
-	"go.uber.org/zap"
+	"sync"
 	"testing"
+
+	"go.uber.org/zap"
+
+	"github.com/wetor/AnimeGo/internal/animego/anidata"
+	"github.com/wetor/AnimeGo/internal/utils"
+	"github.com/wetor/AnimeGo/pkg/cache"
+	"github.com/wetor/AnimeGo/pkg/request"
 )
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
+	utils.CreateMutiDir("data")
 	logger, _ := zap.NewDevelopment()
 	zap.ReplaceGlobals(logger)
+	request.Init(&request.Options{})
+	mutex := sync.Mutex{}
+
+	db := cache.NewBolt()
+	db.Open("data/bolt.db")
+
+	bangumiCache := cache.NewBolt()
+	bangumiCache.Open("testdata/bolt_sub.bolt")
+	anidata.Init(&anidata.Options{
+		Cache:            db,
+		BangumiCache:     bangumiCache,
+		BangumiCacheLock: &mutex,
+	})
+
 	m.Run()
 	fmt.Println("end")
 }
@@ -36,9 +55,9 @@ func TestBangumi_Parse(t *testing.T) {
 			wantErr:    false,
 		},
 		{
-			name:       "海贼王",
-			args:       args{bangumiID: 975, ep: 509},
-			wantEntity: &Entity{Eps: 1056},
+			name:       "欢迎来到实力至上主义的教室 第二季",
+			args:       args{bangumiID: 371546, ep: 7},
+			wantEntity: &Entity{Eps: 13},
 			wantErr:    false,
 		},
 	}
@@ -77,17 +96,13 @@ func TestBangumi_ParseCache(t *testing.T) {
 			wantEntity: &Entity{Eps: 13},
 			wantErr:    false,
 		},
+		{
+			name:       "CLANNAD",
+			args:       args{bangumiID: 51, ep: 5},
+			wantEntity: &Entity{Eps: 22},
+			wantErr:    false,
+		},
 	}
-	db := cache.NewBolt()
-	db.Open("data/bolt.db")
-	anidata.Init(&anidata.Options{Cache: db})
-	bangumiCache := cache.NewBolt()
-	bangumiCache.Open("data/bolt_sub.db")
-
-	store.Init(&store.InitOptions{
-		Cache:        db,
-		BangumiCache: bangumiCache,
-	})
 
 	b := &Bangumi{}
 	for _, tt := range tests {

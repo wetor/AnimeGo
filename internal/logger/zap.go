@@ -1,18 +1,19 @@
 package logger
 
 import (
+	"os"
+	"time"
+
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 	"gopkg.in/natefinch/lumberjack.v2"
-	"os"
-	"time"
 )
 
 const (
 	logTmFmt = "2006-01-02 15:04:05"
 )
 
-func GetLogger(opt *InitOptions) {
+func GetLogger(opt *Options) {
 	level := zapcore.DebugLevel
 	if !opt.Debug {
 		level = zapcore.InfoLevel

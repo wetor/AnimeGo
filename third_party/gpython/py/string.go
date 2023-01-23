@@ -1,14 +1,12 @@
 package py
 
 import (
-	"github.com/go-python/gpython/py"
 	"strings"
+
+	"github.com/go-python/gpython/py"
 )
 
 func init() {
-	py.StringType.Dict["strip"] = py.MustNewMethod("strip", func(self py.Object) (py.Object, error) {
-		return py.String(strings.TrimSpace(string(self.(py.String)))), nil
-	}, 0, `strip()`)
 
 	py.StringType.Dict["join"] = py.MustNewMethod("join", func(self py.Object, args py.Object) (py.Object, error) {
 		argList := args.(*py.List)

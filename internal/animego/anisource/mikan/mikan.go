@@ -1,13 +1,13 @@
 package mikan
 
 import (
+	"go.uber.org/zap"
+
 	"github.com/wetor/AnimeGo/internal/animego/anidata/themoviedb"
 	"github.com/wetor/AnimeGo/internal/animego/anisource"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin/public"
-	"github.com/wetor/AnimeGo/internal/store"
 	"github.com/wetor/AnimeGo/pkg/errors"
-	"go.uber.org/zap"
 )
 
 func ParseMikan(name, url, tmdbKey string) (anime *models.AnimeEntity) {
@@ -42,16 +42,16 @@ func ParseMikan(name, url, tmdbKey string) (anime *models.AnimeEntity) {
 	func() {
 		defer errors.HandleAniError(func(err *errors.AniError) {
 			zap.S().Debug(err)
-			if store.Config.Default.TMDBFailSkip {
+			if anisource.TMDBFailSkip {
 				zap.S().Warn("无法获取准确的季度信息，结束此流程")
 				return
 			}
-			if store.Config.Default.TMDBFailUseTitleSeason && match.Season != 0 {
+			if anisource.TMDBFailUseTitleSeason && match.Season != 0 {
 				season = match.Season
 				zap.S().Debugf("使用标题解析季度信息：第%d季", match.Season)
 			}
 			if season == 0 {
-				if store.Config.Default.TMDBFailUseFirstSeason {
+				if anisource.TMDBFailUseFirstSeason {
 					season = 1
 					zap.S().Debugf("无法获取准确季度信息，默认：第%d季", season)
 				} else {

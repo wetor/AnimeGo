@@ -1,10 +1,12 @@
 package python
 
 import (
+	"reflect"
+
 	gpy "github.com/go-python/gpython/py"
+
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/pkg/errors"
-	"reflect"
 )
 
 func Value2PyObject(object any) gpy.Object {

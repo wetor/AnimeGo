@@ -1,13 +1,13 @@
 package bangumi
 
 import (
+	"go.uber.org/zap"
+
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
-	"github.com/wetor/AnimeGo/internal/store"
 	"github.com/wetor/AnimeGo/pkg/errors"
 	mem "github.com/wetor/AnimeGo/pkg/memorizer"
 	"github.com/wetor/AnimeGo/pkg/request"
 	"github.com/wetor/AnimeGo/third_party/bangumi/res"
-	"go.uber.org/zap"
 )
 
 const (
@@ -43,6 +43,7 @@ func (b Bangumi) ParseCache(bangumiID int) (entity *Entity) {
 
 	if e, err := b.loadAnimeInfo(bangumiID); err == nil {
 		if e != nil {
+			zap.S().Debug("使用Bangumi Archive，", bangumiID)
 			return e
 		}
 	}
@@ -99,9 +100,8 @@ func (b Bangumi) parseAnimeInfo(bangumiID int) (entity *Entity) {
 
 func (b Bangumi) loadAnimeInfo(bangumiID int) (entity *Entity, err error) {
 	entity = &Entity{}
-	zap.S().Debug("使用Bangumi Archive，", bangumiID)
-	store.BangumiCacheLock.Lock()
-	err = store.BangumiCache.Get(SubjectBucket, bangumiID, entity)
-	store.BangumiCacheLock.Unlock()
+	anidata.BangumiCacheLock.Lock()
+	err = anidata.BangumiCache.Get(SubjectBucket, bangumiID, entity)
+	anidata.BangumiCacheLock.Unlock()
 	return entity, err
 }

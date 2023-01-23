@@ -3,23 +3,33 @@ package themoviedb
 import (
 	"encoding/csv"
 	"fmt"
-	"github.com/wetor/AnimeGo/internal/animego/anidata"
-	"github.com/wetor/AnimeGo/key"
-	"github.com/wetor/AnimeGo/pkg/cache"
-	"github.com/wetor/AnimeGo/pkg/request"
-	"go.uber.org/zap"
 	"io"
 	"log"
 	"os"
 	"strconv"
 	"testing"
 	"time"
+
+	"go.uber.org/zap"
+
+	"github.com/wetor/AnimeGo/internal/animego/anidata"
+	"github.com/wetor/AnimeGo/pkg/cache"
+	"github.com/wetor/AnimeGo/pkg/request"
 )
+
+const ThemoviedbKey = "d3d8430aefee6c19520d0f7da145daf5"
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
 	logger, _ := zap.NewDevelopment()
 	zap.ReplaceGlobals(logger)
+
+	db := cache.NewBolt()
+	db.Open("data/bolt.db")
+	anidata.Init(&anidata.Options{Cache: db})
+	request.Init(&request.Options{
+		Proxy: "http://192.168.10.2:7890",
+	})
 	m.Run()
 	fmt.Println("end")
 }
@@ -43,7 +53,7 @@ func TestThemoviedb_Parse(t1 *testing.T) {
 		// TODO: Add test cases.
 		{
 			name:       "海贼王",
-			fields:     fields{Key: key.ThemoviedbKey},
+			fields:     fields{Key: ThemoviedbKey},
 			args:       args{name: "ONE PIECE", airDate: "1999-10-20"},
 			wantTmdbID: 37854,
 			wantSeason: 1,
@@ -51,7 +61,7 @@ func TestThemoviedb_Parse(t1 *testing.T) {
 		},
 		{
 			name:       "在地下城寻求邂逅是否搞错了什么 Ⅳ 新章 迷宫篇",
-			fields:     fields{Key: key.ThemoviedbKey},
+			fields:     fields{Key: ThemoviedbKey},
 			args:       args{name: "ダンジョンに出会いを求めるのは間違っているだろうか Ⅳ 新章 迷宮篇", airDate: "2022-07-21"},
 			wantTmdbID: 62745,
 			wantSeason: 4,
@@ -59,7 +69,7 @@ func TestThemoviedb_Parse(t1 *testing.T) {
 		},
 		{
 			name:       "来自深渊 烈日的黄金乡",
-			fields:     fields{Key: key.ThemoviedbKey},
+			fields:     fields{Key: ThemoviedbKey},
 			args:       args{name: "メイドインアビス 烈日の黄金郷", airDate: "2022-07-06"},
 			wantTmdbID: 72636,
 			wantSeason: 2,
@@ -67,7 +77,7 @@ func TestThemoviedb_Parse(t1 *testing.T) {
 		},
 		{
 			name:       "OVERLORD IV",
-			fields:     fields{Key: key.ThemoviedbKey},
+			fields:     fields{Key: ThemoviedbKey},
 			args:       args{name: "オーバーロードIV", airDate: "2022-07-05"},
 			wantTmdbID: 64196,
 			wantSeason: 4,
@@ -75,7 +85,7 @@ func TestThemoviedb_Parse(t1 *testing.T) {
 		},
 		{
 			name:       "福星小子",
-			fields:     fields{Key: key.ThemoviedbKey},
+			fields:     fields{Key: ThemoviedbKey},
 			args:       args{name: "うる星やつら", airDate: "2022-10-14"},
 			wantTmdbID: 154524,
 			wantSeason: 1,
@@ -83,7 +93,7 @@ func TestThemoviedb_Parse(t1 *testing.T) {
 		},
 		{
 			name:       "Mairimashita! Iruma-kun 3rd Season",
-			fields:     fields{Key: key.ThemoviedbKey},
+			fields:     fields{Key: ThemoviedbKey},
 			args:       args{name: "Mairimashita! Iruma-kun 3rd Season", airDate: "2022-11-14"},
 			wantTmdbID: 91801,
 			wantSeason: 3,
@@ -91,15 +101,11 @@ func TestThemoviedb_Parse(t1 *testing.T) {
 		},
 		//
 	}
-	db := cache.NewBolt()
-	db.Open("data/bolt.db")
-	anidata.Init(&anidata.Options{Cache: db})
+
 	t := &Themoviedb{
-		Key: key.ThemoviedbKey,
+		Key: ThemoviedbKey,
 	}
-	request.Init(&request.InitOptions{
-		Proxy: "http://127.0.0.1:7890",
-	})
+
 	for _, tt := range tests {
 		t1.Run(tt.name, func(t1 *testing.T) {
 			gotTmdbID, gotSeason := t.ParseCache(tt.args.name, tt.args.airDate)
@@ -162,9 +168,9 @@ func TestThemoviedb_ParseByFile(t1 *testing.T) {
 	db.Open("data/bolt.db")
 	anidata.Init(&anidata.Options{Cache: db})
 	t := &Themoviedb{
-		Key: key.ThemoviedbKey,
+		Key: ThemoviedbKey,
 	}
-	request.Init(&request.InitOptions{
+	request.Init(&request.Options{
 		Proxy: "http://127.0.0.1:7890",
 	})
 	for _, tt := range tests {

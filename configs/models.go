@@ -27,7 +27,7 @@ type Setting struct {
 		JavaScript []string `yaml:"javascript" json:"javascript" attr:"JavaScript插件" comment_key:"filter_javascript"`
 	} `yaml:"filter" json:"filter" attr:"过滤器设置" comment:"用来筛选符合条件的项目进行解析下载"`
 	Category string `yaml:"category" json:"category" attr:"分类名" comment:"仅qBittorrent有效"`
-	TagSrc   string `yaml:"tag" json:"tag" attr:"标签表达式" comment_key:"tag_help"`
+	Tag      string `yaml:"tag" json:"tag" attr:"标签表达式" comment_key:"tag_help"`
 	WebApi   struct {
 		AccessKey string `yaml:"access_key" json:"access_key" attr:"请求秘钥" comment:"为空则不需要验证"`
 		Host      string `yaml:"host" json:"host" attr:"域名"`
@@ -70,8 +70,8 @@ type Advanced struct {
 	Path struct {
 		DbFile   string `yaml:"db_file" json:"db_file" attr:"数据库文件名"`
 		LogFile  string `yaml:"log_file" json:"log_file" attr:"日志文件名" comment:"日志会在所在文件夹自动归档"`
-		TempPath string `yaml:"temp_path" json:"temp_path" comment:"临时文件夹"`
-	} `yaml:"path" json:"path" comment:"其他路径设置" comment:"路径相对于data_path"`
+		TempPath string `yaml:"temp_path" json:"temp_path" attr:"临时文件夹"`
+	} `yaml:"path" json:"path" attr:"其他路径设置"`
 
 	Default struct {
 		TMDBFailSkip           bool `yaml:"tmdb_fail_skip" json:"tmdb_fail_skip" attr:"跳过当前项" comment:"tmdb解析季度失败时，跳过当前项。优先级3"`

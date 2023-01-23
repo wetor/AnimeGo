@@ -9,7 +9,7 @@ import (
 	"github.com/go-python/gpython/py"
 )
 
-func init() {
+func Init() {
 	methods := []*py.Method{
 		py.MustNewMethod("match", match, 0, "match(pattern, string)"),
 		py.MustNewMethod("search", search, 0, "search(pattern, string)"),

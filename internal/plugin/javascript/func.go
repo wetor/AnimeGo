@@ -2,16 +2,18 @@ package javascript
 
 import (
 	"fmt"
+	"os"
+	"path"
+	"strings"
+	"time"
+
+	"go.uber.org/zap"
+
 	"github.com/wetor/AnimeGo/internal/animego/anidata/mikan"
 	"github.com/wetor/AnimeGo/internal/animego/anisource"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin/public"
 	"github.com/wetor/AnimeGo/pkg/errors"
-	"go.uber.org/zap"
-	"os"
-	"path"
-	"strings"
-	"time"
 )
 
 // initFunc

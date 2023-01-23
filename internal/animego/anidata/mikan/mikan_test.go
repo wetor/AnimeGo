@@ -2,10 +2,12 @@ package mikan
 
 import (
 	"fmt"
+	"testing"
+
+	"go.uber.org/zap"
+
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/pkg/cache"
-	"go.uber.org/zap"
-	"testing"
 )
 
 func TestMain(m *testing.M) {

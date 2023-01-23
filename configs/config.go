@@ -1,14 +1,12 @@
 package configs
 
 import (
-	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/internal/utils"
 	"log"
 	"os"
 	"path"
 	"path/filepath"
-	"time"
 
+	"github.com/wetor/AnimeGo/internal/utils"
 	"gopkg.in/yaml.v3"
 )
 
@@ -92,19 +90,4 @@ func (c *Config) Proxy() string {
 	} else {
 		return ""
 	}
-}
-
-func (s *Setting) Tag(info *models.AnimeEntity) string {
-	date, _ := time.Parse("2006-01-02", info.AirDate)
-	mouth := (int(date.Month()) + 2) / 3
-	tag := utils.Format(s.TagSrc, utils.FormatMap{
-		"year":          date.Year(),
-		"quarter":       (mouth-1)*3 + 1,
-		"quarter_index": mouth,
-		"quarter_name":  []string{"冬", "春", "夏", "秋"}[mouth-1],
-		"ep":            info.Ep,
-		"week":          (int(date.Weekday())+6)%7 + 1,
-		"week_name":     []string{"星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"}[date.Weekday()],
-	})
-	return tag
 }

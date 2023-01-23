@@ -2,13 +2,22 @@ package rss
 
 import (
 	"fmt"
-	"github.com/wetor/AnimeGo/test"
 	"testing"
+
+	"go.uber.org/zap"
+
+	"github.com/wetor/AnimeGo/internal/animego/feed"
+	"github.com/wetor/AnimeGo/internal/utils"
 )
 
 func TestRss_Parse(t *testing.T) {
-	test.TestInit()
-	r := NewRss("https://share.dmhy.org/topics/rss/rss.xml", "dmhy")
+	logger, _ := zap.NewDevelopment()
+	zap.ReplaceGlobals(logger)
+	_ = utils.CreateMutiDir(feed.TempPath)
+	feed.Init(&feed.Options{
+		TempPath: "data",
+	})
+	r := NewRss("https://mikanani.me/RSS/MyBangumi?token=ky5DTt%2fMyAjCH2oKEN81FQ%3d%3d", "mikan")
 	items := r.Parse()
 	for _, item := range items {
 		fmt.Println(item.Url, item.Name, item.Length, item.Date, item.Hash())

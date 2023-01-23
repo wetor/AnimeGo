@@ -2,14 +2,15 @@ package api
 
 import (
 	"encoding/base64"
+	"os"
+
 	"github.com/gin-gonic/gin"
 	jsoniter "github.com/json-iterator/go"
+	"go.uber.org/zap"
+
 	"github.com/wetor/AnimeGo/configs"
-	"github.com/wetor/AnimeGo/internal/store"
 	webModels "github.com/wetor/AnimeGo/internal/web/models"
 	"github.com/wetor/AnimeGo/pkg/errors"
-	"go.uber.org/zap"
-	"os"
 )
 
 // ConfigGet godoc
@@ -29,7 +30,7 @@ func ConfigGet(c *gin.Context) {
 		return
 	}
 	if request.Key == "all" {
-		c.JSON(webModels.Succ("配置项值", store.Config))
+		c.JSON(webModels.Succ("配置项值", Config))
 	} else if request.Key == "default" {
 		c.JSON(webModels.Succ("配置项默认值", configs.DefaultConfig()))
 	} else if request.Key == "comment" {

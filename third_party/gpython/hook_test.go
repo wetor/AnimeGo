@@ -2,8 +2,9 @@ package gpython
 
 import (
 	"fmt"
-	"github.com/go-python/gpython/py"
 	"testing"
+
+	"github.com/go-python/gpython/py"
 )
 
 func TestHook(t *testing.T) {

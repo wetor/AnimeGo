@@ -1,8 +1,9 @@
 package configs
 
 import (
-	encoder "github.com/wetor/AnimeGo/third_party/yaml-encoder"
 	"os"
+
+	encoder "github.com/wetor/AnimeGo/third_party/yaml-encoder"
 )
 
 var (
@@ -47,7 +48,7 @@ func defaultSetting() {
 	}
 
 	defaultConfig.Setting.Category = "AnimeGo"
-	defaultConfig.Setting.TagSrc = "{year}年{quarter}月新番"
+	defaultConfig.Setting.Tag = "{year}年{quarter}月新番"
 
 	defaultConfig.Setting.WebApi.Host = "localhost"
 	defaultConfig.Setting.WebApi.Port = 7991

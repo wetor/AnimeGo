@@ -1,9 +1,6 @@
 package web
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/wetor/AnimeGo/internal/web/models"
-	"go.uber.org/zap"
 	"net"
 	"net/http"
 	"net/http/httputil"
@@ -12,6 +9,11 @@ import (
 	"runtime/debug"
 	"strings"
 	"time"
+
+	"github.com/gin-gonic/gin"
+	"go.uber.org/zap"
+
+	"github.com/wetor/AnimeGo/internal/web/models"
 )
 
 // KeyAuth 鉴权

@@ -1,12 +1,14 @@
 package downloader
 
 import (
+	"os"
+
+	"go.uber.org/zap"
+
+	"github.com/wetor/AnimeGo/internal/animego/manager"
 	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/internal/store"
 	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/errors"
-	"go.uber.org/zap"
-	"os"
 )
 
 func RenameAnime(opt *models.RenameOptions) {
@@ -14,7 +16,7 @@ func RenameAnime(opt *models.RenameOptions) {
 		return
 	}
 	var err error
-	rename := store.Config.Advanced.Download.Rename
+	rename := manager.DownloaderConf.Rename
 	go func() {
 		for {
 			exit := false

@@ -3,41 +3,63 @@ package mikan
 import (
 	"encoding/json"
 	"fmt"
+	"sync"
+	"testing"
+
+	"go.uber.org/zap"
+
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
+	"github.com/wetor/AnimeGo/internal/animego/anisource"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin/public"
-	"github.com/wetor/AnimeGo/internal/store"
-	"github.com/wetor/AnimeGo/key"
+	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/request"
-	"github.com/wetor/AnimeGo/test"
 	"github.com/wetor/AnimeGo/third_party/gpython"
-	"testing"
 )
+
+const ThemoviedbKey = "d3d8430aefee6c19520d0f7da145daf5"
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
-	test.TestInit()
+	logger, _ := zap.NewDevelopment()
+	zap.ReplaceGlobals(logger)
+	_ = utils.CreateMutiDir("data")
+	b := cache.NewBolt()
+	b.Open("data/test.db")
+	anisource.Init(&anisource.Options{
+		Options: &anidata.Options{
+			Cache: b,
+			CacheTime: map[string]int64{
+				"mikan":      int64(7 * 24 * 60 * 60),
+				"bangumi":    int64(3 * 24 * 60 * 60),
+				"themoviedb": int64(14 * 24 * 60 * 60),
+			},
+		},
+		TMDBFailSkip:           false,
+		TMDBFailUseTitleSeason: true,
+		TMDBFailUseFirstSeason: true,
+	})
 
-	db := cache.NewBolt()
-	db.Open("data/bolt.db")
-	anidata.Init(&anidata.Options{Cache: db})
 	bangumiCache := cache.NewBolt()
 	bangumiCache.Open("data/bolt_sub.db")
-
-	store.Init(&store.InitOptions{
-		Cache:        db,
-		BangumiCache: bangumiCache,
+	bangumiCache.Add("bangumi_sub")
+	mutex := sync.Mutex{}
+	anidata.Init(&anidata.Options{
+		Cache:            b,
+		BangumiCache:     bangumiCache,
+		BangumiCacheLock: &mutex,
 	})
 	public.Init(&public.Options{
-		PluginPath: "/Users/wetor/GoProjects/AnimeGo/data/plugin",
+		PluginPath: "../../../../assets/plugin",
 	})
 	gpython.Init()
 
-	request.Init(&request.InitOptions{
+	request.Init(&request.Options{
 		Proxy: "http://127.0.0.1:7890",
 	})
 	m.Run()
+	b.Close()
 	fmt.Println("end")
 }
 
@@ -80,7 +102,7 @@ func TestParseMikan(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotAnime := ParseMikan(tt.args.name, tt.args.url, key.ThemoviedbKey)
+			gotAnime := ParseMikan(tt.args.name, tt.args.url, ThemoviedbKey)
 			data1, _ := json.Marshal(gotAnime)
 			t.Log(string(data1))
 			if gotAnime.MikanID != tt.wantAnime.MikanID {

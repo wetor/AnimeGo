@@ -2,17 +2,18 @@ package task
 
 import (
 	"archive/zip"
-	"github.com/parnurzeal/gorequest"
-	"github.com/robfig/cron/v3"
-	"github.com/wetor/AnimeGo/internal/store"
-	"github.com/wetor/AnimeGo/internal/utils"
-	"github.com/wetor/AnimeGo/pkg/errors"
-	"go.uber.org/zap"
 	"io"
 	"os"
 	"path"
 	"path/filepath"
 	"time"
+
+	"github.com/parnurzeal/gorequest"
+	"github.com/robfig/cron/v3"
+	"go.uber.org/zap"
+
+	"github.com/wetor/AnimeGo/internal/utils"
+	"github.com/wetor/AnimeGo/pkg/errors"
 )
 
 const (
@@ -20,6 +21,10 @@ const (
 	ArchiveReleaseBase = "https://github.com/wetor/AnimeGoData/releases/download/archive/"
 	Subject            = "bolt_sub.zip"
 	SubjectDB          = "bolt_sub.db"
+
+	Cron              = "0 0 12 * * 3" // 每周三12点
+	MaxModifyTimeHour = 24             // 首次启动时，是否执行任务的最长修改时间
+	MinFileSizeKB     = 512            // 首次启动时，是否执行任务的最小文件大小
 )
 
 type BangumiTask struct {
@@ -28,10 +33,10 @@ type BangumiTask struct {
 	savePath string
 }
 
-func NewBangumiTask(savePath string, parser *cron.Parser) *BangumiTask {
+func NewBangumiTask(parser *cron.Parser) *BangumiTask {
 	return &BangumiTask{
-		savePath: savePath,
-		cron:     "0 0 12 * * 3", // 每周三12点
+		savePath: DBDir,
+		cron:     Cron,
 		parser:   parser,
 	}
 }
@@ -108,24 +113,24 @@ func (t *BangumiTask) Run(force bool) {
 		zap.S().Error(err)
 	})
 	db := path.Join(t.savePath, SubjectDB)
-	stat, _ := os.Stat(db)
-	// 上次修改时间小于24小时，且文件大小大于512kb，跳过
-	if force && time.Now().Unix()-stat.ModTime().Unix() <= 24*60*60 && stat.Size() > 512*1024 {
+	stat, err := os.Stat(db)
+	// 上次修改时间小于 MinModifyTimeHour 小时，且文件大小大于 MinFileSizeKB kb，跳过
+	if force && err == nil &&
+		time.Now().Unix()-stat.ModTime().Unix() <= MaxModifyTimeHour*60*60 && stat.Size() > MinFileSizeKB*1024 {
 		return
 	}
 	zap.S().Infof("[定时任务] %s 开始执行", t.Name())
 	subUrl := CDN1 + ArchiveReleaseBase + Subject
 	file := t.download(subUrl, Subject)
-	store.BangumiCacheLock.Lock()
-	store.BangumiCache.Close()
+	BangumiCacheLock.Lock()
+	BangumiCache.Close()
 	t.unzip(file)
 	// 重新加载bolt
-	store.BangumiCache.Open(db)
-	store.BangumiCacheLock.Unlock()
-	if utils.FileSize(db) <= 512*1024 {
+	BangumiCache.Open(db)
+	BangumiCacheLock.Unlock()
+	if utils.FileSize(db) <= MinFileSizeKB*1024 {
 		zap.S().Infof("[定时任务] %s 执行失败", t.Name())
 	} else {
-
 		zap.S().Infof("[定时任务] %s 执行完毕，下次执行时间: %s", t.Name(), t.NextTime())
 	}
 }
