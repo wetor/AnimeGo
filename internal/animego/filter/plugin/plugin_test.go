@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/wetor/AnimeGo/internal/constant"
+
 	"go.uber.org/zap"
 
 	"github.com/wetor/AnimeGo/internal/animego/feed"
@@ -18,6 +20,7 @@ func TestMain(m *testing.M) {
 	fmt.Println("begin")
 	logger, _ := zap.NewDevelopment()
 	zap.ReplaceGlobals(logger)
+	constant.PluginPath = "."
 	m.Run()
 	fmt.Println("end")
 }
@@ -128,4 +131,32 @@ func TestPython_Filter2(t *testing.T) {
 	for _, r := range result {
 		fmt.Println(r.Name)
 	}
+}
+
+// /Users/wetor/GoProjects/AnimeGo/assets/plugin/filter/pydemo.py
+
+func TestPython_Filter3(t *testing.T) {
+	gpython.Init()
+	lib.InitLog()
+	constant.PluginPath = "/Users/wetor/GoProjects/AnimeGo/assets/plugin/filter"
+	_ = utils.CreateMutiDir("data")
+	feed.Init(&feed.Options{
+		TempPath: "data",
+	})
+	rss := mikanRss.NewRss("", "")
+	items := rss.Parse("testdata/Mikan.xml")
+	fmt.Println(len(items))
+	js := NewFilterPlugin([]models.Plugin{
+		{
+			Enable: true,
+			Type:   "py",
+			File:   "pydemo.py",
+		},
+	})
+	result := js.Filter(items)
+	fmt.Println(len(result))
+	for _, r := range result {
+		fmt.Println(r.Name)
+	}
+
 }

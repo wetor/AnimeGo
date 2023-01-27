@@ -1,4 +1,9 @@
+# 日志包
 import log
+
+# 使用 plugin/anisource/Auto_Bangumi/raw_parser.py
+import sys
+sys.path.append("../anisource/Auto_Bangumi")
 import raw_parser
 
 

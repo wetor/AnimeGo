@@ -27,7 +27,7 @@ func TestPython_Execute(t *testing.T) {
 	p := &Python{}
 	p.SetSchema([]string{"title"}, []string{})
 	result := p.Execute("data/raw_parser.py", models.Object{
-		"title": "【悠哈璃羽字幕社】 [明日同学的水手服_Akebi-chan no Sailor-fuku] [01-12] [x264 1080p][CHT]",
+		"title": "[OPFans枫雪动漫][ONE PIECE 海贼王][第1048话][周日版][1080p][MP4][简体]",
 	})
 	fmt.Println(result)
 }
