@@ -1,8 +1,9 @@
 package utils
 
 import (
-	"github.com/wetor/AnimeGo/pkg/errors"
 	"path"
+
+	"github.com/wetor/AnimeGo/pkg/errors"
 )
 
 // FindScript
@@ -20,8 +21,10 @@ func FindScript(file, ext string) string {
 			return path.Join(file, "main"+ext)
 		} else if IsExist(path.Join(file, "plugin"+ext)) {
 			return path.Join(file, "plugin"+ext)
+		} else if IsExist(path.Join(file, path.Base(file)+ext)) {
+			return path.Join(file, path.Base(file)+ext)
 		} else {
-			errors.NewAniErrorf("插件文件夹中找不到 'main%s' 或 'plugin%s'", ext, ext).TryPanic()
+			errors.NewAniErrorf("插件文件夹中找不到 'main%s'、'plugin%s' 或 '文件夹名%s'", ext, ext, ext).TryPanic()
 		}
 	} else if !IsExist(file) {
 		// 文件不存在，尝试增加 ext 扩展名

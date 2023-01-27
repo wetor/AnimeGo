@@ -3,6 +3,7 @@ package configs
 import (
 	"os"
 
+	"github.com/wetor/AnimeGo/internal/models"
 	encoder "github.com/wetor/AnimeGo/third_party/yaml-encoder"
 )
 
@@ -13,9 +14,11 @@ var (
 )
 
 func defaultSettingComment() {
-	configComment["filter_javascript"] = `js插件的文件名列表，依次执行。路径相对于data_path
-插件名可以忽略'.js'后缀；插件名也可以使用上层文件夹名，会自动加载文件夹内部的 'main.js' 或 'plugin.js'
-如设置为 'plugin/test'，会依次尝试加载 'plugin/test/main.js', 'plugin/test/plugin.js', 'plugin/test.js'
+	configComment["filter_plugin"] = `按顺序依次执行启用的插件
+列表类型，每一项需要有以下参数：
+  enable: 启用
+  type: 插件类型，支持 'js' 和 'py' 两种插件类型。支持 'javascript' 和 'python' 全称，不区分大小写
+  file: 插件文件，相对于 'data/plugin' 文件夹的路径
 `
 
 	configComment["tag_help"] = `仅qBittorrent有效，可用通配符列表：
@@ -43,10 +46,13 @@ func defaultSetting() {
 	defaultConfig.Setting.SavePath = "./download/anime"
 	defaultConfig.Setting.DownloadPath = "./download/incomplete"
 
-	defaultConfig.Setting.Filter.JavaScript = []string{
-		"plugin/filter/default.js",
+	defaultConfig.Setting.Filter.Plugin = []models.Plugin{
+		{
+			Enable: true,
+			Type:   "js",
+			File:   "filter/default.js",
+		},
 	}
-
 	defaultConfig.Setting.Category = "AnimeGo"
 	defaultConfig.Setting.Tag = "{year}年{quarter}月新番"
 
@@ -90,10 +96,6 @@ func defaultAdvanced() {
 	defaultConfig.Advanced.Feed.DelaySecond = 5
 	defaultConfig.Advanced.Feed.MultiGoroutine.Enable = false
 	defaultConfig.Advanced.Feed.MultiGoroutine.GoroutineMax = 4
-
-	defaultConfig.Advanced.Path.DbFile = "cache/bolt.db"
-	defaultConfig.Advanced.Path.LogFile = "log/animego.log"
-	defaultConfig.Advanced.Path.TempPath = "temp"
 
 	defaultConfig.Advanced.Default.TMDBFailSkip = false
 	defaultConfig.Advanced.Default.TMDBFailUseTitleSeason = true

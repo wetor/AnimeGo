@@ -38,9 +38,8 @@ type RenameOptions struct {
 // =========== AnimeEntity ===========
 
 type AnimeParseOptions struct {
-	Url  string
-	Name string
-	ID   int
-	Date string
-	Ep   int
+	Url    string
+	Name   string
+	Date   string
+	Parsed *TitleParsed
 }

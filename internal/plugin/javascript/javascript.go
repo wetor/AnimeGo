@@ -13,6 +13,8 @@ import (
 	"github.com/wetor/AnimeGo/pkg/errors"
 )
 
+const Type = "javascript"
+
 type JavaScript struct {
 	*goja.Runtime
 	main         func(models.Object) models.Object // 主函数
@@ -84,6 +86,10 @@ func (js *JavaScript) checkResult(result any) {
 			errors.NewAniError("返回值缺少: " + field).TryPanic()
 		}
 	}
+}
+
+func (js *JavaScript) Type() string {
+	return Type
 }
 
 func (js *JavaScript) SetSchema(paramsSchema, resultSchema []string) {

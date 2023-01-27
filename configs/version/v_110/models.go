@@ -1,6 +1,4 @@
-package configs
-
-import "github.com/wetor/AnimeGo/internal/models"
+package v_110
 
 type Config struct {
 	Version  string `yaml:"version" json:"version" attr:"配置文件版本"`
@@ -26,7 +24,7 @@ type Setting struct {
 	SavePath     string `yaml:"save_path" json:"save_path" attr:"保存文件夹" comment:"下载完成后，重命名并移动到的文件夹"`
 	DataPath     string `yaml:"data_path" json:"data_path" attr:"数据文件夹" comment:"用于保存数据库、插件等数据"`
 	Filter       struct {
-		Plugin []models.Plugin `yaml:"plugin" json:"plugin" attr:"插件" comment_key:"filter_plugin"`
+		JavaScript []string `yaml:"javascript" json:"javascript" attr:"JavaScript插件" comment_key:"filter_javascript"`
 	} `yaml:"filter" json:"filter" attr:"过滤器设置" comment:"用来筛选符合条件的项目进行解析下载"`
 	Category string `yaml:"category" json:"category" attr:"分类名" comment:"仅qBittorrent有效"`
 	Tag      string `yaml:"tag" json:"tag" attr:"标签表达式" comment_key:"tag_help"`
@@ -68,6 +66,12 @@ type Advanced struct {
 			GoroutineMax int  `yaml:"goroutine_max" json:"goroutine_max" attr:"最大协程数量"`
 		} `yaml:"multi_goroutine" json:"multi_goroutine" attr:"订阅多协程解析"`
 	} `yaml:"feed" json:"feed" attr:"订阅设置"`
+
+	Path struct {
+		DbFile   string `yaml:"db_file" json:"db_file" attr:"数据库文件名"`
+		LogFile  string `yaml:"log_file" json:"log_file" attr:"日志文件名" comment:"日志会在所在文件夹自动归档"`
+		TempPath string `yaml:"temp_path" json:"temp_path" attr:"临时文件夹"`
+	} `yaml:"path" json:"path" attr:"其他路径设置"`
 
 	Default struct {
 		TMDBFailSkip           bool `yaml:"tmdb_fail_skip" json:"tmdb_fail_skip" attr:"跳过当前项" comment:"tmdb解析季度失败时，跳过当前项。优先级3"`

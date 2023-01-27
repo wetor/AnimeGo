@@ -40,11 +40,14 @@ func NewRss(url, name string) *Rss {
 }
 
 // Parse
+//  @Description: 解析rss
+//  @receiver *Rss
+//  @param opts ...any
+//    [0] string 解析本地文件路径
+//  @return items []*models.FeedItem
 //
-//	Description 第一步，解析rss
-//	Receiver f *Rss
-func (f *Rss) Parse() (items []*models.FeedItem) {
-	if len(f.url) == 0 {
+func (f *Rss) Parse(opts ...any) (items []*models.FeedItem) {
+	if len(f.url) == 0 && len(opts) == 0 {
 		return nil
 	}
 
@@ -53,13 +56,17 @@ func (f *Rss) Parse() (items []*models.FeedItem) {
 		zap.S().Debug(err)
 		zap.S().Warn(errMsg)
 	})
-
-	filename := path.Join(feed.TempPath, f.name+".xml")
-	// --------- 下载rss.xml ---------
+	var filename string
 	zap.S().Info("获取Rss数据开始...")
-	errMsg = "请求Rss失败"
-	err := request.GetFile(f.url, filename)
-	errors.NewAniErrorD(err).TryPanic()
+	if len(opts) == 1 {
+		filename = opts[0].(string)
+	} else {
+		filename = path.Join(feed.TempPath, f.name+".xml")
+		// --------- 下载rss.xml ---------
+		errMsg = "请求Rss失败"
+		err := request.GetFile(f.url, filename)
+		errors.NewAniErrorD(err).TryPanic()
+	}
 	zap.S().Info("获取Rss数据成功！")
 
 	// --------- 解析本地rss.xml ---------

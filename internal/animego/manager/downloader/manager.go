@@ -9,13 +9,12 @@ import (
 	"sync"
 	"time"
 
-	"github.com/wetor/AnimeGo/internal/api"
-
 	"go.uber.org/zap"
 
 	"github.com/wetor/AnimeGo/internal/animego/downloader"
 	"github.com/wetor/AnimeGo/internal/animego/downloader/qbittorrent"
 	"github.com/wetor/AnimeGo/internal/animego/manager"
+	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/errors"
@@ -25,7 +24,7 @@ const (
 	UpdateWaitMinSecond    = 2  // 允许的最短刷新时间
 	DownloadChanDefaultCap = 10 // 下载通道默认容量
 	DownloadStateChan      = 5
-	NotFoundExpireDay      = 7
+	NotFoundExpireHour     = 3
 	Name2EntityBucket      = "name2entity"
 	Name2StatusBucket      = "name2status"
 	Hash2NameBucket        = "hash2name"
@@ -293,6 +292,17 @@ func (m *Manager) UpdateDownloadItem(status *models.DownloadStatus, anime *model
 	}
 }
 
+func (m *Manager) DeleteCache(fullname string) {
+	m.Lock()
+	defer m.Unlock()
+
+	delete(m.name2status, fullname)
+	err := m.cache.Delete(Name2StatusBucket, fullname)
+	errors.NewAniErrorD(err).TryPanic()
+	err = m.cache.Delete(Name2EntityBucket, fullname)
+	errors.NewAniErrorD(err).TryPanic()
+}
+
 func (m *Manager) UpdateList() {
 	m.Lock()
 	defer m.Unlock()
@@ -338,17 +348,15 @@ func (m *Manager) UpdateList() {
 		} else {
 			// 文件不存在，检查过期时间
 			if status.ExpireAt <= 0 {
-				// 未设置过期，设置7天过期
-				status.ExpireAt = time.Now().Add(NotFoundExpireDay * 24 * time.Hour).Unix()
+				// 未设置过期，设置3小时过期
+				status.ExpireAt = time.Now().Add(NotFoundExpireHour * time.Hour).Unix()
 				status.State = StateNotFound
 				m.cache.Put(Name2StatusBucket, name, status, 0)
 			} else if status.ExpireAt-time.Now().Unix() <= 0 {
 				// 已过期，删除
-				delete(m.name2status, name)
-				err := m.cache.Delete(Name2StatusBucket, name)
-				errors.NewAniErrorD(err).TryPanic()
-				err = m.cache.Delete(Name2EntityBucket, name)
-				errors.NewAniErrorD(err).TryPanic()
+				m.Unlock()
+				m.DeleteCache(name)
+				m.Lock()
 			}
 		}
 		delete(hash2item, status.Hash)

@@ -67,7 +67,7 @@ func (js *JavaScript) ReadFile(filename string) string {
 	return string(file)
 }
 
-func (js JavaScript) ParseName(name string) (episode *public.Episode) {
+func (js JavaScript) ParseName(name string) (episode *models.TitleParsed) {
 	episode = public.ParserName(name)
 	if episode.Ep == 0 {
 		panic(js.ToValue(errors.NewAniError("解析ep信息失败")))

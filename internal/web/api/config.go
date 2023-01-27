@@ -75,8 +75,8 @@ func ConfigPut(c *gin.Context) {
 		return
 	}
 	if request.Key == "all" {
-		if request.Backup {
-			err := configs.BackupConfig(configs.ConfigFile)
+		if *request.Backup {
+			err := configs.BackupConfig(configs.ConfigFile, "")
 			if err != nil {
 				err = errors.NewAniErrorD(err)
 				zap.S().Debug(err)

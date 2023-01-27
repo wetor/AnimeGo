@@ -70,7 +70,7 @@ func PluginConfigPost(c *gin.Context) {
 	if !checkRequest(c, &request) {
 		return
 	}
-	file, err := request.FindFile(DataPath)
+	file, err := request.FindFile()
 	if err != nil {
 		zap.S().Debug(err)
 		c.JSON(webModels.Fail(err.Error()))
@@ -116,7 +116,7 @@ func PluginConfigGet(c *gin.Context) {
 	if !checkRequest(c, &request) {
 		return
 	}
-	file, err := request.FindFile(DataPath)
+	file, err := request.FindFile()
 	if err != nil {
 		zap.S().Debug(err)
 		c.JSON(webModels.Fail(err.Error()))

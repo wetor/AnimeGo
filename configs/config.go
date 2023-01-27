@@ -3,11 +3,12 @@ package configs
 import (
 	"log"
 	"os"
-	"path"
 	"path/filepath"
 
-	"github.com/wetor/AnimeGo/internal/utils"
 	"gopkg.in/yaml.v3"
+
+	"github.com/wetor/AnimeGo/internal/constant"
+	"github.com/wetor/AnimeGo/internal/utils"
 )
 
 var ConfigFile = "./data/animego.yaml"
@@ -29,8 +30,6 @@ func Init(file string) *Config {
 		log.Fatal("配置文件加载错误：", err)
 	}
 
-	conf.Path.TempPath = path.Join(conf.DataPath, conf.Path.TempPath)
-
 	absPath, err := filepath.Abs(conf.DownloadPath)
 	if err != nil {
 		log.Fatalf("download_path不是正确的路径，%s", conf.DownloadPath)
@@ -43,11 +42,6 @@ func Init(file string) *Config {
 	}
 	conf.SavePath = absPath
 
-	conf.Path.DbFile = path.Join(conf.DataPath, conf.Path.DbFile)
-	conf.Path.LogFile = path.Join(conf.DataPath, conf.Path.LogFile)
-	for i := range conf.Filter.JavaScript {
-		conf.Filter.JavaScript[i] = path.Join(conf.DataPath, conf.Filter.JavaScript[i])
-	}
 	return conf
 }
 
@@ -68,19 +62,19 @@ func (c *Config) InitDir() {
 		log.Fatalf("创建文件夹失败，%s", c.SavePath)
 	}
 
-	err = utils.CreateMutiDir(c.Path.TempPath)
+	err = utils.CreateMutiDir(constant.TempPath)
 	if err != nil {
-		log.Fatalf("创建文件夹失败，%s", c.Path.TempPath)
+		log.Fatalf("创建文件夹失败，%s", constant.TempPath)
 	}
-	dbDir := path.Dir(c.Path.DbFile)
-	err = utils.CreateMutiDir(dbDir)
+
+	err = utils.CreateMutiDir(constant.CachePath)
 	if err != nil {
-		log.Fatalf("创建文件夹失败，%s", dbDir)
+		log.Fatalf("创建文件夹失败，%s", constant.CachePath)
 	}
-	logDir := path.Dir(c.Path.LogFile)
-	err = utils.CreateMutiDir(logDir)
+
+	err = utils.CreateMutiDir(constant.LogPath)
 	if err != nil {
-		log.Fatalf("创建文件夹失败，%s", logDir)
+		log.Fatalf("创建文件夹失败，%s", constant.LogPath)
 	}
 }
 

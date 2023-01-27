@@ -16,36 +16,37 @@ import (
 )
 
 var (
-	Ctx              context.Context
-	AccessKey        string
-	DataPath         string
-	Cache            api.Cacher
-	Config           *configs.Config
-	BangumiCache     api.CacheGetter
-	BangumiCacheLock *sync.Mutex
-	FilterManager    api.FilterManager
+	Ctx                           context.Context
+	AccessKey                     string
+	DataPath                      string
+	Cache                         api.Cacher
+	Config                        *configs.Config
+	BangumiCache                  api.CacheGetter
+	BangumiCacheLock              *sync.Mutex
+	FilterManager                 api.FilterManager
+	DownloaderManagerCacheDeleter api.DownloaderManagerCacheDeleter
 )
 
 type Options struct {
-	Ctx              context.Context
-	AccessKey        string
-	DataPath         string
-	Cache            api.Cacher
-	Config           *configs.Config
-	BangumiCache     api.CacheGetter
-	BangumiCacheLock *sync.Mutex
-	FilterManager    api.FilterManager
+	Ctx                           context.Context
+	AccessKey                     string
+	Cache                         api.Cacher
+	Config                        *configs.Config
+	BangumiCache                  api.CacheGetter
+	BangumiCacheLock              *sync.Mutex
+	FilterManager                 api.FilterManager
+	DownloaderManagerCacheDeleter api.DownloaderManagerCacheDeleter
 }
 
 func Init(opts *Options) {
 	Ctx = opts.Ctx
 	AccessKey = opts.AccessKey
-	DataPath = opts.DataPath
 	Cache = opts.Cache
 	Config = opts.Config
 	BangumiCache = opts.BangumiCache
 	BangumiCacheLock = opts.BangumiCacheLock
 	FilterManager = opts.FilterManager
+	DownloaderManagerCacheDeleter = opts.DownloaderManagerCacheDeleter
 }
 
 // checkRequest 绑定request结构体

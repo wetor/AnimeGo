@@ -7,7 +7,7 @@ import (
 )
 
 type Feed interface {
-	Parse() []*models.FeedItem
+	Parse(opts ...any) []*models.FeedItem
 }
 
 var (

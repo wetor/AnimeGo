@@ -16,6 +16,10 @@ type Cacher interface {
 	CacheGetter
 }
 
+type DownloaderManagerCacheDeleter interface {
+	DeleteCache(fullname string)
+}
+
 type CacheOpener interface {
 	Open(file string)
 	Close()

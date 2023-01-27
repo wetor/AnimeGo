@@ -1,6 +1,6 @@
 ## 数据结构
 ### main
-js中main函数的参数：
+js和py中main函数的参数：
 ```javascript
 // 参数
 argv = [
@@ -27,7 +27,7 @@ log.info(...params)
 log.error(...params)
 ```
 
-### os.readFile
+### os.readFile(仅js)
 ```javascript
 // 读取文本文件
 // 参数
@@ -36,14 +36,14 @@ filename // 基于当前插件所在目录的相对路径
 os.readFile // 字符串
 ```
 
-### variable
+### variable(仅js)
 ```javascript
 // 变量
 variable.version // AnimeGo版本号
 variable.name // 插件名（即不含扩展名的插件文件名）
 ```
 
-### animeGo.parseName
+### animeGo.parseName(仅js)
 ```javascript
 // 初步解析资源名
 // 参数
@@ -60,7 +60,7 @@ animeGo.parseName = {
     Source: "", // 资源平台
 }
 ```
-### animeGo.getMikanInfo
+### animeGo.getMikanInfo(仅js)
 ```javascript
 // 获取Mikan信息
 // 参数
@@ -75,7 +75,7 @@ animeGo.getMikanInfo = {
 ```
 
 ### 其他函数
-#### sleep
+#### sleep(仅js)
 ```javascript
 sleep(ms) // ms 毫秒，1000ms=1s
 ```

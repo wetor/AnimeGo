@@ -5,6 +5,7 @@ import (
 	"crypto/md5"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path"
@@ -73,6 +74,46 @@ func Sleep(second int, ctx context.Context) bool {
 		}
 	}
 	return false
+}
+
+func Map2Model(src map[string]any, dst any) {
+	vdst := reflect.ValueOf(dst).Elem()
+	for key, val := range src {
+		v := vdst.FieldByName(key)
+		if v.CanSet() {
+			v.Set(reflect.ValueOf(val))
+		}
+	}
+}
+
+func Model2Map(src any, dst map[string]any) {
+	vsrc := reflect.ValueOf(src).Elem()
+	vscrType := vsrc.Type()
+	for i := 0; i < vscrType.NumField(); i++ {
+		dst[vscrType.Field(i).Name] = vsrc.Field(i).Interface()
+	}
+}
+
+func Map2ModelByJson(src map[string]any, dst any) {
+	data, err := json.Marshal(src)
+	if err != nil {
+		panic(err)
+	}
+	err = json.Unmarshal(data, dst)
+	if err != nil {
+		panic(err)
+	}
+}
+
+func Model2MapByJson(src any, dst map[string]any) {
+	data, err := json.Marshal(src)
+	if err != nil {
+		panic(err)
+	}
+	err = json.Unmarshal(data, &dst)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func ConvertModel(src, dst any) {

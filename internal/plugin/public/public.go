@@ -14,11 +14,15 @@ var (
 	pluginPath string
 )
 
+type Options struct {
+	PluginPath string
+}
+
 func Init(opt *Options) {
 	pluginPath = opt.PluginPath
 }
 
-func ParserName(title string) (ep *Episode) {
+func ParserName(title string) (ep *models.TitleParsed) {
 	pluginFile := path.Join(pluginPath, "anisource/Auto_Bangumi/raw_parser.py")
 	if !utils.IsExist(pluginFile) {
 		utils.CopyDir(assets.Plugin, "plugin", pluginPath, true, true)
@@ -27,7 +31,7 @@ func ParserName(title string) (ep *Episode) {
 	result := py.Execute(pluginFile, models.Object{
 		"title": title,
 	})
-	ep = &Episode{
+	ep = &models.TitleParsed{
 		TitleRaw: title,
 	}
 	if obj, ok := result.(models.Object); ok {
@@ -36,8 +40,7 @@ func ParserName(title string) (ep *Episode) {
 			ep.Name = ep.NameEN
 		}
 		if tmp, has := obj["title_jp"]; has {
-			ep.NameJP = tmp.(string)
-			ep.Name = ep.NameJP
+			ep.Name = tmp.(string)
 		}
 		if tmp, has := obj["title_zh"]; has {
 			ep.NameCN = tmp.(string)

@@ -4,33 +4,23 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"strconv"
 	"testing"
 
-	"github.com/go-python/gpython/py"
+	"github.com/wetor/AnimeGo/internal/plugin/python/lib"
+
+	"go.uber.org/zap"
 
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/third_party/gpython"
 )
 
-func TestRe1(t *testing.T) {
-	i, _ := strconv.ParseInt("09", 10, 64)
-	fmt.Println(i)
+func TestMain(m *testing.M) {
+	fmt.Println("begin")
+	logger, _ := zap.NewDevelopment()
+	zap.ReplaceGlobals(logger)
 	gpython.Init()
-	pyFile := "./data/test.py"
-	// See type Context interface and related docs
-	ctx := py.NewContext(py.DefaultContextOpts())
-
-	// This drives modules being able to perform cleanup and release resources
-	defer ctx.Close()
-
-	_, err := py.RunFile(ctx, pyFile, py.CompileOpts{}, nil)
-
-	if err != nil {
-		py.TracebackDump(err)
-		panic(err)
-	}
-
+	m.Run()
+	fmt.Println("end")
 }
 
 func TestPython_Execute(t *testing.T) {
@@ -43,7 +33,6 @@ func TestPython_Execute(t *testing.T) {
 }
 
 func TestParser(t *testing.T) {
-	gpython.Init()
 	fr, err := os.Open("./data/test_data.txt")
 	if err != nil {
 		panic(err)
@@ -72,4 +61,14 @@ func TestParser(t *testing.T) {
 	for _, ep := range eps {
 		fw.WriteString(fmt.Sprintf("%v\n", ep))
 	}
+}
+
+func TestLib_log(t *testing.T) {
+	lib.InitLog()
+	p := &Python{}
+	p.SetSchema([]string{}, []string{})
+	result := p.Execute("data/test_log.py", models.Object{
+		"title": "【悠哈璃羽字幕社】 [明日同学的水手服_Akebi-chan no Sailor-fuku] [01-12] [x264 1080p][CHT]",
+	})
+	fmt.Println(result)
 }

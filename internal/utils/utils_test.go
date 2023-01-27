@@ -1,10 +1,8 @@
 package utils
 
 import (
-	"log"
-	"os"
+	"fmt"
 	"testing"
-	"time"
 )
 
 func TestSettings_Tag(t *testing.T) {
@@ -14,4 +12,60 @@ func TestSettings_Tag(t *testing.T) {
 	if got != want {
 		t.Errorf("Tag() = %v, want %v", got, want)
 	}
+}
+
+func TestMap2ModelByJson(t *testing.T) {
+	obj := map[string]any{
+		"best":    100,
+		"testKey": "这是字符串",
+	}
+	type Struct struct {
+		Best    int64  `json:"best"`
+		TestKey string `json:"testKey"`
+	}
+	model := Struct{}
+	Map2ModelByJson(obj, &model)
+	fmt.Println(model)
+}
+
+func TestMap2Model(t *testing.T) {
+	obj := map[string]any{
+		"Best":    100,
+		"TestKey": "这是字符串",
+	}
+	type Struct struct {
+		Best    int
+		TestKey string
+	}
+	model := Struct{}
+	Map2Model(obj, &model)
+	fmt.Println(model)
+}
+
+func TestModel2Map(t *testing.T) {
+	obj := map[string]any{}
+	type Struct struct {
+		Best    int
+		TestKey string
+	}
+	model := Struct{
+		Best:    666,
+		TestKey: "这是",
+	}
+	Model2Map(&model, obj)
+	fmt.Println(obj)
+}
+
+func TestModel2MapByJson(t *testing.T) {
+	obj := map[string]any{}
+	type Struct struct {
+		Best    int64  `json:"best"`
+		TestKey string `json:"testKey"`
+	}
+	model := Struct{
+		Best:    666,
+		TestKey: "这是",
+	}
+	Model2MapByJson(&model, obj)
+	fmt.Println(obj)
 }

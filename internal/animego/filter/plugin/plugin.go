@@ -1,19 +1,23 @@
 package plugin
 
 import (
+	"path"
+
+	"go.uber.org/zap"
+
+	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin"
+	"github.com/wetor/AnimeGo/pkg/errors"
 )
 
 type Filter struct {
-	ScriptFile []string
-	plugin     plugin.Plugin
+	plugin []models.Plugin
 }
 
-func NewPluginFilter(plugin plugin.Plugin, files []string) *Filter {
+func NewFilterPlugin(pluginInfo []models.Plugin) *Filter {
 	return &Filter{
-		ScriptFile: files,
-		plugin:     plugin,
+		plugin: pluginInfo,
 	}
 }
 
@@ -23,18 +27,27 @@ func (p *Filter) Filter(list []*models.FeedItem) []*models.FeedItem {
 	for i := range list {
 		filterIndex = append(filterIndex, int64(i))
 	}
-	for _, jsFile := range p.ScriptFile {
+	for _, info := range p.plugin {
+		if !info.Enable {
+			continue
+		}
+		zap.S().Debugf("[Plugin] 开始执行Filter插件(%s): %s", info.Type, info.File)
 		// 入参
 		inList := make([]*models.FeedItem, 0)
 		for _, i := range filterIndex {
 			inList = append(inList, list[i])
 		}
-		p.plugin.SetSchema([]string{"feedItems"}, []string{"index", "error"})
-		execute := p.plugin.Execute(jsFile, models.Object{
+		pluginInstance := plugin.GetPlugin(info.Type)
+		pluginInstance.SetSchema([]string{"feedItems"}, []string{"index", "error"})
+		execute := pluginInstance.Execute(path.Join(constant.PluginPath, info.File), models.Object{
 			"feedItems": inList,
 		})
+		result := execute.(models.Object)
+		if result["error"] != nil {
+			errors.NewAniErrorD(result["error"]).TryPanic()
+		}
 		// 返回的index列表
-		resultIndex := execute.(models.Object)["index"].([]any)
+		resultIndex := result["index"].([]any)
 
 		filterIndex = make([]int64, 0, len(resultIndex))
 		for _, index := range resultIndex {

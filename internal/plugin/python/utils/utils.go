@@ -1,11 +1,11 @@
-package python
+package utils
 
 import (
 	"reflect"
 
 	gpy "github.com/go-python/gpython/py"
-
 	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/errors"
 )
 
@@ -44,8 +44,14 @@ func Value2PyObject(object any) gpy.Object {
 				pyValList.Append(Value2PyObject(refVal.Index(i).Interface()))
 			}
 			pyVal = pyValList
+		case reflect.Struct:
+			fallthrough
+		case reflect.Pointer:
+			m := make(models.Object)
+			utils.Model2Map(object, m)
+			pyVal = Value2PyObject(m)
 		default:
-			errors.NewAniError("不支持的类型").TryPanic()
+			errors.NewAniErrorf("不支持的类型: %v ", reflect.ValueOf(object).Type()).TryPanic()
 		}
 	}
 	return pyVal
@@ -88,7 +94,7 @@ func PyObject2Value(object gpy.Object) any {
 	case nil:
 		objVal = nil
 	default:
-		errors.NewAniError("不支持的类型").TryPanic()
+		errors.NewAniErrorf("不支持的类型: %v ", reflect.ValueOf(object).Type()).TryPanic()
 	}
 	return objVal
 }

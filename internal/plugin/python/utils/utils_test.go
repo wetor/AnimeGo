@@ -1,11 +1,10 @@
-package python
+package utils
 
 import (
 	"fmt"
 	"testing"
 
 	"github.com/go-python/gpython/py"
-
 	"github.com/wetor/AnimeGo/internal/models"
 )
 

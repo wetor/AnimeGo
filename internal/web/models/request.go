@@ -4,6 +4,7 @@ import (
 	"path"
 
 	"github.com/wetor/AnimeGo/configs"
+	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/utils"
 )
@@ -21,8 +22,8 @@ type PluginRequest struct {
 	Name string `json:"name" form:"name" binding:"required"` //插件文件名
 }
 
-func (p PluginRequest) FindFile(dataPath string) (string, error) {
-	file := path.Join(dataPath, "plugin", p.Name)
+func (p PluginRequest) FindFile() (string, error) {
+	file := path.Join(constant.PluginPath, p.Name)
 	ext := path.Ext(file)
 	if len(ext) == 0 {
 		ext = models.JSExt
@@ -56,7 +57,7 @@ type ConfigPutRequest struct {
 	//   all 更新所有配置项，json格式
 	Key string `json:"key" form:"key" default:"all"`
 	// Backup 备份原配置文件
-	Backup bool            `json:"backup" form:"backup" default:"true"`
+	Backup *bool           `json:"backup" form:"backup" default:"true"`
 	Config *configs.Config `json:"config"`
 }
 

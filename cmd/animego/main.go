@@ -31,10 +31,11 @@ import (
 	"github.com/wetor/AnimeGo/internal/animego/manager"
 	downloaderMgr "github.com/wetor/AnimeGo/internal/animego/manager/downloader"
 	filterMgr "github.com/wetor/AnimeGo/internal/animego/manager/filter"
+	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/logger"
 	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/internal/plugin/javascript"
 	"github.com/wetor/AnimeGo/internal/plugin/public"
+	"github.com/wetor/AnimeGo/internal/plugin/python/lib"
 	"github.com/wetor/AnimeGo/internal/schedule"
 	"github.com/wetor/AnimeGo/internal/schedule/task"
 	"github.com/wetor/AnimeGo/internal/utils"
@@ -46,17 +47,19 @@ import (
 )
 
 const (
-	AnimeGoVersion       = "0.6.3"
-	AnimeGoConfigVersion = "1.1.0"
+	AnimeGoVersion       = "0.6.5"
+	AnimeGoConfigVersion = "1.2.0"
 	AnimeGoGithub        = "https://github.com/wetor/AnimeGo"
 
 	DefaultConfigFile = "./data/animego.yaml"
 )
 
 var (
-	ctx, cancel       = context.WithCancel(context.Background())
-	configFile        string
-	debug             bool
+	ctx, cancel = context.WithCancel(context.Background())
+	configFile  string
+	debug       bool
+	webapi      bool
+
 	WG                sync.WaitGroup
 	BangumiCacheMutex sync.Mutex
 )
@@ -82,6 +85,7 @@ func main() {
 
 	flag.StringVar(&configFile, "config", DefaultConfigFile, "配置文件路径；配置文件中的相对路径均是相对与程序的位置")
 	flag.BoolVar(&debug, "debug", false, "Debug模式，将会显示更多的日志")
+	flag.BoolVar(&webapi, "web", true, "启用Web API，默认启用")
 	flag.Parse()
 
 	sigs := make(chan os.Signal, 1)
@@ -163,6 +167,9 @@ func Main(ctx context.Context) {
 
 	// 载入配置文件
 	config := configs.Init(configFile)
+	constant.Init(&constant.Options{
+		DataPath: config.DataPath,
+	})
 	config.InitDir()
 
 	// 释放资源
@@ -170,7 +177,7 @@ func Main(ctx context.Context) {
 
 	// 初始化日志
 	logger.Init(&logger.Options{
-		File:    config.Advanced.Path.LogFile,
+		File:    constant.LogFile,
 		Debug:   debug,
 		Context: ctx,
 		WG:      &WG,
@@ -187,29 +194,29 @@ func Main(ctx context.Context) {
 
 	// 初始化插件-gpython
 	gpython.Init()
-
+	lib.InitLog()
 	// 初始化插件-公共方法
 	public.Init(&public.Options{
-		PluginPath: path.Join(config.DataPath, "plugin"),
+		PluginPath: constant.PluginPath,
 	})
 
 	// 初始化feed订阅
 	feed.Init(&feed.Options{
-		TempPath: config.Advanced.Path.TempPath,
+		TempPath: constant.TempPath,
 	})
 
 	// 载入AnimeGo数据库（缓存）
 	bolt := cache.NewBolt()
-	bolt.Open(config.Advanced.Path.DbFile)
+	bolt.Open(constant.CacheFile)
 
 	// 载入Bangumi Archive数据库
 	bangumiCache := cache.NewBolt()
-	bangumiCache.Open(path.Join(path.Dir(config.Advanced.Path.DbFile), "bolt_sub.db"))
+	bangumiCache.Open(constant.BangumiCacheFile)
 
 	// 初始化并启动定时任务
 	schedule.Init(&schedule.Options{
 		Options: &task.Options{
-			DBDir:            path.Dir(config.Advanced.Path.DbFile),
+			DBDir:            constant.CachePath,
 			BangumiCache:     bangumiCache,
 			BangumiCacheLock: &BangumiCacheMutex,
 		},
@@ -274,7 +281,7 @@ func Main(ctx context.Context) {
 
 	// 初始化filter manager
 	filterManager := filterMgr.NewManager(
-		plugin.NewPluginFilter(&javascript.JavaScript{}, config.Filter.JavaScript),
+		plugin.NewFilterPlugin(config.Filter.Plugin),
 		feedRss.NewRss(config.Setting.Feed.Mikan.Url, config.Setting.Feed.Mikan.Name),
 		mikan.MikanAdapter{ThemoviedbKey: config.Setting.Key.Themoviedb},
 		downloadChan)
@@ -283,24 +290,26 @@ func Main(ctx context.Context) {
 	downloaderManager.Start(ctx)
 	filterManager.Start(ctx)
 
-	// 初始化并运行Web API
-	web.Init(&web.Options{
-		Options: &api.Options{
-			Ctx:              ctx,
-			AccessKey:        config.WebApi.AccessKey,
-			DataPath:         config.DataPath,
-			Cache:            bolt,
-			Config:           config,
-			BangumiCache:     bangumiCache,
-			BangumiCacheLock: &BangumiCacheMutex,
-			FilterManager:    filterManager,
-		},
-		Host:  config.WebApi.Host,
-		Port:  config.WebApi.Port,
-		WG:    &WG,
-		Debug: debug,
-	})
-	web.Run(ctx)
+	if webapi {
+		// 初始化并运行Web API
+		web.Init(&web.Options{
+			Options: &api.Options{
+				Ctx:                           ctx,
+				AccessKey:                     config.WebApi.AccessKey,
+				Cache:                         bolt,
+				Config:                        config,
+				BangumiCache:                  bangumiCache,
+				BangumiCacheLock:              &BangumiCacheMutex,
+				FilterManager:                 filterManager,
+				DownloaderManagerCacheDeleter: downloaderManager,
+			},
+			Host:  config.WebApi.Host,
+			Port:  config.WebApi.Port,
+			WG:    &WG,
+			Debug: debug,
+		})
+		web.Run(ctx)
+	}
 
 	// 等待运行结束
 	WG.Wait()

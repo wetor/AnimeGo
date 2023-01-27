@@ -9,9 +9,12 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/wetor/AnimeGo/internal/models"
+	pyutils "github.com/wetor/AnimeGo/internal/plugin/python/utils"
 	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/errors"
 )
+
+const Type = "python"
 
 type Python struct {
 	paramsSchema []string
@@ -44,12 +47,12 @@ func (py *Python) execute(file string) {
 		errors.NewAniErrorD(err).TryPanic()
 	}
 	py.main = func(params models.Object) models.Object {
-		pyObj := Value2PyObject(params)
+		pyObj := pyutils.Value2PyObject(params)
 		res, err := module.Call("main", gpy.Tuple{pyObj}, nil)
 		if err != nil {
 			gpy.TracebackDump(err)
 		}
-		obj, ok := PyObject2Value(res).(models.Object)
+		obj, ok := pyutils.PyObject2Value(res).(models.Object)
 		if !ok {
 			obj = models.Object{
 				"result": obj,
@@ -83,6 +86,10 @@ func (py *Python) checkResult(result any) {
 			errors.NewAniError("返回值缺少: " + field).TryPanic()
 		}
 	}
+}
+
+func (py *Python) Type() string {
+	return Type
 }
 
 func (py *Python) SetSchema(paramsSchema, resultSchema []string) {

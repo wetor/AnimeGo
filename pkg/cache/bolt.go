@@ -3,15 +3,16 @@ package cache
 import (
 	"bytes"
 	"encoding/binary"
-	jsoniter "github.com/json-iterator/go"
-	"github.com/wetor/AnimeGo/pkg/errors"
-	bolt "go.etcd.io/bbolt"
 	"os"
 	"path"
 	"sync"
-
-	"go.uber.org/zap"
 	"time"
+
+	jsoniter "github.com/json-iterator/go"
+	bolt "go.etcd.io/bbolt"
+	"go.uber.org/zap"
+
+	"github.com/wetor/AnimeGo/pkg/errors"
 )
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
