@@ -4,20 +4,24 @@
 
 ## 使用帮助
 ```text
--config string
-    配置文件路径；配置文件中的相对路径均是相对与程序的位置 (default "data/animego.yaml")
--debug
-    Debug模式，将会输出更多的日志 (default false)
+  -config string
+        配置文件路径；配置文件中的相对路径均是相对与程序的位置 (default "./data/animego.yaml")
+  -debug
+        Debug模式，将会显示更多的日志
+  -web
+        启用Web API，默认启用 (default true)
 ```
 ### 0.安装插件 [可选]
 - (默认已安装) AnimeGo过滤器插件：https://github.com/deqxj00/AnimeGoFilterPlugin
-  - 将配置文件中的`setting/filter/javascript`项修改为
+  - 配置文件中`setting/filter/plugin`新增
     ```
     setting:
       # ...
       filter:
-        javascript: 
-          - plugin/filter/AnimeGoHelperParser/AnimeGoHelperParser.js
+        plugin:
+          - enable: true
+            type: js
+            file: filter/AnimeGoHelperParser/AnimeGoHelperParser.js
     ```
     后开启插件。支持多插件顺序执行筛选
 - ([安装Tampermonkey插件](https://greasyfork.org/zh-CN/scripts/449596)) AnimeGo网页快速订阅Tampermonkey(油猴)插件：https://github.com/deqxj00/AnimeGoHelper
@@ -32,9 +36,9 @@
 
 其中主要需要修改的配置项为：
 - `setting/client/qbittorrent` : 必填，qbittorrent客户端webapi信息
-- `setting/feed/mikan/url` : Mikan订阅url，如果仅使用浏览器插件手动下载则无需填写
-- `setting/save_path`: 下载保存路径
-- `setting/data_path`: 程序所需数据文件路径，可以通过修改此项，移动程序自动生成的`data`文件夹
+- `setting/feed/mikan/url` : 可选，Mikan订阅url，如果仅使用浏览器插件手动下载则无需填写
+- `setting/download_path`: 下载器下载保存位置
+- `setting/save_path`: 重命名后移动到位置
 - 其余配置项根据需求修改
 
 ### 3.启动程序
@@ -63,10 +67,10 @@
 - Jellyfin支持
 
 ## 开发计划
-- [ ] 增加读取网站离线Archive的缓存功能 降低网站请求
-  - [ ] [Bangumi数据](https://github.com/bangumi/Archive)
+- [x] 增加读取网站离线Archive的缓存功能 降低网站请求
+  - [x] [Bangumi数据](https://github.com/bangumi/Archive)
   - [ ] [Mikan数据](https://github.com/MikanProject/bangumi-data/blob/master/dist/data.json)
-- [ ] 类似[AutoBangumi](https://github.com/EstrellaXD/Auto_Bangumi) 的追番功能
+- [x] 类似[AutoBangumi](https://github.com/EstrellaXD/Auto_Bangumi) 的追番功能
   - [x] [Mikan Project](https://mikanani.me) 订阅支持
   - [x] [qBittorrent](https://qbittorrent.org) 等下载支持
   - [x] [Jellyfin](https://jellyfin.org/) 媒体库软件识别 会写入bgmid到tvshow.nfo 可以配合[jellyfin-plugin-bangumi](https://github.com/kookxiang/jellyfin-plugin-bangumi)使用
@@ -74,7 +78,7 @@
 - [ ] Web界面支持
 - [ ] 模块化与高级自定义功能支持
   - [ ] 独立的订阅支持
-  - [ ] 独立下载控制
+  - [x] 独立下载控制
   - [ ] ...
 
 ## 版本计划
