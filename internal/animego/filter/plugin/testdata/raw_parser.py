@@ -48,7 +48,10 @@ class Episode:
 class RawParser:
     @staticmethod
     def get_group(name):
-        return re.split(r"[\[\]]", name)[1]
+        sp = re.split(r"[\[\]]", name)
+        if len(sp) > 1:
+            return sp[1]
+        return ""
 
     @staticmethod
     def pre_process(raw_name):

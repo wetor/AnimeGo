@@ -58,7 +58,7 @@ func TestMain(m *testing.M) {
 func TestManager_UpdateFeed(t *testing.T) {
 
 	rss := mikanRss.NewRss("https://mikanani.me/RSS/MyBangumi?token=ky5DTt%2fMyAjCH2oKEN81FQ%3d%3d", "Mikan")
-	mk := mikan.MikanAdapter{ThemoviedbKey: ThemoviedbKey}
+	mk := mikan.Mikan{ThemoviedbKey: ThemoviedbKey}
 	m := NewManager(&filter.Default{}, rss, mk, nil)
 
 	m.Start(ctx)

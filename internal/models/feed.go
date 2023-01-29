@@ -12,12 +12,13 @@ const (
 )
 
 type FeedItem struct {
-	Url      string `json:"url"`      // Link，详情页连接，用于下一步解析番剧信息
-	Name     string `json:"name"`     // 种子名
-	Date     string `json:"date"`     // 发布日期
-	Type     string `json:"type"`     // 下载类型，[application/x-bittorrent]
-	Download string `json:"download"` // 下载链接
-	Length   int64  `json:"length"`   // 种子大小
+	Url        string       `json:"url"`      // Link，详情页连接，用于下一步解析番剧信息
+	Name       string       `json:"name"`     // 种子名
+	Date       string       `json:"date"`     // 发布日期
+	Type       string       `json:"type"`     // 下载类型，[application/x-bittorrent]
+	Download   string       `json:"download"` // 下载链接
+	Length     int64        `json:"length"`   // 种子大小
+	NameParsed *TitleParsed // 标题解析信息
 }
 
 // DownloadType

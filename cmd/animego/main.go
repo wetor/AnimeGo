@@ -135,7 +135,7 @@ func InitDefaultConfig() {
 }
 
 func InitDefaultAssets(conf *configs.Config) {
-	utils.CopyDir(assets.Plugin, "plugin", path.Join(conf.Setting.DataPath, "plugin"), true, true)
+	utils.CopyDir(assets.Plugin, "plugin", path.Join(conf.Setting.DataPath, "plugin"), true, false)
 }
 
 func doExit() {
@@ -283,7 +283,7 @@ func Main(ctx context.Context) {
 	filterManager := filterMgr.NewManager(
 		plugin.NewFilterPlugin(config.Filter.Plugin),
 		feedRss.NewRss(config.Setting.Feed.Mikan.Url, config.Setting.Feed.Mikan.Name),
-		mikan.MikanAdapter{ThemoviedbKey: config.Setting.Key.Themoviedb},
+		mikan.Mikan{ThemoviedbKey: config.Setting.Key.Themoviedb},
 		downloadChan)
 
 	// 启动manager

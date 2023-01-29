@@ -84,6 +84,8 @@ func TestParseMikan(t *testing.T) {
 				MikanID:      228,
 				ThemoviedbID: 37854,
 				ID:           975,
+				Ep:           1029,
+				Season:       1,
 			},
 		},
 		{
@@ -96,23 +98,35 @@ func TestParseMikan(t *testing.T) {
 				MikanID:      2775,
 				ThemoviedbID: 72517,
 				ID:           371546,
+				Ep:           7,
+				Season:       2,
 			},
 		},
 	}
 
+	mikan := Mikan{ThemoviedbKey: ThemoviedbKey}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotAnime := ParseMikan(tt.args.name, tt.args.url, ThemoviedbKey)
+			gotAnime := mikan.Parse(&models.AnimeParseOptions{
+				Name: tt.args.name,
+				Url:  tt.args.url,
+			})
 			data1, _ := json.Marshal(gotAnime)
 			t.Log(string(data1))
 			if gotAnime.MikanID != tt.wantAnime.MikanID {
-				t.Errorf("ParseMikan().MikanID = %v, want %v", gotAnime.MikanID, tt.wantAnime.MikanID)
+				t.Errorf("Parse().MikanID = %v, want %v", gotAnime.MikanID, tt.wantAnime.MikanID)
 			}
 			if gotAnime.ID != tt.wantAnime.ID {
-				t.Errorf("ParseMikan().ID = %v, want %v", gotAnime.ID, tt.wantAnime.ID)
+				t.Errorf("Parse().ID = %v, want %v", gotAnime.ID, tt.wantAnime.ID)
 			}
 			if gotAnime.ThemoviedbID != tt.wantAnime.ThemoviedbID {
-				t.Errorf("ParseMikan().ThemoviedbID = %v, want %v", gotAnime.ThemoviedbID, tt.wantAnime.ThemoviedbID)
+				t.Errorf("Parse().ThemoviedbID = %v, want %v", gotAnime.ThemoviedbID, tt.wantAnime.ThemoviedbID)
+			}
+			if gotAnime.Ep != tt.wantAnime.Ep {
+				t.Errorf("Parse().Ep = %v, want %v", gotAnime.Ep, tt.wantAnime.Ep)
+			}
+			if gotAnime.Season != tt.wantAnime.Season {
+				t.Errorf("Parse().Season = %v, want %v", gotAnime.Season, tt.wantAnime.Season)
 			}
 
 		})

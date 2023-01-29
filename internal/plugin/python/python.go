@@ -10,6 +10,7 @@ import (
 
 	"github.com/wetor/AnimeGo/internal/models"
 	pyutils "github.com/wetor/AnimeGo/internal/plugin/python/utils"
+	pluginutils "github.com/wetor/AnimeGo/internal/plugin/utils"
 	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/errors"
 )
@@ -17,8 +18,8 @@ import (
 const Type = "python"
 
 type Python struct {
-	paramsSchema []string
-	resultSchema []string
+	paramsSchema [][]string
+	resultSchema [][]string
 	ctx          gpy.Context
 	main         func(params models.Object) models.Object // 主函数
 }
@@ -66,25 +67,15 @@ func (py *Python) endExecute() {
 
 }
 
-func (py *Python) checkParams(params models.Object) {
-	for _, field := range py.paramsSchema {
-		_, has := params[field]
-		if !has {
-			errors.NewAniError("参数缺少: " + field).TryPanic()
-		}
+func (py *Python) SetSchema(paramsSchema, resultSchema []string) {
+	py.paramsSchema = make([][]string, len(paramsSchema))
+	for i, param := range paramsSchema {
+		py.paramsSchema[i] = strings.Split(param, ":")
 	}
-}
 
-func (py *Python) checkResult(result any) {
-	resultMap, ok := result.(models.Object)
-	if !ok {
-		errors.NewAniError("返回类型错误").TryPanic()
-	}
-	for _, field := range py.resultSchema {
-		_, has := resultMap[field]
-		if !has {
-			errors.NewAniError("返回值缺少: " + field).TryPanic()
-		}
+	py.resultSchema = make([][]string, len(resultSchema))
+	for i, param := range resultSchema {
+		py.resultSchema[i] = strings.Split(param, ":")
 	}
 }
 
@@ -92,17 +83,12 @@ func (py *Python) Type() string {
 	return Type
 }
 
-func (py *Python) SetSchema(paramsSchema, resultSchema []string) {
-	py.paramsSchema = paramsSchema
-	py.resultSchema = resultSchema
-}
-
 func (py *Python) Execute(file string, params models.Object) (result any) {
 	func() {
 		defer errors.HandleError(func(err error) {
 			zap.S().Error(err)
 		})
-		py.checkParams(params)
+		pluginutils.CheckParams(py.paramsSchema, params)
 
 		py.preExecute(file)
 
@@ -112,7 +98,7 @@ func (py *Python) Execute(file string, params models.Object) (result any) {
 		py.endExecute()
 
 		result = py.main(params)
-		py.checkResult(result)
+		pluginutils.CheckResult(py.resultSchema, result)
 	}()
 	return result
 }

@@ -25,7 +25,7 @@ func TestMain(m *testing.M) {
 
 func TestPython_Execute(t *testing.T) {
 	p := &Python{}
-	p.SetSchema([]string{"title"}, []string{})
+	p.SetSchema([]string{"optional:title"}, []string{})
 	result := p.Execute("data/raw_parser.py", models.Object{
 		"title": "[OPFans枫雪动漫][ONE PIECE 海贼王][第1048话][周日版][1080p][MP4][简体]",
 	})
@@ -42,11 +42,11 @@ func TestParser(t *testing.T) {
 
 	var eps []models.Object
 	p := &Python{}
-	p.SetSchema([]string{"title"}, []string{})
+	p.SetSchema([]string{"optional:title"}, []string{})
 	for sc.Scan() {
 		title := sc.Text()
 		fmt.Println(title)
-		result := p.Execute("/Users/wetor/GoProjects/AnimeGo/data/plugin/anisource/Auto_Bangumi/raw_parser.py", models.Object{
+		result := p.Execute("/Users/wetor/GoProjects/AnimeGo/data/plugin/lib/Auto_Bangumi/raw_parser.py", models.Object{
 			"title": title,
 		})
 		fmt.Println(result)
@@ -66,9 +66,17 @@ func TestParser(t *testing.T) {
 func TestLib_log(t *testing.T) {
 	lib.InitLog()
 	p := &Python{}
-	p.SetSchema([]string{}, []string{})
+	p.SetSchema([]string{"optional:title"}, []string{"optional:result"})
 	result := p.Execute("data/test_log.py", models.Object{
 		"title": "【悠哈璃羽字幕社】 [明日同学的水手服_Akebi-chan no Sailor-fuku] [01-12] [x264 1080p][CHT]",
 	})
+	fmt.Println(result)
+}
+
+func TestPython(t *testing.T) {
+	lib.InitLog()
+	p := &Python{}
+	p.SetSchema([]string{"optional:title"}, []string{"optional:result"})
+	result := p.Execute("data/test.py", models.Object{})
 	fmt.Println(result)
 }

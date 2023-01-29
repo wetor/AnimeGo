@@ -44,8 +44,12 @@ func CopyDir(fs embed.FS, src, dst string, replace bool, skip bool) {
 			}
 		}
 		if writeFile {
-			if err := os.WriteFile(dstPath, fileContent, os.ModePerm); err != nil {
-				panic(err)
+			// 若已存在文件大小不一致则替换
+			if int(FileSize(dstPath)) != len(fileContent) {
+				log.Printf("文件 [%s] 大小改变，重新写入。", path.Base(dstPath))
+				if err := os.WriteFile(dstPath, fileContent, os.ModePerm); err != nil {
+					panic(err)
+				}
 			}
 		}
 	}

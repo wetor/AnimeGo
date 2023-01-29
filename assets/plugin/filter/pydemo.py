@@ -1,20 +1,30 @@
-# 日志包
 import log
-
-# 使用 plugin/anisource/Auto_Bangumi/raw_parser.py
-import sys
-sys.path.append("../anisource/Auto_Bangumi")
-import raw_parser
+import re
+import pylib
 
 
 def main(argv):
-    result_index = []
+    result = []
     for i, item in enumerate(argv['feedItems']):
-        log.info(item)
-        result = raw_parser.parser.analyse(item.Name)
-        if result.group == 'NC-Raws':
-            result_index.append(i)
+        # 解析标题
+        parsed = pylib.analyse(item)
+        # log.info(i, item, parsed)
+        # 解析失败
+        if not parsed.episode:
+            # -----------------
+            # 这里进行二次解析处理
+            # -----------------
+            log.infof('%d %s 「%s」', i, 'ep解析错误', item.Name)
+            continue
+        # 跳过非1080
+        if not re.search('1080', parsed.resolution):
+            continue
+        result.append({
+            'index': i,
+            'parsed': parsed,
+        })
+
     return {
-        'index': result_index,
-        'error': None
+        'data': result,
+        'error': None,
     }

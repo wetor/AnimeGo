@@ -23,11 +23,11 @@ func Init(opt *Options) {
 }
 
 func ParserName(title string) (ep *models.TitleParsed) {
-	pluginFile := path.Join(pluginPath, "anisource/Auto_Bangumi/raw_parser.py")
+	pluginFile := path.Join(pluginPath, "lib/Auto_Bangumi/raw_parser.py")
 	if !utils.IsExist(pluginFile) {
-		utils.CopyDir(assets.Plugin, "plugin", pluginPath, true, true)
+		utils.CopyDir(assets.Plugin, "plugin", pluginPath, true, false)
 	}
-	py.SetSchema([]string{"title"}, []string{})
+	py.SetSchema([]string{"optional:title"}, []string{})
 	result := py.Execute(pluginFile, models.Object{
 		"title": title,
 	})

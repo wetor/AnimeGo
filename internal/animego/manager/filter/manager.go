@@ -56,6 +56,9 @@ func (m *Manager) Update(ctx context.Context, items []*models.FeedItem) {
 	if items == nil {
 		items = m.feed.Parse()
 	}
+	if len(items) == 0 {
+		return
+	}
 	items = m.filter.Filter(items)
 
 	animeList := make([]*models.AnimeEntity, len(items))
@@ -77,9 +80,9 @@ func (m *Manager) Update(ctx context.Context, items []*models.FeedItem) {
 				exit = true
 			default:
 				anime := m.anisource.Parse(&models.AnimeParseOptions{
-					Url:  _item.Url,
-					Name: _item.Name,
-					Date: _item.Date,
+					Url:    _item.Url,
+					Name:   _item.Name,
+					Parsed: _item.NameParsed,
 				})
 				if anime != nil {
 					anime.DownloadInfo = &models.DownloadInfo{

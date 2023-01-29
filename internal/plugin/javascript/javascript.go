@@ -9,6 +9,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/wetor/AnimeGo/internal/models"
+	pluginutils "github.com/wetor/AnimeGo/internal/plugin/utils"
 	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/errors"
 )
@@ -18,8 +19,8 @@ const Type = "javascript"
 type JavaScript struct {
 	*goja.Runtime
 	main         func(models.Object) models.Object // 主函数
-	paramsSchema []string
-	resultSchema []string
+	paramsSchema [][]string
+	resultSchema [][]string
 }
 
 func (js *JavaScript) preExecute() {
@@ -66,25 +67,15 @@ func (js *JavaScript) registerVar() {
 	}
 }
 
-func (js *JavaScript) checkParams(params models.Object) {
-	for _, field := range js.paramsSchema {
-		_, has := params[field]
-		if !has {
-			errors.NewAniError("参数缺少: " + field).TryPanic()
-		}
+func (js *JavaScript) SetSchema(paramsSchema, resultSchema []string) {
+	js.paramsSchema = make([][]string, len(paramsSchema))
+	for i, param := range paramsSchema {
+		js.paramsSchema[i] = strings.Split(param, ":")
 	}
-}
 
-func (js *JavaScript) checkResult(result any) {
-	resultMap, ok := result.(models.Object)
-	if !ok {
-		errors.NewAniError("返回类型错误").TryPanic()
-	}
-	for _, field := range js.resultSchema {
-		_, has := resultMap[field]
-		if !has {
-			errors.NewAniError("返回值缺少: " + field).TryPanic()
-		}
+	js.resultSchema = make([][]string, len(resultSchema))
+	for i, param := range resultSchema {
+		js.resultSchema[i] = strings.Split(param, ":")
 	}
 }
 
@@ -92,17 +83,12 @@ func (js *JavaScript) Type() string {
 	return Type
 }
 
-func (js *JavaScript) SetSchema(paramsSchema, resultSchema []string) {
-	js.paramsSchema = paramsSchema
-	js.resultSchema = resultSchema
-}
-
 func (js *JavaScript) Execute(file string, params models.Object) (result any) {
 	func() {
 		defer errors.HandleError(func(err error) {
 			zap.S().Error(err)
 		})
-		js.checkParams(params)
+		pluginutils.CheckParams(js.paramsSchema, params)
 
 		js.preExecute()
 
@@ -112,7 +98,7 @@ func (js *JavaScript) Execute(file string, params models.Object) (result any) {
 		js.endExecute()
 
 		result = js.main(params)
-		js.checkResult(result)
+		pluginutils.CheckResult(js.resultSchema, result)
 	}()
 	return result
 }

@@ -87,7 +87,11 @@ func Map2Model(src map[string]any, dst any) {
 }
 
 func Model2Map(src any, dst map[string]any) {
-	vsrc := reflect.ValueOf(src).Elem()
+	vsrcp := reflect.ValueOf(src)
+	if vsrcp.IsNil() {
+		return
+	}
+	vsrc := vsrcp.Elem()
 	vscrType := vsrc.Type()
 	for i := 0; i < vscrType.NumField(); i++ {
 		dst[vscrType.Field(i).Name] = vsrc.Field(i).Interface()

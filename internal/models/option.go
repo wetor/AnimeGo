@@ -40,6 +40,5 @@ type RenameOptions struct {
 type AnimeParseOptions struct {
 	Url    string
 	Name   string
-	Date   string
 	Parsed *TitleParsed
 }
