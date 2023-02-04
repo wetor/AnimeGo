@@ -10,9 +10,9 @@ import (
 
 	jsoniter "github.com/json-iterator/go"
 	bolt "go.etcd.io/bbolt"
-	"go.uber.org/zap"
 
 	"github.com/wetor/AnimeGo/pkg/errors"
+	"github.com/wetor/AnimeGo/pkg/log"
 )
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
@@ -29,8 +29,8 @@ func (c *Bolt) Open(file string) {
 	_ = os.MkdirAll(path.Dir(file), os.ModePerm)
 	db, err := bolt.Open(file, 0600, nil)
 	if err != nil {
-		zap.S().Debug(errors.NewAniErrorD(err))
-		zap.S().Warn("打开bolt数据库失败")
+		log.Debugf("", errors.NewAniErrorD(err))
+		log.Warnf("打开bolt数据库失败")
 		return
 	}
 	c.db = db
@@ -39,8 +39,8 @@ func (c *Bolt) Open(file string) {
 func (c *Bolt) Close() {
 	err := c.db.Close()
 	if err != nil {
-		zap.S().Debug(errors.NewAniErrorD(err))
-		zap.S().Warn("关闭bolt数据库失败")
+		log.Debugf("", errors.NewAniErrorD(err))
+		log.Warnf("关闭bolt数据库失败")
 		return
 	}
 }
@@ -54,8 +54,8 @@ func (c *Bolt) Add(bucket string) {
 		return nil
 	})
 	if err != nil {
-		zap.S().Debug(errors.NewAniErrorD(err))
-		zap.S().Warn("关闭bolt数据库失败")
+		log.Debugf("", errors.NewAniErrorD(err))
+		log.Warnf("关闭bolt数据库失败")
 		return
 	}
 }
@@ -77,8 +77,8 @@ func (c *Bolt) Put(bucket string, key, val interface{}, ttl int64) {
 		return b.Put(dbKey, dbVal)
 	})
 	if err != nil {
-		zap.S().Debug(errors.NewAniErrorD(err))
-		zap.S().Warn("bolt添加数据失败")
+		log.Debugf("", errors.NewAniErrorD(err))
+		log.Warnf("bolt添加数据失败")
 		return
 	}
 }
@@ -116,8 +116,8 @@ func (c *Bolt) BatchPut(bucket string, key, val []interface{}, ttl int64) {
 		return nil
 	})
 	if err != nil {
-		zap.S().Debug(errors.NewAniErrorD(err))
-		zap.S().Warn("bolt添加数据失败")
+		log.Debugf("", errors.NewAniErrorD(err))
+		log.Warnf("bolt添加数据失败")
 		return
 	}
 }
@@ -221,8 +221,8 @@ func (c *Bolt) toBytes(val interface{}, extra int64) []byte {
 	}
 	data, err := json.Marshal(val)
 	if err != nil {
-		zap.S().Debug(errors.NewAniErrorD(err))
-		zap.S().Error("Json Encode失败")
+		log.Debugf("", errors.NewAniErrorD(err))
+		log.Errorf("Json Encode失败")
 	}
 	buf.Write(data)
 	return buf.Bytes()
@@ -233,8 +233,8 @@ func (c *Bolt) toValue(data []byte, val interface{}) (extra int64) {
 	extra = int64(binary.LittleEndian.Uint64(data[0:8]))
 	err := json.Unmarshal(data[8:], val)
 	if err != nil {
-		zap.S().Debug(errors.NewAniErrorD(err))
-		zap.S().Error("Json Decode失败")
+		log.Debugf("", errors.NewAniErrorD(err))
+		log.Errorf("Json Decode失败")
 	}
 	return extra
 }

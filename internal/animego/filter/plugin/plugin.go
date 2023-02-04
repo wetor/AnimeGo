@@ -3,13 +3,12 @@ package plugin
 import (
 	"path"
 
-	"go.uber.org/zap"
-
 	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/errors"
+	"github.com/wetor/AnimeGo/pkg/log"
 )
 
 type Filter struct {
@@ -28,21 +27,23 @@ func (p *Filter) Filter(list []*models.FeedItem) []*models.FeedItem {
 	for i, item := range list {
 		inList[i] = item
 	}
-
 	for _, info := range p.plugin {
 		if !info.Enable {
 			continue
 		}
-		zap.S().Debugf("[Plugin] 开始执行Filter插件(%s): %s", info.Type, info.File)
+		log.Debugf("[Plugin] 开始执行Filter插件(%s): %s", info.Type, info.File)
 		// 入参
 		pluginInstance := plugin.GetPlugin(info.Type)
 		pluginInstance.SetSchema([]string{"required:feedItems"}, []string{"required:error", "optional:data", "optional:index"})
-		execute := pluginInstance.Execute(path.Join(constant.PluginPath, info.File), models.Object{
+		execute := pluginInstance.Execute(&models.PluginExecuteOptions{
+			File: path.Join(constant.PluginPath, info.File),
+		}, models.Object{
 			"feedItems": inList,
 		})
 		result := execute.(models.Object)
 		if result["error"] != nil {
-			errors.NewAniErrorD(result["error"]).TryPanic()
+			log.Debugf("", errors.NewAniErrorD(result["error"]))
+			log.Warnf("[Plugin] %s插件(%s)执行错误: %v", info.Type, info.File, result["error"])
 		}
 
 		if _, has := result["data"]; has {

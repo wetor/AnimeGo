@@ -9,12 +9,11 @@ import (
 	"strconv"
 
 	"github.com/mmcdole/gofeed"
-	"go.uber.org/zap"
 
 	"github.com/wetor/AnimeGo/internal/animego/feed"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/utils"
-	"github.com/wetor/AnimeGo/pkg/errors"
+	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/request"
 )
 
@@ -50,38 +49,37 @@ func (f *Rss) Parse(opts ...any) (items []*models.FeedItem) {
 	if len(f.url) == 0 && len(opts) == 0 {
 		return nil
 	}
-
-	errMsg := ""
-	defer errors.HandleAniError(func(err *errors.AniError) {
-		zap.S().Debug(err)
-		zap.S().Warn(errMsg)
-	})
 	var filename string
-	zap.S().Info("获取Rss数据开始...")
+	log.Infof("获取Rss数据开始...")
 	if len(opts) == 1 {
 		filename = opts[0].(string)
 	} else {
 		filename = path.Join(feed.TempPath, f.name+".xml")
 		// --------- 下载rss.xml ---------
-		errMsg = "请求Rss失败"
 		err := request.GetFile(f.url, filename)
-		errors.NewAniErrorD(err).TryPanic()
+		if err != nil {
+			log.Debugf("", err)
+			log.Warnf("请求Rss失败")
+		}
 	}
-	zap.S().Info("获取Rss数据成功！")
+	log.Infof("获取Rss数据成功！")
 
 	// --------- 解析本地rss.xml ---------
-	errMsg = "打开Rss文件失败"
 	file, err := os.Open(filename)
-	errors.NewAniErrorD(err).TryPanic()
+	if err != nil {
+		log.Debugf("", err)
+		log.Warnf("打开Rss文件失败")
+	}
 
 	defer file.Close()
 	fp := gofeed.NewParser()
-	errMsg = "解析ss失败"
 	feeds, err := fp.Parse(file)
-	errors.NewAniErrorD(err).TryPanic()
+	if err != nil {
+		log.Debugf("", err)
+		log.Warnf("解析ss失败")
+	}
 
 	regx := regexp.MustCompile(`<pubDate>(.*?)T`)
-
 	var date string
 	var length int64
 	items = make([]*models.FeedItem, len(feeds.Items))
@@ -94,13 +92,16 @@ func (f *Rss) Parse(opts ...any) (items []*models.FeedItem) {
 		}
 
 		if len(item.Enclosures) == 0 {
-			zap.S().Warnf("Torrent Enclosures错误，%s，跳过", item.Title)
+			log.Warnf("Torrent Enclosures错误，%s，跳过", item.Title)
 			continue
 		}
 
-		length, _ = strconv.ParseInt(item.Enclosures[0].Length, 10, 64)
+		length, err = strconv.ParseInt(item.Enclosures[0].Length, 10, 64)
+		if err != nil {
+			log.Debugf("", err)
+		}
 		if length == 0 {
-			zap.S().Warn("Torrent Length错误")
+			log.Warnf("Torrent Length错误")
 		}
 
 		items[i] = &models.FeedItem{

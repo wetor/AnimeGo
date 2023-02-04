@@ -27,8 +27,10 @@ func ParserName(title string) (ep *models.TitleParsed) {
 	if !utils.IsExist(pluginFile) {
 		utils.CopyDir(assets.Plugin, "plugin", pluginPath, true, false)
 	}
-	py.SetSchema([]string{"optional:title"}, []string{})
-	result := py.Execute(pluginFile, models.Object{
+	result := py.Execute(&models.PluginExecuteOptions{
+		File:      pluginFile,
+		SkipCheck: true,
+	}, models.Object{
 		"title": title,
 	})
 	ep = &models.TitleParsed{

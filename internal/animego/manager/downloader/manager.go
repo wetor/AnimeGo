@@ -9,8 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"go.uber.org/zap"
-
 	"github.com/wetor/AnimeGo/internal/animego/downloader"
 	"github.com/wetor/AnimeGo/internal/animego/downloader/qbittorrent"
 	"github.com/wetor/AnimeGo/internal/animego/manager"
@@ -18,6 +16,7 @@ import (
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/errors"
+	"github.com/wetor/AnimeGo/pkg/log"
 )
 
 const (
@@ -110,17 +109,17 @@ func (m *Manager) download(anime *models.AnimeEntity) {
 		if status.State != StateNotFound {
 			// 文件已存在
 			if len(status.Path) != 0 && utils.IsExist(path.Join(manager.DownloaderConf.SavePath, status.Path)) {
-				zap.S().Infof("发现已下载「%s」", status.Path)
+				log.Infof("发现已下载「%s」", status.Path)
 			} else if status.Init {
-				zap.S().Infof("发现正在下载「%s」", name)
+				log.Infof("发现正在下载「%s」", name)
 			}
 			if !manager.DownloaderConf.AllowDuplicateDownload {
-				zap.S().Infof("取消下载，不允许重复「%s」", name)
+				log.Infof("取消下载，不允许重复「%s」", name)
 				return
 			}
 		}
 	}
-	zap.S().Infof("开始下载「%s」", name)
+	log.Infof("开始下载「%s」", name)
 	m.client.Add(&models.ClientAddOptions{
 		Urls:        []string{anime.Url},
 		SavePath:    manager.DownloaderConf.DownloadPath,
@@ -179,20 +178,20 @@ func (m *Manager) Start(ctx context.Context) {
 			exit := false
 			func() {
 				defer errors.HandleError(func(err error) {
-					zap.S().Error(err)
+					log.Errorf("", err)
 					m.sleep(ctx)
 				})
 				select {
 				case <-ctx.Done():
-					zap.S().Debug("正常退出 manager downloader")
+					log.Debugf("正常退出 manager downloader")
 					exit = true
 					return
 				case anime := <-m.downloadChan:
 					if m.client.Connected() {
-						zap.S().Debugf("接收到下载项:「%s」", anime.FullName())
+						log.Debugf("接收到下载项:「%s」", anime.FullName())
 						m.download(anime)
 					} else {
-						zap.S().Warnf("无法连接客户端，等待。已接收到%d个下载项", len(m.downloadChan))
+						log.Warnf("无法连接客户端，等待。已接收到%d个下载项", len(m.downloadChan))
 						go func() {
 							m.downloadChan <- anime
 						}()
@@ -283,11 +282,11 @@ func (m *Manager) UpdateDownloadItem(status *models.DownloadStatus, anime *model
 			}()
 			status.Downloaded = true
 		}
-		zap.S().Debugw("下载进度",
-			"名称", name,
-			"进度", fmt.Sprintf("%.1f", item.Progress*100),
-			"qbt状态", item.State,
-			"状态", status.State,
+		log.Debugf("下载进度: %v, 名称: %v, qbt状态: %v, 状态: %v",
+			fmt.Sprintf("%.1f", item.Progress*100),
+			name,
+			item.State,
+			status.State,
 		)
 	}
 }
@@ -390,20 +389,20 @@ func (m *Manager) UpdateList() {
 
 func (m *Manager) scrape(bangumi *models.AnimeEntity) bool {
 	nfo := path.Join(manager.DownloaderConf.SavePath, bangumi.DirName(), "tvshow.nfo")
-	zap.S().Infof("写入元数据文件「%s」", nfo)
+	log.Infof("写入元数据文件「%s」", nfo)
 
 	if !utils.IsExist(nfo) {
 		err := os.WriteFile(nfo, []byte(bangumi.Meta()), os.ModePerm)
 		if err != nil {
-			zap.S().Debug(errors.NewAniErrorD(err))
-			zap.S().Warn("写入tvshow.nfo元文件失败")
+			log.Debugf("", errors.NewAniErrorD(err))
+			log.Warnf("写入tvshow.nfo元文件失败")
 			return false
 		}
 	}
 	data, err := os.ReadFile(nfo)
 	if err != nil {
-		zap.S().Debug(errors.NewAniErrorD(err))
-		zap.S().Warn("打开已存在的tvshow.nfo元文件失败")
+		log.Debugf("", errors.NewAniErrorD(err))
+		log.Warnf("打开已存在的tvshow.nfo元文件失败")
 		return false
 	}
 	TmdbRegx := regexp.MustCompile(`<tmdbid>\d+</tmdbid>`)
@@ -415,8 +414,8 @@ func (m *Manager) scrape(bangumi *models.AnimeEntity) bool {
 
 	err = os.WriteFile(nfo, []byte(xmlStr), os.ModePerm)
 	if err != nil {
-		zap.S().Debug(errors.NewAniErrorD(err))
-		zap.S().Warn("写入修改的tvshow.nfo元文件失败")
+		log.Debugf("", errors.NewAniErrorD(err))
+		log.Warnf("写入修改的tvshow.nfo元文件失败")
 		return false
 	}
 	return true

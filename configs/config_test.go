@@ -53,7 +53,7 @@ func TestCopy(t *testing.T) {
 
 func TestUpdateConfig_120(t *testing.T) {
 	_ = utils.CreateMutiDir("data")
-	_ = os.Setenv("ANIMEGO_CONFIG_VERSION", "1.2.0")
+	ConfigVersion = "1.2.0"
 	file, _ := os.ReadFile("testdata/animego_110.yaml")
 	_ = os.WriteFile("data/animego.yaml", file, 0666)
 	UpdateConfig("data/animego.yaml", false)

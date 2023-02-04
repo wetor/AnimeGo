@@ -17,7 +17,7 @@ var (
 
 type Plugin interface {
 	Type() string
-	Execute(file string, params models.Object) any
+	Execute(opts *models.PluginExecuteOptions, params models.Object) any
 	SetSchema(paramsSchema, resultSchema []string)
 }
 

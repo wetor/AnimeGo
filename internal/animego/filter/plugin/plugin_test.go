@@ -4,22 +4,22 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/wetor/AnimeGo/internal/constant"
-
-	"go.uber.org/zap"
-
 	"github.com/wetor/AnimeGo/internal/animego/feed"
 	mikanRss "github.com/wetor/AnimeGo/internal/animego/feed/rss"
+	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin/python/lib"
 	"github.com/wetor/AnimeGo/internal/utils"
+	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/third_party/gpython"
 )
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
-	logger, _ := zap.NewDevelopment()
-	zap.ReplaceGlobals(logger)
+	log.Init(&log.Options{
+		File:  "data/test.log",
+		Debug: true,
+	})
 	constant.PluginPath = "."
 	m.Run()
 	fmt.Println("end")
@@ -43,7 +43,7 @@ func TestJavaScript_Filter(t *testing.T) {
 	result := js.Filter(items)
 	fmt.Println(len(result))
 	for _, r := range result {
-		fmt.Println(r.Name)
+		fmt.Println(r)
 	}
 
 }

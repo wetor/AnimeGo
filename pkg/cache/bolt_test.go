@@ -5,8 +5,8 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/wetor/AnimeGo/pkg/log"
 	bolt "go.etcd.io/bbolt"
-	"go.uber.org/zap"
 )
 
 type AnimeEntity struct {
@@ -42,8 +42,10 @@ var (
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
-	logger, _ := zap.NewDevelopment()
-	zap.ReplaceGlobals(logger)
+	log.Init(&log.Options{
+		File:  "data/test.log",
+		Debug: true,
+	})
 	db.Open("data/1.db")
 	db_sub.Open("testdata/bolt_sub.bolt")
 	m.Run()

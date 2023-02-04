@@ -3,6 +3,10 @@ package constant
 import "path"
 
 var (
+	AnimeGoGithub = "https://github.com/wetor/AnimeGo"
+)
+
+var (
 	dataPath         = "data"
 	CachePath        = "data/cache"
 	CacheFile        = "data/cache/bolt.db"

@@ -5,19 +5,20 @@ import (
 	"sync"
 	"testing"
 
-	"go.uber.org/zap"
-
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/cache"
+	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/request"
 )
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
 	utils.CreateMutiDir("data")
-	logger, _ := zap.NewDevelopment()
-	zap.ReplaceGlobals(logger)
+	log.Init(&log.Options{
+		File:  "data/test.log",
+		Debug: true,
+	})
 	request.Init(&request.Options{})
 	mutex := sync.Mutex{}
 

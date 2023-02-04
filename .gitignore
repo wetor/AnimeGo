@@ -18,6 +18,7 @@ data/
 key/
 download/
 log/
+!pkg/log/
 *.log
 *.db
 animego

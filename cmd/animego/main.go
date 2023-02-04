@@ -12,8 +12,6 @@ import (
 	"syscall"
 	"time"
 
-	"go.uber.org/zap"
-
 	"github.com/wetor/AnimeGo/assets"
 	"github.com/wetor/AnimeGo/configs"
 	_ "github.com/wetor/AnimeGo/docs"
@@ -42,16 +40,18 @@ import (
 	"github.com/wetor/AnimeGo/internal/web"
 	"github.com/wetor/AnimeGo/internal/web/api"
 	"github.com/wetor/AnimeGo/pkg/cache"
+	log2 "github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/request"
 	"github.com/wetor/AnimeGo/third_party/gpython"
 )
 
 const (
-	AnimeGoVersion       = "0.6.5"
-	AnimeGoConfigVersion = "1.2.0"
-	AnimeGoGithub        = "https://github.com/wetor/AnimeGo"
+	DefaultConfigFile = "data/animego.yaml"
+)
 
-	DefaultConfigFile = "./data/animego.yaml"
+var (
+	version   = "dev"
+	buildTime = "dev"
 )
 
 var (
@@ -66,15 +66,7 @@ var (
 
 func init() {
 	var err error
-	err = os.Setenv("ANIMEGO_VERSION", AnimeGoVersion)
-	if err != nil {
-		panic(err)
-	}
-	err = os.Setenv("ANIMEGO_CONFIG_VERSION", AnimeGoConfigVersion)
-	if err != nil {
-		panic(err)
-	}
-	err = os.Setenv("ANIMEGO_GITHUB", AnimeGoGithub)
+	err = os.Setenv("ANIMEGO_VERSION", fmt.Sprintf("%s-%s", version, buildTime))
 	if err != nil {
 		panic(err)
 	}
@@ -94,10 +86,10 @@ func main() {
 		for s := range sigs {
 			switch s {
 			case syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGQUIT:
-				zap.S().Infof("收到退出信号: %v", s)
+				log2.Infof("收到退出信号: %v", s)
 				doExit()
 			default:
-				zap.S().Infof("收到其他信号: %v", s)
+				log2.Infof("收到其他信号: %v", s)
 			}
 		}
 	}()
@@ -139,7 +131,7 @@ func InitDefaultAssets(conf *configs.Config) {
 }
 
 func doExit() {
-	zap.S().Infof("正在退出...")
+	log2.Infof("正在退出...")
 	cancel()
 	go func() {
 		time.Sleep(5 * time.Second)
@@ -155,9 +147,9 @@ func printInfo() {
  / ___ | / / / // // / / / / //  __// /_/ // /_/ /
 /_/  |_|/_/ /_//_//_/ /_/ /_/ \___/ \____/ \____/
     `)
-	fmt.Printf("AnimeGo v%s\n", os.Getenv("ANIMEGO_VERSION"))
-	fmt.Printf("AnimeGo config v%s\n", os.Getenv("ANIMEGO_CONFIG_VERSION"))
-	fmt.Printf("%s\n", os.Getenv("ANIMEGO_GITHUB"))
+	fmt.Printf("AnimeGo %s\n", os.Getenv("ANIMEGO_VERSION"))
+	fmt.Printf("AnimeGo config v%s\n", configs.ConfigVersion)
+	fmt.Printf("%s\n", constant.AnimeGoGithub)
 	fmt.Println("--------------------------------------------------")
 }
 
@@ -185,6 +177,7 @@ func Main(ctx context.Context) {
 
 	// 初始化request
 	request.Init(&request.Options{
+		UserAgent: fmt.Sprintf("%s/AnimeGo (%s)", os.Getenv("ANIMEGO_VERSION"), constant.AnimeGoGithub),
 		Proxy:     config.Proxy(),
 		Timeout:   config.Advanced.Request.TimeoutSecond,
 		Retry:     config.Advanced.Request.RetryNum,

@@ -19,13 +19,3 @@ func HandleError(fn func(error)) {
 		}
 	}
 }
-
-func HandleAniError(fn func(*AniError)) {
-	if err := recover(); err != nil {
-		if e, ok := err.(*AniError); ok {
-			fn(e)
-		} else {
-			panic(err)
-		}
-	}
-}

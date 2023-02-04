@@ -4,16 +4,14 @@ import (
 	"encoding/csv"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"strconv"
 	"testing"
 	"time"
 
-	"go.uber.org/zap"
-
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/pkg/cache"
+	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/request"
 )
 
@@ -21,9 +19,10 @@ const ThemoviedbKey = "d3d8430aefee6c19520d0f7da145daf5"
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
-	logger, _ := zap.NewDevelopment()
-	zap.ReplaceGlobals(logger)
-
+	log.Init(&log.Options{
+		File:  "data/test.log",
+		Debug: true,
+	})
 	db := cache.NewBolt()
 	db.Open("data/bolt.db")
 	anidata.Init(&anidata.Options{Cache: db})
@@ -175,7 +174,7 @@ func TestThemoviedb_ParseByFile(t1 *testing.T) {
 	})
 	for _, tt := range tests {
 		t1.Run(tt.name, func(t1 *testing.T) {
-			log.Printf("搜索：「%s」", tt.args.name)
+			fmt.Printf("搜索：「%s」", tt.args.name)
 			gotTmdbID, gotSeason := t.ParseCache(tt.args.name, tt.args.airDate)
 
 			if gotTmdbID.ID != tt.wantTmdbID {

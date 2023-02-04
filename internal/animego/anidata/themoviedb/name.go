@@ -3,9 +3,8 @@ package themoviedb
 import (
 	"regexp"
 
-	"go.uber.org/zap"
-
 	"github.com/wetor/AnimeGo/pkg/errors"
+	"github.com/wetor/AnimeGo/pkg/log"
 )
 
 var nameRegxStep = []*regexp.Regexp{
@@ -42,7 +41,7 @@ func RemoveNameSuffix(name string, fun func(string) any) any {
 				if len(newName) > 0 && len(newName) > len(name)/10 {
 					name = newName
 				}
-				zap.S().Debugf("重新搜索：「%s」", name)
+				log.Debugf("重新搜索：「%s」", name)
 			}
 		}
 	}

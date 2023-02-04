@@ -29,6 +29,8 @@ type Version struct {
 }
 
 var (
+	ConfigVersion = "1.2.0" // 当前配置文件版本
+
 	versions = []string{
 		"1.1.0",
 		"1.2.0",
@@ -72,7 +74,7 @@ func UpdateConfig(oldFile string, backup bool) (restart bool) {
 		log.Fatal("配置文件升级失败：当前配置文件版本号错误 " + oldVer)
 	}
 
-	newVer := os.Getenv("ANIMEGO_CONFIG_VERSION")
+	newVer := ConfigVersion
 	newIndex := -1
 	for i, v := range versions {
 		if newVer == v {

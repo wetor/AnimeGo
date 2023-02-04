@@ -2,6 +2,7 @@ package task
 
 import (
 	"archive/zip"
+	"context"
 	"io"
 	"os"
 	"path"
@@ -10,10 +11,11 @@ import (
 
 	"github.com/parnurzeal/gorequest"
 	"github.com/robfig/cron/v3"
-	"go.uber.org/zap"
 
 	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/errors"
+	"github.com/wetor/AnimeGo/pkg/log"
+	"github.com/wetor/AnimeGo/pkg/try"
 )
 
 const (
@@ -25,6 +27,9 @@ const (
 	Cron              = "0 0 12 * * 3" // 每周三12点
 	MaxModifyTimeHour = 24             // 首次启动时，是否执行任务的最长修改时间
 	MinFileSizeKB     = 512            // 首次启动时，是否执行任务的最小文件大小
+
+	RetryNum  = 3  // 失败重试次数
+	RetryWait = 60 // 失败重试等待时间，秒
 )
 
 type BangumiTask struct {
@@ -60,15 +65,15 @@ func (t *BangumiTask) download(url, name string) string {
 	req := gorequest.New()
 	_, data, errs := req.Get(url).EndBytes()
 	if errs != nil {
-		zap.S().Debug(errors.NewAniErrorD(errs))
-		zap.S().Errorf("使用ghproxy下载%s失败", name)
+		log.Debugf("", errors.NewAniErrorD(errs))
+		log.Errorf("使用ghproxy下载%s失败", name)
 		return ""
 	}
 	file := path.Join(t.savePath, name)
 	err := os.WriteFile(file, data, 0644)
 	if err != nil {
-		zap.S().Debug(errors.NewAniErrorD(err))
-		zap.S().Errorf("保存文件到%s失败", name)
+		log.Debugf("", errors.NewAniErrorD(err))
+		log.Errorf("保存文件到%s失败", name)
 		return ""
 	}
 	return file
@@ -109,28 +114,42 @@ func (t *BangumiTask) unzip(filename string) {
 }
 
 func (t *BangumiTask) Run(force bool) {
-	defer errors.HandleError(func(err error) {
-		zap.S().Error(err)
-	})
-	db := path.Join(t.savePath, SubjectDB)
-	stat, err := os.Stat(db)
-	// 上次修改时间小于 MinModifyTimeHour 小时，且文件大小大于 MinFileSizeKB kb，跳过
-	if force && err == nil &&
-		time.Now().Unix()-stat.ModTime().Unix() <= MaxModifyTimeHour*60*60 && stat.Size() > MinFileSizeKB*1024 {
-		return
-	}
-	zap.S().Infof("[定时任务] %s 开始执行", t.Name())
-	subUrl := CDN1 + ArchiveReleaseBase + Subject
-	file := t.download(subUrl, Subject)
-	BangumiCacheLock.Lock()
-	BangumiCache.Close()
-	t.unzip(file)
-	// 重新加载bolt
-	BangumiCache.Open(db)
-	BangumiCacheLock.Unlock()
-	if utils.FileSize(db) <= MinFileSizeKB*1024 {
-		zap.S().Infof("[定时任务] %s 执行失败", t.Name())
-	} else {
-		zap.S().Infof("[定时任务] %s 执行完毕，下次执行时间: %s", t.Name(), t.NextTime())
+	success := false
+	for i := 0; i < RetryNum; i++ {
+		try.This(func() {
+			db := path.Join(t.savePath, SubjectDB)
+			stat, err := os.Stat(db)
+			// 上次修改时间小于 MinModifyTimeHour 小时，且文件大小大于 MinFileSizeKB kb，跳过
+			if force && err == nil &&
+				time.Now().Unix()-stat.ModTime().Unix() <= MaxModifyTimeHour*60*60 && stat.Size() > MinFileSizeKB*1024 {
+				return
+			}
+			log.Infof("[定时任务] %s 开始执行", t.Name())
+			subUrl := CDN1 + ArchiveReleaseBase + Subject
+			file := t.download(subUrl, Subject)
+			BangumiCacheLock.Lock()
+			BangumiCache.Close()
+			t.unzip(file)
+			// 重新加载bolt
+			BangumiCache.Open(db)
+			BangumiCacheLock.Unlock()
+			if utils.FileSize(db) <= MinFileSizeKB*1024 {
+				errors.NewAniError("缓存文件小于512KB").TryPanic()
+			} else {
+				log.Infof("[定时任务] %s 执行完毕，下次执行时间: %s", t.Name(), t.NextTime())
+			}
+			success = true
+		}).Catch(func(err try.E) {
+			log.Debugf("", err)
+			if i == 0 {
+				log.Warnf("[定时任务] %s 执行失败", t.Name())
+			} else {
+				log.Warnf("[定时任务] %s 执行失败，%d 秒后重新执行", t.Name(), RetryWait)
+			}
+			utils.Sleep(RetryWait, context.Background())
+		})
+		if success {
+			break
+		}
 	}
 }

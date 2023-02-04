@@ -4,9 +4,9 @@ import (
 	"time"
 
 	"github.com/robfig/cron/v3"
-	"go.uber.org/zap"
 
 	"github.com/wetor/AnimeGo/pkg/errors"
+	"github.com/wetor/AnimeGo/pkg/log"
 )
 
 type JSPluginTask struct {
@@ -36,10 +36,7 @@ func (t *JSPluginTask) NextTime() time.Time {
 }
 
 func (t *JSPluginTask) Run(force bool) {
-	defer errors.HandleError(func(err error) {
-		zap.S().Error(err)
-	})
-	zap.S().Infof("[定时任务] %s 开始执行", t.Name())
+	log.Infof("[定时任务] %s 开始执行", t.Name())
 
-	zap.S().Infof("[定时任务] %s 执行完毕，下次执行时间: %s", t.Name(), t.NextTime())
+	log.Infof("[定时任务] %s 执行完毕，下次执行时间: %s", t.Name(), t.NextTime())
 }

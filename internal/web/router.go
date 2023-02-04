@@ -6,11 +6,10 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
-
 	"github.com/wetor/AnimeGo/internal/web/api"
 	"github.com/wetor/AnimeGo/internal/web/models"
 	"github.com/wetor/AnimeGo/pkg/errors"
+	"github.com/wetor/AnimeGo/pkg/log"
 )
 
 func Run(ctx context.Context) {
@@ -18,14 +17,14 @@ func Run(ctx context.Context) {
 	go func() {
 		defer WG.Done()
 		r := gin.New()
-		r.Use(Cors())             // 跨域中间件
-		r.Use(GinLogger(zap.S())) // 日志中间件
-		r.Use(GinRecovery(zap.S(), true, func(c *gin.Context, recovered any) {
+		r.Use(Cors())                     // 跨域中间件
+		r.Use(GinLogger(log.GetLogger())) // 日志中间件
+		r.Use(GinRecovery(log.GetLogger(), true, func(c *gin.Context, recovered any) {
 			if err, ok := recovered.(error); ok {
-				zap.S().Debugf("服务器错误，err: %v", errors.NewAniErrorD(err))
+				log.Debugf("服务器错误，err: %v", errors.NewAniErrorD(err))
 				c.JSON(models.ErrSvr("服务器错误"))
 			} else {
-				zap.S().Debug(recovered.(string))
+				log.Debugf(recovered.(string))
 				c.JSON(models.ErrSvr(recovered.(string)))
 			}
 		})) // 错误处理中间件
@@ -51,18 +50,18 @@ func Run(ctx context.Context) {
 		}
 		go func() {
 			if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-				zap.S().Debug(err)
-				zap.S().Warn("启动web服务失败")
+				log.Debugf("", err)
+				log.Warnf("启动web服务失败")
 			}
 		}()
-		zap.S().Infof("AnimeGo Web服务已启动: http://%s", s.Addr)
+		log.Infof("AnimeGo Web服务已启动: http://%s", s.Addr)
 		select {
 		case <-ctx.Done():
 			if err := s.Close(); err != nil {
-				zap.S().Debug(err)
-				zap.S().Warn("关闭web服务失败")
+				log.Debugf("", err)
+				log.Warnf("关闭web服务失败")
 			}
-			zap.S().Debug("正常退出 web")
+			log.Debugf("正常退出 web")
 		}
 	}()
 }

@@ -7,12 +7,12 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 
 	"github.com/wetor/AnimeGo/internal/animego/feed/rss"
 	"github.com/wetor/AnimeGo/internal/models"
 	webModels "github.com/wetor/AnimeGo/internal/web/models"
 	"github.com/wetor/AnimeGo/pkg/errors"
+	"github.com/wetor/AnimeGo/pkg/log"
 )
 
 // Rss godoc
@@ -72,7 +72,7 @@ func PluginConfigPost(c *gin.Context) {
 	}
 	file, err := request.FindFile()
 	if err != nil {
-		zap.S().Debug(err)
+		log.Debugf("", err)
 		c.JSON(webModels.Fail(err.Error()))
 		return
 	}
@@ -80,7 +80,7 @@ func PluginConfigPost(c *gin.Context) {
 	data, err := base64.StdEncoding.DecodeString(request.Data)
 	if err != nil {
 		err = errors.NewAniErrorD(err)
-		zap.S().Debug(err)
+		log.Debugf("", err)
 		c.JSON(webModels.Fail(err.Error()))
 		return
 	}
@@ -88,7 +88,7 @@ func PluginConfigPost(c *gin.Context) {
 	err = os.WriteFile(filename, data, 0666)
 	if err != nil {
 		err = errors.NewAniErrorD(err)
-		zap.S().Debug(err)
+		log.Debugf("", err)
 		c.JSON(webModels.Fail(err.Error()))
 		return
 	}
@@ -118,7 +118,7 @@ func PluginConfigGet(c *gin.Context) {
 	}
 	file, err := request.FindFile()
 	if err != nil {
-		zap.S().Debug(err)
+		log.Debugf("", err)
 		c.JSON(webModels.Fail(err.Error()))
 		return
 	}
@@ -127,7 +127,7 @@ func PluginConfigGet(c *gin.Context) {
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		err = errors.NewAniErrorD(err)
-		zap.S().Debug(err)
+		log.Debugf("", err)
 		c.JSON(webModels.Fail("打开文件 " + filename + " 失败"))
 		return
 	}

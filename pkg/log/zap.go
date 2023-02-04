@@ -1,4 +1,4 @@
-package logger
+package log
 
 import (
 	"os"
@@ -13,21 +13,23 @@ const (
 	logTmFmt = "2006-01-02 15:04:05"
 )
 
-func GetLogger(opt *Options) {
+func NewLogger(file string, debug bool) *zap.Logger {
 	level := zapcore.DebugLevel
-	if !opt.Debug {
+	if !debug {
 		level = zapcore.InfoLevel
 	}
+	// 文件日志: 不显示Debug级别日志
+	// 控制台日志: 彩色显示
 	newCore := zapcore.NewTee(
-		zapcore.NewCore(GetEncoder(true, opt.Debug), GetWriteSyncer(opt.File), level), // 写入文件
-		zapcore.NewCore(GetEncoder(false, opt.Debug), zapcore.Lock(os.Stdout), level), // 写入控制台
+		zapcore.NewCore(GetEncoder(cEncodeLevel), GetWriteSyncer(file), zapcore.InfoLevel),            // 写入文件
+		zapcore.NewCore(GetEncoder(zapcore.CapitalColorLevelEncoder), zapcore.Lock(os.Stdout), level), // 写入控制台
 	)
-	logger := zap.New(newCore, zap.AddCaller())
-	zap.ReplaceGlobals(logger)
+	return zap.New(newCore, zap.AddCaller(), zap.AddCallerSkip(1))
+
 }
 
 // GetEncoder 自定义的Encoder
-func GetEncoder(file, debug bool) zapcore.Encoder {
+func GetEncoder(levelEncoder zapcore.LevelEncoder) zapcore.Encoder {
 	conf := zapcore.EncoderConfig{
 		TimeKey:        "ts",
 		LevelKey:       "level",
@@ -37,23 +39,11 @@ func GetEncoder(file, debug bool) zapcore.Encoder {
 		MessageKey:     "msg",
 		StacktraceKey:  "stacktrace",
 		LineEnding:     zapcore.DefaultLineEnding,
-		EncodeLevel:    cEncodeLevel,
+		EncodeLevel:    levelEncoder,
 		EncodeTime:     cEncodeTime,
 		EncodeDuration: zapcore.SecondsDurationEncoder,
 		EncodeCaller:   cEncodeCaller,
 	}
-	if file {
-		conf.EncodeLevel = cEncodeLevel
-	} else {
-		conf.EncodeLevel = zapcore.CapitalColorLevelEncoder
-	}
-
-	if debug {
-		conf.EncodeCaller = cEncodeCaller
-	} else {
-		conf.EncodeCaller = nil
-	}
-
 	return zapcore.NewConsoleEncoder(conf)
 }
 

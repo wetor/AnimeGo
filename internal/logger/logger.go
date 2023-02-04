@@ -4,9 +4,8 @@ import (
 	"context"
 	"sync"
 
-	"go.uber.org/zap"
-
 	"github.com/wetor/AnimeGo/internal/utils"
+	"github.com/wetor/AnimeGo/pkg/log"
 )
 
 type Options struct {
@@ -17,16 +16,18 @@ type Options struct {
 }
 
 func Init(opts *Options) {
+	log.Init(&log.Options{
+		File:  opts.File,
+		Debug: opts.Debug,
+	})
 	opts.WG.Add(1)
-
-	GetLogger(opts)
 	go func() {
 		defer opts.WG.Done()
 		for {
 			select {
 			case <-opts.Context.Done():
 				Flush()
-				zap.S().Debug("正常退出 logger")
+				log.Debugf("正常退出 logger")
 				return
 			default:
 				Flush()
@@ -37,5 +38,5 @@ func Init(opts *Options) {
 }
 
 func Flush() {
-	_ = zap.S().Sync()
+	_ = log.Sync()
 }

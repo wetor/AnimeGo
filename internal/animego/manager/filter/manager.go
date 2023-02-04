@@ -6,8 +6,6 @@ import (
 	"context"
 	"sync"
 
-	"go.uber.org/zap"
-
 	"github.com/wetor/AnimeGo/internal/animego/anisource"
 	"github.com/wetor/AnimeGo/internal/animego/feed"
 	"github.com/wetor/AnimeGo/internal/animego/filter"
@@ -15,6 +13,7 @@ import (
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/errors"
+	"github.com/wetor/AnimeGo/pkg/log"
 )
 
 const (
@@ -72,9 +71,6 @@ func (m *Manager) Update(ctx context.Context, items []*models.FeedItem) {
 		working <- i //计数器+1 可能会发生阻塞
 		wg.Add(1)
 		go func(_i int, _item *models.FeedItem) {
-			defer errors.HandleError(func(err error) {
-				zap.S().Error(err)
-			})
 			select {
 			case <-ctx.Done():
 				exit = true
@@ -92,7 +88,7 @@ func (m *Manager) Update(ctx context.Context, items []*models.FeedItem) {
 
 					animeList[_i] = anime
 
-					zap.S().Debugf("发送下载项:「%s」", anime.FullName())
+					log.Debugf("发送下载项:「%s」", anime.FullName())
 					// 向管道中发送需要下载的信息
 					m.downloadChan <- anime
 
@@ -119,11 +115,11 @@ func (m *Manager) Start(ctx context.Context) {
 			exit := false
 			func() {
 				defer errors.HandleError(func(err error) {
-					zap.S().Error(err)
+					log.Errorf("", err)
 				})
 				select {
 				case <-ctx.Done():
-					zap.S().Debug("正常退出 manager filter")
+					log.Debugf("正常退出 manager filter")
 					exit = true
 					return
 				default:

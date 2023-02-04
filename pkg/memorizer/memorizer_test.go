@@ -3,11 +3,12 @@ package memorizer
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/wetor/AnimeGo/pkg/cache"
-	"go.uber.org/zap"
 	"strconv"
 	"testing"
 	"time"
+
+	"github.com/wetor/AnimeGo/pkg/cache"
+	"github.com/wetor/AnimeGo/pkg/log"
 )
 
 type Type struct {
@@ -22,8 +23,10 @@ type Type2 struct {
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
-	logger, _ := zap.NewDevelopment()
-	zap.ReplaceGlobals(logger)
+	log.Init(&log.Options{
+		File:  "data/test.log",
+		Debug: true,
+	})
 	m.Run()
 	fmt.Println("end")
 }

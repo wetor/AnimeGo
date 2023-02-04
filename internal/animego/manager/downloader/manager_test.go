@@ -8,14 +8,13 @@ import (
 	"testing"
 	"time"
 
-	"go.uber.org/zap"
-
 	"github.com/wetor/AnimeGo/internal/animego/downloader"
 	"github.com/wetor/AnimeGo/internal/animego/downloader/qbittorrent"
 	"github.com/wetor/AnimeGo/internal/animego/manager"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/cache"
+	"github.com/wetor/AnimeGo/pkg/log"
 )
 
 var (
@@ -28,10 +27,11 @@ var (
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
-	logger, _ := zap.NewDevelopment()
-	zap.ReplaceGlobals(logger)
 	_ = utils.CreateMutiDir("data")
-
+	log.Init(&log.Options{
+		File:  "data/test.log",
+		Debug: true,
+	})
 	downloader.Init(&downloader.Options{
 		WG: &wg,
 	})

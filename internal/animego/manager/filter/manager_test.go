@@ -7,8 +7,6 @@ import (
 	"testing"
 	"time"
 
-	"go.uber.org/zap"
-
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/internal/animego/anisource"
 	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
@@ -17,6 +15,7 @@ import (
 	"github.com/wetor/AnimeGo/internal/animego/manager"
 	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/cache"
+	"github.com/wetor/AnimeGo/pkg/log"
 )
 
 const ThemoviedbKey = "d3d8430aefee6c19520d0f7da145daf5"
@@ -29,9 +28,11 @@ var (
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
-	logger, _ := zap.NewDevelopment()
-	zap.ReplaceGlobals(logger)
 	_ = utils.CreateMutiDir("data")
+	log.Init(&log.Options{
+		File:  "data/test.log",
+		Debug: true,
+	})
 	b := cache.NewBolt()
 	b.Open("data/test.db")
 

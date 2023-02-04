@@ -3,17 +3,19 @@ package lib
 import (
 	"github.com/go-python/gpython/py"
 	pyutils "github.com/wetor/AnimeGo/internal/plugin/python/utils"
-	"go.uber.org/zap"
+	log2 "github.com/wetor/AnimeGo/pkg/log"
 )
 
 func InitLog() {
 	methods := []*py.Method{
 		py.MustNewMethod("debug", log("debug"), 0, "debug(args...)"),
-		py.MustNewMethod("debugf", log("debugf"), 0, "debugf(args...)"),
+		py.MustNewMethod("debugf", log("debugf"), 0, "debugf(template, args...)"),
 		py.MustNewMethod("info", log("info"), 0, "info(args...)"),
-		py.MustNewMethod("infof", log("infof"), 0, "infof(args...)"),
+		py.MustNewMethod("infof", log("infof"), 0, "infof(template, args...)"),
 		py.MustNewMethod("error", log("error"), 0, "error(args...)"),
-		py.MustNewMethod("errorf", log("errorf"), 0, "errorf(args...)"),
+		py.MustNewMethod("errorf", log("errorf"), 0, "errorf(template, args...)"),
+		py.MustNewMethod("warn", log("warn"), 0, "warn(args...)"),
+		py.MustNewMethod("warnf", log("warnf"), 0, "warnf(template, args...)"),
 	}
 
 	py.RegisterModule(&py.ModuleImpl{
@@ -30,17 +32,21 @@ func log(name string) func(self py.Object, args py.Tuple) (py.Object, error) {
 	var logFuncf func(template string, args ...interface{})
 	switch name {
 	case "debug":
-		logFunc = zap.S().Debug
+		logFunc = log2.Debug
 	case "info":
-		logFunc = zap.S().Info
+		logFunc = log2.Info
+	case "warn":
+		logFunc = log2.Warn
 	case "error":
-		logFunc = zap.S().Error
+		logFunc = log2.Error
 	case "debugf":
-		logFuncf = zap.S().Debugf
+		logFuncf = log2.Debugf
 	case "infof":
-		logFuncf = zap.S().Infof
+		logFuncf = log2.Infof
+	case "warnf":
+		logFuncf = log2.Warnf
 	case "errorf":
-		logFuncf = zap.S().Errorf
+		logFuncf = log2.Errorf
 	}
 	if name[len(name)-1] == 'f' {
 		return func(self py.Object, args py.Tuple) (py.Object, error) {

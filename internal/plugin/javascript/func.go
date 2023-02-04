@@ -7,39 +7,40 @@ import (
 	"strings"
 	"time"
 
-	"go.uber.org/zap"
-
 	"github.com/wetor/AnimeGo/internal/animego/anidata/mikan"
 	"github.com/wetor/AnimeGo/internal/animego/anisource"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin/public"
 	"github.com/wetor/AnimeGo/pkg/errors"
+	"github.com/wetor/AnimeGo/pkg/log"
+	"github.com/wetor/AnimeGo/pkg/try"
 )
 
 // initFunc
 //  @Description: 获取js需要注册的函数列表
 //  @return models.Object
 //
-func (js JavaScript) initFunc() models.Object {
+func (p JavaScript) initFunc() models.Object {
 	return models.Object{
-		"print": js.Print,
-		"sleep": js.Sleep,
+		"print": p.Print,
+		"sleep": p.Sleep,
 		"os": models.Object{
-			"readFile": js.ReadFile,
+			"readFile": p.ReadFile,
 		},
 		"goLog": models.Object{
-			"debug": zap.S().Debug,
-			"info":  zap.S().Info,
-			"error": zap.S().Error,
+			"debug": log.Debug,
+			"info":  log.Info,
+			"warn":  log.Warn,
+			"error": log.Error,
 		},
 		"animeGo": models.Object{
-			"parseName":    js.ParseName,
-			"getMikanInfo": js.GetMikanInfo,
+			"parseName":    p.ParseName,
+			"getMikanInfo": p.GetMikanInfo,
 		},
 	}
 }
 
-func (js JavaScript) initVar() models.Object {
+func (p JavaScript) initVar() models.Object {
 	return models.Object{
 		"variable": models.Object{
 			"version": os.Getenv("ANIMEGO_VERSION"),
@@ -48,37 +49,38 @@ func (js JavaScript) initVar() models.Object {
 	}
 }
 
-func (js JavaScript) Print(params ...any) {
+func (p JavaScript) Print(params ...any) {
 	fmt.Println(params...)
 }
 
-func (js JavaScript) Sleep(ms int64) {
+func (p JavaScript) Sleep(ms int64) {
 	time.Sleep(time.Duration(ms) * time.Millisecond)
 }
 
-func (js *JavaScript) ReadFile(filename string) string {
+func (p *JavaScript) ReadFile(filename string) string {
 	if strings.Index(filename, "../") >= 0 {
 		panic("禁止使用'../'访问路径")
 	}
 	file, err := os.ReadFile(path.Join(currRootPath, filename))
 	if err != nil {
-		panic(js.ToValue(err))
+		panic(p.ToValue(err))
 	}
 	return string(file)
 }
 
-func (js JavaScript) ParseName(name string) (episode *models.TitleParsed) {
+func (p JavaScript) ParseName(name string) (episode *models.TitleParsed) {
 	episode = public.ParserName(name)
 	if episode.Ep == 0 {
-		panic(js.ToValue(errors.NewAniError("解析ep信息失败")))
+		panic(p.ToValue(errors.NewAniError("解析ep信息失败")))
 	}
 	return
 }
 
-func (js JavaScript) GetMikanInfo(url string) *mikan.MikanInfo {
-	defer errors.HandleError(func(err error) {
-		panic(js.ToValue(err))
+func (p JavaScript) GetMikanInfo(url string) (info *mikan.MikanInfo) {
+	try.This(func() {
+		info = anisource.Mikan().CacheParseMikanInfo(url)
+	}).Catch(func(err try.E) {
+		panic(p.ToValue(err))
 	})
-	info := anisource.Mikan().CacheParseMikanInfo(url)
-	return info
+	return
 }

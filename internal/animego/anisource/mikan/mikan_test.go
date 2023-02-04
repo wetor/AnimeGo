@@ -6,14 +6,13 @@ import (
 	"sync"
 	"testing"
 
-	"go.uber.org/zap"
-
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/internal/animego/anisource"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin/public"
 	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/cache"
+	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/request"
 	"github.com/wetor/AnimeGo/third_party/gpython"
 )
@@ -22,9 +21,11 @@ const ThemoviedbKey = "d3d8430aefee6c19520d0f7da145daf5"
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
-	logger, _ := zap.NewDevelopment()
-	zap.ReplaceGlobals(logger)
 	_ = utils.CreateMutiDir("data")
+	log.Init(&log.Options{
+		File:  "data/test.log",
+		Debug: true,
+	})
 	b := cache.NewBolt()
 	b.Open("data/test.db")
 	anisource.Init(&anisource.Options{

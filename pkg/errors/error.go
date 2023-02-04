@@ -15,26 +15,25 @@ type AniError struct {
 }
 
 func NewAniError(msg string) *AniError {
-	return NewAniErrorSkipf(2, msg, nil)
+	return NewAniErrorSkipf(2, msg)
 }
 
 func NewAniErrorD(data interface{}) *AniError {
-	return NewAniErrorSkipf(2, "", data)
+	return NewAniErrorSkipf(2, "").SetData(data)
 }
 
 func NewAniErrorSkip(skip int, msg string) *AniError {
-	return NewAniErrorSkipf(skip+1, msg, nil)
+	return NewAniErrorSkipf(skip+1, msg)
 }
 
 func NewAniErrorf(format string, a ...interface{}) *AniError {
-	return NewAniErrorSkipf(2, format, nil, a...)
+	return NewAniErrorSkipf(2, format, a...)
 }
 
-func NewAniErrorSkipf(skip int, format string, data interface{}, a ...interface{}) *AniError {
+func NewAniErrorSkipf(skip int, format string, a ...interface{}) *AniError {
 	file, pc, line := GetCaller(skip)
 	return &AniError{
 		Msg:  fmt.Sprintf(format, a...),
-		Data: data,
 		File: file,
 		Func: pc,
 		Line: line,

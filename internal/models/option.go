@@ -42,3 +42,8 @@ type AnimeParseOptions struct {
 	Name   string
 	Parsed *TitleParsed
 }
+
+type PluginExecuteOptions struct {
+	File      string
+	SkipCheck bool
+}

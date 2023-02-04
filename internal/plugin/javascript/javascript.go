@@ -6,12 +6,13 @@ import (
 	"strings"
 
 	"github.com/dop251/goja"
-	"go.uber.org/zap"
 
 	"github.com/wetor/AnimeGo/internal/models"
 	pluginutils "github.com/wetor/AnimeGo/internal/plugin/utils"
 	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/errors"
+	"github.com/wetor/AnimeGo/pkg/log"
+	"github.com/wetor/AnimeGo/pkg/try"
 )
 
 const Type = "javascript"
@@ -23,16 +24,16 @@ type JavaScript struct {
 	resultSchema [][]string
 }
 
-func (js *JavaScript) preExecute() {
-	if js.Runtime == nil {
-		js.Runtime = goja.New()
-		js.registerFunc()
-		_, err := js.RunScript(animeGoBaseFilename, animeGoBaseJs)
+func (p *JavaScript) preExecute() {
+	if p.Runtime == nil {
+		p.Runtime = goja.New()
+		p.registerFunc()
+		_, err := p.RunScript(animeGoBaseFilename, animeGoBaseJs)
 		errors.NewAniErrorD(err).TryPanic()
 	}
 }
 
-func (js *JavaScript) execute(file string) {
+func (p *JavaScript) execute(file string) {
 	raw, err := os.ReadFile(file)
 	errors.NewAniErrorD(err).TryPanic()
 
@@ -40,65 +41,68 @@ func (js *JavaScript) execute(file string) {
 	_, currName = path.Split(file)
 	currName = strings.TrimSuffix(currName, path.Ext(file))
 
-	_, err = js.RunScript(file, string(raw))
+	_, err = p.RunScript(file, string(raw))
 	errors.NewAniErrorD(err).TryPanic()
 
-	err = js.ExportTo(js.Get(funcMain), &js.main)
+	err = p.ExportTo(p.Get(funcMain), &p.main)
 	errors.NewAniErrorD(err).TryPanic()
 }
 
-func (js *JavaScript) endExecute() {
-	js.registerVar()
+func (p *JavaScript) endExecute() {
+	p.registerVar()
 }
 
-func (js *JavaScript) registerFunc() {
-	funcMap := js.initFunc()
+func (p *JavaScript) registerFunc() {
+	funcMap := p.initFunc()
 	for name, method := range funcMap {
-		err := js.Set(name, method)
+		err := p.Set(name, method)
 		errors.NewAniErrorD(err).TryPanic()
 	}
 }
 
-func (js *JavaScript) registerVar() {
-	varMap := js.initVar()
+func (p *JavaScript) registerVar() {
+	varMap := p.initVar()
 	for name, v := range varMap {
-		err := js.Set(name, v)
+		err := p.Set(name, v)
 		errors.NewAniErrorD(err).TryPanic()
 	}
 }
 
-func (js *JavaScript) SetSchema(paramsSchema, resultSchema []string) {
-	js.paramsSchema = make([][]string, len(paramsSchema))
+func (p *JavaScript) SetSchema(paramsSchema, resultSchema []string) {
+	p.paramsSchema = make([][]string, len(paramsSchema))
 	for i, param := range paramsSchema {
-		js.paramsSchema[i] = strings.Split(param, ":")
+		p.paramsSchema[i] = strings.Split(param, ":")
 	}
 
-	js.resultSchema = make([][]string, len(resultSchema))
+	p.resultSchema = make([][]string, len(resultSchema))
 	for i, param := range resultSchema {
-		js.resultSchema[i] = strings.Split(param, ":")
+		p.resultSchema[i] = strings.Split(param, ":")
 	}
 }
 
-func (js *JavaScript) Type() string {
+func (p *JavaScript) Type() string {
 	return Type
 }
 
-func (js *JavaScript) Execute(file string, params models.Object) (result any) {
-	func() {
-		defer errors.HandleError(func(err error) {
-			zap.S().Error(err)
-		})
-		pluginutils.CheckParams(js.paramsSchema, params)
+func (p *JavaScript) Execute(opts *models.PluginExecuteOptions, params models.Object) (result any) {
+	try.This(func() {
+		if !opts.SkipCheck {
+			pluginutils.CheckParams(p.paramsSchema, params)
+		}
+		p.preExecute()
 
-		js.preExecute()
+		file := utils.FindScript(opts.File, models.JSExt)
+		p.execute(file)
 
-		file = utils.FindScript(file, models.JSExt)
-		js.execute(file)
+		p.endExecute()
 
-		js.endExecute()
-
-		result = js.main(params)
-		pluginutils.CheckResult(js.resultSchema, result)
-	}()
+		result = p.main(params)
+		if !opts.SkipCheck {
+			pluginutils.CheckResult(p.resultSchema, result)
+		}
+	}).Catch(func(err try.E) {
+		log.Warnf("%s 脚本运行时出错", p.Type())
+		log.Debugf("", err)
+	})
 	return result
 }

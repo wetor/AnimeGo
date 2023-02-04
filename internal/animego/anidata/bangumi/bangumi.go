@@ -1,10 +1,9 @@
 package bangumi
 
 import (
-	"go.uber.org/zap"
-
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/pkg/errors"
+	"github.com/wetor/AnimeGo/pkg/log"
 	mem "github.com/wetor/AnimeGo/pkg/memorizer"
 	"github.com/wetor/AnimeGo/pkg/request"
 	"github.com/wetor/AnimeGo/third_party/bangumi/res"
@@ -43,7 +42,7 @@ func (b Bangumi) ParseCache(bangumiID int) (entity *Entity) {
 
 	if e, err := b.loadAnimeInfo(bangumiID); err == nil {
 		if e != nil {
-			zap.S().Debug("使用Bangumi Archive，", bangumiID)
+			log.Debugf("使用Bangumi Archive，%d", bangumiID)
 			return e
 		}
 	}

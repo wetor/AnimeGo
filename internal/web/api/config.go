@@ -6,11 +6,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	jsoniter "github.com/json-iterator/go"
-	"go.uber.org/zap"
 
 	"github.com/wetor/AnimeGo/configs"
 	webModels "github.com/wetor/AnimeGo/internal/web/models"
 	"github.com/wetor/AnimeGo/pkg/errors"
+	"github.com/wetor/AnimeGo/pkg/log"
 )
 
 // ConfigGet godoc
@@ -38,7 +38,7 @@ func ConfigGet(c *gin.Context) {
 		err := jsoniter.Unmarshal(configs.DefaultDoc(), &data)
 		if err != nil {
 			err = errors.NewAniErrorD(err)
-			zap.S().Debug(err)
+			log.Debugf("", err)
 			c.JSON(webModels.Fail("配置项说明格式化错误"))
 			return
 		}
@@ -47,7 +47,7 @@ func ConfigGet(c *gin.Context) {
 		data, err := os.ReadFile(configs.ConfigFile)
 		if err != nil {
 			err = errors.NewAniErrorD(err)
-			zap.S().Debug(err)
+			log.Debugf("", err)
 			c.JSON(webModels.Fail("打开文件 " + configs.ConfigFile + " 失败"))
 			return
 		}
@@ -79,7 +79,7 @@ func ConfigPut(c *gin.Context) {
 			err := configs.BackupConfig(configs.ConfigFile, "")
 			if err != nil {
 				err = errors.NewAniErrorD(err)
-				zap.S().Debug(err)
+				log.Debugf("", err)
 				c.JSON(webModels.Fail("备份文件 " + configs.ConfigFile + " 失败"))
 				return
 			}
@@ -87,7 +87,7 @@ func ConfigPut(c *gin.Context) {
 		err := os.WriteFile(configs.ConfigFile, configs.Config2Bytes(request.Config), 0644)
 		if err != nil {
 			err = errors.NewAniErrorD(err)
-			zap.S().Debug(err)
+			log.Debugf("", err)
 			c.JSON(webModels.Fail("写到文件 " + configs.ConfigFile + " 失败"))
 			return
 		}

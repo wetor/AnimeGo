@@ -2,23 +2,23 @@ package api
 
 import (
 	"context"
+	"os"
 	"sync"
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
 
 	"github.com/wetor/AnimeGo/configs"
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/utils"
 	webModels "github.com/wetor/AnimeGo/internal/web/models"
 	"github.com/wetor/AnimeGo/pkg/errors"
+	"github.com/wetor/AnimeGo/pkg/log"
 )
 
 var (
 	Ctx                           context.Context
 	AccessKey                     string
-	DataPath                      string
 	Cache                         api.Cacher
 	Config                        *configs.Config
 	BangumiCache                  api.CacheGetter
@@ -57,17 +57,17 @@ func Init(opts *Options) {
 //	Return bool
 func checkRequest(c *gin.Context, data any) bool {
 	if err := c.ShouldBind(data); err != nil {
-		zap.S().Warnf("参数错误，err: %s", errors.NewAniErrorD(err))
+		log.Warnf("参数错误，err: %s", errors.NewAniErrorD(err))
 		c.JSON(webModels.Fail("参数错误"))
 		return false
 	}
 	if err := c.ShouldBindQuery(data); err != nil {
-		zap.S().Warnf("Query参数错误，err: %s", errors.NewAniErrorD(err))
+		log.Warnf("Query参数错误，err: %s", errors.NewAniErrorD(err))
 		c.JSON(webModels.Fail("Query参数错误"))
 		return false
 	}
 	if err := c.ShouldBindUri(data); err != nil {
-		zap.S().Warnf("Uri参数错误，err: %s", errors.NewAniErrorD(err))
+		log.Warnf("Uri参数错误，err: %s", errors.NewAniErrorD(err))
 		c.JSON(webModels.Fail("Uri参数错误"))
 		return false
 	}
@@ -75,7 +75,7 @@ func checkRequest(c *gin.Context, data any) bool {
 	key, has := c.Get("access_key")
 	localKey := utils.Sha256(AccessKey)
 	if has && key != localKey {
-		zap.S().Warn(errors.NewAniError("Access key错误！"))
+		log.Warnf("", errors.NewAniError("Access key错误！"))
 		c.JSON(webModels.Fail("Access key错误"))
 		return false
 	}
@@ -93,7 +93,8 @@ func checkRequest(c *gin.Context, data any) bool {
 //	@Router /ping [get]
 func Ping(c *gin.Context) {
 	c.JSON(webModels.Succ("pong", gin.H{
-		"time": time.Now().Unix(),
+		"version": os.Getenv("ANIMEGO_VERSION"),
+		"time":    time.Now().Unix(),
 	}))
 }
 

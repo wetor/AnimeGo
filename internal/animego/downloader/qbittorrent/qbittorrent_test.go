@@ -7,18 +7,19 @@ import (
 	"testing"
 	"time"
 
-	"go.uber.org/zap"
-
 	"github.com/wetor/AnimeGo/internal/animego/downloader"
 	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/pkg/log"
 )
 
 var qbt *QBittorrent
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
-	logger, _ := zap.NewDevelopment()
-	zap.ReplaceGlobals(logger)
+	log.Init(&log.Options{
+		File:  "data/test.log",
+		Debug: true,
+	})
 	wg := sync.WaitGroup{}
 	downloader.Init(&downloader.Options{
 		WG: &wg,

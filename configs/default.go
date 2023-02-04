@@ -112,7 +112,7 @@ func defaultAdvanced() {
 
 func defaultAll() {
 	if !isInit {
-		defaultConfig.Version = os.Getenv("ANIMEGO_CONFIG_VERSION")
+		defaultConfig.Version = ConfigVersion
 		defaultSettingComment()
 		defaultSetting()
 		defaultAdvancedComment()

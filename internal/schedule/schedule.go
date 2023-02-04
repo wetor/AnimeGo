@@ -39,18 +39,8 @@ func NewSchedule() *Schedule {
 	}
 	schedule.crontab = cron.New(cron.WithParser(schedule.parser))
 
-	schedule.tasks["bangumi"] = task.NewBangumiTask(&schedule.parser)
+	schedule.Add("bangumi", task.NewBangumiTask(&schedule.parser))
 
-	for name, task_ := range schedule.tasks {
-		task_.Run(true)
-		id, err := schedule.crontab.AddFunc(task_.Cron(), func() {
-			task_.Run(false)
-		})
-		if err != nil {
-			errors.NewAniErrorD(err).TryPanic()
-		}
-		schedule.task2id[name] = id
-	}
 	return schedule
 }
 

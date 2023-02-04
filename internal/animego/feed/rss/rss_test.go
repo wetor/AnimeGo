@@ -4,15 +4,11 @@ import (
 	"fmt"
 	"testing"
 
-	"go.uber.org/zap"
-
 	"github.com/wetor/AnimeGo/internal/animego/feed"
 	"github.com/wetor/AnimeGo/internal/utils"
 )
 
 func TestRss_Parse(t *testing.T) {
-	logger, _ := zap.NewDevelopment()
-	zap.ReplaceGlobals(logger)
 	_ = utils.CreateMutiDir(feed.TempPath)
 	feed.Init(&feed.Options{
 		TempPath: "data",

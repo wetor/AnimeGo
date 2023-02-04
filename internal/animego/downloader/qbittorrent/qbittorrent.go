@@ -4,12 +4,11 @@ import (
 	"context"
 	"time"
 
-	"go.uber.org/zap"
-
 	"github.com/wetor/AnimeGo/internal/animego/downloader"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/errors"
+	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/third_party/qbapi"
 )
 
@@ -87,13 +86,13 @@ func (c *QBittorrent) Start(ctx context.Context) {
 		var err error
 		c.client, err = qbapi.NewAPI(c.option...)
 		if err != nil {
-			zap.S().Debug(errors.NewAniErrorD(err))
-			zap.S().Warnf("初始化QBittorrent客户端第%d次，失败", c.retryNum)
+			log.Debugf("", errors.NewAniErrorD(err))
+			log.Warnf("初始化QBittorrent客户端第%d次，失败", c.retryNum)
 			return false
 		}
 		if err = c.client.Login(ctx); err != nil {
-			zap.S().Debug(errors.NewAniErrorD(err))
-			zap.S().Warnf("连接QBittorrent第%d次，失败", c.retryNum)
+			log.Debugf("", errors.NewAniErrorD(err))
+			log.Warnf("连接QBittorrent第%d次，失败", c.retryNum)
 			return false
 		}
 		// c.Init()
@@ -106,11 +105,11 @@ func (c *QBittorrent) Start(ctx context.Context) {
 			exit := false
 			func() {
 				defer errors.HandleError(func(err error) {
-					zap.S().Error(err)
+					log.Errorf("", err)
 				})
 				select {
 				case <-ctx.Done():
-					zap.S().Debug("正常退出 qbittorrent 1")
+					log.Debugf("正常退出 qbittorrent 1")
 					exit = true
 					return
 				case msg := <-c.retryChan:
@@ -124,7 +123,7 @@ func (c *QBittorrent) Start(ctx context.Context) {
 							// 重连成功
 							c.retryNum = 0
 							c.connected = true
-							zap.S().Info("连接QBittorrent成功")
+							log.Infof("连接QBittorrent成功")
 						}
 					}
 				}
@@ -141,11 +140,11 @@ func (c *QBittorrent) Start(ctx context.Context) {
 			exit := false
 			func() {
 				defer errors.HandleError(func(err error) {
-					zap.S().Error(err)
+					log.Errorf("", err)
 				})
 				select {
 				case <-ctx.Done():
-					zap.S().Debug("正常退出 qbittorrent 2")
+					log.Debugf("正常退出 qbittorrent 2")
 					exit = true
 					return
 				default:
@@ -182,13 +181,13 @@ func (c *QBittorrent) checkError(err error) bool {
 		return false
 	}
 	if qerror, ok := err.(*qbapi.QError); ok && qerror.Code() == -10004 {
-		zap.S().Debug(errors.NewAniErrorSkipf(2, "请求失败，等待客户端响应, err: %v", nil, err))
+		log.Debugf("", errors.NewAniErrorSkipf(2, "请求失败，等待客户端响应").SetData(err))
 		c.retryNum = 1
 		c.connected = false
 		c.retryChan <- ChanRetryConnect
 	} else {
-		zap.S().Debug(errors.NewAniErrorSkipf(2, "err: %v", nil, err))
-		zap.S().Warn("请求QBittorrent接口失败")
+		log.Debugf("", errors.NewAniErrorSkipf(2, "").SetData(err))
+		log.Warnf("请求QBittorrent接口失败")
 	}
 	return true
 }

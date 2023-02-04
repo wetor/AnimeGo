@@ -4,13 +4,15 @@ import (
 	"fmt"
 	"testing"
 
-	"go.uber.org/zap"
+	"github.com/wetor/AnimeGo/pkg/log"
 )
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
-	logger, _ := zap.NewDevelopment()
-	zap.ReplaceGlobals(logger)
+	log.Init(&log.Options{
+		File:  "data/test.log",
+		Debug: true,
+	})
 	m.Run()
 	fmt.Println("end")
 }

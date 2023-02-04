@@ -1,16 +1,14 @@
 package request
 
 import (
-	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"time"
 
 	"github.com/parnurzeal/gorequest"
-	"go.uber.org/zap"
-
 	"github.com/wetor/AnimeGo/pkg/errors"
+	"github.com/wetor/AnimeGo/pkg/log"
 )
 
 var (
@@ -18,11 +16,12 @@ var (
 	RetryWait int
 	Timeout   int
 	Proxy     string
-	UserAgent string = "default/AnimeGo (https://github.com/wetor/AnimeGo)"
+	UserAgent string
 	Debug     bool
 )
 
 type Options struct {
+	UserAgent string
 	Proxy     string // 使用代理
 	Retry     int    // 额外重试次数，默认为不做重试
 	RetryWait int    // 重试等待时间，最小3秒
@@ -37,6 +36,7 @@ func (o *Options) Default() {
 	if o.Timeout < 3 {
 		o.Timeout = 3
 	}
+	o.UserAgent = "0.1.0/AnimeGo (https://github.com/wetor/AnimeGo)"
 }
 
 func Init(opt *Options) {
@@ -45,11 +45,11 @@ func Init(opt *Options) {
 	RetryWait = opt.RetryWait
 	Timeout = opt.Timeout
 	Proxy = opt.Proxy
-	UserAgent = fmt.Sprintf("%s/AnimeGo (%s)", os.Getenv("ANIMEGO_VERSION"), os.Getenv("ANIMEGO_GITHUB"))
+	UserAgent = opt.UserAgent
 }
 
 func get(uri string) *gorequest.SuperAgent {
-	zap.S().Infof("HTTP GET %s", uri)
+	log.Infof("HTTP GET %s", uri)
 	retryWait := time.Duration(RetryWait) * time.Second
 	timeout := time.Duration(Timeout) * time.Second
 	allTimeout := timeout + (timeout+retryWait)*time.Duration(Retry) // 最长等待时间
@@ -70,21 +70,21 @@ func get(uri string) *gorequest.SuperAgent {
 
 func handleError(resp gorequest.Response, errs []error) (err error) {
 	if len(errs) != 0 {
-		zap.S().Debug(errors.NewAniErrorD(errs))
-		zap.S().Warn("HTTP 请求失败")
+		log.Debugf("", errors.NewAniErrorD(errs))
+		log.Warnf("HTTP 请求失败")
 		return errs[0]
 	}
 	if resp.StatusCode != http.StatusOK {
-		err = errors.NewAniErrorSkipf(3, "HTTP 请求失败，%s, 重试 %s 次", nil, resp.Status, resp.Header.Get("Retry-Count"))
-		zap.S().Debug(err)
-		zap.S().Warnf("HTTP 请求失败, %s", resp.Status)
+		err = errors.NewAniErrorSkipf(3, "HTTP 请求失败，%s, 重试 %s 次", resp.Status, resp.Header.Get("Retry-Count"))
+		log.Debugf("", err)
+		log.Warnf("HTTP 请求失败, %s", resp.Status)
 		return err
 	}
 
 	if retryCount := resp.Header.Get("Retry-Count"); retryCount != "0" {
-		zap.S().Infof("HTTP 请求完成，重试 %s 次", retryCount)
+		log.Infof("HTTP 请求完成，重试 %s 次", retryCount)
 	} else {
-		zap.S().Infof("HTTP 请求完成")
+		log.Infof("HTTP 请求完成")
 	}
 	return nil
 }

@@ -7,16 +7,12 @@ import (
 	"testing"
 	"time"
 
-	"go.uber.org/zap"
-
 	"github.com/wetor/AnimeGo/internal/schedule/task"
 	"github.com/wetor/AnimeGo/pkg/cache"
 )
 
 func TestNewSchedule(t *testing.T) {
 	wg := sync.WaitGroup{}
-	logger, _ := zap.NewDevelopment()
-	zap.ReplaceGlobals(logger)
 	b := cache.NewBolt()
 	b.Open("task/data/bolt_sub.db")
 	mutex := sync.Mutex{}
