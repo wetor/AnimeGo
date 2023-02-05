@@ -4,12 +4,14 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/wetor/AnimeGo/internal/animego/downloader"
-	"github.com/wetor/AnimeGo/internal/animego/downloader/qbittorrent"
 	"github.com/wetor/AnimeGo/internal/animego/manager"
 	downloaderMgr "github.com/wetor/AnimeGo/internal/animego/manager/downloader"
 	"github.com/wetor/AnimeGo/internal/models"
@@ -18,54 +20,61 @@ import (
 	"github.com/wetor/AnimeGo/pkg/log"
 )
 
-var (
-	qbt downloader.Client
-	mgr *downloaderMgr.Manager
-	wg  sync.WaitGroup
+const (
+	DownloadPath = "data/download"
+	SavePath     = "data/save"
+	ContentFile  = "file.mp4"
+)
 
+var (
+	qbt         downloader.Client
+	mgr         *downloaderMgr.Manager
+	wg          sync.WaitGroup
 	ctx, cancel = context.WithCancel(context.Background())
 )
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
-	_ = utils.CreateMutiDir("data")
+
+	_ = os.RemoveAll("data")
+	_ = utils.CreateMutiDir(DownloadPath)
+	_ = utils.CreateMutiDir(SavePath)
 	log.Init(&log.Options{
 		File:  "data/test.log",
 		Debug: true,
 	})
-	downloader.Init(&downloader.Options{
-		WG: &wg,
-	})
-	qbt = qbittorrent.NewQBittorrent("http://192.168.10.50:8080", "admin", "adminadmin")
+
+	qbt = &ClientMock{}
 	qbt.Start(ctx)
 
 	manager.Init(&manager.Options{
 		Downloader: manager.Downloader{
-			UpdateDelaySecond:      5,
-			DownloadPath:           "/tmp/download",
-			SavePath:               "/tmp/save",
+			UpdateDelaySecond:      1,
+			DownloadPath:           DownloadPath,
+			SavePath:               SavePath,
 			Category:               "test",
 			Tag:                    "test",
 			AllowDuplicateDownload: false,
 			SeedingTimeMinute:      0,
-			IgnoreSizeMaxKb:        100,
+			IgnoreSizeMaxKb:        1,
 			Rename:                 "wait_move",
 		},
 		WG: &wg,
 	})
+
 	b := cache.NewBolt()
 	b.Open("data/test.db")
 	mgr = downloaderMgr.NewManager(qbt, b, nil)
 
-	for !qbt.Connected() {
-		time.Sleep(time.Second)
-	}
 	m.Run()
+
+	_ = os.RemoveAll("data")
 	fmt.Println("end")
 }
 
-func Download1(m *downloaderMgr.Manager) {
-	animes := &models.AnimeEntity{
+func Download1(m *downloaderMgr.Manager) *models.AnimeEntity {
+	tempHash := utils.RandString(40)
+	anime := &models.AnimeEntity{
 		ID:      18692,
 		Name:    "ドラえもん",
 		NameCN:  "哆啦A梦",
@@ -75,16 +84,17 @@ func Download1(m *downloaderMgr.Manager) {
 		Ep:      712,
 		MikanID: 681,
 		DownloadInfo: &models.DownloadInfo{
-			Url:  "https://mikanani.me/Download/20220626/171f3b402fa4cf770ef267c0744a81b6b9ad77f2.torrent",
-			Hash: "171f3b402fa4cf770ef267c0744a81b6b9ad77f2",
+			Hash: tempHash,
 		},
 	}
-	m.Download(animes)
+	name2hash[anime.FullName()] = tempHash
+	m.Download(anime)
+	return anime
 }
 
-func Download2(m *downloaderMgr.Manager) {
-
-	animes := &models.AnimeEntity{
+func Download2(m *downloaderMgr.Manager) *models.AnimeEntity {
+	tempHash := utils.RandString(40)
+	anime := &models.AnimeEntity{
 		ID:      18692,
 		Name:    "ONE PIECE",
 		NameCN:  "海贼王",
@@ -94,26 +104,25 @@ func Download2(m *downloaderMgr.Manager) {
 		Ep:      1026,
 		MikanID: 228,
 		DownloadInfo: &models.DownloadInfo{
-			Url:  "https://mikanani.me/Download/20220725/193f881098f1a2a4347e8b04512118090f79345d.torrent",
-			Hash: "193f881098f1a2a4347e8b04512118090f79345d",
+			Hash: tempHash,
 		},
 	}
-	m.Download(animes)
+	name2hash[anime.FullName()] = tempHash
+	m.Download(anime)
+	return anime
 }
 
-func TestManager_Update(t *testing.T) {
-	Download1(mgr)
-	Download2(mgr)
-
+func TestManager_Start(t *testing.T) {
 	mgr.Start(ctx)
-
 	go func() {
-		time.Sleep(30 * time.Second)
-		mgr.Delete([]string{"171f3b402fa4cf770ef267c0744a81b6b9ad77f2", "193f881098f1a2a4347e8b04512118090f79345d"})
+		time.Sleep(15 * time.Second)
 		cancel()
 		wg.Done()
-		os.Remove("data/test.db")
 	}()
+	a1 := Download1(mgr)
+	time.Sleep(2 * time.Second)
+	a2 := Download2(mgr)
 	wg.Wait()
-
+	assert.FileExists(t, path.Join(SavePath, a1.DirName(), a1.FileName()+path.Ext(ContentFile)))
+	assert.FileExists(t, path.Join(SavePath, a2.DirName(), a2.FileName()+path.Ext(ContentFile)))
 }
