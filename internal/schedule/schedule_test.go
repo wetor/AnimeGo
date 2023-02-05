@@ -1,4 +1,4 @@
-package schedule
+package schedule_test
 
 import (
 	"context"
@@ -7,6 +7,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/robfig/cron/v3"
+
+	"github.com/wetor/AnimeGo/internal/schedule"
 	"github.com/wetor/AnimeGo/internal/schedule/task"
 	"github.com/wetor/AnimeGo/pkg/cache"
 )
@@ -17,7 +20,7 @@ func TestNewSchedule(t *testing.T) {
 	b.Open("task/data/bolt_sub.db")
 	mutex := sync.Mutex{}
 
-	Init(&Options{
+	schedule.Init(&schedule.Options{
 		Options: &task.Options{
 			DBDir:            "task/data",
 			BangumiCache:     b,
@@ -25,8 +28,9 @@ func TestNewSchedule(t *testing.T) {
 		},
 		WG: &wg,
 	})
-	s := NewSchedule()
-	s.Add("test", task.NewJSPluginTask(&s.parser))
+	s := schedule.NewSchedule()
+	parser := cron.NewParser(cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow)
+	s.Add("test", task.NewJSPluginTask(&parser))
 	for _, ts := range s.List() {
 		fmt.Println(ts)
 	}

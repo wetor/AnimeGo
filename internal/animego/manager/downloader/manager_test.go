@@ -1,4 +1,4 @@
-package downloader
+package downloader_test
 
 import (
 	"context"
@@ -11,6 +11,7 @@ import (
 	"github.com/wetor/AnimeGo/internal/animego/downloader"
 	"github.com/wetor/AnimeGo/internal/animego/downloader/qbittorrent"
 	"github.com/wetor/AnimeGo/internal/animego/manager"
+	downloaderMgr "github.com/wetor/AnimeGo/internal/animego/manager/downloader"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/cache"
@@ -19,7 +20,7 @@ import (
 
 var (
 	qbt downloader.Client
-	mgr *Manager
+	mgr *downloaderMgr.Manager
 	wg  sync.WaitGroup
 
 	ctx, cancel = context.WithCancel(context.Background())
@@ -54,7 +55,7 @@ func TestMain(m *testing.M) {
 	})
 	b := cache.NewBolt()
 	b.Open("data/test.db")
-	mgr = NewManager(qbt, b, nil)
+	mgr = downloaderMgr.NewManager(qbt, b, nil)
 
 	for !qbt.Connected() {
 		time.Sleep(time.Second)
@@ -63,7 +64,7 @@ func TestMain(m *testing.M) {
 	fmt.Println("end")
 }
 
-func Download1(m *Manager) {
+func Download1(m *downloaderMgr.Manager) {
 	animes := &models.AnimeEntity{
 		ID:      18692,
 		Name:    "ドラえもん",
@@ -81,7 +82,7 @@ func Download1(m *Manager) {
 	m.Download(animes)
 }
 
-func Download2(m *Manager) {
+func Download2(m *downloaderMgr.Manager) {
 
 	animes := &models.AnimeEntity{
 		ID:      18692,
@@ -108,10 +109,7 @@ func TestManager_Update(t *testing.T) {
 
 	go func() {
 		time.Sleep(30 * time.Second)
-		mgr.client.Delete(&models.ClientDeleteOptions{
-			Hash:       []string{"171f3b402fa4cf770ef267c0744a81b6b9ad77f2", "193f881098f1a2a4347e8b04512118090f79345d"},
-			DeleteFile: true,
-		})
+		mgr.Delete([]string{"171f3b402fa4cf770ef267c0744a81b6b9ad77f2", "193f881098f1a2a4347e8b04512118090f79345d"})
 		cancel()
 		wg.Done()
 		os.Remove("data/test.db")

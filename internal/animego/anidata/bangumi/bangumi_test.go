@@ -1,4 +1,4 @@
-package bangumi
+package bangumi_test
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
+	"github.com/wetor/AnimeGo/internal/animego/anidata/bangumi"
 	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/log"
@@ -45,26 +46,26 @@ func TestBangumi_Parse(t *testing.T) {
 	tests := []struct {
 		name       string
 		args       args
-		wantEntity *Entity
+		wantEntity *bangumi.Entity
 		wantErr    bool
 	}{
 		// TODO: Add test cases.
 		{
 			name:       "联盟空军航空魔法音乐队 光辉魔女",
 			args:       args{bangumiID: 253047, ep: 3},
-			wantEntity: &Entity{Eps: 12},
+			wantEntity: &bangumi.Entity{Eps: 12},
 			wantErr:    false,
 		},
 		{
 			name:       "欢迎来到实力至上主义的教室 第二季",
 			args:       args{bangumiID: 371546, ep: 7},
-			wantEntity: &Entity{Eps: 13},
+			wantEntity: &bangumi.Entity{Eps: 13},
 			wantErr:    false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			b := &Bangumi{}
+			b := &bangumi.Bangumi{}
 			gotEntity := b.Parse(tt.args.bangumiID)
 			if gotEntity.Eps != tt.wantEntity.Eps {
 				t.Errorf("Parse() gotEntity = %v, want %v", gotEntity, tt.wantEntity)
@@ -81,31 +82,31 @@ func TestBangumi_ParseCache(t *testing.T) {
 	tests := []struct {
 		name       string
 		args       args
-		wantEntity *Entity
+		wantEntity *bangumi.Entity
 		wantErr    bool
 	}{
 		// TODO: Add test cases.
 		{
 			name:       "联盟空军航空魔法音乐队 光辉魔女",
 			args:       args{bangumiID: 253047, ep: 3},
-			wantEntity: &Entity{Eps: 12},
+			wantEntity: &bangumi.Entity{Eps: 12},
 			wantErr:    false,
 		},
 		{
 			name:       "欢迎来到实力至上主义的教室 第二季",
 			args:       args{bangumiID: 371546, ep: 5},
-			wantEntity: &Entity{Eps: 13},
+			wantEntity: &bangumi.Entity{Eps: 13},
 			wantErr:    false,
 		},
 		{
 			name:       "CLANNAD",
 			args:       args{bangumiID: 51, ep: 5},
-			wantEntity: &Entity{Eps: 22},
+			wantEntity: &bangumi.Entity{Eps: 22},
 			wantErr:    false,
 		},
 	}
 
-	b := &Bangumi{}
+	b := &bangumi.Bangumi{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 

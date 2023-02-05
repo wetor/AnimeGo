@@ -1,4 +1,4 @@
-package javascript
+package javascript_test
 
 import (
 	"fmt"
@@ -7,6 +7,7 @@ import (
 	"github.com/dop251/goja"
 
 	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/plugin/javascript"
 	"github.com/wetor/AnimeGo/pkg/log"
 )
 
@@ -43,7 +44,7 @@ function sum(a, b) {
 }
 
 func TestJavaScript_Execute(t *testing.T) {
-	js := &JavaScript{}
+	js := &javascript.JavaScript{}
 	js.SetSchema([]string{"optional:feedItems"}, []string{"optional:index", "optional:error"})
 	execute := js.Execute(&models.PluginExecuteOptions{
 		File: "testdata/test.js",

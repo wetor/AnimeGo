@@ -1,4 +1,4 @@
-package filter
+package filter_test
 
 import (
 	"context"
@@ -13,6 +13,7 @@ import (
 	mikanRss "github.com/wetor/AnimeGo/internal/animego/feed/rss"
 	"github.com/wetor/AnimeGo/internal/animego/filter"
 	"github.com/wetor/AnimeGo/internal/animego/manager"
+	filterMgr "github.com/wetor/AnimeGo/internal/animego/manager/filter"
 	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/log"
@@ -60,7 +61,7 @@ func TestManager_UpdateFeed(t *testing.T) {
 
 	rss := mikanRss.NewRss("https://mikanani.me/RSS/MyBangumi?token=ky5DTt%2fMyAjCH2oKEN81FQ%3d%3d", "Mikan")
 	mk := mikan.Mikan{ThemoviedbKey: ThemoviedbKey}
-	m := NewManager(&filter.Default{}, rss, mk, nil)
+	m := filterMgr.NewManager(&filter.Default{}, rss, mk, nil)
 
 	m.Start(ctx)
 

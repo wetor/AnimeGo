@@ -89,6 +89,13 @@ func (m *Manager) loadCache() {
 	}
 }
 
+func (m *Manager) Delete(hash []string) {
+	m.client.Delete(&models.ClientDeleteOptions{
+		Hash:       hash,
+		DeleteFile: true,
+	})
+}
+
 // Download
 //
 //	@Description: 将下载任务加入到下载队列中

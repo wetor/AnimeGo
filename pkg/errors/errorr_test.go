@@ -1,40 +1,42 @@
-package errors
+package errors_test
 
 import (
-	"errors"
+	errs "errors"
 	"fmt"
 	"testing"
+
+	"github.com/wetor/AnimeGo/pkg/errors"
 )
 
 func TestNewAniError(t *testing.T) {
-	err := NewAniError("测试错误")
+	err := errors.NewAniError("测试错误")
 	fmt.Println(err)
 }
 
 func TestNewAniErrorPanic(t *testing.T) {
-	defer HandleError(func(err error) {
+	defer errors.HandleError(func(err error) {
 		fmt.Println("【捕获错误】", err)
 
 	})
-	NewAniError("").TryPanic()
+	errors.NewAniError("").TryPanic()
 
-	NewAniErrorD(nil).TryPanic()
+	errors.NewAniErrorD(nil).TryPanic()
 
-	NewAniError("测试错误").TryPanic()
+	errors.NewAniError("测试错误").TryPanic()
 }
 
 func TestNewAniErrorPanic2(t *testing.T) {
-	defer HandleError(func(err error) {
+	defer errors.HandleError(func(err error) {
 		fmt.Println("【捕获错误1】", err)
 	})
-	NewAniError("").TryPanic()
+	errors.NewAniError("").TryPanic()
 
 	func() {
-		defer HandleError(func(err error) {
+		defer errors.HandleError(func(err error) {
 			fmt.Println("【捕获错误2】", err)
 		})
-		NewAniErrorD(errors.New("测试errors.New")).TryPanic()
+		errors.NewAniErrorD(errs.New("测试errors.New")).TryPanic()
 	}()
 
-	NewAniError("测试错误").TryPanic()
+	errors.NewAniError("测试错误").TryPanic()
 }

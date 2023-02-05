@@ -1,10 +1,11 @@
-package mikan
+package mikan_test
 
 import (
 	"fmt"
 	"testing"
 
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
+	"github.com/wetor/AnimeGo/internal/animego/anidata/mikan"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/log"
 )
@@ -49,7 +50,7 @@ func TestMikan_Parse(t *testing.T) {
 	db := cache.NewBolt()
 	db.Open("data/bolt.db")
 	anidata.Init(&anidata.Options{Cache: db})
-	m := &Mikan{}
+	m := &mikan.Mikan{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 

@@ -1,4 +1,4 @@
-package themoviedb
+package themoviedb_test
 
 import (
 	"encoding/csv"
@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
+	"github.com/wetor/AnimeGo/internal/animego/anidata/themoviedb"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/request"
@@ -101,7 +102,7 @@ func TestThemoviedb_Parse(t1 *testing.T) {
 		//
 	}
 
-	t := &Themoviedb{
+	t := &themoviedb.Themoviedb{
 		Key: ThemoviedbKey,
 	}
 
@@ -166,7 +167,7 @@ func TestThemoviedb_ParseByFile(t1 *testing.T) {
 	db := cache.NewBolt()
 	db.Open("data/bolt.db")
 	anidata.Init(&anidata.Options{Cache: db})
-	t := &Themoviedb{
+	t := &themoviedb.Themoviedb{
 		Key: ThemoviedbKey,
 	}
 	request.Init(&request.Options{

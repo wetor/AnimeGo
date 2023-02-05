@@ -1,4 +1,4 @@
-package plugin
+package plugin_test
 
 import (
 	"fmt"
@@ -6,6 +6,7 @@ import (
 
 	"github.com/wetor/AnimeGo/internal/animego/feed"
 	mikanRss "github.com/wetor/AnimeGo/internal/animego/feed/rss"
+	"github.com/wetor/AnimeGo/internal/animego/filter/plugin"
 	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin/python/lib"
@@ -33,7 +34,7 @@ func TestJavaScript_Filter(t *testing.T) {
 	rss := mikanRss.NewRss("", "")
 	items := rss.Parse("testdata/Mikan.xml")
 	fmt.Println(len(items))
-	js := NewFilterPlugin([]models.Plugin{
+	js := plugin.NewFilterPlugin([]models.Plugin{
 		{
 			Enable: true,
 			Type:   "js",
@@ -63,7 +64,7 @@ func TestJavaScript_Filter2(t *testing.T) {
 			Name: "3333",
 		},
 	}
-	js := NewFilterPlugin([]models.Plugin{
+	js := plugin.NewFilterPlugin([]models.Plugin{
 		{
 			Enable: true,
 			Type:   "js",
@@ -87,7 +88,7 @@ func TestPython_Filter(t *testing.T) {
 	rss := mikanRss.NewRss("", "")
 	items := rss.Parse("testdata/Mikan.xml")
 	fmt.Println(len(items))
-	js := NewFilterPlugin([]models.Plugin{
+	js := plugin.NewFilterPlugin([]models.Plugin{
 		{
 			Enable: true,
 			Type:   "py",
@@ -119,7 +120,7 @@ func TestPython_Filter2(t *testing.T) {
 			Name: "3333",
 		},
 	}
-	js := NewFilterPlugin([]models.Plugin{
+	js := plugin.NewFilterPlugin([]models.Plugin{
 		{
 			Enable: true,
 			Type:   "py",
@@ -145,7 +146,7 @@ func TestPython_Filter3(t *testing.T) {
 	items := rss.Parse("testdata/Mikan.xml")
 	fmt.Println(len(items))
 	fmt.Println("===========")
-	js := NewFilterPlugin([]models.Plugin{
+	js := plugin.NewFilterPlugin([]models.Plugin{
 		{
 			Enable: true,
 			Type:   "py",
@@ -178,7 +179,7 @@ func TestPython_Filter4(t *testing.T) {
 			Name: "[梦蓝字幕组]New Doraemon 哆啦A梦新番[716][2022.07.23][AVC][1080P][GB_JP]",
 		},
 	}
-	js := NewFilterPlugin([]models.Plugin{
+	js := plugin.NewFilterPlugin([]models.Plugin{
 		{
 			Enable: true,
 			Type:   "py",
