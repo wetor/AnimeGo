@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/utils"
 )
 
@@ -17,7 +18,7 @@ func TestSettings_Tag(t *testing.T) {
 }
 
 func TestMap2ModelByJson(t *testing.T) {
-	obj := map[string]any{
+	obj := models.Object{
 		"best":    100,
 		"testKey": "这是字符串",
 	}
@@ -31,7 +32,7 @@ func TestMap2ModelByJson(t *testing.T) {
 }
 
 func TestMap2Model(t *testing.T) {
-	obj := map[string]any{
+	obj := models.Object{
 		"Best":    100,
 		"TestKey": "这是字符串",
 	}
@@ -45,7 +46,7 @@ func TestMap2Model(t *testing.T) {
 }
 
 func TestModel2Map(t *testing.T) {
-	obj := map[string]any{}
+	obj := models.Object{}
 	type Struct struct {
 		Best    int
 		TestKey string
@@ -59,7 +60,7 @@ func TestModel2Map(t *testing.T) {
 }
 
 func TestModel2MapByJson(t *testing.T) {
-	obj := map[string]any{}
+	obj := models.Object{}
 	type Struct struct {
 		Best    int64  `json:"best"`
 		TestKey string `json:"testKey"`

@@ -62,11 +62,6 @@ func (c *Config) InitDir() {
 		log.Fatalf("创建文件夹失败，%s", c.SavePath)
 	}
 
-	err = utils.CreateMutiDir(constant.TempPath)
-	if err != nil {
-		log.Fatalf("创建文件夹失败，%s", constant.TempPath)
-	}
-
 	err = utils.CreateMutiDir(constant.CachePath)
 	if err != nil {
 		log.Fatalf("创建文件夹失败，%s", constant.CachePath)

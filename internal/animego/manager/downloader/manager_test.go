@@ -11,9 +11,9 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/wetor/AnimeGo/internal/animego/downloader"
 	"github.com/wetor/AnimeGo/internal/animego/manager"
 	downloaderMgr "github.com/wetor/AnimeGo/internal/animego/manager/downloader"
+	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/cache"
@@ -27,7 +27,7 @@ const (
 )
 
 var (
-	qbt         downloader.Client
+	qbt         api.Downloader
 	mgr         *downloaderMgr.Manager
 	wg          sync.WaitGroup
 	ctx, cancel = context.WithCancel(context.Background())

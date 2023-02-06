@@ -4,13 +4,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/wetor/AnimeGo/internal/animego/feed"
 	mikanRss "github.com/wetor/AnimeGo/internal/animego/feed/rss"
 	"github.com/wetor/AnimeGo/internal/animego/filter/plugin"
 	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin/python/lib"
-	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/third_party/gpython"
 )
@@ -27,10 +25,6 @@ func TestMain(m *testing.M) {
 }
 
 func TestJavaScript_Filter(t *testing.T) {
-	_ = utils.CreateMutiDir("data")
-	feed.Init(&feed.Options{
-		TempPath: "data",
-	})
 	rss := mikanRss.NewRss("", "")
 	items := rss.Parse("testdata/Mikan.xml")
 	fmt.Println(len(items))
@@ -81,10 +75,6 @@ func TestJavaScript_Filter2(t *testing.T) {
 func TestPython_Filter(t *testing.T) {
 	gpython.Init()
 	lib.InitLog()
-	_ = utils.CreateMutiDir("data")
-	feed.Init(&feed.Options{
-		TempPath: "data",
-	})
 	rss := mikanRss.NewRss("", "")
 	items := rss.Parse("testdata/Mikan.xml")
 	fmt.Println(len(items))
@@ -98,9 +88,8 @@ func TestPython_Filter(t *testing.T) {
 	result := js.Filter(items)
 	fmt.Println(len(result))
 	for _, r := range result {
-		fmt.Println(r.Name)
+		fmt.Println(r)
 	}
-
 }
 
 func TestPython_Filter2(t *testing.T) {
@@ -138,10 +127,6 @@ func TestPython_Filter3(t *testing.T) {
 	gpython.Init()
 	lib.InitLog()
 	constant.PluginPath = "/Users/wetor/GoProjects/AnimeGo/assets/plugin/filter"
-	_ = utils.CreateMutiDir("data")
-	feed.Init(&feed.Options{
-		TempPath: "data",
-	})
 	rss := mikanRss.NewRss("", "")
 	items := rss.Parse("testdata/Mikan.xml")
 	fmt.Println(len(items))

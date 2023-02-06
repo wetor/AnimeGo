@@ -2,7 +2,6 @@ package task
 
 import (
 	"archive/zip"
-	"context"
 	"io"
 	"os"
 	"path"
@@ -15,7 +14,6 @@ import (
 	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/errors"
 	"github.com/wetor/AnimeGo/pkg/log"
-	"github.com/wetor/AnimeGo/pkg/try"
 )
 
 const (
@@ -38,11 +36,11 @@ type BangumiTask struct {
 	savePath string
 }
 
-func NewBangumiTask(parser *cron.Parser) *BangumiTask {
+func NewBangumiTask() *BangumiTask {
 	return &BangumiTask{
 		savePath: DBDir,
 		cron:     Cron,
-		parser:   parser,
+		parser:   &SecondParser,
 	}
 }
 
@@ -114,42 +112,22 @@ func (t *BangumiTask) unzip(filename string) {
 }
 
 func (t *BangumiTask) Run(force bool) {
-	success := false
-	for i := 0; i < RetryNum; i++ {
-		try.This(func() {
-			db := path.Join(t.savePath, SubjectDB)
-			stat, err := os.Stat(db)
-			// 上次修改时间小于 MinModifyTimeHour 小时，且文件大小大于 MinFileSizeKB kb，跳过
-			if force && err == nil &&
-				time.Now().Unix()-stat.ModTime().Unix() <= MaxModifyTimeHour*60*60 && stat.Size() > MinFileSizeKB*1024 {
-				return
-			}
-			log.Infof("[定时任务] %s 开始执行", t.Name())
-			subUrl := CDN1 + ArchiveReleaseBase + Subject
-			file := t.download(subUrl, Subject)
-			BangumiCacheLock.Lock()
-			BangumiCache.Close()
-			t.unzip(file)
-			// 重新加载bolt
-			BangumiCache.Open(db)
-			BangumiCacheLock.Unlock()
-			if utils.FileSize(db) <= MinFileSizeKB*1024 {
-				errors.NewAniError("缓存文件小于512KB").TryPanic()
-			} else {
-				log.Infof("[定时任务] %s 执行完毕，下次执行时间: %s", t.Name(), t.NextTime())
-			}
-			success = true
-		}).Catch(func(err try.E) {
-			log.Debugf("", err)
-			if i == 0 {
-				log.Warnf("[定时任务] %s 执行失败", t.Name())
-			} else {
-				log.Warnf("[定时任务] %s 执行失败，%d 秒后重新执行", t.Name(), RetryWait)
-			}
-			utils.Sleep(RetryWait, context.Background())
-		})
-		if success {
-			break
-		}
+	db := path.Join(t.savePath, SubjectDB)
+	stat, err := os.Stat(db)
+	// 上次修改时间小于 MinModifyTimeHour 小时，且文件大小大于 MinFileSizeKB kb，跳过
+	if force && err == nil &&
+		time.Now().Unix()-stat.ModTime().Unix() <= MaxModifyTimeHour*60*60 && stat.Size() > MinFileSizeKB*1024 {
+		return
+	}
+	subUrl := CDN1 + ArchiveReleaseBase + Subject
+	file := t.download(subUrl, Subject)
+	BangumiCacheLock.Lock()
+	BangumiCache.Close()
+	t.unzip(file)
+	// 重新加载bolt
+	BangumiCache.Open(db)
+	BangumiCacheLock.Unlock()
+	if utils.FileSize(db) <= MinFileSizeKB*1024 {
+		errors.NewAniError("缓存文件小于512KB").TryPanic()
 	}
 }

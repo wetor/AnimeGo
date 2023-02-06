@@ -1,6 +1,7 @@
 package request_test
 
 import (
+	"bytes"
 	"fmt"
 	"testing"
 
@@ -19,6 +20,13 @@ func TestMain(m *testing.M) {
 }
 
 func TestGet(t *testing.T) {
+	request.Init(&request.Options{})
+	rss := bytes.NewBuffer(nil)
+	err := request.GetWriter("https://mikanani.me/RSS/MyBangumi?token=ky5DTt%2fMyAjCH2oKEN81FQ%3d%3d", rss)
+	fmt.Println(rss.String(), err)
+}
+
+func TestGet2(t *testing.T) {
 	request.Init(&request.Options{})
 	str, err := request.GetString("http://pv.sohu.com/cityjson?ie=utf-8")
 	fmt.Println(str, err)

@@ -9,7 +9,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/wetor/AnimeGo/internal/animego/downloader"
 	"github.com/wetor/AnimeGo/internal/animego/downloader/qbittorrent"
 	"github.com/wetor/AnimeGo/internal/animego/manager"
 	"github.com/wetor/AnimeGo/internal/api"
@@ -31,7 +30,7 @@ const (
 )
 
 type Manager struct {
-	client downloader.Client
+	client api.Downloader
 	cache  api.Cacher
 
 	// 通过管道传递下载项
@@ -46,11 +45,11 @@ type Manager struct {
 // NewManager
 //
 //	@Description: 初始化下载管理器
-//	@param client downloader.Client 下载客户端
-//	@param cache cache.Cache 缓存
+//	@param client api.Downloader 下载客户端
+//	@param cache api.Cacher 缓存
 //	@param downloadChan chan *models.AnimeEntity 下载传递通道
 //	@return *Manager
-func NewManager(client downloader.Client, cache api.Cacher, downloadChan chan *models.AnimeEntity) *Manager {
+func NewManager(client api.Downloader, cache api.Cacher, downloadChan chan *models.AnimeEntity) *Manager {
 	m := &Manager{
 		client:           client,
 		cache:            cache,
@@ -236,7 +235,7 @@ func (m *Manager) UpdateDownloadItem(status *models.DownloadStatus, anime *model
 
 		renamePath := path.Join(anime.DirName(), anime.FileName()+path.Ext(content.Name))
 		m.name2chan[name] = make(chan models.TorrentState, DownloadStateChan)
-		renameOpt := &models.RenameOptions{
+		renameOpt := &RenameOptions{
 			Src:   path.Join(manager.DownloaderConf.DownloadPath, content.Name),
 			Dst:   path.Join(manager.DownloaderConf.SavePath, renamePath),
 			State: m.name2chan[name],

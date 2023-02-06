@@ -6,8 +6,18 @@ import (
 
 	"github.com/robfig/cron/v3"
 
+	"github.com/wetor/AnimeGo/internal/api"
+	"github.com/wetor/AnimeGo/internal/logger"
 	"github.com/wetor/AnimeGo/internal/schedule/task"
+	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/errors"
+	"github.com/wetor/AnimeGo/pkg/log"
+	"github.com/wetor/AnimeGo/pkg/try"
+)
+
+const (
+	RetryNum  = 3 // 失败重试次数
+	RetryWait = 1 // 失败重试等待时间，秒
 )
 
 var (
@@ -25,29 +35,45 @@ func Init(opts *Options) {
 }
 
 type Schedule struct {
-	tasks   map[string]task.Task
+	tasks   map[string]api.Task
 	task2id map[string]cron.EntryID
 	crontab *cron.Cron
-	parser  cron.Parser
 }
 
 func NewSchedule() *Schedule {
 	schedule := &Schedule{
-		tasks:   make(map[string]task.Task),
+		tasks:   make(map[string]api.Task),
 		task2id: make(map[string]cron.EntryID),
-		parser:  cron.NewParser(cron.Second | cron.Minute | cron.Hour | cron.Dom | cron.Month | cron.Dow),
 	}
-	schedule.crontab = cron.New(cron.WithParser(schedule.parser))
+	schedule.crontab = cron.New(cron.WithSeconds(), cron.WithLogger(logger.NewCronLoggerAdapter()))
 
-	schedule.Add("bangumi", task.NewBangumiTask(&schedule.parser))
-
+	schedule.Add("bangumi", task.NewBangumiTask())
+	schedule.tasks["bangumi"].Run(true)
 	return schedule
 }
 
-func (s *Schedule) Add(name string, task task.Task) {
-	task.Run(true)
+func (s *Schedule) Add(name string, task api.Task) {
 	id, err := s.crontab.AddFunc(task.Cron(), func() {
-		task.Run(false)
+		log.Infof("[定时任务] %s 开始执行", task.Name())
+		success := false
+		for i := 0; i < RetryNum; i++ {
+			try.This(func() {
+				task.Run(false)
+				success = true
+			}).Catch(func(err try.E) {
+				log.Debugf("", err)
+				if i == RetryNum-1 {
+					log.Warnf("[定时任务] %s 第%d次执行失败", task.Name(), i+1)
+				} else {
+					log.Warnf("[定时任务] %s 第%d次执行失败，%d 秒后重新执行", task.Name(), i+1, RetryWait)
+				}
+				utils.Sleep(RetryWait, context.Background())
+			})
+			if success {
+				log.Infof("[定时任务] %s 执行完毕，下次执行时间: %s", task.Name(), task.NextTime())
+				break
+			}
+		}
 	})
 	if err != nil {
 		errors.NewAniErrorD(err).TryPanic()

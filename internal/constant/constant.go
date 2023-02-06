@@ -13,7 +13,6 @@ var (
 	BangumiCacheFile = "data/cache/bolt_sub.db"
 	LogPath          = "data/log"
 	LogFile          = "data/log/animego.log"
-	TempPath         = "data/temp"
 	PluginPath       = "data/plugin"
 )
 
@@ -30,8 +29,6 @@ func Init(opts *Options) {
 
 	LogPath = path.Join(dataPath, "log")
 	LogFile = path.Join(LogPath, "animego.log")
-
-	TempPath = path.Join(dataPath, "temp")
 
 	PluginPath = path.Join(dataPath, "plugin")
 }

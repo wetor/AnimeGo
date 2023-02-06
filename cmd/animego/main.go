@@ -23,7 +23,6 @@ import (
 	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
 	"github.com/wetor/AnimeGo/internal/animego/downloader"
 	"github.com/wetor/AnimeGo/internal/animego/downloader/qbittorrent"
-	"github.com/wetor/AnimeGo/internal/animego/feed"
 	feedRss "github.com/wetor/AnimeGo/internal/animego/feed/rss"
 	"github.com/wetor/AnimeGo/internal/animego/filter/plugin"
 	"github.com/wetor/AnimeGo/internal/animego/manager"
@@ -191,11 +190,6 @@ func Main(ctx context.Context) {
 	// 初始化插件-公共方法
 	public.Init(&public.Options{
 		PluginPath: constant.PluginPath,
-	})
-
-	// 初始化feed订阅
-	feed.Init(&feed.Options{
-		TempPath: constant.TempPath,
 	})
 
 	// 载入AnimeGo数据库（缓存）
