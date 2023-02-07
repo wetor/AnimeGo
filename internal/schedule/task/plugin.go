@@ -5,14 +5,14 @@ import (
 	"path"
 	"time"
 
-	"github.com/wetor/AnimeGo/internal/constant"
-
 	"github.com/robfig/cron/v3"
 
 	"github.com/wetor/AnimeGo/internal/api"
+	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/pkg/errors"
+	"github.com/wetor/AnimeGo/pkg/log"
 )
 
 type PluginTask struct {
@@ -54,9 +54,16 @@ func (t *PluginTask) NextTime() time.Time {
 	return next.Next(time.Now())
 }
 
-func (t *PluginTask) Run(force bool) {
+func (t *PluginTask) Run(params ...interface{}) {
+	var obj models.Object
+	var ok bool
+	if len(params) >= 1 {
+		if obj, ok = params[0].(models.Object); !ok {
+			log.Debugf("[定时任务] %s-Plugin 参数错误: %v", t.plugin.Type(), params[0])
+		}
+	}
 	t.plugin.Execute(&models.PluginExecuteOptions{
 		File:      path.Join(constant.PluginPath, t.file),
 		SkipCheck: true,
-	}, nil)
+	}, obj)
 }

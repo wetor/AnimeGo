@@ -8,7 +8,6 @@ import (
 
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/logger"
-	"github.com/wetor/AnimeGo/internal/schedule/task"
 	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/errors"
 	"github.com/wetor/AnimeGo/pkg/log"
@@ -20,66 +19,85 @@ const (
 	RetryWait = 1 // 失败重试等待时间，秒
 )
 
-var (
-	WG *sync.WaitGroup
-)
-
-type Options struct {
-	*task.Options
-	WG *sync.WaitGroup
-}
-
-func Init(opts *Options) {
-	WG = opts.WG
-	task.Init(opts.Options)
+type TaskInfo struct {
+	Name    string
+	Task    api.Task
+	Params  []interface{}
+	TaskRun func(params ...interface{})
 }
 
 type Schedule struct {
-	tasks   map[string]api.Task
+	wg      *sync.WaitGroup
+	tasks   map[string]*TaskInfo
 	task2id map[string]cron.EntryID
 	crontab *cron.Cron
 }
 
-func NewSchedule() *Schedule {
+type AddTaskOptions struct {
+	Name     string
+	StartRun bool
+	Params   []interface{}
+	Task     api.Task
+}
+
+type Options struct {
+	WG *sync.WaitGroup
+}
+
+func NewSchedule(opts *Options) *Schedule {
 	schedule := &Schedule{
-		tasks:   make(map[string]api.Task),
+		wg:      opts.WG,
+		tasks:   make(map[string]*TaskInfo),
 		task2id: make(map[string]cron.EntryID),
 	}
 	schedule.crontab = cron.New(cron.WithSeconds(), cron.WithLogger(logger.NewCronLoggerAdapter()))
-
-	schedule.Add("bangumi", task.NewBangumiTask())
-	schedule.tasks["bangumi"].Run(true)
 	return schedule
 }
 
-func (s *Schedule) Add(name string, task api.Task) {
-	id, err := s.crontab.AddFunc(task.Cron(), func() {
-		log.Infof("[定时任务] %s 开始执行", task.Name())
-		success := false
-		for i := 0; i < RetryNum; i++ {
-			try.This(func() {
-				task.Run(false)
-				success = true
-			}).Catch(func(err try.E) {
-				log.Debugf("", err)
-				if i == RetryNum-1 {
-					log.Warnf("[定时任务] %s 第%d次执行失败", task.Name(), i+1)
-				} else {
-					log.Warnf("[定时任务] %s 第%d次执行失败，%d 秒后重新执行", task.Name(), i+1, RetryWait)
+func (s *Schedule) Add(opts *AddTaskOptions) {
+	t := &TaskInfo{
+		Name:   opts.Name,
+		Task:   opts.Task,
+		Params: opts.Params,
+		TaskRun: func(params ...interface{}) {
+			log.Infof("[定时任务] %s 开始执行", opts.Task.Name())
+			success := false
+			for i := 0; i < RetryNum; i++ {
+				try.This(func() {
+					opts.Task.Run(params...)
+					success = true
+				}).Catch(func(err try.E) {
+					log.Debugf("", err)
+					if i == RetryNum-1 {
+						log.Warnf("[定时任务] %s 第%d次执行失败", opts.Task.Name(), i+1)
+					} else {
+						log.Warnf("[定时任务] %s 第%d次执行失败，%d 秒后重新执行", opts.Task.Name(), i+1, RetryWait)
+					}
+					utils.Sleep(RetryWait, context.Background())
+				})
+				if success {
+					log.Infof("[定时任务] %s 执行完毕，下次执行时间: %s", opts.Task.Name(), opts.Task.NextTime())
+					break
 				}
-				utils.Sleep(RetryWait, context.Background())
-			})
-			if success {
-				log.Infof("[定时任务] %s 执行完毕，下次执行时间: %s", task.Name(), task.NextTime())
-				break
 			}
-		}
+		},
+	}
+
+	id, err := s.crontab.AddFunc(t.Task.Cron(), func() {
+		t.TaskRun(t.Params...)
 	})
 	if err != nil {
 		errors.NewAniErrorD(err).TryPanic()
 	}
-	s.tasks[name] = task
-	s.task2id[name] = id
+	if opts.StartRun {
+		t.TaskRun(t.Params...)
+	}
+	s.tasks[t.Name] = t
+	s.task2id[t.Name] = id
+}
+
+func (s *Schedule) Get(name string) *TaskInfo {
+	return s.tasks[name]
 }
 
 func (s *Schedule) Delete(name string) {
@@ -88,23 +106,19 @@ func (s *Schedule) Delete(name string) {
 	delete(s.task2id, name)
 }
 
-func (s *Schedule) List() []*task.TaskInfo {
-	list := make([]*task.TaskInfo, 0, len(s.tasks))
-	for name, task_ := range s.tasks {
-		list = append(list, &task.TaskInfo{
-			Name:  name,
-			RunAt: task_.NextTime(),
-			Cron:  task_.Cron(),
-		})
+func (s *Schedule) List() []*TaskInfo {
+	list := make([]*TaskInfo, 0, len(s.tasks))
+	for _, t := range s.tasks {
+		list = append(list, t)
 	}
 	return list
 }
 
 func (s *Schedule) Start(ctx context.Context) {
 	s.crontab.Start()
-	WG.Add(1)
+	s.wg.Add(1)
 	go func() {
-		defer WG.Done()
+		defer s.wg.Done()
 		for {
 			select {
 			case <-ctx.Done():

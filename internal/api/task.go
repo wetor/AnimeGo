@@ -6,5 +6,5 @@ type Task interface {
 	Cron() string
 	NextTime() time.Time
 	Name() string
-	Run(force bool)
+	Run(params ...interface{})
 }

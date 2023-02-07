@@ -201,15 +201,18 @@ func Main(ctx context.Context) {
 	bangumiCache.Open(constant.BangumiCacheFile)
 
 	// 初始化并启动定时任务
-	schedule.Init(&schedule.Options{
-		Options: &task.Options{
-			DBDir:            constant.CachePath,
-			BangumiCache:     bangumiCache,
-			BangumiCacheLock: &BangumiCacheMutex,
-		},
+	scheduleVar := schedule.NewSchedule(&schedule.Options{
 		WG: &WG,
 	})
-	scheduleVar := schedule.NewSchedule()
+	scheduleVar.Add(&schedule.AddTaskOptions{
+		Name:     "bangumi",
+		StartRun: true,
+		Task: task.NewBangumiTask(&task.BangumiOptions{
+			DBPath:     constant.CachePath,
+			Cache:      bangumiCache,
+			CacheMutex: &BangumiCacheMutex,
+		}),
+	})
 	scheduleVar.Start(ctx)
 
 	// 初始化并连接下载器
