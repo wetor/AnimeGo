@@ -26,10 +26,17 @@ func TestMain(m *testing.M) {
 
 func TestPython_Execute(t *testing.T) {
 	p := &python.Python{}
-	p.SetSchema([]string{"optional:title"}, []string{})
-	result := p.Execute(&models.PluginExecuteOptions{
+	p.Load(&models.PluginLoadOptions{
 		File: "data/raw_parser.py",
-	}, models.Object{
+		Functions: []*models.PluginFunctionOptions{
+			{
+				Name:         "main",
+				ParamsSchema: []string{"title"},
+				ResultSchema: []string{"ep"},
+			},
+		},
+	})
+	result := p.Run("main", models.Object{
 		"title": "[OPFans枫雪动漫][ONE PIECE 海贼王][第1048话][周日版][1080p][MP4][简体]",
 	})
 	fmt.Println(result)
@@ -45,17 +52,25 @@ func TestParser(t *testing.T) {
 
 	var eps []models.Object
 	p := &python.Python{}
-	p.SetSchema([]string{"optional:title"}, []string{})
+
+	p.Load(&models.PluginLoadOptions{
+		File: "/Users/wetor/GoProjects/AnimeGo/data/plugin/lib/Auto_Bangumi/raw_parser.py",
+		Functions: []*models.PluginFunctionOptions{
+			{
+				Name:            "main",
+				SkipSchemaCheck: true,
+			},
+		},
+	})
+
 	for sc.Scan() {
 		title := sc.Text()
 		fmt.Println(title)
-		result := p.Execute(&models.PluginExecuteOptions{
-			File: "/Users/wetor/GoProjects/AnimeGo/data/plugin/lib/Auto_Bangumi/raw_parser.py",
-		}, models.Object{
+		result := p.Run("main", models.Object{
 			"title": title,
 		})
 		fmt.Println(result)
-		eps = append(eps, result.(models.Object))
+		eps = append(eps, result)
 	}
 
 	fw, err := os.Create("./data/test_out.txt")
@@ -71,10 +86,17 @@ func TestParser(t *testing.T) {
 func TestLib_log(t *testing.T) {
 	lib.InitLog()
 	p := &python.Python{}
-	p.SetSchema([]string{"optional:title"}, []string{"optional:result"})
-	result := p.Execute(&models.PluginExecuteOptions{
+	p.Load(&models.PluginLoadOptions{
 		File: "data/test_log.py",
-	}, models.Object{
+		Functions: []*models.PluginFunctionOptions{
+			{
+				Name:         "main",
+				ParamsSchema: []string{"title"},
+				ResultSchema: []string{"result"},
+			},
+		},
+	})
+	result := p.Run("main", models.Object{
 		"title": "【悠哈璃羽字幕社】 [明日同学的水手服_Akebi-chan no Sailor-fuku] [01-12] [x264 1080p][CHT]",
 	})
 	fmt.Println(result)
@@ -83,9 +105,44 @@ func TestLib_log(t *testing.T) {
 func TestPython(t *testing.T) {
 	lib.InitLog()
 	p := &python.Python{}
-	p.SetSchema([]string{"optional:title"}, []string{"optional:result"})
-	result := p.Execute(&models.PluginExecuteOptions{
+	p.Load(&models.PluginLoadOptions{
 		File: "data/test.py",
-	}, models.Object{})
+		Functions: []*models.PluginFunctionOptions{
+			{
+				Name:            "main",
+				SkipSchemaCheck: true,
+				ParamsSchema:    []string{"title"},
+				ResultSchema:    []string{"result"},
+			},
+		},
+	})
+	result := p.Run("main", models.Object{})
 	fmt.Println(result)
+}
+
+func TestPythonFunction(t *testing.T) {
+	lib.InitLog()
+	p := &python.Python{}
+	p.Load(&models.PluginLoadOptions{
+		File: "testdata/test.py",
+		Functions: []*models.PluginFunctionOptions{
+			{
+				Name:         "main",
+				ParamsSchema: []string{"params"},
+				ResultSchema: []string{"result"},
+			},
+			{
+				Name:            "test",
+				SkipSchemaCheck: true,
+			},
+		},
+	})
+	result := p.Run("main", models.Object{
+		"params": []int{1, 2, 3},
+	})
+	fmt.Println(result)
+
+	p.Run("test", models.Object{
+		"test": true,
+	})
 }

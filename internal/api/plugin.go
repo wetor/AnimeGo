@@ -4,6 +4,14 @@ import "github.com/wetor/AnimeGo/internal/models"
 
 type Plugin interface {
 	Type() string
-	Execute(opts *models.PluginExecuteOptions, params models.Object) any
-	SetSchema(paramsSchema, resultSchema []string)
+	PluginLoader
+	PluginRunner
+}
+
+type PluginLoader interface {
+	Load(opts *models.PluginLoadOptions)
+}
+
+type PluginRunner interface {
+	Run(function string, params models.Object) models.Object
 }

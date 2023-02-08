@@ -19,10 +19,8 @@ import (
 const Type = "python"
 
 type Python struct {
-	paramsSchema [][]string
-	resultSchema [][]string
-	ctx          py.Context
-	main         func(params models.Object) models.Object // 主函数
+	functions map[string]*Function
+	ctx       py.Context
 }
 
 func (p *Python) preExecute(file string) {
@@ -48,19 +46,22 @@ func (p *Python) execute(file string) {
 		py.TracebackDump(err)
 		errors.NewAniErrorD(err).TryPanic()
 	}
-	p.main = func(params models.Object) models.Object {
-		pyObj := pyutils.Value2PyObject(params)
-		res, err := module.Call("main", py.Tuple{pyObj}, nil)
-		if err != nil {
-			py.TracebackDump(err)
-		}
-		obj, ok := pyutils.PyObject2Value(res).(models.Object)
-		if !ok {
-			obj = models.Object{
-				"result": obj,
+
+	for name, function := range p.functions {
+		function.Func = func(params models.Object) models.Object {
+			pyObj := pyutils.Value2PyObject(params)
+			res, err := module.Call(name, py.Tuple{pyObj}, nil)
+			if err != nil {
+				py.TracebackDump(err)
 			}
+			obj, ok := pyutils.PyObject2Value(res).(models.Object)
+			if !ok {
+				obj = models.Object{
+					"result": obj,
+				}
+			}
+			return obj
 		}
-		return obj
 	}
 }
 
@@ -68,27 +69,22 @@ func (p *Python) endExecute() {
 
 }
 
-func (p *Python) SetSchema(paramsSchema, resultSchema []string) {
-	p.paramsSchema = make([][]string, len(paramsSchema))
-	for i, param := range paramsSchema {
-		p.paramsSchema[i] = strings.Split(param, ":")
-	}
-
-	p.resultSchema = make([][]string, len(resultSchema))
-	for i, param := range resultSchema {
-		p.resultSchema[i] = strings.Split(param, ":")
-	}
-}
-
 func (p *Python) Type() string {
 	return Type
 }
 
-func (p *Python) Execute(opts *models.PluginExecuteOptions, params models.Object) (result any) {
-	try.This(func() {
-		if !opts.SkipCheck {
-			pluginutils.CheckParams(p.paramsSchema, params)
+func (p *Python) Load(opts *models.PluginLoadOptions) {
+	p.functions = make(map[string]*Function, len(opts.Functions))
+	for _, f := range opts.Functions {
+		p.functions[f.Name] = &Function{
+			ParamsSchema:    pluginutils.ParseSchemas(f.ParamsSchema),
+			ResultSchema:    pluginutils.ParseSchemas(f.ResultSchema),
+			Name:            f.Name,
+			SkipSchemaCheck: f.SkipSchemaCheck,
 		}
+	}
+
+	try.This(func() {
 		p.preExecute(opts.File)
 
 		file := utils.FindScript(opts.File, models.PyExt)
@@ -96,12 +92,25 @@ func (p *Python) Execute(opts *models.PluginExecuteOptions, params models.Object
 
 		p.endExecute()
 
-		result = p.main(params)
-		if !opts.SkipCheck {
-			pluginutils.CheckResult(p.resultSchema, result)
-		}
 	}).Catch(func(err try.E) {
 		log.Warnf("%s 脚本运行时出错", p.Type())
+		log.Debugf("", err)
+	})
+}
+
+func (p *Python) Run(function string, params models.Object) (result models.Object) {
+	try.This(func() {
+		f := p.functions[function]
+		if !f.SkipSchemaCheck {
+			pluginutils.CheckSchema(f.ParamsSchema, params)
+		}
+		result = p.functions[function].Run(params)
+
+		if !f.SkipSchemaCheck {
+			pluginutils.CheckSchema(f.ResultSchema, result)
+		}
+	}).Catch(func(err try.E) {
+		log.Warnf("%s 脚本函数 %s 运行时出错", p.Type(), function)
 		log.Debugf("", err)
 	})
 	return result

@@ -166,7 +166,7 @@ class RawParser:
 parser = RawParser()
 
 
-def main(args):
+def parse(args):
     ep = parser.analyse(args['title'])
     return ep
 

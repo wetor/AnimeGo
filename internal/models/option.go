@@ -35,7 +35,19 @@ type AnimeParseOptions struct {
 	Parsed *TitleParsed
 }
 
-type PluginExecuteOptions struct {
+type PluginFunctionOptions struct {
+	Name            string
+	ParamsSchema    []string
+	ResultSchema    []string
+	SkipSchemaCheck bool
+}
+
+type PluginLoadOptions struct {
 	File      string
-	SkipCheck bool
+	Functions []*PluginFunctionOptions
+}
+
+type PluginExecuteOptions struct {
+	File            string
+	SkipSchemaCheck bool
 }

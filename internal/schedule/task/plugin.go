@@ -62,8 +62,14 @@ func (t *PluginTask) Run(params ...interface{}) {
 			log.Debugf("[定时任务] %s-Plugin 参数错误: %v", t.plugin.Type(), params[0])
 		}
 	}
-	t.plugin.Execute(&models.PluginExecuteOptions{
-		File:      path.Join(constant.PluginPath, t.file),
-		SkipCheck: true,
-	}, obj)
+	t.plugin.Load(&models.PluginLoadOptions{
+		File: path.Join(constant.PluginPath, t.file),
+		Functions: []*models.PluginFunctionOptions{
+			{
+				Name:            "main",
+				SkipSchemaCheck: true,
+			},
+		},
+	})
+	t.plugin.Run("main", obj)
 }

@@ -34,13 +34,19 @@ func (p *Filter) Filter(list []*models.FeedItem) []*models.FeedItem {
 		log.Debugf("[Plugin] 开始执行Filter插件(%s): %s", info.Type, info.File)
 		// 入参
 		pluginInstance := plugin.GetPlugin(info.Type, plugin.Filter)
-		pluginInstance.SetSchema([]string{"required:feedItems"}, []string{"required:error", "optional:data", "optional:index"})
-		execute := pluginInstance.Execute(&models.PluginExecuteOptions{
+		pluginInstance.Load(&models.PluginLoadOptions{
 			File: path.Join(constant.PluginPath, info.File),
-		}, models.Object{
+			Functions: []*models.PluginFunctionOptions{
+				{
+					Name:         "main",
+					ParamsSchema: []string{"feedItems"},
+					ResultSchema: []string{"error", "data,optional", "index,optional"},
+				},
+			},
+		})
+		result := pluginInstance.Run("main", models.Object{
 			"feedItems": inList,
 		})
-		result := execute.(models.Object)
 		if result["error"] != nil {
 			log.Debugf("", errors.NewAniErrorD(result["error"]))
 			log.Warnf("[Plugin] %s插件(%s)执行错误: %v", info.Type, info.File, result["error"])

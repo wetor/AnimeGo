@@ -27,48 +27,53 @@ func ParserName(title string) (ep *models.TitleParsed) {
 	if !utils.IsExist(pluginFile) {
 		utils.CopyDir(assets.Plugin, "plugin", pluginPath, true, false)
 	}
-	result := py.Execute(&models.PluginExecuteOptions{
-		File:      pluginFile,
-		SkipCheck: true,
-	}, models.Object{
+	py.Load(&models.PluginLoadOptions{
+		File: pluginFile,
+		Functions: []*models.PluginFunctionOptions{
+			{
+				Name:            "parse",
+				SkipSchemaCheck: true,
+			},
+		},
+	})
+	result := py.Run("parse", models.Object{
 		"title": title,
 	})
 	ep = &models.TitleParsed{
 		TitleRaw: title,
 	}
-	if obj, ok := result.(models.Object); ok {
-		if tmp, has := obj["title_en"]; has {
-			ep.NameEN = tmp.(string)
-			ep.Name = ep.NameEN
-		}
-		if tmp, has := obj["title_jp"]; has {
-			ep.Name = tmp.(string)
-		}
-		if tmp, has := obj["title_zh"]; has {
-			ep.NameCN = tmp.(string)
-			ep.Name = ep.NameCN
-		}
-		if tmp, has := obj["season"]; has {
-			ep.Season = int(tmp.(int64))
-		}
-		if tmp, has := obj["season_raw"]; has {
-			ep.SeasonRaw = tmp.(string)
-		}
-		if tmp, has := obj["episode"]; has {
-			ep.Ep = int(tmp.(int64))
-		}
-		if tmp, has := obj["sub"]; has {
-			ep.Sub = tmp.(string)
-		}
-		if tmp, has := obj["group"]; has {
-			ep.Group = tmp.(string)
-		}
-		if tmp, has := obj["resolution"]; has {
-			ep.Definition = tmp.(string)
-		}
-		if tmp, has := obj["source"]; has {
-			ep.Source = tmp.(string)
-		}
+
+	if tmp, has := result["title_en"]; has {
+		ep.NameEN = tmp.(string)
+		ep.Name = ep.NameEN
+	}
+	if tmp, has := result["title_jp"]; has {
+		ep.Name = tmp.(string)
+	}
+	if tmp, has := result["title_zh"]; has {
+		ep.NameCN = tmp.(string)
+		ep.Name = ep.NameCN
+	}
+	if tmp, has := result["season"]; has {
+		ep.Season = int(tmp.(int64))
+	}
+	if tmp, has := result["season_raw"]; has {
+		ep.SeasonRaw = tmp.(string)
+	}
+	if tmp, has := result["episode"]; has {
+		ep.Ep = int(tmp.(int64))
+	}
+	if tmp, has := result["sub"]; has {
+		ep.Sub = tmp.(string)
+	}
+	if tmp, has := result["group"]; has {
+		ep.Group = tmp.(string)
+	}
+	if tmp, has := result["resolution"]; has {
+		ep.Definition = tmp.(string)
+	}
+	if tmp, has := result["source"]; has {
+		ep.Source = tmp.(string)
 	}
 	return ep
 }
