@@ -42,9 +42,15 @@ type PluginFunctionOptions struct {
 	SkipSchemaCheck bool
 }
 
+type PluginVariableOptions struct {
+	Name     string
+	Nullable bool
+}
+
 type PluginLoadOptions struct {
 	File      string
 	Functions []*PluginFunctionOptions
+	Variables []*PluginVariableOptions
 }
 
 type PluginExecuteOptions struct {

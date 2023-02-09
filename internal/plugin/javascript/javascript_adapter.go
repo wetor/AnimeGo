@@ -27,3 +27,10 @@ func (p *JavaScriptAdapter) Run(function string, params models.Object) (result m
 func (p *JavaScriptAdapter) Type() string {
 	return p.js.Type()
 }
+
+func (p *JavaScriptAdapter) Get(name string) interface{} {
+	return nil
+}
+
+func (p *JavaScriptAdapter) Set(name string, val interface{}) {
+}

@@ -6,6 +6,7 @@ type Plugin interface {
 	Type() string
 	PluginLoader
 	PluginRunner
+	PluginVariable
 }
 
 type PluginLoader interface {
@@ -14,4 +15,9 @@ type PluginLoader interface {
 
 type PluginRunner interface {
 	Run(function string, params models.Object) models.Object
+}
+
+type PluginVariable interface {
+	Get(varName string) interface{}
+	Set(varName string, val interface{})
 }

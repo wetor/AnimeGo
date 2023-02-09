@@ -146,3 +146,38 @@ func TestPythonFunction(t *testing.T) {
 		"test": true,
 	})
 }
+
+func TestPythonVariable(t *testing.T) {
+	lib.InitLog()
+	p := &python.Python{}
+	p.Load(&models.PluginLoadOptions{
+		File: "testdata/var.py",
+		Functions: []*models.PluginFunctionOptions{
+			{
+				Name:            "main",
+				SkipSchemaCheck: true,
+			},
+		},
+		Variables: []*models.PluginVariableOptions{
+			{
+				Name: "Name",
+			},
+			{
+				Name: "Cron",
+			},
+			{
+				Name:     "Test",
+				Nullable: true,
+			},
+		},
+	})
+
+	fmt.Println(p.Get("Name"))
+	fmt.Println(p.Get("Cron"))
+	p.Set("Name", "update_test")
+	result := p.Run("main", models.Object{
+		"params": []int{1, 2, 3},
+	})
+	fmt.Println(result)
+
+}

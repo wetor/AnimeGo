@@ -5,10 +5,11 @@ import (
 	"path"
 	"time"
 
+	"github.com/wetor/AnimeGo/internal/constant"
+
 	"github.com/robfig/cron/v3"
 
 	"github.com/wetor/AnimeGo/internal/api"
-	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/pkg/errors"
@@ -19,7 +20,6 @@ type PluginTask struct {
 	parser *cron.Parser
 	cron   string
 
-	file   string
 	plugin api.Plugin
 }
 
@@ -29,23 +29,48 @@ type PluginOptions struct {
 }
 
 func NewPluginTask(opts *PluginOptions) *PluginTask {
+	p := plugin.GetPlugin(opts.Type, plugin.Schedule)
+	p.Load(&models.PluginLoadOptions{
+		File: path.Join(constant.PluginPath, opts.File),
+		Functions: []*models.PluginFunctionOptions{
+			{
+				Name:            "Run",
+				SkipSchemaCheck: true,
+			},
+		},
+		Variables: []*models.PluginVariableOptions{
+			{
+				Name:     "Name",
+				Nullable: true,
+			},
+			{
+				Name: "Cron",
+			},
+		},
+	})
+	if len(opts.Cron) > 0 {
+		_, err := SecondParser.Parse(opts.Cron)
+		if err == nil {
+			p.Set("Cron", opts.Cron)
+		}
+	}
 	return &PluginTask{
 		parser: &SecondParser,
-		cron:   opts.Cron,
-		file:   opts.File,
-		plugin: plugin.GetPlugin(opts.Type, plugin.Schedule),
+		cron:   p.Get("Cron").(string),
+		plugin: p,
 	}
 }
 
 func (t *PluginTask) Name() string {
-	if t.plugin == nil {
-		return "NoInit-Plugin"
+	name := t.plugin.Get("Name")
+	if name == nil {
+		name = "NoName"
 	}
-	return fmt.Sprintf("%s-Plugin", t.plugin.Type())
+	return fmt.Sprintf("%v(%s-Plugin)", t.plugin.Get("Name"), t.plugin.Type())
 }
 
 func (t *PluginTask) Cron() string {
-	return t.cron
+	return t.plugin.Get("Cron").(string)
 }
 
 func (t *PluginTask) NextTime() time.Time {
@@ -62,14 +87,5 @@ func (t *PluginTask) Run(params ...interface{}) {
 			log.Debugf("[定时任务] %s-Plugin 参数错误: %v", t.plugin.Type(), params[0])
 		}
 	}
-	t.plugin.Load(&models.PluginLoadOptions{
-		File: path.Join(constant.PluginPath, t.file),
-		Functions: []*models.PluginFunctionOptions{
-			{
-				Name:            "main",
-				SkipSchemaCheck: true,
-			},
-		},
-	})
-	t.plugin.Run("main", obj)
+	t.plugin.Run("Run", obj)
 }

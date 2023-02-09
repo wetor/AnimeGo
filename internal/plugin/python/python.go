@@ -20,6 +20,7 @@ const Type = "python"
 
 type Python struct {
 	functions map[string]*Function
+	variables map[string]*Variable
 	ctx       py.Context
 }
 
@@ -63,10 +64,32 @@ func (p *Python) execute(file string) {
 			return obj
 		}
 	}
+
+	for name, variable := range p.variables {
+		_, has := module.Globals[name]
+		if !has && !variable.Nullable {
+			log.Warnf("未找到全局变量 %s", name)
+			errors.NewAniErrorf("未找到全局变量 %s", name).TryPanic()
+		}
+		variable.Getter = func(name string) interface{} {
+			return pyutils.PyObject2Value(module.Globals[name])
+		}
+		variable.Setter = func(name string, val interface{}) {
+			module.Globals[name] = pyutils.Value2PyObject(val)
+		}
+	}
 }
 
 func (p *Python) endExecute() {
 
+}
+
+func (p *Python) Get(name string) interface{} {
+	return p.variables[name].Getter(name)
+}
+
+func (p *Python) Set(name string, val interface{}) {
+	p.variables[name].Setter(name, val)
 }
 
 func (p *Python) Type() string {
@@ -81,6 +104,13 @@ func (p *Python) Load(opts *models.PluginLoadOptions) {
 			ResultSchema:    pluginutils.ParseSchemas(f.ResultSchema),
 			Name:            f.Name,
 			SkipSchemaCheck: f.SkipSchemaCheck,
+		}
+	}
+	p.variables = make(map[string]*Variable, len(opts.Variables))
+	for _, v := range opts.Variables {
+		p.variables[v.Name] = &Variable{
+			Name:     v.Name,
+			Nullable: v.Nullable,
 		}
 	}
 

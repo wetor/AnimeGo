@@ -36,6 +36,7 @@ func TestMain(m *testing.M) {
 		WG: &wg,
 	})
 	m.Run()
+	wg.Done()
 	fmt.Println("end")
 }
 
@@ -64,7 +65,6 @@ func TestNewSchedule2(t *testing.T) {
 		Name:     "test",
 		StartRun: true,
 		Task: task.NewPluginTask(&task.PluginOptions{
-			Cron: "*/5 * * * * ?",
 			Plugin: &models.Plugin{
 				Enable: true,
 				Type:   python.Type,
