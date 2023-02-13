@@ -32,6 +32,12 @@ func Value2PyObject(object any) gpy.Object {
 			pyValDict[key] = Value2PyObject(value)
 		}
 		pyVal = pyValDict
+	case map[string]any:
+		pyValDict := gpy.NewStringDictSized(len(val))
+		for key, value := range val {
+			pyValDict[key] = Value2PyObject(value)
+		}
+		pyVal = pyValDict
 	default:
 		refVal := reflect.ValueOf(object)
 		switch refVal.Kind() {

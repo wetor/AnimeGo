@@ -53,7 +53,12 @@ func findAll(self py.Object, arg py.Tuple) (py.Object, error) {
 	return _compile(pattern).findAll(arg[1:])
 }
 
-func compile(self py.Object, arg py.Object) (py.Object, error) {
-	pattern := string(arg.(py.String))
+func compile(self py.Object, arg py.Tuple) (py.Object, error) {
+	var pattern string
+	if v, ok := arg[0].(py.String); ok {
+		pattern = string(v)
+	} else if v, ok := arg[0].(py.Bytes); ok {
+		pattern = string(v)
+	}
 	return _compile(pattern), nil
 }

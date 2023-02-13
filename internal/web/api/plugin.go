@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"os"
+	"path"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -84,7 +85,8 @@ func PluginConfigPost(c *gin.Context) {
 		c.JSON(webModels.Fail(err.Error()))
 		return
 	}
-	filename := strings.TrimSuffix(file, ".js") + ".json"
+
+	filename := strings.TrimSuffix(file, path.Ext(file)) + ".json"
 	err = os.WriteFile(filename, data, 0666)
 	if err != nil {
 		err = errors.NewAniErrorD(err)

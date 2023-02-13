@@ -186,7 +186,7 @@ func Main(ctx context.Context) {
 
 	// 初始化插件-gpython
 	gpython.Init()
-	lib.InitLog()
+	lib.Init()
 	// 初始化插件-公共方法
 	public.Init(&public.Options{
 		PluginPath: constant.PluginPath,

@@ -6,6 +6,11 @@ import (
 	"os"
 	"testing"
 
+	mikanRss "github.com/wetor/AnimeGo/internal/animego/feed/rss"
+
+	"github.com/wetor/AnimeGo/internal/animego/anidata"
+	"github.com/wetor/AnimeGo/pkg/cache"
+
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin/python"
 	"github.com/wetor/AnimeGo/internal/plugin/python/lib"
@@ -84,7 +89,7 @@ func TestParser(t *testing.T) {
 }
 
 func TestLib_log(t *testing.T) {
-	lib.InitLog()
+	lib.Init()
 	p := &python.Python{}
 	p.Load(&models.PluginLoadOptions{
 		File: "data/test_log.py",
@@ -103,7 +108,7 @@ func TestLib_log(t *testing.T) {
 }
 
 func TestPython(t *testing.T) {
-	lib.InitLog()
+	lib.Init()
 	p := &python.Python{}
 	p.Load(&models.PluginLoadOptions{
 		File: "data/test.py",
@@ -121,7 +126,7 @@ func TestPython(t *testing.T) {
 }
 
 func TestPythonFunction(t *testing.T) {
-	lib.InitLog()
+	lib.Init()
 	p := &python.Python{}
 	p.Load(&models.PluginLoadOptions{
 		File: "testdata/test.py",
@@ -148,7 +153,7 @@ func TestPythonFunction(t *testing.T) {
 }
 
 func TestPythonVariable(t *testing.T) {
-	lib.InitLog()
+	lib.Init()
 	p := &python.Python{}
 	p.Load(&models.PluginLoadOptions{
 		File: "testdata/var.py",
@@ -180,4 +185,120 @@ func TestPythonVariable(t *testing.T) {
 	})
 	fmt.Println(result)
 
+}
+
+func TestPythonJson(t *testing.T) {
+	lib.Init()
+	p := &python.Python{}
+	p.Load(&models.PluginLoadOptions{
+		File: "testdata/json.py",
+		Functions: []*models.PluginFunctionOptions{
+			{
+				Name:            "main",
+				SkipSchemaCheck: true,
+			},
+		},
+	})
+	result := p.Run("main", models.Object{
+		"json": `{"a":1,"b":2,"c":3,"d":4,"e":5}`,
+		"yaml": `id: 1
+uuid: 3d877494-e7d4-48e3-aa7a-164373a7920d
+name: He3
+age: 26
+isActive: true
+registered: 2020-02-03T06:00:03 -08:00
+tags:
+  - tools
+  - development
+language:
+  - id: 0
+    name: English
+  - id: 1
+    name: Español
+  - id: 2
+    name: Chinese
+`,
+	})
+	fmt.Println(result)
+}
+
+func TestPythonMikan(t *testing.T) {
+	bangumiCache := cache.NewBolt()
+	bangumiCache.Open("../../../test/testdata/bolt_sub.bolt")
+	db := cache.NewBolt()
+	db.Open("data/test.db")
+	anidata.Init(&anidata.Options{
+		Cache:        db,
+		BangumiCache: bangumiCache,
+	})
+	lib.Init()
+	p := &python.Python{}
+	p.Load(&models.PluginLoadOptions{
+		File: "/Users/wetor/GoProjects/AnimeGo/assets/plugin/filter/AnimeGoHelperParser/mikan_tool.py",
+		Functions: []*models.PluginFunctionOptions{
+			{
+				Name:            "main",
+				SkipSchemaCheck: true,
+			},
+		},
+	})
+	result := p.Run("main", models.Object{
+		"url": `https://mikanani.me/Home/Episode/1672d44040d63b380ba0018d9e76e0fa0db18906`,
+	})
+	fmt.Println(result)
+}
+
+func TestPythonConfig(t *testing.T) {
+	lib.Init()
+	os.Setenv("ANIMEGO_VERSION", "0.6.8")
+	p := &python.Python{}
+	p.Load(&models.PluginLoadOptions{
+		File: "testdata/config.py",
+		Functions: []*models.PluginFunctionOptions{
+			{
+				Name:            "test",
+				SkipSchemaCheck: true,
+			},
+		},
+	})
+
+	result := p.Run("test", models.Object{
+		"test": true,
+	})
+	fmt.Println(result)
+}
+
+func TestPythonMikanTool(t *testing.T) {
+	lib.Init()
+	os.Setenv("ANIMEGO_VERSION", "0.6.8")
+
+	db := cache.NewBolt()
+	db.Open("data/bolt.db")
+	bangumiCache := cache.NewBolt()
+	bangumiCache.Open("../../../test/testdata/bolt_sub.bolt")
+	anidata.Init(&anidata.Options{
+		Cache:        db,
+		BangumiCache: bangumiCache,
+	})
+
+	rss := mikanRss.NewRss("", "")
+	items := rss.Parse("testdata/Mikan.xml")
+	fmt.Println(len(items))
+	fmt.Println("===========")
+
+	p := &python.Python{}
+	p.Load(&models.PluginLoadOptions{
+		File: "/Users/wetor/GoProjects/AnimeGo/assets/plugin/filter/mikan_tool.py",
+		Functions: []*models.PluginFunctionOptions{
+			{
+				Name:            "main",
+				SkipSchemaCheck: true,
+			},
+		},
+	})
+
+	result := p.Run("main", models.Object{
+		"feedItems": items,
+	})
+	fmt.Println(result)
 }

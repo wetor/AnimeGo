@@ -28,7 +28,7 @@ func TestMain(m *testing.M) {
 		Debug: true,
 	})
 	gpython.Init()
-	lib.InitLog()
+	lib.Init()
 	_ = utils.CreateMutiDir("data")
 
 	wg := sync.WaitGroup{}
