@@ -3,6 +3,7 @@ package python
 import (
 	"encoding/json"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -55,7 +56,7 @@ func (p *Python) execute(file string) {
 	}
 	p.path = filepath.Dir(file)
 	_, p.name = filepath.Split(file)
-	p.name = strings.TrimSuffix(p.name, filepath.Ext(file))
+	p.name = strings.TrimSuffix(p.name, path.Ext(file))
 
 	p.module, err = py.RunFile(p.ctx, file, py.CompileOpts{
 		CurDir: "/",
@@ -105,8 +106,8 @@ func (p *Python) endExecute() {
 	p.module.Globals["__animego_version__"] = py.String(os.Getenv("ANIMEGO_VERSION"))
 	p.module.Globals["_get_config"] = py.MustNewMethod("_get_config", func(self py.Object, args py.Tuple) (py.Object, error) {
 		result := models.Object{}
-		yamlFile := filepath.Join(p.path, p.name+".yaml")
-		jsonFile := filepath.Join(p.path, p.name+".json")
+		yamlFile := path.Join(p.path, p.name+".yaml")
+		jsonFile := path.Join(p.path, p.name+".json")
 		if utils.IsExist(yamlFile) {
 			data, err := os.ReadFile(yamlFile)
 			if err != nil {

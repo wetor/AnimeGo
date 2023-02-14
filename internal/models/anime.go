@@ -2,7 +2,7 @@ package models
 
 import (
 	"fmt"
-	"path/filepath"
+	"path"
 	"strconv"
 )
 
@@ -43,7 +43,7 @@ func (b *AnimeEntity) FullName() string {
 }
 
 func (b *AnimeEntity) FileName() string {
-	return filepath.Join(fmt.Sprintf("S%02d", b.Season), fmt.Sprintf("E%03d", b.Ep))
+	return path.Join(fmt.Sprintf("S%02d", b.Season), fmt.Sprintf("E%03d", b.Ep))
 }
 
 func (b *AnimeEntity) DirName() string {

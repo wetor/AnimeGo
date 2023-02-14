@@ -1,7 +1,7 @@
 package plugin
 
 import (
-	"path/filepath"
+	"path"
 
 	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/models"
@@ -35,7 +35,7 @@ func (p *Filter) Filter(list []*models.FeedItem) []*models.FeedItem {
 		// 入参
 		pluginInstance := plugin.GetPlugin(nil)
 		pluginInstance.Load(&models.PluginLoadOptions{
-			File: filepath.Join(constant.PluginPath, info.File),
+			File: path.Join(constant.PluginPath, info.File),
 			Functions: []*models.PluginFunctionOptions{
 				{
 					Name:         "main",

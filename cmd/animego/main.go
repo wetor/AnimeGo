@@ -7,7 +7,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"path/filepath"
+	"path"
 	"sync"
 	"syscall"
 	"time"
@@ -127,7 +127,7 @@ func InitDefaultConfig() {
 }
 
 func InitDefaultAssets(conf *configs.Config) {
-	utils.CopyDir(assets.Plugin, "plugin", filepath.Join(conf.Setting.DataPath, "plugin"), true, false)
+	utils.CopyDir(assets.Plugin, "plugin", path.Join(conf.Setting.DataPath, "plugin"), true, false)
 }
 
 func doExit() {

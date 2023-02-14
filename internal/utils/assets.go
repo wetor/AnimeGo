@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 )
@@ -22,8 +23,8 @@ func CopyDir(fs embed.FS, src, dst string, replace bool, skip bool) {
 
 	for _, file := range files {
 		writeFile := true
-		srcPath := filepath.Join(src, file.Name())
-		dstPath := filepath.Join(dst, file.Name())
+		srcPath := path.Join(src, file.Name())
+		dstPath := path.Join(dst, file.Name())
 		if file.IsDir() {
 			CopyDir(fs, srcPath, dstPath, replace, skip)
 			continue

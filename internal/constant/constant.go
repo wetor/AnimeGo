@@ -1,8 +1,6 @@
 package constant
 
-import (
-	"path/filepath"
-)
+import "path"
 
 var (
 	AnimeGoGithub = "https://github.com/wetor/AnimeGo"
@@ -25,12 +23,12 @@ type Options struct {
 func Init(opts *Options) {
 	dataPath = opts.DataPath
 
-	CachePath = filepath.Join(dataPath, "cache")
-	CacheFile = filepath.Join(CachePath, "bolt.db")
-	BangumiCacheFile = filepath.Join(CachePath, "bolt_sub.db")
+	CachePath = path.Join(dataPath, "cache")
+	CacheFile = path.Join(CachePath, "bolt.db")
+	BangumiCacheFile = path.Join(CachePath, "bolt_sub.db")
 
-	LogPath = filepath.Join(dataPath, "log")
-	LogFile = filepath.Join(LogPath, "animego.log")
+	LogPath = path.Join(dataPath, "log")
+	LogFile = path.Join(LogPath, "animego.log")
 
-	PluginPath = filepath.Join(dataPath, "plugin")
+	PluginPath = path.Join(dataPath, "plugin")
 }

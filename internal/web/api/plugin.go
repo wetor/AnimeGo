@@ -4,7 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"os"
-	"path/filepath"
+	"path"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -86,7 +86,7 @@ func PluginConfigPost(c *gin.Context) {
 		return
 	}
 
-	filename := strings.TrimSuffix(file, filepath.Ext(file)) + ".json"
+	filename := strings.TrimSuffix(file, path.Ext(file)) + ".json"
 	err = os.WriteFile(filename, data, 0666)
 	if err != nil {
 		err = errors.NewAniErrorD(err)

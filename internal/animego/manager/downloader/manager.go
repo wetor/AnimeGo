@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path/filepath"
+	"path"
 	"regexp"
 	"sync"
 	"time"
@@ -114,7 +114,7 @@ func (m *Manager) download(anime *models.AnimeEntity) {
 		// 已有下载记录
 		if status.State != StateNotFound {
 			// 文件已存在
-			if len(status.Path) != 0 && utils.IsExist(filepath.Join(manager.DownloaderConf.SavePath, status.Path)) {
+			if len(status.Path) != 0 && utils.IsExist(path.Join(manager.DownloaderConf.SavePath, status.Path)) {
 				log.Infof("发现已下载「%s」", status.Path)
 			} else if status.Init {
 				log.Infof("发现正在下载「%s」", name)
@@ -233,11 +233,11 @@ func (m *Manager) UpdateDownloadItem(status *models.DownloadStatus, anime *model
 			Item: item,
 		})
 
-		renamePath := filepath.Join(anime.DirName(), anime.FileName()+filepath.Ext(content.Name))
+		renamePath := path.Join(anime.DirName(), anime.FileName()+path.Ext(content.Name))
 		m.name2chan[name] = make(chan models.TorrentState, DownloadStateChan)
 		renameOpt := &RenameOptions{
-			Src:   filepath.Join(manager.DownloaderConf.DownloadPath, content.Name),
-			Dst:   filepath.Join(manager.DownloaderConf.SavePath, renamePath),
+			Src:   path.Join(manager.DownloaderConf.DownloadPath, content.Name),
+			Dst:   path.Join(manager.DownloaderConf.SavePath, renamePath),
 			State: m.name2chan[name],
 			RenameCallback: func() {
 				status.Path = renamePath
@@ -334,7 +334,7 @@ func (m *Manager) UpdateList() {
 			continue
 		}
 		// 文件是否存在
-		if len(status.Path) == 0 || utils.IsExist(filepath.Join(manager.DownloaderConf.SavePath, status.Path)) ||
+		if len(status.Path) == 0 || utils.IsExist(path.Join(manager.DownloaderConf.SavePath, status.Path)) ||
 			(!status.Init || !status.Renamed || !status.Scraped) {
 			// 是否存在于下载列表
 			if item, has := hash2item[status.Hash]; has {
@@ -394,7 +394,7 @@ func (m *Manager) UpdateList() {
 }
 
 func (m *Manager) scrape(bangumi *models.AnimeEntity) bool {
-	nfo := filepath.Join(manager.DownloaderConf.SavePath, bangumi.DirName(), "tvshow.nfo")
+	nfo := path.Join(manager.DownloaderConf.SavePath, bangumi.DirName(), "tvshow.nfo")
 	log.Infof("写入元数据文件「%s」", nfo)
 
 	if !utils.IsExist(nfo) {
