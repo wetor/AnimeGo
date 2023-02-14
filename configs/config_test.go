@@ -66,3 +66,18 @@ func TestUpdateConfig_120(t *testing.T) {
 	}
 	_ = os.Remove("data/animego.yaml")
 }
+
+func TestUpdateConfig_130(t *testing.T) {
+	_ = utils.CreateMutiDir("data")
+	configs.ConfigVersion = "1.3.0"
+	file, _ := os.ReadFile("testdata/animego_120_2.yaml")
+	_ = os.WriteFile("data/animego.yaml", file, 0666)
+	configs.UpdateConfig("data/animego.yaml", false)
+
+	want, _ := os.ReadFile("testdata/animego_130.yaml")
+	got, _ := os.ReadFile("data/animego.yaml")
+	if !bytes.Equal(got, want) {
+		t.Errorf("UpdateConfig() = %s, want %s", got, want)
+	}
+	_ = os.Remove("data/animego.yaml")
+}

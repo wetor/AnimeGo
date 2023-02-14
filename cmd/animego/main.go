@@ -35,6 +35,7 @@ import (
 	"github.com/wetor/AnimeGo/internal/plugin/python/lib"
 	"github.com/wetor/AnimeGo/internal/schedule"
 	"github.com/wetor/AnimeGo/internal/schedule/task"
+	scheduleUtils "github.com/wetor/AnimeGo/internal/schedule/utils"
 	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/internal/web"
 	"github.com/wetor/AnimeGo/internal/web/api"
@@ -213,6 +214,7 @@ func Main(ctx context.Context) {
 			CacheMutex: &BangumiCacheMutex,
 		}),
 	})
+	scheduleUtils.AddTasks(scheduleVar, config.Plugin.Schedule)
 	scheduleVar.Start(ctx)
 
 	// 初始化并连接下载器
@@ -271,7 +273,7 @@ func Main(ctx context.Context) {
 
 	// 初始化filter manager
 	filterManager := filterMgr.NewManager(
-		plugin.NewFilterPlugin(config.Filter.Plugin),
+		plugin.NewFilterPlugin(config.Plugin.Filter),
 		feedRss.NewRss(config.Setting.Feed.Mikan.Url, config.Setting.Feed.Mikan.Name),
 		mikan.Mikan{ThemoviedbKey: config.Setting.Key.Themoviedb},
 		downloadChan)

@@ -36,6 +36,9 @@ setting:
             - enable: true
               type: js
               file: filter/regexp.js
+            - enable: true
+              type: py
+              file: filter/mikan_tool.py
     # 分类名. 仅qBittorrent有效
     category: AnimeGo
     # 标签表达式. 仅qBittorrent有效，可用通配符列表：

@@ -170,7 +170,7 @@ func TestPython_Filter4(t *testing.T) {
 		{
 			Enable: true,
 			Type:   "py",
-			File:   "pydemo.py",
+			File:   "default.py",
 		},
 	})
 	result := js.Filter(list)

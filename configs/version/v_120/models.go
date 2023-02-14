@@ -1,17 +1,11 @@
-package configs
+package v_120
 
 import "github.com/wetor/AnimeGo/internal/models"
 
 type Config struct {
 	Version  string `yaml:"version" json:"version" attr:"配置文件版本"`
 	Setting  `yaml:"setting" json:"setting" attr:"常规设置"`
-	Plugin   `yaml:"plugin" json:"plugin" attr:"插件设置" comment_key:"plugin_help"`
 	Advanced `yaml:"advanced" json:"advanced" attr:"高级设置"`
-}
-
-type Plugin struct {
-	Filter   []models.Plugin `yaml:"filter" json:"filter" attr:"过滤器插件" comment:"用来筛选符合条件的项目进行解析下载"`
-	Schedule []models.Plugin `yaml:"schedule" json:"schedule" attr:"定时任务" comment:"定时执行脚本"`
 }
 
 type Setting struct {
@@ -31,9 +25,12 @@ type Setting struct {
 	DownloadPath string `yaml:"download_path" json:"download_path" attr:"下载文件夹" comment:"下载器的下载文件夹"`
 	SavePath     string `yaml:"save_path" json:"save_path" attr:"保存文件夹" comment:"下载完成后，重命名并移动到的文件夹"`
 	DataPath     string `yaml:"data_path" json:"data_path" attr:"数据文件夹" comment:"用于保存数据库、插件等数据"`
-	Category     string `yaml:"category" json:"category" attr:"分类名" comment:"仅qBittorrent有效"`
-	Tag          string `yaml:"tag" json:"tag" attr:"标签表达式" comment_key:"tag_help"`
-	WebApi       struct {
+	Filter       struct {
+		Plugin []models.Plugin `yaml:"plugin" json:"plugin" attr:"插件" comment_key:"filter_plugin"`
+	} `yaml:"filter" json:"filter" attr:"过滤器设置" comment:"用来筛选符合条件的项目进行解析下载"`
+	Category string `yaml:"category" json:"category" attr:"分类名" comment:"仅qBittorrent有效"`
+	Tag      string `yaml:"tag" json:"tag" attr:"标签表达式" comment_key:"tag_help"`
+	WebApi   struct {
 		AccessKey string `yaml:"access_key" json:"access_key" attr:"请求秘钥" comment:"为空则不需要验证"`
 		Host      string `yaml:"host" json:"host" attr:"域名"`
 		Port      int    `yaml:"port" json:"port" attr:"端口"`

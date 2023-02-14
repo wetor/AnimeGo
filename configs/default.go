@@ -14,13 +14,6 @@ var (
 )
 
 func defaultSettingComment() {
-	configComment["filter_plugin"] = `按顺序依次执行启用的插件
-列表类型，每一项需要有以下参数：
-  enable: 启用
-  type: 插件类型，目前仅支持 'py' 插件类型。支持 'python' 全称，不区分大小写
-  file: 插件文件，相对于 'data/plugin' 文件夹的路径
-`
-
 	configComment["tag_help"] = `仅qBittorrent有效，可用通配符列表：
   {year} int 番剧更新年
   {quarter} int 番剧季度月号，取值为[4, 7, 10, 1]分别对应[春, 夏, 秋, 冬]季番剧
@@ -46,13 +39,6 @@ func defaultSetting() {
 	defaultConfig.Setting.SavePath = "./download/anime"
 	defaultConfig.Setting.DownloadPath = "./download/incomplete"
 
-	defaultConfig.Setting.Filter.Plugin = []models.Plugin{
-		{
-			Enable: true,
-			Type:   "js",
-			File:   "filter/default.js",
-		},
-	}
 	defaultConfig.Setting.Category = "AnimeGo"
 	defaultConfig.Setting.Tag = "{year}年{quarter}月新番"
 
@@ -64,6 +50,24 @@ func defaultSetting() {
 	defaultConfig.Setting.Proxy.Url = "http://127.0.0.1:7890"
 
 	defaultConfig.Setting.Key.Themoviedb = "d3d8430aefee6c19520d0f7da145daf5"
+}
+
+func defaultPluginComment() {
+	configComment["plugin_help"] = `按顺序依次执行启用的插件
+列表类型，每一项需要有以下参数：
+  enable: 启用
+  type: 插件类型，目前仅支持 'py' 插件类型。支持 'python' 全称，不区分大小写
+  file: 插件文件，相对于 'data/plugin' 文件夹的路径`
+}
+
+func defaultPlugin() {
+	defaultConfig.Plugin.Filter = []models.Plugin{
+		{
+			Enable: true,
+			Type:   "py",
+			File:   "filter/default.py",
+		},
+	}
 }
 
 func defaultAdvancedComment() {
@@ -115,6 +119,8 @@ func defaultAll() {
 		defaultConfig.Version = ConfigVersion
 		defaultSettingComment()
 		defaultSetting()
+		defaultPluginComment()
+		defaultPlugin()
 		defaultAdvancedComment()
 		defaultAdvanced()
 		isInit = true

@@ -12,6 +12,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/wetor/AnimeGo/configs/version/v_110"
+	"github.com/wetor/AnimeGo/configs/version/v_120"
 	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/utils"
@@ -29,11 +30,12 @@ type Version struct {
 }
 
 var (
-	ConfigVersion = "1.2.0" // 当前配置文件版本
+	ConfigVersion = "1.3.0" // 当前配置文件版本
 
 	versions = []string{
 		"1.1.0",
 		"1.2.0",
+		"1.3.0",
 	}
 	versionList = []Version{
 		{
@@ -44,6 +46,11 @@ var (
 			Name:       versions[1],
 			Desc:       "插件配置结构变更；移除了自定义缓存文件、日志文件和临时文件功能",
 			UpdateFunc: update_110_120,
+		},
+		{
+			Name:       versions[2],
+			Desc:       "插件配置结构变更；移除了js插件支持，增加了定时任务插件支持",
+			UpdateFunc: update_120_130,
 		},
 	}
 )
@@ -125,7 +132,7 @@ func update_110_120(file string) {
 		log.Fatal("配置文件加载错误：", err)
 	}
 
-	newConfig := DefaultConfig()
+	newConfig := &v_120.Config{}
 	err = copier.Copy(newConfig, oldConfig)
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
@@ -163,7 +170,45 @@ func update_110_120(file string) {
 	}
 }
 
-func encodeConfig(conf *Config) ([]byte, error) {
+func update_120_130(file string) {
+	data, err := os.ReadFile(file)
+	if err != nil {
+		log.Fatal("配置文件加载错误：", err)
+	}
+	oldConfig := &v_120.Config{}
+	err = yaml.Unmarshal(data, oldConfig)
+	if err != nil {
+		log.Fatal("配置文件加载错误：", err)
+	}
+
+	newConfig := DefaultConfig()
+	err = copier.Copy(newConfig, oldConfig)
+	if err != nil {
+		log.Fatal("配置文件升级失败：", err)
+	}
+	newConfig.Version = "1.3.0"
+	log.Printf("[变动] 配置项(setting.filter.javascript) 变更为 plugin.filter\n")
+	if len(oldConfig.Filter.Plugin) > 0 {
+		newConfig.Plugin.Filter = make([]models.Plugin, 0, len(oldConfig.Filter.Plugin))
+		for _, p := range oldConfig.Filter.Plugin {
+			if strings.ToLower(p.Type) == "js" || strings.ToLower(p.Type) == "javascript" {
+				log.Printf("[移除] 不支持javascript插件 %s\n", p.File)
+			} else {
+				newConfig.Plugin.Filter = append(newConfig.Plugin.Filter, p)
+			}
+		}
+	}
+	content, err := encodeConfig(newConfig)
+	if err != nil {
+		log.Fatal("配置文件升级失败：", err)
+	}
+	err = os.WriteFile(file, content, 0644)
+	if err != nil {
+		log.Fatal("配置文件升级失败：", err)
+	}
+}
+
+func encodeConfig(conf any) ([]byte, error) {
 	defaultSettingComment()
 	defaultAdvancedComment()
 	yml := encoder.NewEncoder(conf,

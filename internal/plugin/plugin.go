@@ -13,6 +13,9 @@ type Options struct {
 }
 
 func GetPlugin(opts *Options) api.Plugin {
+	if opts == nil {
+		opts = &Options{}
+	}
 	switch strings.ToLower(opts.Type) {
 	case "py", "python":
 		return &python.Python{}

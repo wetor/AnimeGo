@@ -1,5 +1,5 @@
 # 配置文件版本
-version: 1.2.0
+version: 1.3.0
 # 常规设置
 setting:
     # 自动订阅设置
@@ -26,16 +26,6 @@ setting:
     save_path: /Users/wetor/GoProjects/AnimeGo/download/anime
     # 数据文件夹. 用于保存数据库、插件等数据
     data_path: /Users/wetor/GoProjects/AnimeGo/data
-    # 过滤器设置. 用来筛选符合条件的项目进行解析下载
-    filter:
-        # 插件
-        plugin:
-            - enable: true
-              type: js
-              file: filter/default.js
-            - enable: true
-              type: js
-              file: filter/regexp.js
     # 分类名. 仅qBittorrent有效
     category: AnimeGo
     # 标签表达式. 仅qBittorrent有效，可用通配符列表：
@@ -66,6 +56,19 @@ setting:
         # TheMovieDB的APIkey. 可以自行申请链接（需注册）：https://www.themoviedb.org/settings/api?language=zh-CN
         # 以下为wetor的个人APIkey，仅用于AnimeGo使用
         themoviedb: d3d8430aefee6c19520d0f7da145daf5
+# 插件设置. 按顺序依次执行启用的插件
+# 列表类型，每一项需要有以下参数：
+#   enable: 启用
+#   type: 插件类型，目前仅支持 'py' 插件类型。支持 'python' 全称，不区分大小写
+#   file: 插件文件，相对于 'data/plugin' 文件夹的路径
+plugin:
+    # 过滤器插件. 用来筛选符合条件的项目进行解析下载
+    filter:
+        - enable: true
+          type: py
+          file: filter/mikan_tool.py
+    # 定时任务. 定时执行脚本
+    schedule: []
 # 高级设置
 advanced:
     # 更新状态等待时间. 每隔这一段时间，都会更新一次下载进度、清空下载队列(添加到下载项)
