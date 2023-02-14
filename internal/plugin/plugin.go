@@ -16,11 +16,11 @@ const (
 var (
 	pluginMap = map[string]map[string]api.Plugin{
 		Filter: {
-			javascript.Type: &javascript.JavaScript{},
+			javascript.Type: &javascript.JavaScriptAdapter{},
 			python.Type:     &python.Python{},
 		},
 		Schedule: {
-			javascript.Type: &javascript.JavaScript{},
+			javascript.Type: &javascript.JavaScriptAdapter{},
 			python.Type:     &python.Python{},
 		},
 	}

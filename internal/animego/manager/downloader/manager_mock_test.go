@@ -3,7 +3,7 @@ package downloader_test
 import (
 	"context"
 	"os"
-	"path"
+	"path/filepath"
 
 	"github.com/stretchr/testify/mock"
 	"github.com/wetor/AnimeGo/internal/models"
@@ -69,12 +69,12 @@ func (m *ClientMock) Add(opt *models.ClientAddOptions) {
 		State:       QbtDownloading,
 	})
 	name2content[opt.Rename] = &models.TorrentContentItem{
-		Name: path.Join(opt.Rename, ContentFile),
+		Name: filepath.Join(opt.Rename, ContentFile),
 		Size: 1024,
 	}
 
-	_ = utils.CreateMutiDir(path.Join(DownloadPath, opt.Rename))
-	_ = os.WriteFile(path.Join(DownloadPath, opt.Rename, ContentFile), []byte{}, os.ModePerm)
+	_ = utils.CreateMutiDir(filepath.Join(DownloadPath, opt.Rename))
+	_ = os.WriteFile(filepath.Join(DownloadPath, opt.Rename, ContentFile), []byte{}, os.ModePerm)
 }
 
 func (m *ClientMock) Delete(opt *models.ClientDeleteOptions) {

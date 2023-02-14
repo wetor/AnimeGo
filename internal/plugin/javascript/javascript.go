@@ -2,7 +2,7 @@ package javascript
 
 import (
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/dop251/goja"
@@ -20,8 +20,8 @@ const Type = "javascript"
 type JavaScript struct {
 	*goja.Runtime
 	main         func(models.Object) models.Object // 主函数
-	paramsSchema [][]string
-	resultSchema [][]string
+	paramsSchema []*pluginutils.Schema
+	resultSchema []*pluginutils.Schema
 }
 
 func (p *JavaScript) preExecute() {
@@ -37,9 +37,9 @@ func (p *JavaScript) execute(file string) {
 	raw, err := os.ReadFile(file)
 	errors.NewAniErrorD(err).TryPanic()
 
-	currRootPath = path.Dir(file)
-	_, currName = path.Split(file)
-	currName = strings.TrimSuffix(currName, path.Ext(file))
+	currRootPath = filepath.Dir(file)
+	_, currName = filepath.Split(file)
+	currName = strings.TrimSuffix(currName, filepath.Ext(file))
 
 	_, err = p.RunScript(file, string(raw))
 	errors.NewAniErrorD(err).TryPanic()
@@ -69,15 +69,8 @@ func (p *JavaScript) registerVar() {
 }
 
 func (p *JavaScript) SetSchema(paramsSchema, resultSchema []string) {
-	p.paramsSchema = make([][]string, len(paramsSchema))
-	for i, param := range paramsSchema {
-		p.paramsSchema[i] = strings.Split(param, ":")
-	}
-
-	p.resultSchema = make([][]string, len(resultSchema))
-	for i, param := range resultSchema {
-		p.resultSchema[i] = strings.Split(param, ":")
-	}
+	p.paramsSchema = pluginutils.ParseSchemas(paramsSchema)
+	p.resultSchema = pluginutils.ParseSchemas(resultSchema)
 }
 
 func (p *JavaScript) Type() string {
@@ -86,8 +79,8 @@ func (p *JavaScript) Type() string {
 
 func (p *JavaScript) Execute(opts *models.PluginExecuteOptions, params models.Object) (result any) {
 	try.This(func() {
-		if !opts.SkipCheck {
-			pluginutils.CheckParams(p.paramsSchema, params)
+		if !opts.SkipSchemaCheck {
+			pluginutils.CheckSchema(p.paramsSchema, params)
 		}
 		p.preExecute()
 
@@ -97,8 +90,8 @@ func (p *JavaScript) Execute(opts *models.PluginExecuteOptions, params models.Ob
 		p.endExecute()
 
 		result = p.main(params)
-		if !opts.SkipCheck {
-			pluginutils.CheckResult(p.resultSchema, result)
+		if !opts.SkipSchemaCheck {
+			pluginutils.CheckSchema(p.resultSchema, result)
 		}
 	}).Catch(func(err try.E) {
 		log.Warnf("%s 脚本运行时出错", p.Type())

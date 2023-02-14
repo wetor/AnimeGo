@@ -3,7 +3,7 @@ package errors
 import (
 	"bytes"
 	"fmt"
-	"path"
+	"path/filepath"
 )
 
 type AniError struct {
@@ -55,7 +55,7 @@ func (e *AniError) Error() string {
 	if e.Data != nil {
 		str.WriteString(fmt.Sprintf(" %v", e.Data))
 	}
-	_, file := path.Split(e.File)
+	_, file := filepath.Split(e.File)
 	str.WriteString(fmt.Sprintf(" [(%s) %s:%d]", e.Func, file, e.Line))
 
 	return str.String()

@@ -4,6 +4,6 @@ Name = "Refresh_Test"
 Cron = "*/5 * * * * ?"
 
 
-def Run(args):
-    print("test")
+def main(args):
+    print("test", Name, Cron)
     print(args)

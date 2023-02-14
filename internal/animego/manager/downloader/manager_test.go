@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path"
+	"path/filepath"
 	"sync"
 	"testing"
 	"time"
@@ -123,6 +123,6 @@ func TestManager_Start(t *testing.T) {
 	time.Sleep(2 * time.Second)
 	a2 := Download2(mgr)
 	wg.Wait()
-	assert.FileExists(t, path.Join(SavePath, a1.DirName(), a1.FileName()+path.Ext(ContentFile)))
-	assert.FileExists(t, path.Join(SavePath, a2.DirName(), a2.FileName()+path.Ext(ContentFile)))
+	assert.FileExists(t, filepath.Join(SavePath, a1.DirName(), a1.FileName()+filepath.Ext(ContentFile)))
+	assert.FileExists(t, filepath.Join(SavePath, a2.DirName(), a2.FileName()+filepath.Ext(ContentFile)))
 }

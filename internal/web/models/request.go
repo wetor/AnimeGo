@@ -1,7 +1,7 @@
 package models
 
 import (
-	"path"
+	"path/filepath"
 
 	"github.com/wetor/AnimeGo/configs"
 	"github.com/wetor/AnimeGo/internal/constant"
@@ -23,8 +23,8 @@ type PluginRequest struct {
 }
 
 func (p PluginRequest) FindFile() (string, error) {
-	file := path.Join(constant.PluginPath, p.Name)
-	ext := path.Ext(file)
+	file := filepath.Join(constant.PluginPath, p.Name)
+	ext := filepath.Ext(file)
 	if len(ext) == 0 {
 		ext = models.JSExt
 	}

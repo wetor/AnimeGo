@@ -4,11 +4,13 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	mikanRss "github.com/wetor/AnimeGo/internal/animego/feed/rss"
 	"github.com/wetor/AnimeGo/internal/animego/filter/plugin"
 	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin/python/lib"
+	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/third_party/gpython"
 )
@@ -74,7 +76,7 @@ func TestJavaScript_Filter2(t *testing.T) {
 
 func TestPython_Filter(t *testing.T) {
 	gpython.Init()
-	lib.InitLog()
+	lib.Init()
 	rss := mikanRss.NewRss("", "")
 	items := rss.Parse("testdata/Mikan.xml")
 	fmt.Println(len(items))
@@ -94,7 +96,7 @@ func TestPython_Filter(t *testing.T) {
 
 func TestPython_Filter2(t *testing.T) {
 	gpython.Init()
-	lib.InitLog()
+	lib.Init()
 	list := []*models.FeedItem{
 		{
 			Name: "0000",
@@ -125,7 +127,7 @@ func TestPython_Filter2(t *testing.T) {
 
 func TestPython_Filter3(t *testing.T) {
 	gpython.Init()
-	lib.InitLog()
+	lib.Init()
 	constant.PluginPath = "/Users/wetor/GoProjects/AnimeGo/assets/plugin/filter"
 	rss := mikanRss.NewRss("", "")
 	items := rss.Parse("testdata/Mikan.xml")
@@ -148,7 +150,7 @@ func TestPython_Filter3(t *testing.T) {
 
 func TestPython_Filter4(t *testing.T) {
 	gpython.Init()
-	lib.InitLog()
+	lib.Init()
 	constant.PluginPath = "/Users/wetor/GoProjects/AnimeGo/assets/plugin/filter"
 	list := []*models.FeedItem{
 		{
@@ -172,6 +174,38 @@ func TestPython_Filter4(t *testing.T) {
 		},
 	})
 	result := js.Filter(list)
+	fmt.Println(len(result))
+	for _, r := range result {
+		fmt.Println(r.Name, r.NameParsed)
+	}
+}
+
+func TestPython_Filter5(t *testing.T) {
+	db := cache.NewBolt()
+	db.Open("data/bolt.db")
+	bangumiCache := cache.NewBolt()
+	bangumiCache.Open("../../../../test/testdata/bolt_sub.bolt")
+	anidata.Init(&anidata.Options{
+		Cache:        db,
+		BangumiCache: bangumiCache,
+	})
+
+	gpython.Init()
+	lib.Init()
+	constant.PluginPath = "/Users/wetor/GoProjects/AnimeGo/assets/plugin/filter"
+	rss := mikanRss.NewRss("", "")
+	items := rss.Parse("testdata/Mikan.xml")
+	fmt.Println(len(items))
+	fmt.Println("===========")
+	js := plugin.NewFilterPlugin([]models.Plugin{
+		{
+			Enable: true,
+			Type:   "py",
+			File:   "mikan_tool.py",
+		},
+	})
+	result := js.Filter(items)
+	fmt.Println("===========")
 	fmt.Println(len(result))
 	for _, r := range result {
 		fmt.Println(r.Name, r.NameParsed)

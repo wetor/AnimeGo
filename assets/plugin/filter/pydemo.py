@@ -1,13 +1,13 @@
 import log
 import re
-import pylib
+from Auto_Bangumi.raw_parser import analyse
 
 
 def main(argv):
     result = []
     for i, item in enumerate(argv['feedItems']):
         # 解析标题
-        parsed = pylib.analyse(item)
+        parsed = analyse(item.Name)
         # log.info(i, item, parsed)
         # 解析失败
         if not parsed.episode:

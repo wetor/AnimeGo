@@ -7,7 +7,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"path"
+	"path/filepath"
 	"sync"
 	"syscall"
 	"time"
@@ -126,7 +126,7 @@ func InitDefaultConfig() {
 }
 
 func InitDefaultAssets(conf *configs.Config) {
-	utils.CopyDir(assets.Plugin, "plugin", path.Join(conf.Setting.DataPath, "plugin"), true, false)
+	utils.CopyDir(assets.Plugin, "plugin", filepath.Join(conf.Setting.DataPath, "plugin"), true, false)
 }
 
 func doExit() {
@@ -186,7 +186,7 @@ func Main(ctx context.Context) {
 
 	// 初始化插件-gpython
 	gpython.Init()
-	lib.InitLog()
+	lib.Init()
 	// 初始化插件-公共方法
 	public.Init(&public.Options{
 		PluginPath: constant.PluginPath,

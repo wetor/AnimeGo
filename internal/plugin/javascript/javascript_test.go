@@ -45,7 +45,7 @@ function sum(a, b) {
 
 func TestJavaScript_Execute(t *testing.T) {
 	js := &javascript.JavaScript{}
-	js.SetSchema([]string{"optional:feedItems"}, []string{"optional:index", "optional:error"})
+	js.SetSchema([]string{"feedItems,optional"}, []string{"index,optional", "error,optional"})
 	execute := js.Execute(&models.PluginExecuteOptions{
 		File: "testdata/test.js",
 	}, models.Object{

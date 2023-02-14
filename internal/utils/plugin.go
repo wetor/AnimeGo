@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"path"
+	"path/filepath"
 
 	"github.com/wetor/AnimeGo/pkg/errors"
 )
@@ -17,12 +17,12 @@ import (
 func FindScript(file, ext string) string {
 	if IsDir(file) {
 		// 文件夹，在文件夹中寻找 main 和 plugin
-		if IsExist(path.Join(file, "main"+ext)) {
-			return path.Join(file, "main"+ext)
-		} else if IsExist(path.Join(file, "plugin"+ext)) {
-			return path.Join(file, "plugin"+ext)
-		} else if IsExist(path.Join(file, path.Base(file)+ext)) {
-			return path.Join(file, path.Base(file)+ext)
+		if IsExist(filepath.Join(file, "main"+ext)) {
+			return filepath.Join(file, "main"+ext)
+		} else if IsExist(filepath.Join(file, "plugin"+ext)) {
+			return filepath.Join(file, "plugin"+ext)
+		} else if IsExist(filepath.Join(file, filepath.Base(file)+ext)) {
+			return filepath.Join(file, filepath.Base(file)+ext)
 		} else {
 			errors.NewAniErrorf("插件文件夹中找不到 'main%s'、'plugin%s' 或 '文件夹名%s'", ext, ext, ext).TryPanic()
 		}
@@ -33,7 +33,7 @@ func FindScript(file, ext string) string {
 		} else {
 			errors.NewAniError("插件文件不存在").TryPanic()
 		}
-	} else if path.Ext(file) != ext {
+	} else if filepath.Ext(file) != ext {
 		// 文件存在，判断扩展名是否为 ext
 		errors.NewAniError("插件文件格式错误").TryPanic()
 	}

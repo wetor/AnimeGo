@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -147,10 +147,10 @@ func update_110_120(file string) {
 	})
 	log.Printf("[移除] 配置项(setting.advanced.path.db_file)\n")
 	_ = utils.CreateMutiDir(constant.CachePath)
-	_ = os.Rename(path.Join(oldConfig.DataPath, oldConfig.Advanced.Path.DbFile), constant.CacheFile)
+	_ = os.Rename(filepath.Join(oldConfig.DataPath, oldConfig.Advanced.Path.DbFile), constant.CacheFile)
 	log.Printf("[移除] 配置项(setting.advanced.path.log_file)\n")
 	_ = utils.CreateMutiDir(constant.LogPath)
-	_ = os.Rename(path.Join(oldConfig.DataPath, oldConfig.Advanced.Path.LogFile), constant.LogFile)
+	_ = os.Rename(filepath.Join(oldConfig.DataPath, oldConfig.Advanced.Path.LogFile), constant.LogFile)
 	log.Printf("[移除] 配置项(setting.advanced.path.temp_path)\n")
 
 	content, err := encodeConfig(newConfig)
@@ -178,8 +178,8 @@ func encodeConfig(conf *Config) ([]byte, error) {
 }
 
 func BackupConfig(file string, version string) error {
-	dir, name := path.Split(file)
-	ext := path.Ext(name)
+	dir, name := filepath.Split(file)
+	ext := filepath.Ext(name)
 	name = strings.TrimSuffix(name, ext)
 	timeStr := time.Now().Format("20060102150405")
 	name = fmt.Sprintf("%s-%s-%s%s", name, version, timeStr, ext)
@@ -187,7 +187,7 @@ func BackupConfig(file string, version string) error {
 	if err != nil {
 		return err
 	}
-	out := path.Join(dir, name)
+	out := filepath.Join(dir, name)
 	err = os.WriteFile(out, oldFile, 0644)
 	if err != nil {
 		return err

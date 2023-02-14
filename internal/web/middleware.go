@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"os"
-	"path"
+	"path/filepath"
 	"runtime/debug"
 	"strings"
 	"time"
@@ -67,7 +67,7 @@ func GinLogger(logger *zap.SugaredLogger) gin.HandlerFunc {
 		reqPath := c.Request.URL.Path
 		query := c.Request.URL.RawQuery
 		c.Next()
-		ext := path.Ext(reqPath)
+		ext := filepath.Ext(reqPath)
 		if ext != "" && ext != ".html" {
 			return
 		}
