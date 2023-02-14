@@ -1,8 +1,10 @@
-package yaml_encoder
+package yaml_encoder_test
 
 import (
 	"fmt"
 	"testing"
+
+	yaml_encoder "github.com/wetor/AnimeGo/third_party/yaml-encoder"
 )
 
 func TestEncoder(t *testing.T) {
@@ -23,9 +25,9 @@ func TestEncoder(t *testing.T) {
 	config.Server.Host = []string{"127.0.0.1", "127.0.0.2"}
 	config.Server.Port.TestField = "55"
 
-	encoder1 := NewEncoder(config,
-		WithComments(CommentsOnHead),
-		WithCommentsMap(map[string]string{
+	encoder1 := yaml_encoder.NewEncoder(config,
+		yaml_encoder.WithComments(yaml_encoder.CommentsOnHead),
+		yaml_encoder.WithCommentsMap(map[string]string{
 			"host": "主机名",
 			"PORT": `端口号\n\r
 - 端口号第一行
@@ -46,9 +48,9 @@ func TestEncoder(t *testing.T) {
 	}
 
 	config2 := Test{}
-	encoder2 := NewEncoder(config2,
-		WithComments(CommentsOnHead),
-		WithCommentsMap(map[string]string{}),
+	encoder2 := yaml_encoder.NewEncoder(config2,
+		yaml_encoder.WithComments(yaml_encoder.CommentsOnHead),
+		yaml_encoder.WithCommentsMap(map[string]string{}),
 	)
 	content2, _ := encoder2.EncodeDoc()
 	fmt.Println("=============")

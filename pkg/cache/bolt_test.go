@@ -1,12 +1,12 @@
-package cache
+package cache_test
 
 import (
 	"fmt"
 	"reflect"
 	"testing"
 
+	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/log"
-	bolt "go.etcd.io/bbolt"
 )
 
 type AnimeEntity struct {
@@ -36,8 +36,8 @@ type Entity struct {
 }
 
 var (
-	db     = NewBolt()
-	db_sub = NewBolt()
+	db     = cache.NewBolt()
+	db_sub = cache.NewBolt()
 )
 
 func TestMain(m *testing.M) {
@@ -129,19 +129,6 @@ func TestBolt_BatchPut(t *testing.T) {
 			t.Errorf("BatchPut() = %v, want %v", got, want[i])
 		}
 	}
-}
-
-func TestBolt_List(t *testing.T) {
-	db.db.View(func(tx *bolt.Tx) error {
-		// Assume bucket exists and has keys
-		b := tx.Bucket([]byte("test"))
-
-		b.ForEach(func(k, v []byte) error {
-			fmt.Printf("key=%s, value=%s\n", k, v[8:])
-			return nil
-		})
-		return nil
-	})
 }
 
 func TestBolt_GetAll(t *testing.T) {

@@ -33,7 +33,7 @@ func (p *Filter) Filter(list []*models.FeedItem) []*models.FeedItem {
 		}
 		log.Debugf("[Plugin] 开始执行Filter插件(%s): %s", info.Type, info.File)
 		// 入参
-		pluginInstance := plugin.GetPlugin(info.Type)
+		pluginInstance := plugin.GetPlugin(info.Type, plugin.Filter)
 		pluginInstance.SetSchema([]string{"required:feedItems"}, []string{"required:error", "optional:data", "optional:index"})
 		execute := pluginInstance.Execute(&models.PluginExecuteOptions{
 			File: path.Join(constant.PluginPath, info.File),
@@ -78,7 +78,7 @@ func filterIndex(items []*models.FeedItem, indexList []any) []*models.FeedItem {
 	itemResult := make([]*models.FeedItem, len(indexList))
 	for i, val := range indexList {
 		index := int(val.(int64))
-		if index < 0 || index >= len(indexList) {
+		if index < 0 || index >= len(items) {
 			continue
 		}
 		itemResult[i] = items[index]

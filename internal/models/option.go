@@ -27,14 +27,6 @@ type ClientGetOptions struct {
 	Item *TorrentItem
 }
 
-type RenameOptions struct {
-	Src            string
-	Dst            string
-	State          <-chan TorrentState
-	RenameCallback func() // 重命名完成后回调
-	Callback       func() // 完成重命名所有流程后回调
-}
-
 // =========== AnimeEntity ===========
 
 type AnimeParseOptions struct {

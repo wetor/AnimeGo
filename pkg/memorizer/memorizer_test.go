@@ -1,4 +1,4 @@
-package memorizer
+package memorizer_test
 
 import (
 	"encoding/json"
@@ -9,6 +9,7 @@ import (
 
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/log"
+	"github.com/wetor/AnimeGo/pkg/memorizer"
 )
 
 type Type struct {
@@ -36,7 +37,7 @@ func toString(in interface{}) string {
 	return string(data)
 }
 
-func DoSomething(params *Params, results *Results) error {
+func DoSomething(params *memorizer.Params, results *memorizer.Results) error {
 
 	fmt.Print("not cache: ")
 	mikanID := params.Get("mikanID").(int)
@@ -55,17 +56,17 @@ func DoSomething(params *Params, results *Results) error {
 func TestMemorized(t *testing.T) {
 	db := cache.NewBolt()
 	db.Open("data/bolt.db")
-	dosomething := Memorized("test", db, DoSomething)
+	dosomething := memorizer.Memorized("test", db, DoSomething)
 
-	res := NewResults("ThemovieID", &Type{})
-	dosomething(NewParams("mikanID", 1001, "bangumiID", 3333).TTL(1), res)
+	res := memorizer.NewResults("ThemovieID", &Type{})
+	dosomething(memorizer.NewParams("mikanID", 1001, "bangumiID", 3333).TTL(1), res)
 	fmt.Println(toString(res))
 
-	dosomething(NewParams("mikanID", 1001, "bangumiID", 3333), res)
+	dosomething(memorizer.NewParams("mikanID", 1001, "bangumiID", 3333), res)
 	fmt.Println(toString(res))
 
 	time.Sleep(2 * time.Second)
 
-	dosomething(NewParams("mikanID", 1001, "bangumiID", 3333).TTL(1), res)
+	dosomething(memorizer.NewParams("mikanID", 1001, "bangumiID", 3333).TTL(1), res)
 	fmt.Println(toString(res))
 }

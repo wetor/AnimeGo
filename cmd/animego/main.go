@@ -23,7 +23,6 @@ import (
 	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
 	"github.com/wetor/AnimeGo/internal/animego/downloader"
 	"github.com/wetor/AnimeGo/internal/animego/downloader/qbittorrent"
-	"github.com/wetor/AnimeGo/internal/animego/feed"
 	feedRss "github.com/wetor/AnimeGo/internal/animego/feed/rss"
 	"github.com/wetor/AnimeGo/internal/animego/filter/plugin"
 	"github.com/wetor/AnimeGo/internal/animego/manager"
@@ -193,11 +192,6 @@ func Main(ctx context.Context) {
 		PluginPath: constant.PluginPath,
 	})
 
-	// 初始化feed订阅
-	feed.Init(&feed.Options{
-		TempPath: constant.TempPath,
-	})
-
 	// 载入AnimeGo数据库（缓存）
 	bolt := cache.NewBolt()
 	bolt.Open(constant.CacheFile)
@@ -207,15 +201,18 @@ func Main(ctx context.Context) {
 	bangumiCache.Open(constant.BangumiCacheFile)
 
 	// 初始化并启动定时任务
-	schedule.Init(&schedule.Options{
-		Options: &task.Options{
-			DBDir:            constant.CachePath,
-			BangumiCache:     bangumiCache,
-			BangumiCacheLock: &BangumiCacheMutex,
-		},
+	scheduleVar := schedule.NewSchedule(&schedule.Options{
 		WG: &WG,
 	})
-	scheduleVar := schedule.NewSchedule()
+	scheduleVar.Add(&schedule.AddTaskOptions{
+		Name:     "bangumi",
+		StartRun: true,
+		Task: task.NewBangumiTask(&task.BangumiOptions{
+			DBPath:     constant.CachePath,
+			Cache:      bangumiCache,
+			CacheMutex: &BangumiCacheMutex,
+		}),
+	})
 	scheduleVar.Start(ctx)
 
 	// 初始化并连接下载器

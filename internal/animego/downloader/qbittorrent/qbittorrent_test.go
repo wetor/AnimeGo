@@ -1,4 +1,4 @@
-package qbittorrent
+package qbittorrent_test
 
 import (
 	"context"
@@ -8,11 +8,12 @@ import (
 	"time"
 
 	"github.com/wetor/AnimeGo/internal/animego/downloader"
+	"github.com/wetor/AnimeGo/internal/animego/downloader/qbittorrent"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/pkg/log"
 )
 
-var qbt *QBittorrent
+var qbt *qbittorrent.QBittorrent
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
@@ -24,7 +25,7 @@ func TestMain(m *testing.M) {
 	downloader.Init(&downloader.Options{
 		WG: &wg,
 	})
-	qbt = NewQBittorrent("http://192.168.10.50:8080", "admin", "adminadmin")
+	qbt = qbittorrent.NewQBittorrent("http://192.168.10.50:8080", "admin", "adminadmin")
 	qbt.Start(context.Background())
 	for !qbt.Connected() {
 		time.Sleep(time.Second)

@@ -3,30 +3,35 @@ package plugin
 import (
 	"strings"
 
-	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/plugin/javascript"
 	"github.com/wetor/AnimeGo/internal/plugin/python"
 )
 
+const (
+	Filter   = "filter"
+	Schedule = "schedule"
+)
+
 var (
-	pluginMap = map[string]Plugin{
-		javascript.Type: &javascript.JavaScript{},
-		python.Type:     &python.Python{},
+	pluginMap = map[string]map[string]api.Plugin{
+		Filter: {
+			javascript.Type: &javascript.JavaScript{},
+			python.Type:     &python.Python{},
+		},
+		Schedule: {
+			javascript.Type: &javascript.JavaScript{},
+			python.Type:     &python.Python{},
+		},
 	}
 )
 
-type Plugin interface {
-	Type() string
-	Execute(opts *models.PluginExecuteOptions, params models.Object) any
-	SetSchema(paramsSchema, resultSchema []string)
-}
-
-func GetPlugin(t string) Plugin {
+func GetPlugin(t string, instanceName string) api.Plugin {
 	switch strings.ToLower(t) {
 	case "js", "javascript":
-		return pluginMap[javascript.Type]
+		return pluginMap[instanceName][javascript.Type]
 	case "py", "python":
-		return pluginMap[python.Type]
+		return pluginMap[instanceName][python.Type]
 	default:
 		panic("不支持的 plugin.Type: " + t)
 	}

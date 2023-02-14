@@ -3,14 +3,14 @@
 package rss
 
 import (
+	"bytes"
+	"io"
 	"os"
-	"path"
 	"regexp"
 	"strconv"
 
 	"github.com/mmcdole/gofeed"
 
-	"github.com/wetor/AnimeGo/internal/animego/feed"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/log"
@@ -49,14 +49,26 @@ func (f *Rss) Parse(opts ...any) (items []*models.FeedItem) {
 	if len(f.url) == 0 && len(opts) == 0 {
 		return nil
 	}
-	var filename string
+	data := bytes.NewBuffer(nil)
+
 	log.Infof("获取Rss数据开始...")
 	if len(opts) == 1 {
-		filename = opts[0].(string)
+		filename := opts[0].(string)
+		// --------- 解析本地rss.xml ---------
+		file, err := os.Open(filename)
+		if err != nil {
+			log.Debugf("", err)
+			log.Warnf("打开Rss文件失败")
+		}
+		_, err = io.Copy(data, file)
+		if err != nil {
+			log.Debugf("", err)
+			return nil
+		}
+		_ = file.Close()
 	} else {
-		filename = path.Join(feed.TempPath, f.name+".xml")
 		// --------- 下载rss.xml ---------
-		err := request.GetFile(f.url, filename)
+		err := request.GetWriter(f.url, data)
 		if err != nil {
 			log.Debugf("", err)
 			log.Warnf("请求Rss失败")
@@ -64,16 +76,8 @@ func (f *Rss) Parse(opts ...any) (items []*models.FeedItem) {
 	}
 	log.Infof("获取Rss数据成功！")
 
-	// --------- 解析本地rss.xml ---------
-	file, err := os.Open(filename)
-	if err != nil {
-		log.Debugf("", err)
-		log.Warnf("打开Rss文件失败")
-	}
-
-	defer file.Close()
 	fp := gofeed.NewParser()
-	feeds, err := fp.Parse(file)
+	feeds, err := fp.Parse(data)
 	if err != nil {
 		log.Debugf("", err)
 		log.Warnf("解析ss失败")

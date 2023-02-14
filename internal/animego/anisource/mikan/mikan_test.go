@@ -1,4 +1,4 @@
-package mikan
+package mikan_test
 
 import (
 	"encoding/json"
@@ -8,6 +8,7 @@ import (
 
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/internal/animego/anisource"
+	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin/public"
 	"github.com/wetor/AnimeGo/internal/utils"
@@ -105,10 +106,10 @@ func TestParseMikan(t *testing.T) {
 		},
 	}
 
-	mikan := Mikan{ThemoviedbKey: ThemoviedbKey}
+	m := mikan.Mikan{ThemoviedbKey: ThemoviedbKey}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotAnime := mikan.Parse(&models.AnimeParseOptions{
+			gotAnime := m.Parse(&models.AnimeParseOptions{
 				Name: tt.args.name,
 				Url:  tt.args.url,
 			})

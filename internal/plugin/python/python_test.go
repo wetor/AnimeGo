@@ -1,4 +1,4 @@
-package python
+package python_test
 
 import (
 	"bufio"
@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/plugin/python"
 	"github.com/wetor/AnimeGo/internal/plugin/python/lib"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/third_party/gpython"
@@ -24,7 +25,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestPython_Execute(t *testing.T) {
-	p := &Python{}
+	p := &python.Python{}
 	p.SetSchema([]string{"optional:title"}, []string{})
 	result := p.Execute(&models.PluginExecuteOptions{
 		File: "data/raw_parser.py",
@@ -43,7 +44,7 @@ func TestParser(t *testing.T) {
 	sc := bufio.NewScanner(fr)
 
 	var eps []models.Object
-	p := &Python{}
+	p := &python.Python{}
 	p.SetSchema([]string{"optional:title"}, []string{})
 	for sc.Scan() {
 		title := sc.Text()
@@ -69,7 +70,7 @@ func TestParser(t *testing.T) {
 
 func TestLib_log(t *testing.T) {
 	lib.InitLog()
-	p := &Python{}
+	p := &python.Python{}
 	p.SetSchema([]string{"optional:title"}, []string{"optional:result"})
 	result := p.Execute(&models.PluginExecuteOptions{
 		File: "data/test_log.py",
@@ -81,7 +82,7 @@ func TestLib_log(t *testing.T) {
 
 func TestPython(t *testing.T) {
 	lib.InitLog()
-	p := &Python{}
+	p := &python.Python{}
 	p.SetSchema([]string{"optional:title"}, []string{"optional:result"})
 	result := p.Execute(&models.PluginExecuteOptions{
 		File: "data/test.py",

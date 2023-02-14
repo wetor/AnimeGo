@@ -7,7 +7,7 @@ import (
 	"github.com/wetor/AnimeGo/pkg/log"
 )
 
-var nameRegxStep = []*regexp.Regexp{
+var NameRegxStep = []*regexp.Regexp{
 	// 删除末尾 "第X季"或"X季"
 	regexp.MustCompile(`\s?第?(\d{1,2}|(一|二|三|四|五|伍|六|七|八|九|十))(期|部|季|篇|章|編)$`),
 	// 删除末尾 "1st Season"、"Xnd Season"或"Season X"或"X"
@@ -29,15 +29,15 @@ var nameRegxStep = []*regexp.Regexp{
 //
 func RemoveNameSuffix(name string, fun func(string) any) any {
 	currStep := 0
-	for ; currStep < len(nameRegxStep)+1; currStep++ {
+	for ; currStep < len(NameRegxStep)+1; currStep++ {
 		result := fun(name)
 		if result != nil {
 			return result
 		}
-		if currStep < len(nameRegxStep) {
-			has := nameRegxStep[currStep].MatchString(name)
+		if currStep < len(NameRegxStep) {
+			has := NameRegxStep[currStep].MatchString(name)
 			if has {
-				newName := nameRegxStep[currStep].ReplaceAllString(name, "")
+				newName := NameRegxStep[currStep].ReplaceAllString(name, "")
 				if len(newName) > 0 && len(newName) > len(name)/10 {
 					name = newName
 				}

@@ -6,10 +6,8 @@ import (
 	"context"
 	"sync"
 
-	"github.com/wetor/AnimeGo/internal/animego/anisource"
-	"github.com/wetor/AnimeGo/internal/animego/feed"
-	"github.com/wetor/AnimeGo/internal/animego/filter"
 	"github.com/wetor/AnimeGo/internal/animego/manager"
+	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/errors"
@@ -22,9 +20,9 @@ const (
 )
 
 type Manager struct {
-	filter       filter.Filter
-	feed         feed.Feed
-	anisource    anisource.AniSource
+	filter       api.Filter
+	feed         api.Feed
+	anisource    api.AniSource
 	downloadChan chan *models.AnimeEntity
 
 	animeList []*models.AnimeEntity
@@ -35,9 +33,9 @@ type Manager struct {
 //	@Description:
 //	@param filter *filter.Filter
 //	@param feed feed.Feed
-//	@param anisource anisource.AniSource
+//	@param anisource api.AniSource
 //	@return *Manager
-func NewManager(filter filter.Filter, feed feed.Feed, anisource anisource.AniSource, downloadChan chan *models.AnimeEntity) *Manager {
+func NewManager(filter api.Filter, feed api.Feed, anisource api.AniSource, downloadChan chan *models.AnimeEntity) *Manager {
 	m := &Manager{
 		filter:    filter,
 		feed:      feed,

@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"path"
 	"strconv"
-
-	"github.com/wetor/AnimeGo/internal/utils"
 )
 
 // AnimeEntity 动画信息结构体
@@ -55,7 +53,7 @@ func (b *AnimeEntity) DirName() string {
 	if len(b.NameCN) == 0 {
 		b.NameCN = strconv.Itoa(b.ID)
 	}
-	return utils.Filename(b.NameCN)
+	return Filename(b.NameCN)
 }
 
 func (b *AnimeEntity) Meta() string {
@@ -64,7 +62,7 @@ func (b *AnimeEntity) Meta() string {
 		nfoTemplate += "  <tmdbid>{tmdbid}</tmdbid>\n"
 	}
 	nfoTemplate += "  <bangumiid>{bangumiid}</bangumiid>\n</tvshow>"
-	return utils.Format(nfoTemplate, utils.FormatMap{
+	return Format(nfoTemplate, map[string]any{
 		"tmdbid":    b.ThemoviedbID,
 		"bangumiid": b.ID,
 	})

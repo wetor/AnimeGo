@@ -1,4 +1,4 @@
-package configs
+package configs_test
 
 import (
 	"bytes"
@@ -8,12 +8,13 @@ import (
 
 	"github.com/jinzhu/copier"
 
+	"github.com/wetor/AnimeGo/configs"
 	"github.com/wetor/AnimeGo/internal/utils"
 )
 
 func TestDefaultConfig(t *testing.T) {
 	_ = utils.CreateMutiDir("data")
-	_ = DefaultFile("data/animego_default.yaml")
+	_ = configs.DefaultFile("data/animego_default.yaml")
 }
 
 func TestCopy(t *testing.T) {
@@ -53,15 +54,15 @@ func TestCopy(t *testing.T) {
 
 func TestUpdateConfig_120(t *testing.T) {
 	_ = utils.CreateMutiDir("data")
-	ConfigVersion = "1.2.0"
+	configs.ConfigVersion = "1.2.0"
 	file, _ := os.ReadFile("testdata/animego_110.yaml")
 	_ = os.WriteFile("data/animego.yaml", file, 0666)
-	UpdateConfig("data/animego.yaml", false)
+	configs.UpdateConfig("data/animego.yaml", false)
 
 	want, _ := os.ReadFile("testdata/animego_120.yaml")
 	got, _ := os.ReadFile("data/animego.yaml")
 	if !bytes.Equal(got, want) {
 		t.Errorf("UpdateConfig() = %s, want %s", got, want)
 	}
-	//_ = os.Remove("data/animego.yaml")
+	_ = os.Remove("data/animego.yaml")
 }

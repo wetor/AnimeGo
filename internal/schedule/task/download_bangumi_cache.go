@@ -2,20 +2,20 @@ package task
 
 import (
 	"archive/zip"
-	"context"
 	"io"
 	"os"
 	"path"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"github.com/parnurzeal/gorequest"
 	"github.com/robfig/cron/v3"
 
+	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/errors"
 	"github.com/wetor/AnimeGo/pkg/log"
-	"github.com/wetor/AnimeGo/pkg/try"
 )
 
 const (
@@ -25,24 +25,34 @@ const (
 	SubjectDB          = "bolt_sub.db"
 
 	Cron              = "0 0 12 * * 3" // 每周三12点
-	MaxModifyTimeHour = 24             // 首次启动时，是否执行任务的最长修改时间
+	MaxModifyTimeHour = 12             // 首次启动时，是否执行任务的最长修改时间
 	MinFileSizeKB     = 512            // 首次启动时，是否执行任务的最小文件大小
-
-	RetryNum  = 3  // 失败重试次数
-	RetryWait = 60 // 失败重试等待时间，秒
 )
 
+var firstRun = true
+
 type BangumiTask struct {
-	parser   *cron.Parser
-	cron     string
-	savePath string
+	parser *cron.Parser
+	cron   string
+
+	dbPath     string
+	cache      api.CacheOpener
+	cacheMutex *sync.Mutex
 }
 
-func NewBangumiTask(parser *cron.Parser) *BangumiTask {
+type BangumiOptions struct {
+	DBPath     string
+	Cache      api.CacheOpener
+	CacheMutex *sync.Mutex
+}
+
+func NewBangumiTask(opts *BangumiOptions) *BangumiTask {
 	return &BangumiTask{
-		savePath: DBDir,
-		cron:     Cron,
-		parser:   parser,
+		parser:     &SecondParser,
+		cron:       Cron,
+		dbPath:     opts.DBPath,
+		cache:      opts.Cache,
+		cacheMutex: opts.CacheMutex,
 	}
 }
 
@@ -69,7 +79,7 @@ func (t *BangumiTask) download(url, name string) string {
 		log.Errorf("使用ghproxy下载%s失败", name)
 		return ""
 	}
-	file := path.Join(t.savePath, name)
+	file := path.Join(t.dbPath, name)
 	err := os.WriteFile(file, data, 0644)
 	if err != nil {
 		log.Debugf("", errors.NewAniErrorD(err))
@@ -85,7 +95,7 @@ func (t *BangumiTask) unzip(filename string) {
 
 	// 遍历 zr ，将文件写入到磁盘
 	for _, file := range zr.File {
-		path_ := filepath.Join(t.savePath, file.Name)
+		path_ := filepath.Join(t.dbPath, file.Name)
 
 		// 如果是目录，就创建目录
 		if file.FileInfo().IsDir() {
@@ -113,43 +123,32 @@ func (t *BangumiTask) unzip(filename string) {
 	errors.NewAniErrorD(err).TryPanic()
 }
 
-func (t *BangumiTask) Run(force bool) {
-	success := false
-	for i := 0; i < RetryNum; i++ {
-		try.This(func() {
-			db := path.Join(t.savePath, SubjectDB)
-			stat, err := os.Stat(db)
-			// 上次修改时间小于 MinModifyTimeHour 小时，且文件大小大于 MinFileSizeKB kb，跳过
-			if force && err == nil &&
-				time.Now().Unix()-stat.ModTime().Unix() <= MaxModifyTimeHour*60*60 && stat.Size() > MinFileSizeKB*1024 {
-				return
-			}
-			log.Infof("[定时任务] %s 开始执行", t.Name())
-			subUrl := CDN1 + ArchiveReleaseBase + Subject
-			file := t.download(subUrl, Subject)
-			BangumiCacheLock.Lock()
-			BangumiCache.Close()
-			t.unzip(file)
-			// 重新加载bolt
-			BangumiCache.Open(db)
-			BangumiCacheLock.Unlock()
-			if utils.FileSize(db) <= MinFileSizeKB*1024 {
-				errors.NewAniError("缓存文件小于512KB").TryPanic()
-			} else {
-				log.Infof("[定时任务] %s 执行完毕，下次执行时间: %s", t.Name(), t.NextTime())
-			}
-			success = true
-		}).Catch(func(err try.E) {
-			log.Debugf("", err)
-			if i == 0 {
-				log.Warnf("[定时任务] %s 执行失败", t.Name())
-			} else {
-				log.Warnf("[定时任务] %s 执行失败，%d 秒后重新执行", t.Name(), RetryWait)
-			}
-			utils.Sleep(RetryWait, context.Background())
-		})
-		if success {
-			break
-		}
+// Run
+//  @Description:
+//  @receiver *BangumiTask
+//  @param opts ...interface{}
+//    opts[0] bool 是否启动时执行
+//
+func (t *BangumiTask) Run(params ...interface{}) {
+	db := path.Join(t.dbPath, SubjectDB)
+	stat, err := os.Stat(db)
+	// 首次启动时，若
+	// 上次修改时间小于 MinModifyTimeHour 小时，且文件大小大于 MinFileSizeKB kb
+	// 则不执行
+	if firstRun && err == nil &&
+		time.Now().Unix()-stat.ModTime().Unix() <= MaxModifyTimeHour*60*60 && stat.Size() > MinFileSizeKB*1024 {
+		firstRun = false
+		return
+	}
+	subUrl := CDN1 + ArchiveReleaseBase + Subject
+	file := t.download(subUrl, Subject)
+	t.cacheMutex.Lock()
+	t.cache.Close()
+	t.unzip(file)
+	// 重新加载bolt
+	t.cache.Open(db)
+	t.cacheMutex.Unlock()
+	if utils.FileSize(db) <= MinFileSizeKB*1024 {
+		errors.NewAniError("缓存文件小于512KB").TryPanic()
 	}
 }

@@ -1,15 +1,5 @@
 package api
 
-import (
-	"context"
-
-	"github.com/wetor/AnimeGo/internal/models"
-)
-
-type FilterManager interface {
-	Update(ctx context.Context, items []*models.FeedItem)
-}
-
 type Cacher interface {
 	CacheOpener
 	CacheSetter

@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"os"
 	"path"
 	"reflect"
@@ -14,9 +15,7 @@ import (
 	"time"
 )
 
-type FormatMap map[string]any
-
-func Format(format string, p FormatMap) string {
+func Format(format string, p map[string]any) string {
 	args, i := make([]string, len(p)*2), 0
 	for k, v := range p {
 		args[i] = "{" + k + "}"
@@ -26,25 +25,10 @@ func Format(format string, p FormatMap) string {
 	return strings.NewReplacer(args...).Replace(format)
 }
 
-var filenameMap = FormatMap{
-	`/`: "",
-	`\`: "",
-	`[`: "(",
-	`]`: ")",
-	`:`: "-",
-	`;`: "-",
-	`=`: "-",
-	`,`: "-",
-}
-
-func Filename(filename string) string {
-	return Format(filename, filenameMap)
-}
-
 func Tag(tagSrc string, airDate string, ep int) string {
 	date, _ := time.Parse("2006-01-02", airDate)
 	mouth := (int(date.Month()) + 2) / 3
-	tag := Format(tagSrc, FormatMap{
+	tag := Format(tagSrc, map[string]any{
 		"year":          date.Year(),
 		"quarter":       (mouth-1)*3 + 1,
 		"quarter_index": mouth,
@@ -214,4 +198,14 @@ func Rename(src, dst string) error {
 		return err
 	}
 	return nil
+}
+
+const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+func RandString(n int) string {
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letterBytes[rand.Int63()%int64(len(letterBytes))]
+	}
+	return string(b)
 }

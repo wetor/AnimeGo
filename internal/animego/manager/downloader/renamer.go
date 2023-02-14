@@ -10,7 +10,15 @@ import (
 	"github.com/wetor/AnimeGo/pkg/log"
 )
 
-func RenameAnime(opt *models.RenameOptions) {
+type RenameOptions struct {
+	Src            string
+	Dst            string
+	State          <-chan models.TorrentState
+	RenameCallback func() // 重命名完成后回调
+	Callback       func() // 完成重命名所有流程后回调
+}
+
+func RenameAnime(opt *RenameOptions) {
 	if opt.Src == opt.Dst {
 		return
 	}

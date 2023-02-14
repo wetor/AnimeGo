@@ -1,4 +1,4 @@
-package schedule
+package schedule_test
 
 import (
 	"context"
@@ -7,32 +7,73 @@ import (
 	"testing"
 	"time"
 
+	"github.com/wetor/AnimeGo/internal/constant"
+	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/plugin/python"
+	"github.com/wetor/AnimeGo/internal/plugin/python/lib"
+	"github.com/wetor/AnimeGo/internal/schedule"
 	"github.com/wetor/AnimeGo/internal/schedule/task"
+	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/cache"
+	"github.com/wetor/AnimeGo/pkg/log"
+	"github.com/wetor/AnimeGo/third_party/gpython"
 )
 
-func TestNewSchedule(t *testing.T) {
-	wg := sync.WaitGroup{}
-	b := cache.NewBolt()
-	b.Open("task/data/bolt_sub.db")
-	mutex := sync.Mutex{}
+var s *schedule.Schedule
 
-	Init(&Options{
-		Options: &task.Options{
-			DBDir:            "task/data",
-			BangumiCache:     b,
-			BangumiCacheLock: &mutex,
-		},
+func TestMain(m *testing.M) {
+	fmt.Println("begin")
+	log.Init(&log.Options{
+		File:  "log/log.log",
+		Debug: true,
+	})
+	gpython.Init()
+	lib.InitLog()
+	_ = utils.CreateMutiDir("data")
+
+	wg := sync.WaitGroup{}
+	s = schedule.NewSchedule(&schedule.Options{
 		WG: &wg,
 	})
-	s := NewSchedule()
-	s.Add("test", task.NewJSPluginTask(&s.parser))
-	for _, ts := range s.List() {
-		fmt.Println(ts)
-	}
+	m.Run()
+	fmt.Println("end")
+}
+
+func TestNewSchedule(t *testing.T) {
+	b := cache.NewBolt()
+	b.Open("data/bolt_sub.db")
+	mutex := sync.Mutex{}
+
+	s.Add(&schedule.AddTaskOptions{
+		Name:     "bangumi",
+		StartRun: true,
+		Task: task.NewBangumiTask(&task.BangumiOptions{
+			DBPath:     "data",
+			Cache:      b,
+			CacheMutex: &mutex,
+		}),
+	})
+	s.Start(context.Background())
+	time.Sleep(1 * time.Second)
+	s.Delete("bangumi")
+}
+
+func TestNewSchedule2(t *testing.T) {
+	constant.PluginPath = "/Users/wetor/GoProjects/AnimeGo/assets/plugin"
+	s.Add(&schedule.AddTaskOptions{
+		Name:     "test",
+		StartRun: true,
+		Task: task.NewPluginTask(&task.PluginOptions{
+			Cron: "*/5 * * * * ?",
+			Plugin: &models.Plugin{
+				Enable: true,
+				Type:   python.Type,
+				File:   "schedule/refresh.py",
+			},
+		}),
+		Params: []interface{}{models.Object{"aaa": "测试内容"}},
+	})
 	s.Start(context.Background())
 	time.Sleep(11 * time.Second)
 	s.Delete("test")
-	time.Sleep(5 * time.Second)
-
 }

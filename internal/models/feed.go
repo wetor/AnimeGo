@@ -2,8 +2,6 @@ package models
 
 import (
 	"path"
-
-	"github.com/wetor/AnimeGo/internal/utils"
 )
 
 const (
@@ -51,5 +49,5 @@ func (i FeedItem) Hash() string {
 			return hash[:40]
 		}
 	}
-	return "ItemUrl_" + utils.Md5Str(i.Url)
+	return "ItemUrl_" + Md5Str(i.Url)
 }

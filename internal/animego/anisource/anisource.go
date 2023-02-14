@@ -7,12 +7,7 @@ import (
 	"github.com/wetor/AnimeGo/internal/animego/anidata/bangumi"
 	"github.com/wetor/AnimeGo/internal/animego/anidata/mikan"
 	"github.com/wetor/AnimeGo/internal/animego/anidata/themoviedb"
-	"github.com/wetor/AnimeGo/internal/models"
 )
-
-type AniSource interface {
-	Parse(opt *models.AnimeParseOptions) *models.AnimeEntity
-}
 
 // 单例模式
 var (
