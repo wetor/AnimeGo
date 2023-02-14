@@ -2,7 +2,7 @@ package javascript
 
 import (
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 
 	"github.com/dop251/goja"
@@ -37,9 +37,9 @@ func (p *JavaScript) execute(file string) {
 	raw, err := os.ReadFile(file)
 	errors.NewAniErrorD(err).TryPanic()
 
-	currRootPath = path.Dir(file)
-	_, currName = path.Split(file)
-	currName = strings.TrimSuffix(currName, path.Ext(file))
+	currRootPath = filepath.Dir(file)
+	_, currName = filepath.Split(file)
+	currName = strings.TrimSuffix(currName, filepath.Ext(file))
 
 	_, err = p.RunScript(file, string(raw))
 	errors.NewAniErrorD(err).TryPanic()

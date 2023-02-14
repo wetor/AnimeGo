@@ -2,7 +2,7 @@ package log
 
 import (
 	"os"
-	"path"
+	"path/filepath"
 	"sync"
 
 	"go.uber.org/zap"
@@ -23,7 +23,7 @@ type Options struct {
 func Init(opts *Options) {
 	file = opts.File
 	debug = opts.Debug
-	dir := path.Dir(file)
+	dir := filepath.Dir(file)
 	_, err := os.Stat(dir)
 	if err != nil {
 		if !os.IsExist(err) {

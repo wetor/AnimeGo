@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"net/url"
-	"path"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -139,7 +139,7 @@ func (m Mikan) parseMikanInfo(mikanUrl string) (mikan *MikanInfo) {
 		return
 	}
 	href = htmlquery.SelectAttr(group, "href")
-	_, groupId := path.Split(href)
+	_, groupId := filepath.Split(href)
 	mikan.PubGroupID, err = strconv.Atoi(groupId)
 	errors.NewAniErrorD(err).TryPanic()
 

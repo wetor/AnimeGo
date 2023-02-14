@@ -3,7 +3,7 @@ package javascript
 import (
 	"fmt"
 	"os"
-	"path"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -61,7 +61,7 @@ func (p *JavaScript) ReadFile(filename string) string {
 	if strings.Index(filename, "../") >= 0 {
 		panic("禁止使用'../'访问路径")
 	}
-	file, err := os.ReadFile(path.Join(currRootPath, filename))
+	file, err := os.ReadFile(filepath.Join(currRootPath, filename))
 	if err != nil {
 		panic(p.ToValue(err))
 	}

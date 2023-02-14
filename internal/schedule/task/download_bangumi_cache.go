@@ -4,7 +4,6 @@ import (
 	"archive/zip"
 	"io"
 	"os"
-	"path"
 	"path/filepath"
 	"sync"
 	"time"
@@ -79,7 +78,7 @@ func (t *BangumiTask) download(url, name string) string {
 		log.Errorf("使用ghproxy下载%s失败", name)
 		return ""
 	}
-	file := path.Join(t.dbPath, name)
+	file := filepath.Join(t.dbPath, name)
 	err := os.WriteFile(file, data, 0644)
 	if err != nil {
 		log.Debugf("", errors.NewAniErrorD(err))
@@ -130,7 +129,7 @@ func (t *BangumiTask) unzip(filename string) {
 //    opts[0] bool 是否启动时执行
 //
 func (t *BangumiTask) Run(params ...interface{}) {
-	db := path.Join(t.dbPath, SubjectDB)
+	db := filepath.Join(t.dbPath, SubjectDB)
 	stat, err := os.Stat(db)
 	// 首次启动时，若
 	// 上次修改时间小于 MinModifyTimeHour 小时，且文件大小大于 MinFileSizeKB kb

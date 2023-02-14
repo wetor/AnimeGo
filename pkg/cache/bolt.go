@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"os"
-	"path"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -26,7 +26,7 @@ func NewBolt() *Bolt {
 }
 
 func (c *Bolt) Open(file string) {
-	_ = os.MkdirAll(path.Dir(file), os.ModePerm)
+	_ = os.MkdirAll(filepath.Dir(file), os.ModePerm)
 	db, err := bolt.Open(file, 0600, nil)
 	if err != nil {
 		log.Debugf("", errors.NewAniErrorD(err))

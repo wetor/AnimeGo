@@ -2,7 +2,7 @@ package task
 
 import (
 	"fmt"
-	"path"
+	"path/filepath"
 	"time"
 
 	"github.com/wetor/AnimeGo/internal/constant"
@@ -31,7 +31,7 @@ type PluginOptions struct {
 func NewPluginTask(opts *PluginOptions) *PluginTask {
 	p := plugin.GetPlugin(opts.Type, plugin.Schedule)
 	p.Load(&models.PluginLoadOptions{
-		File: path.Join(constant.PluginPath, opts.File),
+		File: filepath.Join(constant.PluginPath, opts.File),
 		Functions: []*models.PluginFunctionOptions{
 			{
 				Name:            "Run",

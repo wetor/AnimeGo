@@ -1,7 +1,7 @@
 package public
 
 import (
-	"path"
+	"path/filepath"
 
 	"github.com/wetor/AnimeGo/assets"
 	"github.com/wetor/AnimeGo/internal/models"
@@ -23,7 +23,7 @@ func Init(opt *Options) {
 }
 
 func ParserName(title string) (ep *models.TitleParsed) {
-	pluginFile := path.Join(pluginPath, "lib/Auto_Bangumi/raw_parser.py")
+	pluginFile := filepath.Join(pluginPath, "lib/Auto_Bangumi/raw_parser.py")
 	if !utils.IsExist(pluginFile) {
 		utils.CopyDir(assets.Plugin, "plugin", pluginPath, true, false)
 	}

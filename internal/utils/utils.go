@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
-	"path"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"time"
@@ -173,7 +173,7 @@ func UTCToTimeStr(t1 string) string {
 }
 
 func CreateLink(src, dst string) error {
-	dir := path.Dir(dst)
+	dir := filepath.Dir(dst)
 	if err := CreateMutiDir(dir); err != nil {
 		return err
 	}
@@ -189,7 +189,7 @@ func CreateLink(src, dst string) error {
 }
 
 func Rename(src, dst string) error {
-	dir := path.Dir(dst)
+	dir := filepath.Dir(dst)
 	if err := CreateMutiDir(dir); err != nil {
 		return err
 	}
