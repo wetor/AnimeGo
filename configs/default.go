@@ -17,7 +17,7 @@ func defaultSettingComment() {
 	configComment["filter_plugin"] = `按顺序依次执行启用的插件
 列表类型，每一项需要有以下参数：
   enable: 启用
-  type: 插件类型，支持 'js' 和 'py' 两种插件类型。支持 'javascript' 和 'python' 全称，不区分大小写
+  type: 插件类型，目前仅支持 'py' 插件类型。支持 'python' 全称，不区分大小写
   file: 插件文件，相对于 'data/plugin' 文件夹的路径
 `
 

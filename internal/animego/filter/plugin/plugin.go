@@ -33,7 +33,7 @@ func (p *Filter) Filter(list []*models.FeedItem) []*models.FeedItem {
 		}
 		log.Debugf("[Plugin] 开始执行Filter插件(%s): %s", info.Type, info.File)
 		// 入参
-		pluginInstance := plugin.GetPlugin(info.Type, plugin.Filter)
+		pluginInstance := plugin.GetPlugin(nil)
 		pluginInstance.Load(&models.PluginLoadOptions{
 			File: filepath.Join(constant.PluginPath, info.File),
 			Functions: []*models.PluginFunctionOptions{

@@ -11,20 +11,18 @@
   -web
         启用Web API，默认启用 (default true)
 ```
-### 0.安装插件 [可选]
-- (默认已安装) AnimeGo过滤器插件：https://github.com/deqxj00/AnimeGoFilterPlugin
-  - 配置文件中`setting/filter/plugin`新增
-    ```
-    setting:
-      # ...
-      filter:
-        plugin:
-          - enable: true
-            type: js
-            file: filter/AnimeGoHelperParser/AnimeGoHelperParser.js
-    ```
-    后开启插件。支持多插件顺序执行筛选
-- ([安装Tampermonkey插件](https://greasyfork.org/zh-CN/scripts/449596)) AnimeGo网页快速订阅Tampermonkey(油猴)插件：https://github.com/deqxj00/AnimeGoHelper
+### 0.安装和使用MikanTool插件 [可选]
+- 配置文件中`setting/filter/plugin`新增如下内容后即可开启插件。
+  ```
+  setting:
+    # ...
+    filter:
+      plugin:
+        - enable: true
+          type: py
+          file: filter/mikan_tool.py
+  ```
+- 然后 [安装MikanTool Tampermonkey插件](https://greasyfork.org/zh-CN/scripts/449596) ，需要浏览器中已安装Tampermonkey（油猴插件）
 
 ### 1.首次启动
 ```shell
@@ -43,10 +41,9 @@
 
 ### 3.启动程序
 ```shell
-./AnimeGo -config=data/animego.yaml
+./AnimeGo
 ```
-> 可选`-debug`，启用后将输出更详细的日志  
-> 如不修改`data/animego.yaml`位置，直接启动程序即可
+> 可选`-debug`，启用后将输出更详细的日志
 
 可以使用如screen等工具放至后台执行，也可以创建服务并启动
 ### 更多待补充...
@@ -62,7 +59,7 @@
 
 ## 目前进度
 - 可使用配置、筛选和下载等基本功能
-- javascript、python编写筛选器，[帮助文档](internal/plugin/README.md)
+- python编写筛选器，[帮助文档](internal/plugin/README.md)
 - 支持Tampermonkey(油猴)插件 [AnimeGo\[Mikan快速订阅\]](https://greasyfork.org/zh-CN/scripts/449596) 快速订阅下载
 - Jellyfin支持
 
@@ -82,6 +79,24 @@
   - [ ] ...
 
 ## 开发日志
+
+### v0.7.1
+- 移除JavaScript插件支持
+
+### v0.7.0
+- 实现MikanTool(原AnimeGoHelperParser)的Python版插件
+- Python插件支持多函数
+- Python插件支持全局变量
+- Python插件新增core模块，支持json和yaml的编码和解码，以及Mikan url解析
+- 统一使用filepath已解决windows上可能存在的问题
+- 修复部分Bug
+
+### v0.6.8 
+- Schedule定时任务
+  - 优化参数传递
+  - 支持定时执行插件脚本
+- 优化部分单测
+  - mock了qbt客户端
 
 ### v0.6.7
 - 修复js plugin调用py问题

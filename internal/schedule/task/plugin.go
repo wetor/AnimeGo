@@ -29,7 +29,7 @@ type PluginOptions struct {
 }
 
 func NewPluginTask(opts *PluginOptions) *PluginTask {
-	p := plugin.GetPlugin(opts.Type, plugin.Schedule)
+	p := plugin.GetPlugin(nil)
 	p.Load(&models.PluginLoadOptions{
 		File: filepath.Join(constant.PluginPath, opts.File),
 		Functions: []*models.PluginFunctionOptions{
