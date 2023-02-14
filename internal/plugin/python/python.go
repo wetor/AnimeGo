@@ -32,7 +32,9 @@ type Python struct {
 
 func (p *Python) preExecute(file string) {
 	if p.ctx == nil {
-		p.ctx = py.NewContext(py.DefaultContextOpts())
+		p.ctx = py.NewContext(py.ContextOpts{
+			SysPaths: []string{filepath.Dir(file)},
+		})
 		code, err := os.ReadFile(file)
 		if err != nil {
 			errors.NewAniErrorD(err).TryPanic()

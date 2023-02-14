@@ -23,7 +23,7 @@ func Init(opt *Options) {
 }
 
 func ParserName(title string) (ep *models.TitleParsed) {
-	pluginFile := filepath.Join(pluginPath, "lib/Auto_Bangumi/raw_parser.py")
+	pluginFile := filepath.Join(pluginPath, "filter/Auto_Bangumi/raw_parser.py")
 	if !utils.IsExist(pluginFile) {
 		utils.CopyDir(assets.Plugin, "plugin", pluginPath, true, false)
 	}
@@ -31,12 +31,12 @@ func ParserName(title string) (ep *models.TitleParsed) {
 		File: pluginFile,
 		Functions: []*models.PluginFunctionOptions{
 			{
-				Name:            "parse",
+				Name:            "main",
 				SkipSchemaCheck: true,
 			},
 		},
 	})
-	result := py.Run("parse", models.Object{
+	result := py.Run("main", models.Object{
 		"title": title,
 	})
 	ep = &models.TitleParsed{

@@ -2,7 +2,7 @@ import time
 
 import log
 import core
-import pylib
+from Auto_Bangumi.raw_parser import analyse
 
 
 def get_is_push(value, key, title):
@@ -74,7 +74,7 @@ def main(args):
 
     for index, item in enumerate(args.feedItems):
         try:
-            parsed = pylib.analyse(item)
+            parsed = analyse(item.Name)
             log.debug(' ')
             log.debug('==================================')
             log.info('| '+item.Name, ' ', item.Length)
@@ -129,8 +129,8 @@ def main(args):
             log.debug(' ')
 
             if isNeedGetMikanInfo:
-                time.sleep(1)
-
+                # time.sleep(1)
+                pass
         except Exception as e:
             log.debugf('%v %v', item.Name, e)
 

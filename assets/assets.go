@@ -6,6 +6,6 @@ import (
 
 var (
 	//go:embed plugin
-	//go:embed plugin/filter/pylib/__init__.py
+	//go:embed plugin/filter/Auto_Bangumi/__init__.py
 	Plugin embed.FS
 )
