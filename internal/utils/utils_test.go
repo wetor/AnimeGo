@@ -2,6 +2,7 @@ package utils_test
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/wetor/AnimeGo/internal/models"
@@ -62,7 +63,7 @@ func TestModel2Map(t *testing.T) {
 func TestModel2MapByJson(t *testing.T) {
 	obj := models.Object{}
 	type Struct struct {
-		Best    int64  `json:"best"`
+		Best    int    `json:"best"`
 		TestKey string `json:"testKey"`
 	}
 	model := Struct{
@@ -71,4 +72,5 @@ func TestModel2MapByJson(t *testing.T) {
 	}
 	utils.Model2MapByJson(&model, obj)
 	fmt.Println(obj)
+	fmt.Println(obj["best"], reflect.ValueOf(obj["best"]).Type())
 }

@@ -23,8 +23,9 @@ var s *schedule.Schedule
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
+	constant.CachePath = "data"
 	log.Init(&log.Options{
-		File:  "log/log.log",
+		File:  "data/log.log",
 		Debug: true,
 	})
 	gpython.Init()
@@ -49,7 +50,6 @@ func TestNewSchedule(t *testing.T) {
 		Name:     "bangumi",
 		StartRun: true,
 		Task: task.NewBangumiTask(&task.BangumiOptions{
-			DBPath:     "data",
 			Cache:      b,
 			CacheMutex: &mutex,
 		}),

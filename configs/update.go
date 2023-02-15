@@ -4,10 +4,10 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path"
-	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/wetor/AnimeGo/pkg/xpath"
 
 	"github.com/jinzhu/copier"
 	"gopkg.in/yaml.v3"
@@ -153,13 +153,13 @@ func update_110_120(file string) {
 	constant.Init(&constant.Options{
 		DataPath: newConfig.DataPath,
 	})
-	log.Printf("[移除] 配置项(setting.advanced.path.db_file)\n")
+	log.Printf("[移除] 配置项(setting.advanced.xpath.db_file)\n")
 	_ = utils.CreateMutiDir(constant.CachePath)
-	_ = os.Rename(path.Join(oldConfig.DataPath, oldConfig.Advanced.Path.DbFile), constant.CacheFile)
-	log.Printf("[移除] 配置项(setting.advanced.path.log_file)\n")
+	_ = os.Rename(xpath.Join(oldConfig.DataPath, oldConfig.Advanced.Path.DbFile), constant.CacheFile)
+	log.Printf("[移除] 配置项(setting.advanced.xpath.log_file)\n")
 	_ = utils.CreateMutiDir(constant.LogPath)
-	_ = os.Rename(path.Join(oldConfig.DataPath, oldConfig.Advanced.Path.LogFile), constant.LogFile)
-	log.Printf("[移除] 配置项(setting.advanced.path.temp_path)\n")
+	_ = os.Rename(xpath.Join(oldConfig.DataPath, oldConfig.Advanced.Path.LogFile), constant.LogFile)
+	log.Printf("[移除] 配置项(setting.advanced.xpath.temp_path)\n")
 
 	content, err := encodeConfig(newConfig)
 	if err != nil {
@@ -224,8 +224,8 @@ func encodeConfig(conf any) ([]byte, error) {
 }
 
 func BackupConfig(file string, version string) error {
-	dir, name := filepath.Split(file)
-	ext := path.Ext(name)
+	dir, name := xpath.Split(file)
+	ext := xpath.Ext(name)
 	name = strings.TrimSuffix(name, ext)
 	timeStr := time.Now().Format("20060102150405")
 	name = fmt.Sprintf("%s-%s-%s%s", name, version, timeStr, ext)
@@ -233,7 +233,7 @@ func BackupConfig(file string, version string) error {
 	if err != nil {
 		return err
 	}
-	out := path.Join(dir, name)
+	out := xpath.Join(dir, name)
 	err = os.WriteFile(out, oldFile, 0644)
 	if err != nil {
 		return err

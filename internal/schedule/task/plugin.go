@@ -2,10 +2,7 @@ package task
 
 import (
 	"fmt"
-	"path"
 	"time"
-
-	"github.com/wetor/AnimeGo/internal/constant"
 
 	"github.com/robfig/cron/v3"
 
@@ -31,7 +28,7 @@ type PluginOptions struct {
 func NewPluginTask(opts *PluginOptions) *PluginTask {
 	p := plugin.GetPlugin(nil)
 	p.Load(&models.PluginLoadOptions{
-		File: path.Join(constant.PluginPath, opts.File),
+		File: opts.File,
 		Functions: []*models.PluginFunctionOptions{
 			{
 				Name:            "Run",

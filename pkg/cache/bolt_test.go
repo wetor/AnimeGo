@@ -43,7 +43,7 @@ var (
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
 	log.Init(&log.Options{
-		File:  "data/test.log",
+		File:  "data/log.log",
 		Debug: true,
 	})
 	db.Open("data/1.db")

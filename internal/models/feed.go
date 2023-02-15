@@ -1,8 +1,6 @@
 package models
 
-import (
-	"path/filepath"
-)
+import "github.com/wetor/AnimeGo/pkg/xpath"
 
 const (
 	MagnetType  = "magnet"
@@ -44,7 +42,7 @@ func (i FeedItem) DownloadType() string {
 //
 func (i FeedItem) Hash() string {
 	if i.DownloadType() == TorrentType {
-		_, hash := filepath.Split(i.Download)
+		_, hash := xpath.Split(i.Download)
 		if len(hash) >= 40 {
 			return hash[:40]
 		}

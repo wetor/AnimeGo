@@ -1,7 +1,6 @@
 package mikan_test
 
 import (
-	"encoding/json"
 	"fmt"
 	"sync"
 	"testing"
@@ -9,10 +8,11 @@ import (
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/internal/animego/anisource"
 	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
+	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/internal/plugin/public"
 	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/cache"
+	"github.com/wetor/AnimeGo/pkg/json"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/request"
 	"github.com/wetor/AnimeGo/third_party/gpython"
@@ -23,12 +23,13 @@ const ThemoviedbKey = "d3d8430aefee6c19520d0f7da145daf5"
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
 	_ = utils.CreateMutiDir("data")
+	constant.PluginPath = "../../../../assets/plugin"
 	log.Init(&log.Options{
-		File:  "data/test.log",
+		File:  "data/log.log",
 		Debug: true,
 	})
 	b := cache.NewBolt()
-	b.Open("data/test.db")
+	b.Open("data/bolt.db")
 	anisource.Init(&anisource.Options{
 		Options: &anidata.Options{
 			Cache: b,
@@ -42,9 +43,8 @@ func TestMain(m *testing.M) {
 		TMDBFailUseTitleSeason: true,
 		TMDBFailUseFirstSeason: true,
 	})
-
 	bangumiCache := cache.NewBolt()
-	bangumiCache.Open("data/bolt_sub.db")
+	bangumiCache.Open("../../../../test/testdata/bolt_sub.bolt")
 	bangumiCache.Add("bangumi_sub")
 	mutex := sync.Mutex{}
 	anidata.Init(&anidata.Options{
@@ -52,9 +52,7 @@ func TestMain(m *testing.M) {
 		BangumiCache:     bangumiCache,
 		BangumiCacheLock: &mutex,
 	})
-	public.Init(&public.Options{
-		PluginPath: "../../../../assets/plugin",
-	})
+
 	gpython.Init()
 
 	request.Init(&request.Options{

@@ -4,7 +4,7 @@ import log
 def test(args):
     log.info(args)
     log.info(__plugin_name__)
-    log.info(__plugin_path__)
+    log.info(__plugin_dir__)
     log.info(__animego_version__)
     config = _get_config()
     log.info(config)

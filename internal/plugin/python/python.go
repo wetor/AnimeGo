@@ -1,23 +1,23 @@
 package python
 
 import (
-	"encoding/json"
 	"os"
-	"path"
-	"path/filepath"
 	"strings"
 
 	"github.com/go-python/gpython/py"
 	_ "github.com/go-python/gpython/stdlib"
 	"gopkg.in/yaml.v3"
 
+	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/models"
 	pyutils "github.com/wetor/AnimeGo/internal/plugin/python/utils"
 	pluginutils "github.com/wetor/AnimeGo/internal/plugin/utils"
 	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/errors"
+	"github.com/wetor/AnimeGo/pkg/json"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/try"
+	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
 const Type = "python"
@@ -28,37 +28,30 @@ type Python struct {
 	ctx       py.Context
 	module    *py.Module
 	name      string
-	path      string
+	dir       string
+	file      string
 }
 
-func (p *Python) preExecute(file string) {
+func (p *Python) preExecute() {
 	if p.ctx == nil {
 		p.ctx = py.NewContext(py.ContextOpts{
-			SysPaths: []string{filepath.Dir(file)},
+			SysPaths: []string{p.dir},
 		})
-		code, err := os.ReadFile(file)
+		code, err := os.ReadFile(p.file)
 		if err != nil {
 			errors.NewAniErrorD(err).TryPanic()
 		}
 		codeStr := strings.ReplaceAll(string(code), "\r\n", "\n")
-		err = os.WriteFile(file, []byte(codeStr), os.ModePerm)
+		err = os.WriteFile(p.file, []byte(codeStr), os.ModePerm)
 		if err != nil {
 			errors.NewAniErrorD(err).TryPanic()
 		}
 	}
 }
 
-func (p *Python) execute(file string) {
+func (p *Python) execute() {
 	var err error
-	file, err = filepath.Abs(file)
-	if err != nil {
-		errors.NewAniErrorD(err).TryPanic()
-	}
-	p.path = filepath.Dir(file)
-	_, p.name = filepath.Split(file)
-	p.name = strings.TrimSuffix(p.name, path.Ext(file))
-
-	p.module, err = py.RunFile(p.ctx, file, py.CompileOpts{
+	p.module, err = py.RunFile(p.ctx, p.file, py.CompileOpts{
 		CurDir: "/",
 	}, nil)
 	if err != nil {
@@ -102,12 +95,12 @@ func (p *Python) endExecute() {
 	}
 
 	p.module.Globals["__plugin_name__"] = py.String(p.name)
-	p.module.Globals["__plugin_path__"] = py.String(p.path)
+	p.module.Globals["__plugin_dir__"] = py.String(p.dir)
 	p.module.Globals["__animego_version__"] = py.String(os.Getenv("ANIMEGO_VERSION"))
 	p.module.Globals["_get_config"] = py.MustNewMethod("_get_config", func(self py.Object, args py.Tuple) (py.Object, error) {
 		result := models.Object{}
-		yamlFile := path.Join(p.path, p.name+".yaml")
-		jsonFile := path.Join(p.path, p.name+".json")
+		yamlFile := xpath.Join(p.dir, p.name+".yaml")
+		jsonFile := xpath.Join(p.dir, p.name+".json")
 		if utils.IsExist(yamlFile) {
 			data, err := os.ReadFile(yamlFile)
 			if err != nil {
@@ -144,7 +137,19 @@ func (p *Python) Type() string {
 	return Type
 }
 
+func (p *Python) loadPre(file string) {
+	if xpath.IsAbs(file) {
+		p.file = xpath.Abs(xpath.P(file))
+	} else {
+		p.file = xpath.Abs(xpath.Join(constant.PluginPath, xpath.P(file)))
+	}
+	p.file = utils.FindScript(p.file, ".py")
+	p.dir, p.name = xpath.Split(p.file)
+	p.name = strings.TrimSuffix(p.name, xpath.Ext(p.file))
+}
+
 func (p *Python) Load(opts *models.PluginLoadOptions) {
+	p.loadPre(opts.File)
 	p.functions = make(map[string]*Function, len(opts.Functions))
 	for _, f := range opts.Functions {
 		p.functions[f.Name] = &Function{
@@ -163,11 +168,8 @@ func (p *Python) Load(opts *models.PluginLoadOptions) {
 	}
 
 	try.This(func() {
-		p.preExecute(opts.File)
-
-		file := utils.FindScript(opts.File, models.PyExt)
-		p.execute(file)
-
+		p.preExecute()
+		p.execute()
 		p.endExecute()
 
 	}).Catch(func(err try.E) {

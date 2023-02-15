@@ -2,8 +2,9 @@ package models
 
 import (
 	"fmt"
-	"path"
 	"strconv"
+
+	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
 // AnimeEntity 动画信息结构体
@@ -43,7 +44,7 @@ func (b *AnimeEntity) FullName() string {
 }
 
 func (b *AnimeEntity) FileName() string {
-	return path.Join(fmt.Sprintf("S%02d", b.Season), fmt.Sprintf("E%03d", b.Ep))
+	return xpath.Join(fmt.Sprintf("S%02d", b.Season), fmt.Sprintf("E%03d", b.Ep))
 }
 
 func (b *AnimeEntity) DirName() string {

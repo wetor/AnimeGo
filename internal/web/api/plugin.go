@@ -4,7 +4,6 @@ import (
 	"encoding/base64"
 	"fmt"
 	"os"
-	"path"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -14,6 +13,7 @@ import (
 	webModels "github.com/wetor/AnimeGo/internal/web/models"
 	"github.com/wetor/AnimeGo/pkg/errors"
 	"github.com/wetor/AnimeGo/pkg/log"
+	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
 // Rss godoc
@@ -56,8 +56,8 @@ func Rss(c *gin.Context) {
 //  @Summary 发送插件配置
 //  @Description 将当前插件的配置发送给AnimeGo并保存
 //  @Description 插件名为不包含 'plugin' 的路径
-//  @Description 插件名可以忽略'.js'后缀；插件名也可以使用上层文件夹名，会自动寻找文件夹内部的 'main.js' 或 'plugin.js'
-//  @Description 如传入 'test'，会依次尝试寻找 'plugin/test/main.js', 'plugin/test/plugin.js', 'plugin/test.js'
+//  @Description 插件名可以忽略'.py'后缀；插件名也可以使用上层文件夹名，会自动加载文件夹内部的 'main.py'
+//  @Description 如设置为 'plugin/test'，会依次尝试加载 'plugin/test/main.py', 'plugin/test.py'
 //  @Tags plugin
 //  @Accept  json
 //  @Produce  json
@@ -86,7 +86,7 @@ func PluginConfigPost(c *gin.Context) {
 		return
 	}
 
-	filename := strings.TrimSuffix(file, path.Ext(file)) + ".json"
+	filename := strings.TrimSuffix(file, xpath.Ext(file)) + ".json"
 	err = os.WriteFile(filename, data, 0666)
 	if err != nil {
 		err = errors.NewAniErrorD(err)

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/binary"
 	"os"
-	"path/filepath"
 	"sync"
 	"time"
 
@@ -13,6 +12,7 @@ import (
 
 	"github.com/wetor/AnimeGo/pkg/errors"
 	"github.com/wetor/AnimeGo/pkg/log"
+	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
@@ -26,7 +26,7 @@ func NewBolt() *Bolt {
 }
 
 func (c *Bolt) Open(file string) {
-	_ = os.MkdirAll(filepath.Dir(file), os.ModePerm)
+	_ = os.MkdirAll(xpath.Dir(file), os.ModePerm)
 	db, err := bolt.Open(file, 0600, nil)
 	if err != nil {
 		log.Debugf("", errors.NewAniErrorD(err))

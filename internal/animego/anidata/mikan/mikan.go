@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"net/url"
-	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -15,6 +14,7 @@ import (
 	"github.com/wetor/AnimeGo/pkg/errors"
 	mem "github.com/wetor/AnimeGo/pkg/memorizer"
 	"github.com/wetor/AnimeGo/pkg/request"
+	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
 const (
@@ -139,7 +139,7 @@ func (m Mikan) parseMikanInfo(mikanUrl string) (mikan *MikanInfo) {
 		return
 	}
 	href = htmlquery.SelectAttr(group, "href")
-	_, groupId := filepath.Split(href)
+	_, groupId := xpath.Split(href)
 	mikan.PubGroupID, err = strconv.Atoi(groupId)
 	errors.NewAniErrorD(err).TryPanic()
 

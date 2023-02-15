@@ -1,8 +1,6 @@
 package lib
 
 import (
-	"encoding/json"
-
 	"github.com/go-python/gpython/py"
 	"gopkg.in/yaml.v3"
 
@@ -11,6 +9,7 @@ import (
 	"github.com/wetor/AnimeGo/internal/models"
 	pyutils "github.com/wetor/AnimeGo/internal/plugin/python/utils"
 	"github.com/wetor/AnimeGo/internal/utils"
+	"github.com/wetor/AnimeGo/pkg/json"
 	"github.com/wetor/AnimeGo/pkg/try"
 )
 

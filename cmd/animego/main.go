@@ -7,7 +7,6 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"path"
 	"sync"
 	"syscall"
 	"time"
@@ -31,7 +30,6 @@ import (
 	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/logger"
 	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/internal/plugin/public"
 	"github.com/wetor/AnimeGo/internal/plugin/python/lib"
 	"github.com/wetor/AnimeGo/internal/schedule"
 	"github.com/wetor/AnimeGo/internal/schedule/task"
@@ -42,6 +40,7 @@ import (
 	"github.com/wetor/AnimeGo/pkg/cache"
 	log2 "github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/request"
+	"github.com/wetor/AnimeGo/pkg/xpath"
 	"github.com/wetor/AnimeGo/third_party/gpython"
 )
 
@@ -127,7 +126,7 @@ func InitDefaultConfig() {
 }
 
 func InitDefaultAssets(conf *configs.Config) {
-	utils.CopyDir(assets.Plugin, "plugin", path.Join(conf.Setting.DataPath, "plugin"), true, false)
+	utils.CopyDir(assets.Plugin, "plugin", xpath.Join(conf.Setting.DataPath, "plugin"), true, false)
 }
 
 func doExit() {
@@ -154,6 +153,7 @@ func printInfo() {
 }
 
 func Main(ctx context.Context) {
+	configFile = xpath.Abs(configFile)
 	// 初始化默认配置、升级配置
 	InitDefaultConfig()
 
@@ -188,10 +188,6 @@ func Main(ctx context.Context) {
 	// 初始化插件-gpython
 	gpython.Init()
 	lib.Init()
-	// 初始化插件-公共方法
-	public.Init(&public.Options{
-		PluginPath: constant.PluginPath,
-	})
 
 	// 载入AnimeGo数据库（缓存）
 	bolt := cache.NewBolt()
@@ -209,7 +205,6 @@ func Main(ctx context.Context) {
 		Name:     "bangumi",
 		StartRun: true,
 		Task: task.NewBangumiTask(&task.BangumiOptions{
-			DBPath:     constant.CachePath,
 			Cache:      bangumiCache,
 			CacheMutex: &BangumiCacheMutex,
 		}),

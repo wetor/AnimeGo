@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path"
 	"sync"
 	"testing"
 	"time"
@@ -18,6 +17,7 @@ import (
 	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/log"
+	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
 const (
@@ -35,12 +35,11 @@ var (
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
-
 	_ = os.RemoveAll("data")
 	_ = utils.CreateMutiDir(DownloadPath)
 	_ = utils.CreateMutiDir(SavePath)
 	log.Init(&log.Options{
-		File:  "data/test.log",
+		File:  "data/log.log",
 		Debug: true,
 	})
 
@@ -123,6 +122,6 @@ func TestManager_Start(t *testing.T) {
 	time.Sleep(2 * time.Second)
 	a2 := Download2(mgr)
 	wg.Wait()
-	assert.FileExists(t, path.Join(SavePath, a1.DirName(), a1.FileName()+path.Ext(ContentFile)))
-	assert.FileExists(t, path.Join(SavePath, a2.DirName(), a2.FileName()+path.Ext(ContentFile)))
+	assert.FileExists(t, xpath.Join(SavePath, a1.DirName(), a1.FileName()+xpath.Ext(ContentFile)))
+	assert.FileExists(t, xpath.Join(SavePath, a2.DirName(), a2.FileName()+xpath.Ext(ContentFile)))
 }

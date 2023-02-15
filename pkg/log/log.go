@@ -2,9 +2,9 @@ package log
 
 import (
 	"os"
-	"path/filepath"
 	"sync"
 
+	"github.com/wetor/AnimeGo/pkg/xpath"
 	"go.uber.org/zap"
 )
 
@@ -23,7 +23,7 @@ type Options struct {
 func Init(opts *Options) {
 	file = opts.File
 	debug = opts.Debug
-	dir := filepath.Dir(file)
+	dir := xpath.Dir(file)
 	_, err := os.Stat(dir)
 	if err != nil {
 		if !os.IsExist(err) {

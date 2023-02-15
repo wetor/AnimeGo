@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path"
-	"path/filepath"
 	"strings"
+
+	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
 func CopyDir(fs embed.FS, src, dst string, replace bool, skip bool) {
@@ -23,8 +23,8 @@ func CopyDir(fs embed.FS, src, dst string, replace bool, skip bool) {
 
 	for _, file := range files {
 		writeFile := true
-		srcPath := path.Join(src, file.Name())
-		dstPath := path.Join(dst, file.Name())
+		srcPath := xpath.Join(src, file.Name())
+		dstPath := xpath.Join(dst, file.Name())
 		if file.IsDir() {
 			CopyDir(fs, srcPath, dstPath, replace, skip)
 			continue
@@ -47,7 +47,7 @@ func CopyDir(fs embed.FS, src, dst string, replace bool, skip bool) {
 		if writeFile {
 			// 若已存在文件大小不一致则替换
 			if int(FileSize(dstPath)) != len(fileContent) {
-				log.Printf("文件 [%s] 大小改变，重新写入。", filepath.Base(dstPath))
+				log.Printf("文件 [%s] 大小改变，重新写入。", xpath.Base(dstPath))
 				if err := os.WriteFile(dstPath, fileContent, os.ModePerm); err != nil {
 					panic(err)
 				}

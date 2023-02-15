@@ -1,34 +1,22 @@
 package public
 
 import (
-	"path"
-
-	"github.com/wetor/AnimeGo/assets"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin/python"
 	"github.com/wetor/AnimeGo/internal/utils"
 )
 
-var (
-	py         = &python.Python{}
-	pluginPath string
+const (
+	parserScript = "filter/Auto_Bangumi/raw_parser.py"
 )
 
-type Options struct {
-	PluginPath string
-}
-
-func Init(opt *Options) {
-	pluginPath = opt.PluginPath
-}
+var (
+	py = &python.Python{}
+)
 
 func ParserName(title string) (ep *models.TitleParsed) {
-	pluginFile := path.Join(pluginPath, "filter/Auto_Bangumi/raw_parser.py")
-	if !utils.IsExist(pluginFile) {
-		utils.CopyDir(assets.Plugin, "plugin", pluginPath, true, false)
-	}
 	py.Load(&models.PluginLoadOptions{
-		File: pluginFile,
+		File: parserScript,
 		Functions: []*models.PluginFunctionOptions{
 			{
 				Name:            "main",

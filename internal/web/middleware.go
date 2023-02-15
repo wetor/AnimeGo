@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"os"
-	"path"
 	"runtime/debug"
 	"strings"
 	"time"
@@ -14,6 +13,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/wetor/AnimeGo/internal/web/models"
+	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
 // KeyAuth 鉴权
@@ -67,7 +67,7 @@ func GinLogger(logger *zap.SugaredLogger) gin.HandlerFunc {
 		reqPath := c.Request.URL.Path
 		query := c.Request.URL.RawQuery
 		c.Next()
-		ext := path.Ext(reqPath)
+		ext := xpath.Ext(reqPath)
 		if ext != "" && ext != ".html" {
 			return
 		}

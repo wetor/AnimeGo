@@ -5,14 +5,16 @@ import (
 	"crypto/md5"
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
+
 	"fmt"
 	"math/rand"
 	"os"
-	"path/filepath"
 	"reflect"
 	"strings"
 	"time"
+
+	"github.com/wetor/AnimeGo/pkg/json"
+	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
 func Format(format string, p map[string]any) string {
@@ -173,7 +175,7 @@ func UTCToTimeStr(t1 string) string {
 }
 
 func CreateLink(src, dst string) error {
-	dir := filepath.Dir(dst)
+	dir := xpath.Dir(dst)
 	if err := CreateMutiDir(dir); err != nil {
 		return err
 	}
@@ -189,7 +191,7 @@ func CreateLink(src, dst string) error {
 }
 
 func Rename(src, dst string) error {
-	dir := filepath.Dir(dst)
+	dir := xpath.Dir(dst)
 	if err := CreateMutiDir(dir); err != nil {
 		return err
 	}

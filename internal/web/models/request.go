@@ -1,12 +1,10 @@
 package models
 
 import (
-	"path"
-
 	"github.com/wetor/AnimeGo/configs"
 	"github.com/wetor/AnimeGo/internal/constant"
-	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/utils"
+	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
 type SelectEpRequest struct {
@@ -23,12 +21,13 @@ type PluginRequest struct {
 }
 
 func (p PluginRequest) FindFile() (string, error) {
-	file := path.Join(constant.PluginPath, p.Name)
-	ext := path.Ext(file)
-	if len(ext) == 0 {
-		ext = models.JSExt
+	file := p.Name
+	if xpath.IsAbs(file) {
+		file = xpath.Abs(xpath.P(file))
+	} else {
+		file = xpath.Abs(xpath.Join(constant.PluginPath, xpath.P(file)))
 	}
-	script := utils.FindScript(file, ext)
+	script := utils.FindScript(file, ".py")
 	return script, nil
 }
 

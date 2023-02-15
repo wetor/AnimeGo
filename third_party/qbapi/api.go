@@ -3,7 +3,6 @@ package qbapi
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -11,10 +10,11 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
-	"path/filepath"
 	"strings"
 	"time"
 
+	"github.com/wetor/AnimeGo/pkg/json"
+	"github.com/wetor/AnimeGo/pkg/xpath"
 	"golang.org/x/net/publicsuffix"
 )
 
@@ -548,7 +548,7 @@ func (q *QBAPI) AddNewTorrent(ctx context.Context, req *AddNewTorrentReq) (*AddN
 	buffer := bytes.NewBuffer(nil)
 	writer := multipart.NewWriter(buffer)
 	for _, torrent := range req.File {
-		w, err := writer.CreateFormFile("torrents", filepath.Base(torrent))
+		w, err := writer.CreateFormFile("torrents", xpath.Base(torrent))
 		if err != nil {
 			return nil, NewError(ErrFile, err)
 		}

@@ -18,60 +18,12 @@ import (
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
 	log.Init(&log.Options{
-		File:  "data/test.log",
+		File:  "data/log.log",
 		Debug: true,
 	})
-	constant.PluginPath = "."
+	constant.PluginPath = "testdata"
 	m.Run()
 	fmt.Println("end")
-}
-
-func TestJavaScript_Filter(t *testing.T) {
-	rss := mikanRss.NewRss("", "")
-	items := rss.Parse("testdata/Mikan.xml")
-	fmt.Println(len(items))
-	js := plugin.NewFilterPlugin([]models.Plugin{
-		{
-			Enable: true,
-			Type:   "js",
-			File:   "testdata/test.js",
-		},
-	})
-	result := js.Filter(items)
-	fmt.Println(len(result))
-	for _, r := range result {
-		fmt.Println(r)
-	}
-
-}
-
-func TestJavaScript_Filter2(t *testing.T) {
-	list := []*models.FeedItem{
-		{
-			Name: "0000",
-		},
-		{
-			Name: "1108011",
-		},
-		{
-			Name: "2222",
-		},
-		{
-			Name: "3333",
-		},
-	}
-	js := plugin.NewFilterPlugin([]models.Plugin{
-		{
-			Enable: true,
-			Type:   "js",
-			File:   "testdata/regexp.js",
-		},
-	})
-	result := js.Filter(list)
-	fmt.Println(len(result))
-	for _, r := range result {
-		fmt.Println(r.Name)
-	}
 }
 
 func TestPython_Filter(t *testing.T) {
@@ -84,7 +36,7 @@ func TestPython_Filter(t *testing.T) {
 		{
 			Enable: true,
 			Type:   "py",
-			File:   "testdata/filter.py",
+			File:   "filter.py",
 		},
 	})
 	result := js.Filter(items)
@@ -115,7 +67,7 @@ func TestPython_Filter2(t *testing.T) {
 		{
 			Enable: true,
 			Type:   "py",
-			File:   "testdata/test_re.py",
+			File:   "test_re.py",
 		},
 	})
 	result := js.Filter(list)
@@ -128,7 +80,7 @@ func TestPython_Filter2(t *testing.T) {
 func TestPython_Filter3(t *testing.T) {
 	gpython.Init()
 	lib.Init()
-	constant.PluginPath = "/Users/wetor/GoProjects/AnimeGo/assets/plugin/filter"
+	constant.PluginPath = "../../../../assets/plugin"
 	rss := mikanRss.NewRss("", "")
 	items := rss.Parse("testdata/Mikan.xml")
 	fmt.Println(len(items))
@@ -137,7 +89,7 @@ func TestPython_Filter3(t *testing.T) {
 		{
 			Enable: true,
 			Type:   "py",
-			File:   "pydemo.py",
+			File:   "filter/pydemo.py",
 		},
 	})
 	result := js.Filter(items)
@@ -151,7 +103,7 @@ func TestPython_Filter3(t *testing.T) {
 func TestPython_Filter4(t *testing.T) {
 	gpython.Init()
 	lib.Init()
-	constant.PluginPath = "/Users/wetor/GoProjects/AnimeGo/assets/plugin/filter"
+	constant.PluginPath = "../../../../assets/plugin"
 	list := []*models.FeedItem{
 		{
 			Name: "0000",
@@ -170,7 +122,7 @@ func TestPython_Filter4(t *testing.T) {
 		{
 			Enable: true,
 			Type:   "py",
-			File:   "default.py",
+			File:   "filter/default.py",
 		},
 	})
 	result := js.Filter(list)
@@ -192,7 +144,7 @@ func TestPython_Filter5(t *testing.T) {
 
 	gpython.Init()
 	lib.Init()
-	constant.PluginPath = "/Users/wetor/GoProjects/AnimeGo/assets/plugin/filter"
+	constant.PluginPath = "../../../../assets/plugin"
 	rss := mikanRss.NewRss("", "")
 	items := rss.Parse("testdata/Mikan.xml")
 	fmt.Println(len(items))
@@ -201,7 +153,7 @@ func TestPython_Filter5(t *testing.T) {
 		{
 			Enable: true,
 			Type:   "py",
-			File:   "mikan_tool.py",
+			File:   "filter/mikan_tool.py",
 		},
 	})
 	result := js.Filter(items)

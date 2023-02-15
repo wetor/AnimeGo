@@ -4,9 +4,10 @@ import (
 	"archive/zip"
 	"io"
 	"os"
-	"path"
 	"sync"
 	"time"
+
+	"github.com/wetor/AnimeGo/internal/constant"
 
 	"github.com/parnurzeal/gorequest"
 	"github.com/robfig/cron/v3"
@@ -15,6 +16,7 @@ import (
 	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/errors"
 	"github.com/wetor/AnimeGo/pkg/log"
+	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
 const (
@@ -31,16 +33,13 @@ const (
 var firstRun = true
 
 type BangumiTask struct {
-	parser *cron.Parser
-	cron   string
-
-	dbPath     string
+	parser     *cron.Parser
+	cron       string
 	cache      api.CacheOpener
 	cacheMutex *sync.Mutex
 }
 
 type BangumiOptions struct {
-	DBPath     string
 	Cache      api.CacheOpener
 	CacheMutex *sync.Mutex
 }
@@ -49,7 +48,6 @@ func NewBangumiTask(opts *BangumiOptions) *BangumiTask {
 	return &BangumiTask{
 		parser:     &SecondParser,
 		cron:       Cron,
-		dbPath:     opts.DBPath,
 		cache:      opts.Cache,
 		cacheMutex: opts.CacheMutex,
 	}
@@ -78,7 +76,7 @@ func (t *BangumiTask) download(url, name string) string {
 		log.Errorf("使用ghproxy下载%s失败", name)
 		return ""
 	}
-	file := path.Join(t.dbPath, name)
+	file := xpath.Join(constant.CachePath, name)
 	err := os.WriteFile(file, data, 0644)
 	if err != nil {
 		log.Debugf("", errors.NewAniErrorD(err))
@@ -94,7 +92,7 @@ func (t *BangumiTask) unzip(filename string) {
 
 	// 遍历 zr ，将文件写入到磁盘
 	for _, file := range zr.File {
-		path_ := path.Join(t.dbPath, file.Name)
+		path_ := xpath.Join(constant.CachePath, file.Name)
 
 		// 如果是目录，就创建目录
 		if file.FileInfo().IsDir() {
@@ -129,7 +127,7 @@ func (t *BangumiTask) unzip(filename string) {
 //    opts[0] bool 是否启动时执行
 //
 func (t *BangumiTask) Run(params ...interface{}) {
-	db := path.Join(t.dbPath, SubjectDB)
+	db := xpath.Join(constant.CachePath, SubjectDB)
 	stat, err := os.Stat(db)
 	// 首次启动时，若
 	// 上次修改时间小于 MinModifyTimeHour 小时，且文件大小大于 MinFileSizeKB kb

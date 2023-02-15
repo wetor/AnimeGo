@@ -31,7 +31,7 @@ func TestMain(m *testing.M) {
 	fmt.Println("begin")
 	_ = utils.CreateMutiDir("data")
 	log.Init(&log.Options{
-		File:  "data/test.log",
+		File:  "data/log.log",
 		Debug: true,
 	})
 	b := cache.NewBolt()
