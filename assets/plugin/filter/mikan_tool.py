@@ -121,7 +121,7 @@ def main(args):
                     'index': index,
                     'parsed': parsed,
                 })
-                log.infof('| pushed index: %v', index)
+                log.infof('| pushed index count: %v', len(result))
             else:
                 log.infof('| drop index: %v, %v', index, item.Name)
 
