@@ -18,7 +18,7 @@ func TestSettings_Tag(t *testing.T) {
 	}
 }
 
-func TestMap2ModelByJson(t *testing.T) {
+func TestMapToStruct(t *testing.T) {
 	obj := models.Object{
 		"best":    100,
 		"testKey": "这是字符串",
@@ -28,49 +28,29 @@ func TestMap2ModelByJson(t *testing.T) {
 		TestKey string `json:"testKey"`
 	}
 	model := Struct{}
-	utils.Map2ModelByJson(obj, &model)
+	utils.MapToStruct(obj, &model)
 	fmt.Println(model)
 }
 
-func TestMap2Model(t *testing.T) {
-	obj := models.Object{
-		"Best":    100,
-		"TestKey": "这是字符串",
+func TestStructToMap(t *testing.T) {
+	type InnerStruct struct {
+		Best    int    `json:"in_best"`
+		TestKey string `json:"in_test_key"`
 	}
 	type Struct struct {
-		Best    int
-		TestKey string
-	}
-	model := Struct{}
-	utils.Map2Model(obj, &model)
-	fmt.Println(model)
-}
-
-func TestModel2Map(t *testing.T) {
-	obj := models.Object{}
-	type Struct struct {
-		Best    int
-		TestKey string
+		Best    int         `json:"best"`
+		TestKey string      `json:"test_key"`
+		Inner   InnerStruct `json:"inner"`
 	}
 	model := Struct{
 		Best:    666,
 		TestKey: "这是",
+		Inner: InnerStruct{
+			Best:    777,
+			TestKey: "我",
+		},
 	}
-	utils.Model2Map(&model, obj)
-	fmt.Println(obj)
-}
-
-func TestModel2MapByJson(t *testing.T) {
-	obj := models.Object{}
-	type Struct struct {
-		Best    int    `json:"best"`
-		TestKey string `json:"testKey"`
-	}
-	model := Struct{
-		Best:    666,
-		TestKey: "这是",
-	}
-	utils.Model2MapByJson(&model, obj)
+	obj := utils.StructToMap(&model)
 	fmt.Println(obj)
 	fmt.Println(obj["best"], reflect.ValueOf(obj["best"]).Type())
 }

@@ -74,10 +74,10 @@ def main(args):
 
     for index, item in enumerate(args.feedItems):
         try:
-            parsed = analyse(item.Name)
+            parsed = analyse(item.name)
             log.debug(' ')
             log.debug('==================================')
-            log.info('| '+item.Name, ' ', item.Length)
+            log.info('| '+item.name, ' ', item.length)
             log.debug('==================================')
             isPush0 = True
             isPush1 = True
@@ -88,24 +88,24 @@ def main(args):
             log.infof('| isNeedGetMikanInfo: %v', isNeedGetMikanInfo)
             log.debug('==========0.Gobal.Start===========')
             for key, filters in myFiliters.Filiter0.items():
-                isPush0 = get_is_push(filters, key, item.Name)
+                isPush0 = get_is_push(filters, key, item.name)
 
             # 1,2,3
             log.debug('==1,2,3.MikanID,SubGroupID.Start==')
             if isNeedGetMikanInfo:
-                mikanInfo = core.parse_mikan(item.Url)
-                key1 = 'key_' + str(int(mikanInfo.id)) + '_' + str(int(mikanInfo.sub_group_id))
+                mikanInfo = core.parse_mikan(item.url)
+                key1 = 'key_' + str(mikanInfo.id) + '_' + str(mikanInfo.sub_group_id)
                 key2 = str(int(mikanInfo.id))
                 key3 = str(int(mikanInfo.sub_group_id))
                 log.debug('| key1: '+key1)
                 log.debug('| key2: '+key2)
                 log.debug('| key3: '+key3)
                 if key1 in myFiliters.Filiter1.keys():
-                    isPush1 = get_is_push(myFiliters.Filiter1.get(key1), key1, item.Name)
+                    isPush1 = get_is_push(myFiliters.Filiter1.get(key1), key1, item.name)
                 elif key2 in myFiliters.Filiter2.keys():
-                    isPush2 = get_is_push(myFiliters.Filiter2.get(key2), key2, item.Name)
+                    isPush2 = get_is_push(myFiliters.Filiter2.get(key2), key2, item.name)
                 elif key3 in myFiliters.Filiter3.keys():
-                    isPush3 = get_is_push(myFiliters.Filiter3.get(key2), key3, item.Name)
+                    isPush3 = get_is_push(myFiliters.Filiter3.get(key2), key3, item.name)
                 else:
                     log.debug('| no fetch')
             # 4
@@ -113,7 +113,7 @@ def main(args):
             log.debugf('| %v', parsed.group)
             key4 = parsed.group
             if key4 in myFiliters.Filiter4.keys():
-                isPush4 = get_is_push(myFiliters.Filiter4.get(key4), key4, item.Name)
+                isPush4 = get_is_push(myFiliters.Filiter4.get(key4), key4, item.name)
             log.debug('==============Allend==============')
             if isPush0 and isPush1 and isPush2 and isPush3 and isPush4:
                 log.infof('| push index: %v', index)
@@ -123,7 +123,7 @@ def main(args):
                 })
                 log.infof('| pushed index count: %v', len(result))
             else:
-                log.infof('| drop index: %v, %v', index, item.Name)
+                log.infof('| drop index: %v, %v', index, item.name)
 
             log.debug('==================================')
             log.debug(' ')
@@ -132,7 +132,7 @@ def main(args):
                 # time.sleep(1)
                 pass
         except Exception as e:
-            log.debugf('%v %v', item.Name, e)
+            log.debugf('%v %v', item.name, e)
 
     return {
         'data': result,

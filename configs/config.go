@@ -4,12 +4,11 @@ import (
 	"log"
 	"os"
 
-	"github.com/wetor/AnimeGo/pkg/xpath"
-
 	"gopkg.in/yaml.v3"
 
 	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/utils"
+	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
 var ConfigFile = "./data/animego.yaml"
@@ -32,23 +31,11 @@ func Init(file string) *Config {
 	}
 
 	// 路径设置转绝对路径
-	absPath := xpath.Abs(conf.DataPath)
-	if !utils.IsExist(absPath) {
-		log.Fatalf("data_path不是正确的路径，%s", conf.DataPath)
-	}
-	conf.DataPath = absPath
+	conf.DataPath = xpath.Abs(conf.DataPath)
 
-	absPath = xpath.Abs(conf.DownloadPath)
-	if !utils.IsExist(absPath) {
-		log.Fatalf("download_path不是正确的路径，%s", conf.DownloadPath)
-	}
-	conf.DownloadPath = absPath
+	conf.DownloadPath = xpath.Abs(conf.DownloadPath)
 
-	absPath = xpath.Abs(conf.SavePath)
-	if !utils.IsExist(absPath) {
-		log.Fatalf("save_path不是正确的路径，%s", conf.SavePath)
-	}
-	conf.SavePath = absPath
+	conf.SavePath = xpath.Abs(conf.SavePath)
 
 	return conf
 }

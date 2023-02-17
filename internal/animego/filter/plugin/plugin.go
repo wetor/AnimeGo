@@ -69,7 +69,7 @@ func filterData(items []*models.FeedItem, data []any) []*models.FeedItem {
 		}
 		if _, has := obj["parsed"]; has {
 			parsed := &models.TitleParsed{}
-			utils.Map2ModelByJson(obj["parsed"].(models.Object), parsed)
+			utils.MapToStruct(obj["parsed"].(models.Object), parsed)
 			items[index].NameParsed = parsed
 		}
 		itemResult[i] = items[index]

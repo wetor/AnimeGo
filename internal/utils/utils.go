@@ -62,29 +62,7 @@ func Sleep(second int, ctx context.Context) bool {
 	return false
 }
 
-func Map2Model(src map[string]any, dst any) {
-	vdst := reflect.ValueOf(dst).Elem()
-	for key, val := range src {
-		v := vdst.FieldByName(key)
-		if v.CanSet() {
-			v.Set(reflect.ValueOf(val))
-		}
-	}
-}
-
-func Model2Map(src any, dst map[string]any) {
-	vsrcp := reflect.ValueOf(src)
-	if vsrcp.IsNil() {
-		return
-	}
-	vsrc := vsrcp.Elem()
-	vscrType := vsrc.Type()
-	for i := 0; i < vscrType.NumField(); i++ {
-		dst[vscrType.Field(i).Name] = vsrc.Field(i).Interface()
-	}
-}
-
-func Map2ModelByJson(src map[string]any, dst any) {
+func MapToStruct(src map[string]any, dst any) {
 	data, err := json.Marshal(src)
 	if err != nil {
 		panic(err)
@@ -95,15 +73,38 @@ func Map2ModelByJson(src map[string]any, dst any) {
 	}
 }
 
-func Model2MapByJson(src any, dst map[string]any) {
-	data, err := json.Marshal(src)
-	if err != nil {
-		panic(err)
+func StructToMap(src any) (dst map[string]any) {
+	vsrcp := reflect.ValueOf(src)
+	var value any
+	var vsrc reflect.Value
+
+	if vsrcp.Type().Kind() == reflect.Pointer {
+		if vsrcp.IsNil() {
+			return
+		}
+		vsrc = vsrcp.Elem()
+	} else {
+		vsrc = vsrcp
 	}
-	err = json.Unmarshal(data, &dst)
-	if err != nil {
-		panic(err)
+
+	dst = make(map[string]any)
+	vscrType := vsrc.Type()
+	for i := 0; i < vscrType.NumField(); i++ {
+		field := vscrType.Field(i)
+		value = vsrc.Field(i).Interface()
+		switch field.Type.Kind() {
+		case reflect.Struct:
+			fallthrough
+		case reflect.Pointer:
+			value = StructToMap(value)
+		}
+		keyName := field.Tag.Get("json")
+		if len(keyName) == 0 {
+			keyName = field.Name
+		}
+		dst[keyName] = value
 	}
+	return dst
 }
 
 func ConvertModel(src, dst any) {

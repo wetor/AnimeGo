@@ -112,7 +112,7 @@ func parseMikan(self py.Object, arg py.Object) (py.Object, error) {
 	if err != nil {
 		return nil, err
 	}
-	obj := models.Object{}
-	utils.Model2MapByJson(info, obj)
+	obj := models.Object(utils.StructToMap(info))
+
 	return pyutils.Value2PyObject(obj), nil
 }

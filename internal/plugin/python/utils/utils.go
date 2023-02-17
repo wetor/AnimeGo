@@ -53,8 +53,7 @@ func Value2PyObject(object any) gpy.Object {
 		case reflect.Struct:
 			fallthrough
 		case reflect.Pointer:
-			m := make(models.Object)
-			utils.Model2Map(object, m)
+			m := models.Object(utils.StructToMap(object))
 			pyVal = Value2PyObject(m)
 		default:
 			errors.NewAniErrorf("不支持的类型: %v ", reflect.ValueOf(object).Type()).TryPanic()

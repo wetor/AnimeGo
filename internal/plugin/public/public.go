@@ -30,7 +30,7 @@ func ParserName(title string) (ep *models.TitleParsed) {
 	ep = &models.TitleParsed{
 		TitleRaw: title,
 	}
-	utils.Map2ModelByJson(result, ep)
+	utils.MapToStruct(result, ep)
 	if len(ep.NameCN) > 0 {
 		ep.Name = ep.NameCN
 	} else if len(ep.Name) == 0 && len(ep.NameEN) > 0 {
