@@ -60,20 +60,42 @@ func TestNewSchedule(t *testing.T) {
 }
 
 func TestNewSchedule2(t *testing.T) {
-	constant.PluginPath = "/Users/wetor/GoProjects/AnimeGo/assets/plugin"
+	constant.PluginPath = "../../assets/plugin"
 	s.Add(&schedule.AddTaskOptions{
 		Name:     "test",
 		StartRun: true,
-		Task: task.NewPluginTask(&task.PluginOptions{
+		Task: task.NewScheduleTask(&task.ScheduleOptions{
 			Plugin: &models.Plugin{
 				Enable: true,
 				Type:   python.Type,
 				File:   "schedule/refresh.py",
 			},
 		}),
-		Params: []interface{}{models.Object{"aaa": "测试内容"}},
 	})
 	s.Start(context.Background())
 	time.Sleep(11 * time.Second)
+	s.Delete("test")
+}
+
+func TestNewSchedule3_feed(t *testing.T) {
+	constant.PluginPath = "../../assets/plugin"
+	s.Add(&schedule.AddTaskOptions{
+		Name:     "test",
+		StartRun: true,
+		Task: task.NewFeedTask(&task.FeedOptions{
+			Plugin: &models.Plugin{
+				Enable: true,
+				Type:   python.Type,
+				File:   "feed/mikan_rss.py",
+			},
+			Callback: func(items []*models.FeedItem) {
+				for i, item := range items {
+					fmt.Println(i, "download: ", item)
+				}
+			},
+		}),
+	})
+	s.Start(context.Background())
+	time.Sleep(100 * time.Second)
 	s.Delete("test")
 }

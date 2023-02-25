@@ -1,7 +1,7 @@
 
-def main(argv):
+def filter_all(argv):
     result = []
-    for i, item in enumerate(argv['feedItems']):
+    for i, item in enumerate(argv['items']):
         result.append({
             'index': i
         })

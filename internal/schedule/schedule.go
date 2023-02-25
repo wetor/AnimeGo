@@ -8,10 +8,13 @@ import (
 
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/logger"
+	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/schedule/task"
 	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/errors"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/try"
+	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
 const (
@@ -127,4 +130,19 @@ func (s *Schedule) Start(ctx context.Context) {
 			}
 		}
 	}()
+}
+
+func AddScheduleTasks(s *Schedule, plugins []models.Plugin) {
+	for _, p := range plugins {
+		if !p.Enable {
+			continue
+		}
+		s.Add(&AddTaskOptions{
+			Name:     xpath.Base(p.File),
+			StartRun: false,
+			Task: task.NewScheduleTask(&task.ScheduleOptions{
+				Plugin: &p,
+			}),
+		})
+	}
 }

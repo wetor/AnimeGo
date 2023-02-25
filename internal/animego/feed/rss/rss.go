@@ -12,50 +12,44 @@ import (
 	"github.com/mmcdole/gofeed"
 
 	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/request"
 )
 
-type Rss struct {
-	url  string
-	name string
+type Options struct {
+	Url  string
+	File string
+	Raw  string
 }
 
-func NewRss(url, name string) *Rss {
+type Rss struct {
+	url  string
+	file string
+	raw  string
+}
 
-	if len(name) == 0 {
-		if len(url) == 0 {
-			name = ""
-		} else {
-			name = utils.Md5Str(url)
-		}
-
-	}
+func NewRss(opts *Options) *Rss {
 	return &Rss{
-		url:  url,
-		name: name,
+		url:  opts.Url,
+		file: opts.File,
+		raw:  opts.Raw,
 	}
 }
 
 // Parse
-//  @Description: 解析rss
-//  @receiver *Rss
-//  @param opts ...any
-//    [0] string 解析本地文件路径
-//  @return items []*models.FeedItem
 //
-func (f *Rss) Parse(opts ...any) (items []*models.FeedItem) {
-	if len(f.url) == 0 && len(opts) == 0 {
+//	@Description: 解析rss
+//	@receiver *Rss
+//	@return items []*models.FeedItem
+func (f *Rss) Parse() (items []*models.FeedItem) {
+	if len(f.url) == 0 && len(f.file) == 0 && len(f.raw) == 0 {
 		return nil
 	}
 	data := bytes.NewBuffer(nil)
 
 	log.Infof("获取Rss数据开始...")
-	if len(opts) == 1 {
-		filename := opts[0].(string)
-		// --------- 解析本地rss.xml ---------
-		file, err := os.Open(filename)
+	if len(f.file) != 0 {
+		file, err := os.Open(f.file)
 		if err != nil {
 			log.Debugf("", err)
 			log.Warnf("打开Rss文件失败")
@@ -66,12 +60,14 @@ func (f *Rss) Parse(opts ...any) (items []*models.FeedItem) {
 			return nil
 		}
 		_ = file.Close()
+	} else if len(f.raw) != 0 {
+		data.WriteString(f.raw)
 	} else {
-		// --------- 下载rss.xml ---------
 		err := request.GetWriter(f.url, data)
 		if err != nil {
 			log.Debugf("", err)
 			log.Warnf("请求Rss失败")
+			return nil
 		}
 	}
 	log.Infof("获取Rss数据成功！")
@@ -81,6 +77,7 @@ func (f *Rss) Parse(opts ...any) (items []*models.FeedItem) {
 	if err != nil {
 		log.Debugf("", err)
 		log.Warnf("解析ss失败")
+		return nil
 	}
 
 	regx := regexp.MustCompile(`<pubDate>(.*?)T`)

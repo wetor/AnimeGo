@@ -164,6 +164,32 @@ func TestPythonConfig(t *testing.T) {
 	fmt.Println(result)
 }
 
+func TestPythonParseMikan(t *testing.T) {
+	lib.Init()
+
+	db := cache.NewBolt()
+	db.Open("data/bolt.db")
+	bangumiCache := cache.NewBolt()
+	bangumiCache.Open("../../../test/testdata/bolt_sub.bolt")
+	anidata.Init(&anidata.Options{
+		Cache:        db,
+		BangumiCache: bangumiCache,
+	})
+
+	p := &python.Python{}
+	p.Load(&models.PluginLoadOptions{
+		File: "mikan.py",
+		Functions: []*models.PluginFunctionOptions{
+			{
+				Name:            "main",
+				SkipSchemaCheck: true,
+			},
+		},
+	})
+
+	p.Run("main", nil)
+}
+
 func TestPythonMikanTool(t *testing.T) {
 	savePluginPath := constant.PluginPath
 	constant.PluginPath = "../../../assets/plugin"
@@ -178,8 +204,8 @@ func TestPythonMikanTool(t *testing.T) {
 		Cache:        db,
 		BangumiCache: bangumiCache,
 	})
-	rss := mikanRss.NewRss("", "")
-	items := rss.Parse("testdata/Mikan.xml")
+	rss := mikanRss.NewRss(&mikanRss.Options{File: "testdata/Mikan.xml"})
+	items := rss.Parse()
 	fmt.Println(len(items))
 	fmt.Println("===========")
 

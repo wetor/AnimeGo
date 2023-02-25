@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+
 	"log"
 	"os"
 	"os/signal"
@@ -22,6 +23,7 @@ import (
 	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
 	"github.com/wetor/AnimeGo/internal/animego/downloader"
 	"github.com/wetor/AnimeGo/internal/animego/downloader/qbittorrent"
+	feedPlugin "github.com/wetor/AnimeGo/internal/animego/feed/plugin"
 	feedRss "github.com/wetor/AnimeGo/internal/animego/feed/rss"
 	"github.com/wetor/AnimeGo/internal/animego/filter/plugin"
 	"github.com/wetor/AnimeGo/internal/animego/manager"
@@ -33,7 +35,6 @@ import (
 	"github.com/wetor/AnimeGo/internal/plugin/python/lib"
 	"github.com/wetor/AnimeGo/internal/schedule"
 	"github.com/wetor/AnimeGo/internal/schedule/task"
-	scheduleUtils "github.com/wetor/AnimeGo/internal/schedule/utils"
 	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/internal/web"
 	"github.com/wetor/AnimeGo/internal/web/api"
@@ -197,21 +198,6 @@ func Main(ctx context.Context) {
 	bangumiCache := cache.NewBolt()
 	bangumiCache.Open(constant.BangumiCacheFile)
 
-	// 初始化并启动定时任务
-	scheduleVar := schedule.NewSchedule(&schedule.Options{
-		WG: &WG,
-	})
-	scheduleVar.Add(&schedule.AddTaskOptions{
-		Name:     "bangumi",
-		StartRun: true,
-		Task: task.NewBangumiTask(&task.BangumiOptions{
-			Cache:      bangumiCache,
-			CacheMutex: &BangumiCacheMutex,
-		}),
-	})
-	scheduleUtils.AddTasks(scheduleVar, config.Plugin.Schedule)
-	scheduleVar.Start(ctx)
-
 	// 初始化并连接下载器
 	downloader.Init(&downloader.Options{
 		ConnectTimeoutSecond: config.Advanced.Client.ConnectTimeoutSecond,
@@ -269,13 +255,29 @@ func Main(ctx context.Context) {
 	// 初始化filter manager
 	filterManager := filterMgr.NewManager(
 		plugin.NewFilterPlugin(config.Plugin.Filter),
-		feedRss.NewRss(config.Setting.Feed.Mikan.Url, config.Setting.Feed.Mikan.Name),
+		feedRss.NewRss(&feedRss.Options{Url: config.Setting.Feed.Mikan.Url}),
 		mikan.Mikan{ThemoviedbKey: config.Setting.Key.Themoviedb},
 		downloadChan)
 
 	// 启动manager
 	downloaderManager.Start(ctx)
 	filterManager.Start(ctx)
+
+	// 初始化并启动定时任务
+	scheduleVar := schedule.NewSchedule(&schedule.Options{
+		WG: &WG,
+	})
+	scheduleVar.Add(&schedule.AddTaskOptions{
+		Name:     "bangumi",
+		StartRun: true,
+		Task: task.NewBangumiTask(&task.BangumiOptions{
+			Cache:      bangumiCache,
+			CacheMutex: &BangumiCacheMutex,
+		}),
+	})
+	schedule.AddScheduleTasks(scheduleVar, config.Plugin.Schedule)
+	feedPlugin.AddFeedTasks(scheduleVar, config.Plugin.Feed, filterManager, ctx)
+	scheduleVar.Start(ctx)
 
 	if webapi {
 		// 初始化并运行Web API

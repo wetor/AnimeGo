@@ -2,10 +2,14 @@ package plugin
 
 import (
 	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/internal/plugin"
+	"github.com/wetor/AnimeGo/internal/plugin/python"
 	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/errors"
 	"github.com/wetor/AnimeGo/pkg/log"
+)
+
+const (
+	FuncFilterAll = "filter_all"
 )
 
 type Filter struct {
@@ -30,19 +34,19 @@ func (p *Filter) Filter(list []*models.FeedItem) []*models.FeedItem {
 		}
 		log.Debugf("[Plugin] 开始执行Filter插件(%s): %s", info.Type, info.File)
 		// 入参
-		pluginInstance := plugin.GetPlugin(nil)
+		pluginInstance := &python.Python{}
 		pluginInstance.Load(&models.PluginLoadOptions{
 			File: info.File,
 			Functions: []*models.PluginFunctionOptions{
 				{
-					Name:         "main",
-					ParamsSchema: []string{"feedItems"},
+					Name:         FuncFilterAll,
+					ParamsSchema: []string{"items"},
 					ResultSchema: []string{"error", "data,optional", "index,optional"},
 				},
 			},
 		})
-		result := pluginInstance.Run("main", models.Object{
-			"feedItems": inList,
+		result := pluginInstance.Run(FuncFilterAll, models.Object{
+			"items": inList,
 		})
 		if result["error"] != nil {
 			log.Debugf("", errors.NewAniErrorD(result["error"]))
