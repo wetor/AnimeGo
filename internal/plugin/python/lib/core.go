@@ -2,6 +2,7 @@ package lib
 
 import (
 	"github.com/go-python/gpython/py"
+	"github.com/wetor/AnimeGo/internal/animego/feed/rss"
 	"gopkg.in/yaml.v3"
 
 	"github.com/wetor/AnimeGo/internal/animego/anidata/mikan"
@@ -27,6 +28,8 @@ id: Mikan ID
 sub_group_id: Mikan subgroup ID
 pub_group_id: Mikan pubgroup ID
 group_name: 字幕组名`),
+		py.MustNewMethod("parse_mikan_rss", parseMikanRss, 0,
+			`parse_mikan_rss(rss_data) -> dict`),
 	}
 
 	py.RegisterModule(&py.ModuleImpl{
@@ -115,4 +118,18 @@ func parseMikan(self py.Object, arg py.Object) (py.Object, error) {
 	obj := models.Object(utils.StructToMap(info))
 
 	return pyutils.Value2PyObject(obj), nil
+}
+
+func parseMikanRss(self py.Object, arg py.Object) (py.Object, error) {
+	var items []*models.FeedItem
+	var err error
+	try.This(func() {
+		items = rss.NewRss(&rss.Options{Raw: string(arg.(py.String))}).Parse()
+	}).Catch(func(e try.E) {
+		err = e.(error)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return pyutils.Value2PyObject(items), nil
 }

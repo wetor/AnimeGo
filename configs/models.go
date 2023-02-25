@@ -10,6 +10,7 @@ type Config struct {
 }
 
 type Plugin struct {
+	Feed     []models.Plugin `yaml:"feed" json:"feed" attr:"订阅" comment:"解析订阅链接"`
 	Filter   []models.Plugin `yaml:"filter" json:"filter" attr:"过滤器插件" comment:"用来筛选符合条件的项目进行解析下载"`
 	Schedule []models.Plugin `yaml:"schedule" json:"schedule" attr:"定时任务" comment:"定时执行脚本"`
 }

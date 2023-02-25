@@ -59,7 +59,7 @@ func TestMain(m *testing.M) {
 
 func TestManager_UpdateFeed(t *testing.T) {
 
-	rss := mikanRss.NewRss("https://mikanani.me/RSS/MyBangumi?token=ky5DTt%2fMyAjCH2oKEN81FQ%3d%3d", "Mikan")
+	rss := mikanRss.NewRss(&mikanRss.Options{Url: "https://mikanani.me/RSS/MyBangumi?token=ky5DTt%2fMyAjCH2oKEN81FQ%3d%3d"})
 	mk := mikan.Mikan{ThemoviedbKey: ThemoviedbKey}
 	m := filterMgr.NewManager(&filter.Default{}, rss, mk, nil)
 

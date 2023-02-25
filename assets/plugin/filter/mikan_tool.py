@@ -57,7 +57,7 @@ def get_is_push(value, key, title):
     return is_push
 
 
-def main(args):
+def filter_all(args):
     result = []
     myFiliters = _get_config()
     isNeedGetMikanInfo = False
@@ -72,7 +72,7 @@ def main(args):
     if len(myFiliters.Filiter1) > 0 or len(myFiliters.Filiter2) > 0 or len(myFiliters.Filiter3) > 0:
         isNeedGetMikanInfo = True
 
-    for index, item in enumerate(args.feedItems):
+    for index, item in enumerate(args.items):
         try:
             parsed = analyse(item.name)
             log.debug(' ')

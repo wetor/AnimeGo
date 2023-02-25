@@ -29,8 +29,8 @@ func TestMain(m *testing.M) {
 func TestPython_Filter(t *testing.T) {
 	gpython.Init()
 	lib.Init()
-	rss := mikanRss.NewRss("", "")
-	items := rss.Parse("testdata/Mikan.xml")
+	rss := mikanRss.NewRss(&mikanRss.Options{File: "testdata/Mikan.xml"})
+	items := rss.Parse()
 	fmt.Println(len(items))
 	js := plugin.NewFilterPlugin([]models.Plugin{
 		{
@@ -81,8 +81,8 @@ func TestPython_Filter3(t *testing.T) {
 	gpython.Init()
 	lib.Init()
 	constant.PluginPath = "../../../../assets/plugin"
-	rss := mikanRss.NewRss("", "")
-	items := rss.Parse("testdata/Mikan.xml")
+	rss := mikanRss.NewRss(&mikanRss.Options{File: "testdata/Mikan.xml"})
+	items := rss.Parse()
 	fmt.Println(len(items))
 	fmt.Println("===========")
 	js := plugin.NewFilterPlugin([]models.Plugin{
@@ -145,8 +145,8 @@ func TestPython_Filter5(t *testing.T) {
 	gpython.Init()
 	lib.Init()
 	constant.PluginPath = "../../../../assets/plugin"
-	rss := mikanRss.NewRss("", "")
-	items := rss.Parse("testdata/Mikan.xml")
+	rss := mikanRss.NewRss(&mikanRss.Options{File: "testdata/Mikan.xml"})
+	items := rss.Parse()
 	fmt.Println(len(items))
 	fmt.Println("===========")
 	js := plugin.NewFilterPlugin([]models.Plugin{

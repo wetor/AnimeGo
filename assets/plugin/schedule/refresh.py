@@ -1,9 +1,9 @@
 
-Name = "Refresh_Test"
+__name__ = "Refresh_Test"
 
 # 5s 执行一次
-Cron = "*/5 * * * * ?"
+__cron__ = "*/5 * * * * ?"
 
 
-def Run(args):
+def run(args):
     print("test")

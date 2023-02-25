@@ -12,6 +12,8 @@ import (
 func Value2PyObject(object any) gpy.Object {
 	var pyVal gpy.Object
 	switch val := object.(type) {
+	case *gpy.Method:
+		pyVal = val
 	case nil:
 		pyVal = gpy.None
 	case string:

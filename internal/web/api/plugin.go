@@ -17,22 +17,23 @@ import (
 )
 
 // Rss godoc
-//  @Summary 发送下载项
-//  @Description 将待下载项组合成rss发送给AnimeGo
-//  @Tags plugin
-//  @Accept  json
-//  @Produce  json
-//  @Param rss body webModels.SelectEpRequest true "组合的rss信息"
-//  @Success 200 {object} webModels.Response
-//  @Failure 300 {object} webModels.Response
-//  @Security ApiKeyAuth
-//  @Router /api/rss [post]
+//
+//	@Summary 发送下载项
+//	@Description 将待下载项组合成rss发送给AnimeGo
+//	@Tags plugin
+//	@Accept  json
+//	@Produce  json
+//	@Param rss body webModels.SelectEpRequest true "组合的rss信息"
+//	@Success 200 {object} webModels.Response
+//	@Failure 300 {object} webModels.Response
+//	@Security ApiKeyAuth
+//	@Router /api/rss [post]
 func Rss(c *gin.Context) {
 	var request webModels.SelectEpRequest
 	if !checkRequest(c, &request) {
 		return
 	}
-	reqRss := rss.NewRss(request.Rss.Url, "")
+	reqRss := rss.NewRss(&rss.Options{Url: request.Rss.Url})
 
 	items := reqRss.Parse()
 	if request.IsSelectEp {
@@ -53,19 +54,20 @@ func Rss(c *gin.Context) {
 }
 
 // PluginConfigPost godoc
-//  @Summary 发送插件配置
-//  @Description 将当前插件的配置发送给AnimeGo并保存
-//  @Description 插件名为不包含 'plugin' 的路径
-//  @Description 插件名可以忽略'.py'后缀；插件名也可以使用上层文件夹名，会自动加载文件夹内部的 'main.py'
-//  @Description 如设置为 'plugin/test'，会依次尝试加载 'plugin/test/main.py', 'plugin/test.py'
-//  @Tags plugin
-//  @Accept  json
-//  @Produce  json
-//  @Param plugin body webModels.PluginConfigUploadRequest true "插件信息，data为base64编码后的json文本"
-//  @Success 200 {object} webModels.Response
-//  @Failure 300 {object} webModels.Response
-//  @Security ApiKeyAuth
-//  @Router /api/plugin/config [post]
+//
+//	@Summary 发送插件配置
+//	@Description 将当前插件的配置发送给AnimeGo并保存
+//	@Description 插件名为不包含 'plugin' 的路径
+//	@Description 插件名可以忽略'.py'后缀；插件名也可以使用上层文件夹名，会自动加载文件夹内部的 'main.py'
+//	@Description 如设置为 'plugin/test'，会依次尝试加载 'plugin/test/main.py', 'plugin/test.py'
+//	@Tags plugin
+//	@Accept  json
+//	@Produce  json
+//	@Param plugin body webModels.PluginConfigUploadRequest true "插件信息，data为base64编码后的json文本"
+//	@Success 200 {object} webModels.Response
+//	@Failure 300 {object} webModels.Response
+//	@Security ApiKeyAuth
+//	@Router /api/plugin/config [post]
 func PluginConfigPost(c *gin.Context) {
 	var request webModels.PluginConfigUploadRequest
 	if !checkRequest(c, &request) {
@@ -100,19 +102,20 @@ func PluginConfigPost(c *gin.Context) {
 }
 
 // PluginConfigGet godoc
-//  @Summary 获取插件配置
-//  @Description 从AnimeGo中获取当前插件的配置
-//  @Description 插件名为不包含 'plugin' 的路径
-//  @Description 插件名可以忽略'.js'后缀；插件名也可以使用上层文件夹名，会自动寻找文件夹内部的 'main.js' 或 'plugin.js'
-//  @Description 如传入 'test'，会依次尝试寻找 'plugin/test/main.js', 'plugin/test/plugin.js', 'plugin/test.js'
-//  @Tags plugin
-//  @Accept  json
-//  @Produce  json
-//  @Param name query string true "插件信息"
-//  @Success 200 {object} webModels.Response
-//  @Failure 300 {object} webModels.Response
-//  @Security ApiKeyAuth
-//  @Router /api/plugin/config [get]
+//
+//	@Summary 获取插件配置
+//	@Description 从AnimeGo中获取当前插件的配置
+//	@Description 插件名为不包含 'plugin' 的路径
+//	@Description 插件名可以忽略'.js'后缀；插件名也可以使用上层文件夹名，会自动寻找文件夹内部的 'main.js' 或 'plugin.js'
+//	@Description 如传入 'test'，会依次尝试寻找 'plugin/test/main.js', 'plugin/test/plugin.js', 'plugin/test.js'
+//	@Tags plugin
+//	@Accept  json
+//	@Produce  json
+//	@Param name query string true "插件信息"
+//	@Success 200 {object} webModels.Response
+//	@Failure 300 {object} webModels.Response
+//	@Security ApiKeyAuth
+//	@Router /api/plugin/config [get]
 func PluginConfigGet(c *gin.Context) {
 	var request webModels.PluginConfigDownloadRequest
 	if !checkRequest(c, &request) {

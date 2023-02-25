@@ -32,7 +32,7 @@ type Manager struct {
 //
 //	@Description:
 //	@param filter *filter.Filter
-//	@param feed feed.Feed
+//	@param feed api.Feed
 //	@param anisource api.AniSource
 //	@return *Manager
 func NewManager(filter api.Filter, feed api.Feed, anisource api.AniSource, downloadChan chan *models.AnimeEntity) *Manager {
