@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/wetor/AnimeGo/internal/web/ui"
 
 	"github.com/pkg/errors"
 	"github.com/wetor/AnimeGo/internal/web/models"
@@ -35,6 +36,12 @@ func Run(ctx context.Context) {
 			gin.SetMode(gin.ReleaseMode)
 		}
 		InitRouter(r)
+
+		// ui
+		ui.RegisterStatic(r)
+		uiRoot := r.Group("/ui")
+		// uiRoot.Use(KeyAuth())
+		uiRoot.GET("/", ui.PageConfig)
 
 		WS.Start(ctx)
 		s := &http.Server{

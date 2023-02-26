@@ -9,7 +9,7 @@ type Config struct {
 
 type PluginInfo struct {
 	Enable bool           `yaml:"enable" json:"enable"`
-	Type   string         `yaml:"type" json:"type"`
+	Type   string         `yaml:"type" json:"type" options:"python"`
 	File   string         `yaml:"file" json:"file"`
 	Args   map[string]any `yaml:"args,omitempty" json:"args,omitempty"`
 	Vars   map[string]any `yaml:"vars,omitempty" json:"vars,omitempty"`
@@ -69,7 +69,7 @@ type Advanced struct {
 	Download struct {
 		AllowDuplicateDownload bool   `yaml:"allow_duplicate_download" json:"allow_duplicate_download" attr:"允许重复下载"`
 		SeedingTimeMinute      int    `yaml:"seeding_time_minute" json:"seeding_time_minute" attr:"做种时间"`
-		Rename                 string `yaml:"rename" json:"rename" attr:"重命名方式" comment_key:"rename_help"`
+		Rename                 string `yaml:"rename" json:"rename" attr:"重命名方式" comment_key:"rename_help" options:"link,link_delete,move,wait_move"`
 	} `yaml:"download" json:"download" attr:"下载设置"`
 
 	Feed struct {

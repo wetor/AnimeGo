@@ -13,6 +13,10 @@ var (
 	isInit        = false
 )
 
+func DefaultCommentMap() map[string]string {
+	return configComment
+}
+
 func defaultSettingComment() {
 	configComment["tag_help"] = `仅qBittorrent有效，可用通配符列表：
   {year} int 番剧更新年
