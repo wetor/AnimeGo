@@ -15,7 +15,7 @@ type TitleParsed struct {
 }
 
 type Plugin struct {
-	Enable bool   `yaml:"enable" json:"enable"`
-	Type   string `yaml:"type" json:"type"`
-	File   string `yaml:"file" json:"file"`
+	Enable bool   `yaml:"enable" json:"enable" attr:"启用状态"`
+	Type   string `yaml:"type" json:"type" attr:"插件类型" options:"python"`
+	File   string `yaml:"file" json:"file" attr:"插件文件"`
 }

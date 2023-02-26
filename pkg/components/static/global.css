@@ -1,0 +1,17 @@
+.input-group-text {
+    width:150px;
+    display:inline-block;
+}
+.list-group-item {
+    padding-bottom: 0;
+}
+.card-body {
+    padding-top: 0.75rem;
+    padding-bottom: 0;
+}
+.bi-info-circle {
+    padding: 0.25rem;
+}
+.text-secondary {
+    font-size: 0.8rem;
+}

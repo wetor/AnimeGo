@@ -9,6 +9,7 @@ require (
 	github.com/go-python/gpython v0.1.1-0.20230118193350-337df2ad1ec2
 	github.com/jinzhu/copier v0.3.5
 	github.com/json-iterator/go v1.1.12
+	github.com/maragudk/gomponents v0.20.1
 	github.com/mmcdole/gofeed v1.1.3
 	github.com/parnurzeal/gorequest v0.2.16
 	github.com/robfig/cron/v3 v3.0.1
