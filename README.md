@@ -50,7 +50,7 @@
 
 ## 文档
 1. [配置文件](configs/models.go)
-2. [插件函数文档（仅过滤器）](internal/plugin/README.md)
+2. [插件函数文档](assets/plugin/README.md)
 3. [webapi(Swagger)接口文档](internal/web/README.md)
 
 ## 目的
@@ -59,7 +59,9 @@
 
 ## 目前进度
 - 可使用配置、筛选和下载等基本功能
-- python编写筛选器，[帮助文档](internal/plugin/README.md)
+- python编写定时订阅，[帮助文档](assets/plugin/feed/README.md)
+- python编写筛选器，[帮助文档](assets/plugin/filter/README.md)
+- python编写定时任务，[帮助文档](assets/plugin/schedule/README.md)
 - 支持Tampermonkey(油猴)插件 [AnimeGo\[Mikan快速订阅\]](https://greasyfork.org/zh-CN/scripts/449596) 快速订阅下载
 - Jellyfin支持
 

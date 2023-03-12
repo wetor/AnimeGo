@@ -2,21 +2,20 @@ package task
 
 import (
 	"archive/zip"
-	"github.com/wetor/AnimeGo/internal/models"
 	"io"
 	"os"
 	"sync"
 	"time"
 
-	"github.com/wetor/AnimeGo/internal/constant"
-
 	"github.com/parnurzeal/gorequest"
 	"github.com/robfig/cron/v3"
 
 	"github.com/wetor/AnimeGo/internal/api"
-	"github.com/wetor/AnimeGo/internal/utils"
+	"github.com/wetor/AnimeGo/internal/constant"
+	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/pkg/errors"
 	"github.com/wetor/AnimeGo/pkg/log"
+	"github.com/wetor/AnimeGo/pkg/utils"
 	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 

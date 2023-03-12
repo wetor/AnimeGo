@@ -2,10 +2,11 @@ package plugin
 
 import (
 	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/internal/plugin/python"
-	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/errors"
 	"github.com/wetor/AnimeGo/pkg/log"
+	"github.com/wetor/AnimeGo/pkg/plugin"
+	"github.com/wetor/AnimeGo/pkg/plugin/python"
+	"github.com/wetor/AnimeGo/pkg/utils"
 )
 
 const (
@@ -35,9 +36,9 @@ func (p *Filter) Filter(list []*models.FeedItem) []*models.FeedItem {
 		log.Debugf("[Plugin] 开始执行Filter插件(%s): %s", info.Type, info.File)
 		// 入参
 		pluginInstance := &python.Python{}
-		pluginInstance.Load(&models.PluginLoadOptions{
+		pluginInstance.Load(&plugin.LoadOptions{
 			File: info.File,
-			Functions: []*models.PluginFunctionOptions{
+			Functions: []*plugin.FunctionOptions{
 				{
 					Name:         FuncFilterAll,
 					ParamsSchema: []string{"items"},

@@ -8,14 +8,13 @@ import (
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/internal/animego/anisource"
 	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
-	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/internal/utils"
+	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/json"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/request"
-	"github.com/wetor/AnimeGo/third_party/gpython"
+	"github.com/wetor/AnimeGo/pkg/utils"
 )
 
 const ThemoviedbKey = "d3d8430aefee6c19520d0f7da145daf5"
@@ -23,7 +22,9 @@ const ThemoviedbKey = "d3d8430aefee6c19520d0f7da145daf5"
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
 	_ = utils.CreateMutiDir("data")
-	constant.PluginPath = "../../../../assets/plugin"
+	plugin.Init(&plugin.Options{
+		Path: "../../../../assets/plugin",
+	})
 	log.Init(&log.Options{
 		File:  "data/log.log",
 		Debug: true,
@@ -52,8 +53,6 @@ func TestMain(m *testing.M) {
 		BangumiCache:     bangumiCache,
 		BangumiCacheLock: &mutex,
 	})
-
-	gpython.Init()
 
 	request.Init(&request.Options{
 		Proxy: "http://127.0.0.1:7890",

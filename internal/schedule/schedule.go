@@ -2,6 +2,7 @@ package schedule
 
 import (
 	"context"
+	"github.com/wetor/AnimeGo/pkg/utils"
 	"sync"
 
 	"github.com/robfig/cron/v3"
@@ -10,7 +11,6 @@ import (
 	"github.com/wetor/AnimeGo/internal/logger"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/schedule/task"
-	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/errors"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/try"

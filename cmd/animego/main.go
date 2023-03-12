@@ -25,24 +25,23 @@ import (
 	"github.com/wetor/AnimeGo/internal/animego/downloader/qbittorrent"
 	feedPlugin "github.com/wetor/AnimeGo/internal/animego/feed/plugin"
 	feedRss "github.com/wetor/AnimeGo/internal/animego/feed/rss"
-	"github.com/wetor/AnimeGo/internal/animego/filter/plugin"
+	filterPlugin "github.com/wetor/AnimeGo/internal/animego/filter/plugin"
 	"github.com/wetor/AnimeGo/internal/animego/manager"
 	downloaderMgr "github.com/wetor/AnimeGo/internal/animego/manager/downloader"
 	filterMgr "github.com/wetor/AnimeGo/internal/animego/manager/filter"
 	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/logger"
 	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/internal/plugin/python/lib"
+	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/internal/schedule"
 	"github.com/wetor/AnimeGo/internal/schedule/task"
-	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/internal/web"
 	"github.com/wetor/AnimeGo/internal/web/api"
 	"github.com/wetor/AnimeGo/pkg/cache"
-	log2 "github.com/wetor/AnimeGo/pkg/log"
+	pkgLog "github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/request"
+	"github.com/wetor/AnimeGo/pkg/utils"
 	"github.com/wetor/AnimeGo/pkg/xpath"
-	"github.com/wetor/AnimeGo/third_party/gpython"
 )
 
 const (
@@ -86,10 +85,10 @@ func main() {
 		for s := range sigs {
 			switch s {
 			case syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGQUIT:
-				log2.Infof("收到退出信号: %v", s)
+				pkgLog.Infof("收到退出信号: %v", s)
 				doExit()
 			default:
-				log2.Infof("收到其他信号: %v", s)
+				pkgLog.Infof("收到其他信号: %v", s)
 			}
 		}
 	}()
@@ -131,7 +130,7 @@ func InitDefaultAssets(conf *configs.Config) {
 }
 
 func doExit() {
-	log2.Infof("正在退出...")
+	pkgLog.Infof("正在退出...")
 	cancel()
 	go func() {
 		time.Sleep(5 * time.Second)
@@ -187,9 +186,9 @@ func Main(ctx context.Context) {
 	})
 
 	// 初始化插件-gpython
-	gpython.Init()
-	lib.Init()
-
+	plugin.Init(&plugin.Options{
+		Path: constant.PluginPath,
+	})
 	// 载入AnimeGo数据库（缓存）
 	bolt := cache.NewBolt()
 	bolt.Open(constant.CacheFile)
@@ -254,7 +253,7 @@ func Main(ctx context.Context) {
 
 	// 初始化filter manager
 	filterManager := filterMgr.NewManager(
-		plugin.NewFilterPlugin(configs.ConvertPluginInfo(config.Plugin.Filter)),
+		filterPlugin.NewFilterPlugin(configs.ConvertPluginInfo(config.Plugin.Filter)),
 		feedRss.NewRss(&feedRss.Options{Url: config.Setting.Feed.Mikan.Url}),
 		mikan.Mikan{ThemoviedbKey: config.Setting.Key.Themoviedb},
 		downloadChan)

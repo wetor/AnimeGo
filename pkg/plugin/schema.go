@@ -1,9 +1,8 @@
-package utils
+package plugin
 
 import (
 	"strings"
 
-	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/pkg/errors"
 )
 
@@ -28,7 +27,7 @@ func ParseSchemas(schemas []string) []*Schema {
 }
 
 func CheckSchema(schemas []*Schema, object any) {
-	objectMap, ok := object.(models.Object)
+	objectMap, ok := object.(map[string]any)
 	if !ok {
 		errors.NewAniError("类型错误").TryPanic()
 	}

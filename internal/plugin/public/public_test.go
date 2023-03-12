@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/wetor/AnimeGo/internal/constant"
+	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/internal/plugin/public"
 	"github.com/wetor/AnimeGo/pkg/json"
 	"github.com/wetor/AnimeGo/pkg/log"
@@ -12,7 +12,9 @@ import (
 )
 
 func TestParserName(t *testing.T) {
-	constant.PluginPath = "../../../assets/plugin"
+	plugin.Init(&plugin.Options{
+		Path: "../../../assets/plugin",
+	})
 	log.Init(&log.Options{
 		File:  "data/log.log",
 		Debug: true,

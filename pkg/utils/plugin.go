@@ -6,13 +6,13 @@ import (
 )
 
 // FindScript
-//  @Description: 判断插件是否存在
-//  @Description: 如ext='.py'，插件名可以忽略'.py'后缀；插件名也可以使用上层文件夹名，会自动加载文件夹内部的 'main.py'
-//  @Description: 如设置为 'plugin/test'，会依次尝试加载 'plugin/test/main.py', 'plugin/test.py'
-//  @param file string
-//  @param ext string
-//  @return string
 //
+//	@Description: 判断插件是否存在
+//	@Description: 如ext='.py'，插件名可以忽略'.py'后缀；插件名也可以使用上层文件夹名，会自动加载文件夹内部的 'main.py'
+//	@Description: 如设置为 'plugin/test'，会依次尝试加载 'plugin/test/main.py', 'plugin/test.py'
+//	@param file string
+//	@param ext string
+//	@return string
 func FindScript(file, ext string) string {
 	if IsDir(file) {
 		// 文件夹，在文件夹中寻找 main

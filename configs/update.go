@@ -2,7 +2,6 @@ package configs
 
 import (
 	"fmt"
-	"github.com/wetor/AnimeGo/configs/version/v_130"
 	"log"
 	"os"
 	"strings"
@@ -13,8 +12,9 @@ import (
 
 	"github.com/wetor/AnimeGo/configs/version/v_110"
 	"github.com/wetor/AnimeGo/configs/version/v_120"
+	"github.com/wetor/AnimeGo/configs/version/v_130"
 	"github.com/wetor/AnimeGo/internal/constant"
-	"github.com/wetor/AnimeGo/internal/utils"
+	"github.com/wetor/AnimeGo/pkg/utils"
 	"github.com/wetor/AnimeGo/pkg/xpath"
 	encoder "github.com/wetor/AnimeGo/third_party/yaml-encoder"
 )

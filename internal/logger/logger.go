@@ -4,8 +4,8 @@ import (
 	"context"
 	"sync"
 
-	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/log"
+	"github.com/wetor/AnimeGo/pkg/utils"
 )
 
 type Options struct {

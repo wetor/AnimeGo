@@ -8,12 +8,13 @@ import (
 
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/internal/plugin/python"
-	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/errors"
 	"github.com/wetor/AnimeGo/pkg/log"
+	"github.com/wetor/AnimeGo/pkg/plugin"
+	"github.com/wetor/AnimeGo/pkg/plugin/python"
 	"github.com/wetor/AnimeGo/pkg/request"
 	"github.com/wetor/AnimeGo/pkg/try"
+	"github.com/wetor/AnimeGo/pkg/utils"
 )
 
 type FeedTask struct {
@@ -31,16 +32,16 @@ type FeedOptions struct {
 
 func NewFeedTask(opts *FeedOptions) *FeedTask {
 	p := &python.Python{}
-	p.Load(&models.PluginLoadOptions{
+	p.Load(&plugin.LoadOptions{
 		File: opts.File,
-		Functions: []*models.PluginFunctionOptions{
+		Functions: []*plugin.FunctionOptions{
 			{
 				Name:         FuncParse,
 				ParamsSchema: []string{"data"},
 				ResultSchema: []string{"error", "items"},
 			},
 		},
-		Variables: []*models.PluginVariableOptions{
+		Variables: []*plugin.VariableOptions{
 			{
 				Name:     VarName,
 				Nullable: true,

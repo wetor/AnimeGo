@@ -1,12 +1,12 @@
-package utils
+package plugin
 
 import (
 	"reflect"
 
 	gpy "github.com/go-python/gpython/py"
-	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/internal/utils"
+
 	"github.com/wetor/AnimeGo/pkg/errors"
+	"github.com/wetor/AnimeGo/pkg/utils"
 )
 
 func Value2PyObject(object any) gpy.Object {
@@ -28,12 +28,6 @@ func Value2PyObject(object any) gpy.Object {
 		pyVal = gpy.Float(val)
 	case bool:
 		pyVal = gpy.NewBool(val)
-	case models.Object:
-		pyValDict := gpy.NewStringDictSized(len(val))
-		for key, value := range val {
-			pyValDict[key] = Value2PyObject(value)
-		}
-		pyVal = pyValDict
 	case map[string]any:
 		pyValDict := gpy.NewStringDictSized(len(val))
 		for key, value := range val {
@@ -55,7 +49,7 @@ func Value2PyObject(object any) gpy.Object {
 		case reflect.Struct:
 			fallthrough
 		case reflect.Pointer:
-			m := models.Object(utils.StructToMap(object))
+			m := map[string]any(utils.StructToMap(object))
 			pyVal = Value2PyObject(m)
 		default:
 			errors.NewAniErrorf("不支持的类型: %v ", reflect.ValueOf(object).Type()).TryPanic()
@@ -76,7 +70,7 @@ func PyObject2Value(object gpy.Object) any {
 	case gpy.Float:
 		objVal = float64(val)
 	case gpy.StringDict:
-		objValDict := make(models.Object, len(val))
+		objValDict := make(map[string]any, len(val))
 		for key, value := range val {
 			objValDict[key] = PyObject2Value(value)
 		}

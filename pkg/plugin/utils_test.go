@@ -1,11 +1,10 @@
-package utils
+package plugin
 
 import (
 	"fmt"
 	"testing"
 
 	"github.com/go-python/gpython/py"
-	"github.com/wetor/AnimeGo/internal/models"
 )
 
 func TestPyObject2Object(t *testing.T) {
@@ -27,13 +26,13 @@ func TestPyObject2Object(t *testing.T) {
 }
 
 func TestValue2PyObject(t *testing.T) {
-	object := models.Object{
+	object := map[string]any{
 		"key1": 10086,
 		"key2": true,
-		"keyObject": models.Object{
+		"keyObject": map[string]any{
 			"objKey1": "test123",
 		},
-		"keyObjList": []models.Object{
+		"keyObjList": []map[string]any{
 			{
 				"objKey1": "test123",
 			},

@@ -14,9 +14,9 @@ import (
 	"github.com/wetor/AnimeGo/internal/animego/filter"
 	"github.com/wetor/AnimeGo/internal/animego/manager"
 	filterMgr "github.com/wetor/AnimeGo/internal/animego/manager/filter"
-	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/log"
+	"github.com/wetor/AnimeGo/pkg/utils"
 )
 
 const ThemoviedbKey = "d3d8430aefee6c19520d0f7da145daf5"

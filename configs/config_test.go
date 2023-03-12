@@ -3,6 +3,7 @@ package configs_test
 import (
 	"bytes"
 	"fmt"
+	"github.com/wetor/AnimeGo/pkg/utils"
 	"os"
 	"testing"
 
@@ -10,7 +11,6 @@ import (
 
 	"github.com/wetor/AnimeGo/configs"
 	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/internal/utils"
 )
 
 func TestDefaultConfig(t *testing.T) {

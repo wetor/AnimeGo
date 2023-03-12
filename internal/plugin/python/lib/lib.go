@@ -1,6 +1,11 @@
 package lib
 
+var isInit = false
+
 func Init() {
-	InitLog()
-	InitAnimeGo()
+	if !isInit {
+		InitLog()
+		InitAnimeGo()
+		isInit = true
+	}
 }

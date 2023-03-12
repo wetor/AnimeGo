@@ -2,8 +2,9 @@ package public
 
 import (
 	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/internal/plugin/python"
-	"github.com/wetor/AnimeGo/internal/utils"
+	"github.com/wetor/AnimeGo/pkg/plugin"
+	"github.com/wetor/AnimeGo/pkg/plugin/python"
+	"github.com/wetor/AnimeGo/pkg/utils"
 )
 
 const (
@@ -15,16 +16,16 @@ var (
 )
 
 func ParserName(title string) (ep *models.TitleParsed) {
-	py.Load(&models.PluginLoadOptions{
+	py.Load(&plugin.LoadOptions{
 		File: parserScript,
-		Functions: []*models.PluginFunctionOptions{
+		Functions: []*plugin.FunctionOptions{
 			{
 				Name:            "main",
 				SkipSchemaCheck: true,
 			},
 		},
 	})
-	result := py.Run("main", models.Object{
+	result := py.Run("main", map[string]any{
 		"title": title,
 	})
 	ep = &models.TitleParsed{

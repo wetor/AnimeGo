@@ -2,16 +2,16 @@ package lib
 
 import (
 	"github.com/go-python/gpython/py"
-	"github.com/wetor/AnimeGo/internal/animego/feed/rss"
 	"gopkg.in/yaml.v3"
 
 	"github.com/wetor/AnimeGo/internal/animego/anidata/mikan"
 	"github.com/wetor/AnimeGo/internal/animego/anisource"
+	"github.com/wetor/AnimeGo/internal/animego/feed/rss"
 	"github.com/wetor/AnimeGo/internal/models"
-	pyutils "github.com/wetor/AnimeGo/internal/plugin/python/utils"
-	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/json"
+	"github.com/wetor/AnimeGo/pkg/plugin"
 	"github.com/wetor/AnimeGo/pkg/try"
+	"github.com/wetor/AnimeGo/pkg/utils"
 )
 
 func InitAnimeGo() {
@@ -57,7 +57,7 @@ func loads(self py.Object, args py.Tuple) (py.Object, error) {
 	}
 
 	var err error
-	result := models.Object{}
+	result := map[string]any{}
 
 	switch encodng {
 	case "json":
@@ -70,7 +70,7 @@ func loads(self py.Object, args py.Tuple) (py.Object, error) {
 	if err != nil {
 		return nil, err
 	}
-	return pyutils.Value2PyObject(result), nil
+	return plugin.Value2PyObject(result), nil
 }
 
 func dumps(self py.Object, args py.Tuple) (py.Object, error) {
@@ -86,7 +86,7 @@ func dumps(self py.Object, args py.Tuple) (py.Object, error) {
 		encodng = string(args[1].(py.String))
 	}
 
-	object := pyutils.PyObject2Value(obj)
+	object := plugin.PyObject2Value(obj)
 	var result []byte
 	var err error
 
@@ -101,7 +101,7 @@ func dumps(self py.Object, args py.Tuple) (py.Object, error) {
 	if err != nil {
 		return nil, err
 	}
-	return pyutils.Value2PyObject(string(result)), nil
+	return plugin.Value2PyObject(string(result)), nil
 }
 
 func parseMikan(self py.Object, arg py.Object) (py.Object, error) {
@@ -115,9 +115,9 @@ func parseMikan(self py.Object, arg py.Object) (py.Object, error) {
 	if err != nil {
 		return nil, err
 	}
-	obj := models.Object(utils.StructToMap(info))
+	obj := map[string]any(utils.StructToMap(info))
 
-	return pyutils.Value2PyObject(obj), nil
+	return plugin.Value2PyObject(obj), nil
 }
 
 func parseMikanRss(self py.Object, arg py.Object) (py.Object, error) {
@@ -131,5 +131,5 @@ func parseMikanRss(self py.Object, arg py.Object) (py.Object, error) {
 	if err != nil {
 		return nil, err
 	}
-	return pyutils.Value2PyObject(items), nil
+	return plugin.Value2PyObject(items), nil
 }

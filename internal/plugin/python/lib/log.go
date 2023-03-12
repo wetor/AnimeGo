@@ -2,8 +2,8 @@ package lib
 
 import (
 	"github.com/go-python/gpython/py"
-	pyutils "github.com/wetor/AnimeGo/internal/plugin/python/utils"
 	log2 "github.com/wetor/AnimeGo/pkg/log"
+	"github.com/wetor/AnimeGo/pkg/plugin"
 )
 
 func InitLog() {
@@ -53,10 +53,10 @@ func log(name string) func(self py.Object, args py.Tuple) (py.Object, error) {
 			if len(args) < 1 {
 				return py.AttributeError, nil
 			}
-			f := pyutils.PyObject2Value(args[0]).(string)
+			f := plugin.PyObject2Value(args[0]).(string)
 			list := make([]any, len(args)-1)
 			for i := 0; i < len(args)-1; i++ {
-				list[i] = pyutils.PyObject2Value(args[i+1])
+				list[i] = plugin.PyObject2Value(args[i+1])
 			}
 			logFuncf(f, list...)
 
@@ -66,7 +66,7 @@ func log(name string) func(self py.Object, args py.Tuple) (py.Object, error) {
 		return func(self py.Object, args py.Tuple) (py.Object, error) {
 			list := make([]any, len(args))
 			for i := 0; i < len(args); i++ {
-				list[i] = pyutils.PyObject2Value(args[i])
+				list[i] = plugin.PyObject2Value(args[i])
 			}
 			logFunc(list...)
 

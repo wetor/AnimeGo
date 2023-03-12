@@ -6,13 +6,11 @@ import (
 
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	mikanRss "github.com/wetor/AnimeGo/internal/animego/feed/rss"
-	"github.com/wetor/AnimeGo/internal/animego/filter/plugin"
-	"github.com/wetor/AnimeGo/internal/constant"
+	filterPlugin "github.com/wetor/AnimeGo/internal/animego/filter/plugin"
 	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/internal/plugin/python/lib"
+	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/log"
-	"github.com/wetor/AnimeGo/third_party/gpython"
 )
 
 func TestMain(m *testing.M) {
@@ -21,18 +19,18 @@ func TestMain(m *testing.M) {
 		File:  "data/log.log",
 		Debug: true,
 	})
-	constant.PluginPath = "testdata"
+	plugin.Init(&plugin.Options{
+		Path: "testdata",
+	})
 	m.Run()
 	fmt.Println("end")
 }
 
 func TestPython_Filter(t *testing.T) {
-	gpython.Init()
-	lib.Init()
 	rss := mikanRss.NewRss(&mikanRss.Options{File: "testdata/Mikan.xml"})
 	items := rss.Parse()
 	fmt.Println(len(items))
-	js := plugin.NewFilterPlugin([]models.Plugin{
+	js := filterPlugin.NewFilterPlugin([]models.Plugin{
 		{
 			Enable: true,
 			Type:   "py",
@@ -47,8 +45,6 @@ func TestPython_Filter(t *testing.T) {
 }
 
 func TestPython_Filter2(t *testing.T) {
-	gpython.Init()
-	lib.Init()
 	list := []*models.FeedItem{
 		{
 			Name: "0000",
@@ -63,7 +59,7 @@ func TestPython_Filter2(t *testing.T) {
 			Name: "3333",
 		},
 	}
-	js := plugin.NewFilterPlugin([]models.Plugin{
+	js := filterPlugin.NewFilterPlugin([]models.Plugin{
 		{
 			Enable: true,
 			Type:   "py",
@@ -78,14 +74,14 @@ func TestPython_Filter2(t *testing.T) {
 }
 
 func TestPython_Filter3(t *testing.T) {
-	gpython.Init()
-	lib.Init()
-	constant.PluginPath = "../../../../assets/plugin"
+	plugin.Init(&plugin.Options{
+		Path: "../../../../assets/plugin",
+	})
 	rss := mikanRss.NewRss(&mikanRss.Options{File: "testdata/Mikan.xml"})
 	items := rss.Parse()
 	fmt.Println(len(items))
 	fmt.Println("===========")
-	js := plugin.NewFilterPlugin([]models.Plugin{
+	js := filterPlugin.NewFilterPlugin([]models.Plugin{
 		{
 			Enable: true,
 			Type:   "py",
@@ -101,9 +97,9 @@ func TestPython_Filter3(t *testing.T) {
 }
 
 func TestPython_Filter4(t *testing.T) {
-	gpython.Init()
-	lib.Init()
-	constant.PluginPath = "../../../../assets/plugin"
+	plugin.Init(&plugin.Options{
+		Path: "../../../../assets/plugin",
+	})
 	list := []*models.FeedItem{
 		{
 			Name: "0000",
@@ -118,7 +114,7 @@ func TestPython_Filter4(t *testing.T) {
 			Name: "[梦蓝字幕组]New Doraemon 哆啦A梦新番[716][2022.07.23][AVC][1080P][GB_JP]",
 		},
 	}
-	js := plugin.NewFilterPlugin([]models.Plugin{
+	js := filterPlugin.NewFilterPlugin([]models.Plugin{
 		{
 			Enable: true,
 			Type:   "py",
@@ -142,14 +138,14 @@ func TestPython_Filter5(t *testing.T) {
 		BangumiCache: bangumiCache,
 	})
 
-	gpython.Init()
-	lib.Init()
-	constant.PluginPath = "../../../../assets/plugin"
+	plugin.Init(&plugin.Options{
+		Path: "../../../../assets/plugin",
+	})
 	rss := mikanRss.NewRss(&mikanRss.Options{File: "testdata/Mikan.xml"})
 	items := rss.Parse()
 	fmt.Println(len(items))
 	fmt.Println("===========")
-	js := plugin.NewFilterPlugin([]models.Plugin{
+	js := filterPlugin.NewFilterPlugin([]models.Plugin{
 		{
 			Enable: true,
 			Type:   "py",

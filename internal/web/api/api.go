@@ -10,10 +10,10 @@ import (
 
 	"github.com/wetor/AnimeGo/configs"
 	"github.com/wetor/AnimeGo/internal/api"
-	"github.com/wetor/AnimeGo/internal/utils"
 	webModels "github.com/wetor/AnimeGo/internal/web/models"
 	"github.com/wetor/AnimeGo/pkg/errors"
 	"github.com/wetor/AnimeGo/pkg/log"
+	"github.com/wetor/AnimeGo/pkg/utils"
 )
 
 var (

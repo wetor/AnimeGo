@@ -8,8 +8,9 @@ import (
 
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/internal/plugin/python"
 	"github.com/wetor/AnimeGo/pkg/errors"
+	"github.com/wetor/AnimeGo/pkg/plugin"
+	"github.com/wetor/AnimeGo/pkg/plugin/python"
 )
 
 type ScheduleTask struct {
@@ -25,15 +26,15 @@ type ScheduleOptions struct {
 
 func NewScheduleTask(opts *ScheduleOptions) *ScheduleTask {
 	p := &python.Python{}
-	p.Load(&models.PluginLoadOptions{
+	p.Load(&plugin.LoadOptions{
 		File: opts.File,
-		Functions: []*models.PluginFunctionOptions{
+		Functions: []*plugin.FunctionOptions{
 			{
 				Name:            FuncRun,
 				SkipSchemaCheck: true,
 			},
 		},
-		Variables: []*models.PluginVariableOptions{
+		Variables: []*plugin.VariableOptions{
 			{
 				Name:     VarName,
 				Nullable: true,

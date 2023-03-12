@@ -5,6 +5,8 @@ import core
 from Auto_Bangumi.raw_parser import analyse
 
 
+default_config = {"Filiter0":{},"Filiter1":{},"Filiter2":{},"Filiter3":{},"Filiter4":{}}
+
 def get_is_push(value, key, title):
     log.infof('| key: %v', key)
     log.debugf('| is_enable_whitelist: %v', value.is_enable_whitelist)
@@ -60,6 +62,8 @@ def get_is_push(value, key, title):
 def filter_all(args):
     result = []
     myFiliters = _get_config()
+    if not myFiliters:
+        myFiliters = default_config
     isNeedGetMikanInfo = False
 
     log.debugf('==================================')

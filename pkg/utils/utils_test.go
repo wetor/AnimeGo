@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/internal/utils"
+	"github.com/wetor/AnimeGo/pkg/utils"
 )
 
 func TestSettings_Tag(t *testing.T) {

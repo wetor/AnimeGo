@@ -3,17 +3,18 @@ package schedule_test
 import (
 	"context"
 	"fmt"
+	"github.com/wetor/AnimeGo/internal/plugin"
+	"github.com/wetor/AnimeGo/internal/plugin/python/lib"
+	"github.com/wetor/AnimeGo/pkg/plugin/python"
+	"github.com/wetor/AnimeGo/pkg/utils"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/internal/plugin/python"
-	"github.com/wetor/AnimeGo/internal/plugin/python/lib"
 	"github.com/wetor/AnimeGo/internal/schedule"
 	"github.com/wetor/AnimeGo/internal/schedule/task"
-	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/third_party/gpython"
@@ -60,7 +61,9 @@ func TestNewSchedule(t *testing.T) {
 }
 
 func TestNewSchedule2(t *testing.T) {
-	constant.PluginPath = "../../assets/plugin"
+	plugin.Init(&plugin.Options{
+		Path: "../../assets/plugin",
+	})
 	s.Add(&schedule.AddTaskOptions{
 		Name:     "test",
 		StartRun: true,
@@ -90,7 +93,9 @@ func TestNewSchedule2(t *testing.T) {
 }
 
 func TestNewSchedule3_feed(t *testing.T) {
-	constant.PluginPath = "../../assets/plugin"
+	plugin.Init(&plugin.Options{
+		Path: "../../assets/plugin",
+	})
 	s.Add(&schedule.AddTaskOptions{
 		Name:     "test",
 		StartRun: true,

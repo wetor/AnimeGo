@@ -8,15 +8,12 @@ import (
 	_ "github.com/go-python/gpython/stdlib"
 	"gopkg.in/yaml.v3"
 
-	"github.com/wetor/AnimeGo/internal/constant"
-	"github.com/wetor/AnimeGo/internal/models"
-	pyutils "github.com/wetor/AnimeGo/internal/plugin/python/utils"
-	pluginutils "github.com/wetor/AnimeGo/internal/plugin/utils"
-	"github.com/wetor/AnimeGo/internal/utils"
 	"github.com/wetor/AnimeGo/pkg/errors"
 	"github.com/wetor/AnimeGo/pkg/json"
 	"github.com/wetor/AnimeGo/pkg/log"
+	"github.com/wetor/AnimeGo/pkg/plugin"
 	"github.com/wetor/AnimeGo/pkg/try"
+	"github.com/wetor/AnimeGo/pkg/utils"
 	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
@@ -32,6 +29,10 @@ type Python struct {
 	file      string
 }
 
+// preExecute
+//
+//	@Description: 前置执行，将CRLF脚本转为LF并重新写入
+//	@receiver p
 func (p *Python) preExecute() {
 	if p.ctx == nil {
 		p.ctx = py.NewContext(py.ContextOpts{
@@ -49,6 +50,10 @@ func (p *Python) preExecute() {
 	}
 }
 
+// execute
+//
+//	@Description: 执行脚本
+//	@receiver p
 func (p *Python) execute() {
 	var err error
 	p.module, err = py.RunFile(p.ctx, p.file, py.CompileOpts{
@@ -61,17 +66,21 @@ func (p *Python) execute() {
 
 }
 
+// endExecute
+//
+//	@Description: 后置执行，写入变量，获取方法
+//	@receiver p
 func (p *Python) endExecute() {
 	for name, function := range p.functions {
-		function.Func = func(args models.Object) models.Object {
-			pyObj := pyutils.Value2PyObject(args)
+		function.Func = func(args map[string]any) map[string]any {
+			pyObj := plugin.Value2PyObject(args)
 			res, err := p.module.Call(name, py.Tuple{pyObj}, nil)
 			if err != nil {
 				py.TracebackDump(err)
 			}
-			obj, ok := pyutils.PyObject2Value(res).(models.Object)
+			obj, ok := plugin.PyObject2Value(res).(map[string]any)
 			if !ok {
-				obj = models.Object{
+				obj = map[string]any{
 					"result": obj,
 				}
 			}
@@ -91,7 +100,7 @@ func (p *Python) endExecute() {
 	p.module.Globals["__plugin_dir__"] = py.String(p.dir)
 	p.module.Globals["__animego_version__"] = py.String(os.Getenv("ANIMEGO_VERSION"))
 	p.module.Globals["_get_config"] = py.MustNewMethod("_get_config", func(self py.Object, args py.Tuple) (py.Object, error) {
-		result := models.Object{}
+		result := map[string]any{}
 		yamlFile := xpath.Join(p.dir, p.name+".yaml")
 		jsonFile := xpath.Join(p.dir, p.name+".json")
 		if utils.IsExist(yamlFile) {
@@ -113,41 +122,68 @@ func (p *Python) endExecute() {
 				return nil, err
 			}
 		}
-		return pyutils.Value2PyObject(result), nil
+		return plugin.Value2PyObject(result), nil
 	}, 0, `_get_config() -> dict`)
 
 }
 
+// Get
+//
+//	@Description: 获取变量
+//	@receiver p
+//	@param name
+//	@return any
 func (p *Python) Get(name string) any {
-	return pyutils.PyObject2Value(p.module.Globals[name])
+	return plugin.PyObject2Value(p.module.Globals[name])
 }
 
+// Set
+//
+//	@Description: 设置变量
+//	@receiver p
+//	@param name
+//	@param val
 func (p *Python) Set(name string, val any) {
-	p.module.Globals[name] = pyutils.Value2PyObject(val)
+	p.module.Globals[name] = plugin.Value2PyObject(val)
 }
 
+// Type
+//
+//	@Description: 脚本类型
+//	@receiver p
+//	@return string
 func (p *Python) Type() string {
 	return Type
 }
 
+// loadPre
+//
+//	@Description: 前置加载，脚本路径转为绝对路径
+//	@receiver p
+//	@param file
 func (p *Python) loadPre(file string) {
 	if xpath.IsAbs(file) {
 		p.file = xpath.Abs(xpath.P(file))
 	} else {
-		p.file = xpath.Abs(xpath.Join(constant.PluginPath, xpath.P(file)))
+		p.file = xpath.Abs(xpath.Join(plugin.Path, xpath.P(file)))
 	}
 	p.file = utils.FindScript(p.file, ".py")
 	p.dir, p.name = xpath.Split(p.file)
 	p.name = strings.TrimSuffix(p.name, xpath.Ext(p.file))
 }
 
-func (p *Python) Load(opts *models.PluginLoadOptions) {
+// Load
+//
+//	@Description: 加载脚本
+//	@receiver p
+//	@param opts
+func (p *Python) Load(opts *plugin.LoadOptions) {
 	p.loadPre(opts.File)
 	p.functions = make(map[string]*Function, len(opts.Functions))
 	for _, f := range opts.Functions {
 		p.functions[f.Name] = &Function{
-			ParamsSchema:    pluginutils.ParseSchemas(f.ParamsSchema),
-			ResultSchema:    pluginutils.ParseSchemas(f.ResultSchema),
+			ParamsSchema:    plugin.ParseSchemas(f.ParamsSchema),
+			ResultSchema:    plugin.ParseSchemas(f.ResultSchema),
 			Name:            f.Name,
 			SkipSchemaCheck: f.SkipSchemaCheck,
 		}
@@ -171,16 +207,23 @@ func (p *Python) Load(opts *models.PluginLoadOptions) {
 	})
 }
 
-func (p *Python) Run(function string, args models.Object) (result models.Object) {
+// Run
+//
+//	@Description: 执行脚本函数
+//	@receiver p
+//	@param function 函数名
+//	@param args 参数列表
+//	@return result
+func (p *Python) Run(function string, args map[string]any) (result map[string]any) {
 	try.This(func() {
 		f := p.functions[function]
 		if !f.SkipSchemaCheck {
-			pluginutils.CheckSchema(f.ParamsSchema, args)
+			plugin.CheckSchema(f.ParamsSchema, args)
 		}
 		result = p.functions[function].Run(args)
 
 		if !f.SkipSchemaCheck {
-			pluginutils.CheckSchema(f.ResultSchema, result)
+			plugin.CheckSchema(f.ResultSchema, result)
 		}
 	}).Catch(func(err try.E) {
 		log.Warnf("%s 脚本函数 %s 运行时出错", p.Type(), function)

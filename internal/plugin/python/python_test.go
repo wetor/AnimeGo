@@ -7,33 +7,31 @@ import (
 
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	mikanRss "github.com/wetor/AnimeGo/internal/animego/feed/rss"
-	"github.com/wetor/AnimeGo/internal/constant"
-	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/internal/plugin/python"
-	"github.com/wetor/AnimeGo/internal/plugin/python/lib"
+	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/log"
-	"github.com/wetor/AnimeGo/third_party/gpython"
+	pkgPlugin "github.com/wetor/AnimeGo/pkg/plugin"
+	"github.com/wetor/AnimeGo/pkg/plugin/python"
 )
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
-	constant.PluginPath = "testdata"
+	plugin.Init(&plugin.Options{
+		Path: "testdata",
+	})
 	log.Init(&log.Options{
 		File:  "data/log.log",
 		Debug: true,
 	})
-	gpython.Init()
 	m.Run()
 	fmt.Println("end")
 }
 
 func TestLib_log(t *testing.T) {
-	lib.Init()
 	p := &python.Python{}
-	p.Load(&models.PluginLoadOptions{
+	p.Load(&pkgPlugin.LoadOptions{
 		File: "test_log.py",
-		Functions: []*models.PluginFunctionOptions{
+		Functions: []*pkgPlugin.FunctionOptions{
 			{
 				Name:         "main",
 				ParamsSchema: []string{"title"},
@@ -41,18 +39,17 @@ func TestLib_log(t *testing.T) {
 			},
 		},
 	})
-	result := p.Run("main", models.Object{
+	result := p.Run("main", map[string]any{
 		"title": "【悠哈璃羽字幕社】 [明日同学的水手服_Akebi-chan no Sailor-fuku] [01-12] [x264 1080p][CHT]",
 	})
 	fmt.Println(result)
 }
 
 func TestPythonFunction(t *testing.T) {
-	lib.Init()
 	p := &python.Python{}
-	p.Load(&models.PluginLoadOptions{
+	p.Load(&pkgPlugin.LoadOptions{
 		File: "test.py",
-		Functions: []*models.PluginFunctionOptions{
+		Functions: []*pkgPlugin.FunctionOptions{
 			{
 				Name:         "main",
 				ParamsSchema: []string{"params"},
@@ -64,28 +61,27 @@ func TestPythonFunction(t *testing.T) {
 			},
 		},
 	})
-	result := p.Run("main", models.Object{
+	result := p.Run("main", map[string]any{
 		"params": []int{1, 2, 3},
 	})
 	fmt.Println(result)
 
-	p.Run("test", models.Object{
+	p.Run("test", map[string]any{
 		"test": true,
 	})
 }
 
 func TestPythonVariable(t *testing.T) {
-	lib.Init()
 	p := &python.Python{}
-	p.Load(&models.PluginLoadOptions{
+	p.Load(&pkgPlugin.LoadOptions{
 		File: "var.py",
-		Functions: []*models.PluginFunctionOptions{
+		Functions: []*pkgPlugin.FunctionOptions{
 			{
 				Name:            "main",
 				SkipSchemaCheck: true,
 			},
 		},
-		Variables: []*models.PluginVariableOptions{
+		Variables: []*pkgPlugin.VariableOptions{
 			{
 				Name: "Name",
 			},
@@ -102,7 +98,7 @@ func TestPythonVariable(t *testing.T) {
 	fmt.Println(p.Get("Name"))
 	fmt.Println(p.Get("Cron"))
 	p.Set("Name", "update_test")
-	result := p.Run("main", models.Object{
+	result := p.Run("main", map[string]any{
 		"params": []int{1, 2, 3},
 	})
 	fmt.Println(result)
@@ -110,18 +106,17 @@ func TestPythonVariable(t *testing.T) {
 }
 
 func TestPythonJson(t *testing.T) {
-	lib.Init()
 	p := &python.Python{}
-	p.Load(&models.PluginLoadOptions{
+	p.Load(&pkgPlugin.LoadOptions{
 		File: "json.py",
-		Functions: []*models.PluginFunctionOptions{
+		Functions: []*pkgPlugin.FunctionOptions{
 			{
 				Name:            "main",
 				SkipSchemaCheck: true,
 			},
 		},
 	})
-	result := p.Run("main", models.Object{
+	result := p.Run("main", map[string]any{
 		"json": `{"a":1,"b":2,"c":3,"d":4,"e":5}`,
 		"yaml": `id: 1
 uuid: 3d877494-e7d4-48e3-aa7a-164373a7920d
@@ -145,12 +140,11 @@ language:
 }
 
 func TestPythonConfig(t *testing.T) {
-	lib.Init()
 	os.Setenv("ANIMEGO_VERSION", "0.6.8")
 	p := &python.Python{}
-	p.Load(&models.PluginLoadOptions{
+	p.Load(&pkgPlugin.LoadOptions{
 		File: "config.py",
-		Functions: []*models.PluginFunctionOptions{
+		Functions: []*pkgPlugin.FunctionOptions{
 			{
 				Name:            "test",
 				SkipSchemaCheck: true,
@@ -158,14 +152,13 @@ func TestPythonConfig(t *testing.T) {
 		},
 	})
 
-	result := p.Run("test", models.Object{
+	result := p.Run("test", map[string]any{
 		"test": true,
 	})
 	fmt.Println(result)
 }
 
 func TestPythonParseMikan(t *testing.T) {
-	lib.Init()
 
 	db := cache.NewBolt()
 	db.Open("data/bolt.db")
@@ -177,9 +170,9 @@ func TestPythonParseMikan(t *testing.T) {
 	})
 
 	p := &python.Python{}
-	p.Load(&models.PluginLoadOptions{
+	p.Load(&pkgPlugin.LoadOptions{
 		File: "mikan.py",
-		Functions: []*models.PluginFunctionOptions{
+		Functions: []*pkgPlugin.FunctionOptions{
 			{
 				Name:            "main",
 				SkipSchemaCheck: true,
@@ -191,9 +184,10 @@ func TestPythonParseMikan(t *testing.T) {
 }
 
 func TestPythonMikanTool(t *testing.T) {
-	savePluginPath := constant.PluginPath
-	constant.PluginPath = "../../../assets/plugin"
-	lib.Init()
+	savePluginPath := plugin.Path
+	plugin.Init(&plugin.Options{
+		Path: "../../../assets/plugin",
+	})
 	os.Setenv("ANIMEGO_VERSION", "0.6.8")
 
 	db := cache.NewBolt()
@@ -210,19 +204,21 @@ func TestPythonMikanTool(t *testing.T) {
 	fmt.Println("===========")
 
 	p := &python.Python{}
-	p.Load(&models.PluginLoadOptions{
+	p.Load(&pkgPlugin.LoadOptions{
 		File: "filter/mikan_tool.py",
-		Functions: []*models.PluginFunctionOptions{
+		Functions: []*pkgPlugin.FunctionOptions{
 			{
-				Name:            "main",
+				Name:            "filter_all",
 				SkipSchemaCheck: true,
 			},
 		},
 	})
 
-	result := p.Run("main", models.Object{
-		"feedItems": items,
+	result := p.Run("filter_all", map[string]any{
+		"items": items,
 	})
 	fmt.Println(result["data"])
-	constant.PluginPath = savePluginPath
+	plugin.Init(&plugin.Options{
+		Path: savePluginPath,
+	})
 }
