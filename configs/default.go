@@ -3,7 +3,6 @@ package configs
 import (
 	"os"
 
-	"github.com/wetor/AnimeGo/internal/models"
 	encoder "github.com/wetor/AnimeGo/third_party/yaml-encoder"
 )
 
@@ -61,7 +60,7 @@ func defaultPluginComment() {
 }
 
 func defaultPlugin() {
-	defaultConfig.Plugin.Filter = []models.Plugin{
+	defaultConfig.Plugin.Filter = []PluginInfo{
 		{
 			Enable: true,
 			Type:   "py",

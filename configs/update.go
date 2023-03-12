@@ -2,12 +2,11 @@ package configs
 
 import (
 	"fmt"
+	"github.com/wetor/AnimeGo/configs/version/v_130"
 	"log"
 	"os"
 	"strings"
 	"time"
-
-	"github.com/wetor/AnimeGo/pkg/xpath"
 
 	"github.com/jinzhu/copier"
 	"gopkg.in/yaml.v3"
@@ -15,8 +14,8 @@ import (
 	"github.com/wetor/AnimeGo/configs/version/v_110"
 	"github.com/wetor/AnimeGo/configs/version/v_120"
 	"github.com/wetor/AnimeGo/internal/constant"
-	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/utils"
+	"github.com/wetor/AnimeGo/pkg/xpath"
 	encoder "github.com/wetor/AnimeGo/third_party/yaml-encoder"
 )
 
@@ -37,6 +36,7 @@ var (
 		"1.1.0",
 		"1.2.0",
 		"1.3.0",
+		"1.4.0",
 	}
 	versionList = []Version{
 		{
@@ -52,6 +52,11 @@ var (
 			Name:       versions[2],
 			Desc:       "插件配置结构变更；移除了js插件支持，增加了定时任务插件支持",
 			UpdateFunc: update_120_130,
+		},
+		{
+			Name:       versions[3],
+			Desc:       "插件配置结构变更，支持设置参数",
+			UpdateFunc: update_130_140,
 		},
 	}
 )
@@ -141,9 +146,9 @@ func update_110_120(file string) {
 	newConfig.Version = "1.2.0"
 	log.Printf("[变动] 配置项(setting.filter.javascript) 变更为 setting.filter.plugin\n")
 	if len(oldConfig.Filter.JavaScript) > 0 {
-		newConfig.Filter.Plugin = make([]models.Plugin, len(oldConfig.Filter.JavaScript))
+		newConfig.Filter.Plugin = make([]v_120.PluginInfo, len(oldConfig.Filter.JavaScript))
 		for i, filename := range oldConfig.Filter.JavaScript {
-			newConfig.Filter.Plugin[i] = models.Plugin{
+			newConfig.Filter.Plugin[i] = v_120.PluginInfo{
 				Enable: true,
 				Type:   "js",
 				File:   strings.TrimPrefix(filename, "plugin/"),
@@ -182,7 +187,7 @@ func update_120_130(file string) {
 		log.Fatal("配置文件加载错误：", err)
 	}
 
-	newConfig := DefaultConfig()
+	newConfig := &v_130.Config{}
 	err = copier.Copy(newConfig, oldConfig)
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
@@ -190,15 +195,56 @@ func update_120_130(file string) {
 	newConfig.Version = "1.3.0"
 	log.Printf("[变动] 配置项(setting.filter.javascript) 变更为 plugin.filter\n")
 	if len(oldConfig.Filter.Plugin) > 0 {
-		newConfig.Plugin.Filter = make([]models.Plugin, 0, len(oldConfig.Filter.Plugin))
+		newConfig.Plugin.Filter = make([]v_130.PluginInfo, 0, len(oldConfig.Filter.Plugin))
 		for _, p := range oldConfig.Filter.Plugin {
 			if strings.ToLower(p.Type) == "js" || strings.ToLower(p.Type) == "javascript" {
 				log.Printf("[移除] 不支持javascript插件 %s\n", p.File)
 			} else {
-				newConfig.Plugin.Filter = append(newConfig.Plugin.Filter, p)
+				newConfig.Plugin.Filter = append(newConfig.Plugin.Filter, v_130.PluginInfo{
+					Enable: p.Enable,
+					Type:   p.Type,
+					File:   p.File,
+				})
 			}
 		}
 	}
+	content, err := encodeConfig(newConfig)
+	if err != nil {
+		log.Fatal("配置文件升级失败：", err)
+	}
+	err = os.WriteFile(file, content, 0644)
+	if err != nil {
+		log.Fatal("配置文件升级失败：", err)
+	}
+}
+
+func update_130_140(file string) {
+	data, err := os.ReadFile(file)
+	if err != nil {
+		log.Fatal("配置文件加载错误：", err)
+	}
+	oldConfig := &v_130.Config{}
+	err = yaml.Unmarshal(data, oldConfig)
+	if err != nil {
+		log.Fatal("配置文件加载错误：", err)
+	}
+
+	newConfig := DefaultConfig()
+	err = copier.Copy(newConfig, oldConfig)
+	if err != nil {
+		log.Fatal("配置文件升级失败：", err)
+	}
+	newConfig.Version = "1.4.0"
+	log.Printf("[新增] 配置项(plugin.filter) 支持 args\n")
+	newConfig.Plugin.Filter = make([]PluginInfo, len(oldConfig.Plugin.Filter))
+	_ = copier.Copy(&newConfig.Plugin.Filter, &oldConfig.Plugin.Filter)
+	log.Printf("[新增] 配置项(plugin.feed) 支持 args\n")
+	newConfig.Plugin.Feed = make([]PluginInfo, len(oldConfig.Plugin.Feed))
+	_ = copier.Copy(&newConfig.Plugin.Feed, &oldConfig.Plugin.Feed)
+	log.Printf("[新增] 配置项(plugin.schedule) 支持 args\n")
+	newConfig.Plugin.Schedule = make([]PluginInfo, len(oldConfig.Plugin.Schedule))
+	_ = copier.Copy(&newConfig.Plugin.Schedule, &oldConfig.Plugin.Schedule)
+
 	content, err := encodeConfig(newConfig)
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)

@@ -2,6 +2,7 @@ package task
 
 import (
 	"archive/zip"
+	"github.com/wetor/AnimeGo/internal/models"
 	"io"
 	"os"
 	"sync"
@@ -59,6 +60,10 @@ func (t *BangumiTask) Name() string {
 
 func (t *BangumiTask) Cron() string {
 	return t.cron
+}
+
+func (t *BangumiTask) SetVars(vars models.Object) {
+
 }
 
 func (t *BangumiTask) NextTime() time.Time {
@@ -121,12 +126,12 @@ func (t *BangumiTask) unzip(filename string) {
 }
 
 // Run
-//  @Description:
-//  @receiver *BangumiTask
-//  @param opts ...interface{}
-//    opts[0] bool 是否启动时执行
 //
-func (t *BangumiTask) Run(params ...interface{}) {
+//	@Description:
+//	@receiver *BangumiTask
+//	@param opts ...interface{}
+//	  opts[0] bool 是否启动时执行
+func (t *BangumiTask) Run(args models.Object) {
 	db := xpath.Join(constant.CachePath, SubjectDB)
 	stat, err := os.Stat(db)
 	// 首次启动时，若

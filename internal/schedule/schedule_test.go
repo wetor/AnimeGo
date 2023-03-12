@@ -69,8 +69,20 @@ func TestNewSchedule2(t *testing.T) {
 				Enable: true,
 				Type:   python.Type,
 				File:   "schedule/refresh.py",
+				Vars: models.Object{
+					"__name__": "Vars_Test",
+				},
+				Args: models.Object{
+					"Args_Test": 13213,
+				},
 			},
 		}),
+		Args: models.Object{
+			"Args_Test": "测试",
+		},
+		Vars: models.Object{
+			"__name__": "outer_Vars_Test",
+		},
 	})
 	s.Start(context.Background())
 	time.Sleep(11 * time.Second)

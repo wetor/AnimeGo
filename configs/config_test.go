@@ -9,6 +9,7 @@ import (
 	"github.com/jinzhu/copier"
 
 	"github.com/wetor/AnimeGo/configs"
+	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/utils"
 )
 
@@ -80,4 +81,70 @@ func TestUpdateConfig_130(t *testing.T) {
 		t.Errorf("UpdateConfig() = %s, want %s", got, want)
 	}
 	_ = os.Remove("data/animego.yaml")
+}
+
+func TestUpdateConfig_140(t *testing.T) {
+	_ = utils.CreateMutiDir("data")
+	configs.ConfigVersion = "1.4.0"
+	file, _ := os.ReadFile("testdata/animego_130.yaml")
+	_ = os.WriteFile("data/animego.yaml", file, 0666)
+	configs.UpdateConfig("data/animego.yaml", false)
+
+	want, _ := os.ReadFile("testdata/animego_140.yaml")
+	got, _ := os.ReadFile("data/animego.yaml")
+	if !bytes.Equal(got, want) {
+		t.Errorf("UpdateConfig() = %s, want %s", got, want)
+	}
+	//_ = os.Remove("data/animego.yaml")
+}
+
+func TestConvertPluginInfo(t *testing.T) {
+
+	plugins := configs.ConvertPluginInfo([]configs.PluginInfo{
+		{
+			Enable: true,
+			Type:   "python",
+			File:   "/aaa",
+			Args: map[string]any{
+				"Cron":  "1111",
+				"Retry": 77,
+			},
+		},
+		{
+			Enable: true,
+			Type:   "python",
+			File:   "/aaa",
+			Args: map[string]any{
+				"Cron":  "777888",
+				"Retry": 13,
+			},
+		},
+	})
+	fmt.Println(plugins)
+}
+
+func TestCopy1(t *testing.T) {
+	plugins := []*configs.PluginInfo{
+		{
+			Enable: true,
+			Type:   "python",
+			File:   "/aaa",
+			Args: map[string]any{
+				"Cron":  "1111",
+				"Retry": 77,
+			},
+		},
+		{
+			Enable: true,
+			Type:   "python",
+			File:   "/aaa",
+			Args: map[string]any{
+				"Cron":  "777888",
+				"Retry": 13,
+			},
+		},
+	}
+	dst := make([]*models.Plugin, len(plugins))
+	copier.Copy(&dst, &plugins)
+	fmt.Println(dst)
 }

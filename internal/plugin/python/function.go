@@ -10,15 +10,15 @@ type Function struct {
 	ResultSchema    []*pluginutils.Schema
 	Name            string
 	SkipSchemaCheck bool
-	Func            func(params models.Object) models.Object
+	Func            func(args models.Object) models.Object
 }
 
-func (f *Function) Run(params models.Object) models.Object {
+func (f *Function) Run(args models.Object) models.Object {
 	if !f.SkipSchemaCheck {
-		pluginutils.CheckSchema(f.ParamsSchema, params)
+		pluginutils.CheckSchema(f.ParamsSchema, args)
 	}
 
-	result := f.Func(params)
+	result := f.Func(args)
 
 	if !f.SkipSchemaCheck {
 		pluginutils.CheckSchema(f.ResultSchema, result)

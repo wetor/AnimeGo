@@ -45,9 +45,12 @@ func (p *Filter) Filter(list []*models.FeedItem) []*models.FeedItem {
 				},
 			},
 		})
-		result := pluginInstance.Run(FuncFilterAll, models.Object{
-			"items": inList,
-		})
+		for name, val := range info.Vars {
+			pluginInstance.Set(name, val)
+		}
+		args := info.Args
+		args["items"] = inList
+		result := pluginInstance.Run(FuncFilterAll, args)
 		if result["error"] != nil {
 			log.Debugf("", errors.NewAniErrorD(result["error"]))
 			log.Warnf("[Plugin] %s插件(%s)执行错误: %v", info.Type, info.File, result["error"])

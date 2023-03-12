@@ -20,13 +20,12 @@ type FeedTask struct {
 	parser   *cron.Parser
 	cron     string
 	plugin   api.Plugin
+	args     models.Object
 	callback func([]*models.FeedItem)
 }
 
 type FeedOptions struct {
 	*models.Plugin
-	Cron     string
-	Url      string
 	Callback func([]*models.FeedItem)
 }
 
@@ -54,19 +53,18 @@ func NewFeedTask(opts *FeedOptions) *FeedTask {
 			},
 		},
 	})
-	if len(opts.Cron) > 0 {
-		_, err := SecondParser.Parse(opts.Cron)
-		if err == nil {
-			p.Set(VarCron, opts.Cron)
+	for name, val := range opts.Plugin.Vars {
+		if name == VarCron {
+			_, err := SecondParser.Parse(val.(string))
+			errors.NewAniErrorD(err).TryPanic()
 		}
-	}
-	if len(opts.Url) > 0 {
-		p.Set(VarUrl, opts.Url)
+		p.Set(name, val)
 	}
 	return &FeedTask{
 		parser:   &SecondParser,
 		cron:     p.Get(VarCron).(string),
 		plugin:   p,
+		args:     opts.Args,
 		callback: opts.Callback,
 	}
 }
@@ -83,23 +81,32 @@ func (t *FeedTask) Cron() string {
 	return t.plugin.Get(VarCron).(string)
 }
 
+func (t *FeedTask) SetVars(vars models.Object) {
+	for k, v := range vars {
+		t.plugin.Set(k, v)
+	}
+}
+
 func (t *FeedTask) NextTime() time.Time {
 	next, err := t.parser.Parse(t.cron)
 	errors.NewAniErrorD(err).TryPanic()
 	return next.Next(time.Now())
 }
 
-func (t *FeedTask) Run(params ...interface{}) {
+func (t *FeedTask) Run(args models.Object) {
 	url := t.plugin.Get(VarUrl).(string)
 	data, err := request.GetString(url)
 	if err != nil {
 		log.Warnf("[Plugin] %s插件(%s)执行错误: 请求 %s 失败", t.plugin.Type(), FuncParse, url)
 		log.Debugf("", err)
 	}
-
-	result := t.plugin.Run(FuncParse, models.Object{
-		"data": data,
-	})
+	for k, v := range t.args {
+		if _, ok := args[k]; !ok {
+			args[k] = v
+		}
+	}
+	args["data"] = data
+	result := t.plugin.Run(FuncParse, args)
 	if result["error"] != nil {
 		log.Debugf("", errors.NewAniErrorD(result["error"]))
 		log.Warnf("[Plugin] %s插件(%s)执行错误: %v", t.plugin.Type(), t.Name(), result["error"])

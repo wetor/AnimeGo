@@ -8,6 +8,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/jinzhu/copier"
+
 	"github.com/wetor/AnimeGo/internal/animego/downloader/qbittorrent"
 	"github.com/wetor/AnimeGo/internal/animego/manager"
 	"github.com/wetor/AnimeGo/internal/api"
@@ -79,7 +81,7 @@ func (m *Manager) loadCache() {
 	valueType := models.DownloadStatus{}
 	m.cache.GetAll(Name2StatusBucket, &keyType, &valueType, func(k, v interface{}) {
 		nv := &models.DownloadStatus{}
-		utils.ConvertModel(v.(*models.DownloadStatus), nv)
+		_ = copier.Copy(nv, v.(*models.DownloadStatus))
 		m.name2status[*k.(*string)] = nv
 	})
 
@@ -106,6 +108,8 @@ func (m *Manager) Download(anime *models.AnimeEntity) {
 }
 
 func (m *Manager) download(anime *models.AnimeEntity) {
+	manager.ReInitWG.Add(1)
+	defer manager.ReInitWG.Done()
 	m.Lock()
 	defer m.Unlock()
 	name := anime.FullName()
@@ -309,6 +313,8 @@ func (m *Manager) DeleteCache(fullname string) {
 }
 
 func (m *Manager) UpdateList() {
+	manager.ReInitWG.Add(1)
+	defer manager.ReInitWG.Done()
 	m.Lock()
 	defer m.Unlock()
 

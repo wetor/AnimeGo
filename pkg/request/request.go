@@ -4,6 +4,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/parnurzeal/gorequest"
@@ -18,6 +19,7 @@ var (
 	Proxy     string
 	UserAgent string
 	Debug     bool
+	ReInitWG  sync.WaitGroup
 )
 
 type Options struct {
@@ -48,7 +50,18 @@ func Init(opt *Options) {
 	UserAgent = opt.UserAgent
 }
 
+func ReInit(opt *Options) {
+	ReInitWG.Wait()
+	Retry = opt.Retry
+	RetryWait = opt.RetryWait
+	Timeout = opt.Timeout
+	Proxy = opt.Proxy
+	UserAgent = opt.UserAgent
+}
+
 func get(uri string) *gorequest.SuperAgent {
+	ReInitWG.Add(1)
+	defer ReInitWG.Done()
 	log.Infof("HTTP GET %s", uri)
 	retryWait := time.Duration(RetryWait) * time.Second
 	timeout := time.Duration(Timeout) * time.Second
@@ -90,6 +103,8 @@ func handleError(resp gorequest.Response, errs []error) (err error) {
 }
 
 func GetString(uri string) (string, error) {
+	ReInitWG.Add(1)
+	defer ReInitWG.Done()
 	resp, str, errs := get(uri).End()
 	err := handleError(resp, errs)
 	if err != nil {
@@ -99,6 +114,8 @@ func GetString(uri string) (string, error) {
 }
 
 func Get(uri string, body interface{}) error {
+	ReInitWG.Add(1)
+	defer ReInitWG.Done()
 	resp, _, errs := get(uri).EndStruct(body)
 	err := handleError(resp, errs)
 	if err != nil {
@@ -108,6 +125,8 @@ func Get(uri string, body interface{}) error {
 }
 
 func GetFile(uri string, file string) error {
+	ReInitWG.Add(1)
+	defer ReInitWG.Done()
 	resp, bodyBytes, errs := get(uri).EndBytes()
 	err := handleError(resp, errs)
 	if err != nil {
@@ -121,6 +140,8 @@ func GetFile(uri string, file string) error {
 }
 
 func GetWriter(uri string, w io.Writer) error {
+	ReInitWG.Add(1)
+	defer ReInitWG.Done()
 	resp, bodyBytes, errs := get(uri).EndBytes()
 	err := handleError(resp, errs)
 	if err != nil {

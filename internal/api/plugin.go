@@ -14,10 +14,10 @@ type PluginLoader interface {
 }
 
 type PluginRunner interface {
-	Run(function string, params models.Object) models.Object
+	Run(function string, args models.Object) models.Object
 }
 
 type PluginVariable interface {
-	Get(varName string) interface{}
-	Set(varName string, val interface{})
+	Get(varName string) any
+	Set(varName string, val any)
 }

@@ -254,7 +254,7 @@ func Main(ctx context.Context) {
 
 	// 初始化filter manager
 	filterManager := filterMgr.NewManager(
-		plugin.NewFilterPlugin(config.Plugin.Filter),
+		plugin.NewFilterPlugin(configs.ConvertPluginInfo(config.Plugin.Filter)),
 		feedRss.NewRss(&feedRss.Options{Url: config.Setting.Feed.Mikan.Url}),
 		mikan.Mikan{ThemoviedbKey: config.Setting.Key.Themoviedb},
 		downloadChan)
@@ -275,8 +275,8 @@ func Main(ctx context.Context) {
 			CacheMutex: &BangumiCacheMutex,
 		}),
 	})
-	schedule.AddScheduleTasks(scheduleVar, config.Plugin.Schedule)
-	feedPlugin.AddFeedTasks(scheduleVar, config.Plugin.Feed, filterManager, ctx)
+	schedule.AddScheduleTasks(scheduleVar, configs.ConvertPluginInfo(config.Plugin.Schedule))
+	feedPlugin.AddFeedTasks(scheduleVar, configs.ConvertPluginInfo(config.Plugin.Feed), filterManager, ctx)
 	scheduleVar.Start(ctx)
 
 	if webapi {

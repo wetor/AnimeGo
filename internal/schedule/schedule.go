@@ -25,8 +25,7 @@ const (
 type TaskInfo struct {
 	Name    string
 	Task    api.Task
-	Params  []interface{}
-	TaskRun func(params ...interface{})
+	TaskRun func(args models.Object)
 }
 
 type Schedule struct {
@@ -39,7 +38,8 @@ type Schedule struct {
 type AddTaskOptions struct {
 	Name     string
 	StartRun bool
-	Params   []interface{}
+	Vars     models.Object // 最高优先级
+	Args     models.Object // 最高优先级
 	Task     api.Task
 }
 
@@ -58,16 +58,21 @@ func NewSchedule(opts *Options) *Schedule {
 }
 
 func (s *Schedule) Add(opts *AddTaskOptions) {
+	if opts.Args == nil {
+		opts.Args = make(models.Object)
+	}
+	if opts.Vars == nil {
+		opts.Vars = make(models.Object)
+	}
 	t := &TaskInfo{
-		Name:   opts.Name,
-		Task:   opts.Task,
-		Params: opts.Params,
-		TaskRun: func(params ...interface{}) {
+		Name: opts.Name,
+		Task: opts.Task,
+		TaskRun: func(args models.Object) {
 			log.Infof("[定时任务] %s 开始执行", opts.Task.Name())
 			success := false
 			for i := 0; i < RetryNum; i++ {
 				try.This(func() {
-					opts.Task.Run(params...)
+					opts.Task.Run(args)
 					success = true
 				}).Catch(func(err try.E) {
 					log.Debugf("", err)
@@ -85,15 +90,15 @@ func (s *Schedule) Add(opts *AddTaskOptions) {
 			}
 		},
 	}
-
+	t.Task.SetVars(opts.Vars)
 	id, err := s.crontab.AddFunc(t.Task.Cron(), func() {
-		t.TaskRun(t.Params...)
+		t.TaskRun(opts.Args)
 	})
 	if err != nil {
 		errors.NewAniErrorD(err).TryPanic()
 	}
 	if opts.StartRun {
-		t.TaskRun(t.Params...)
+		t.TaskRun(opts.Args)
 	}
 	s.tasks[t.Name] = t
 	s.task2id[t.Name] = id

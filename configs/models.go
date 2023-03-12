@@ -1,7 +1,5 @@
 package configs
 
-import "github.com/wetor/AnimeGo/internal/models"
-
 type Config struct {
 	Version  string `yaml:"version" json:"version" attr:"配置文件版本"`
 	Setting  `yaml:"setting" json:"setting" attr:"常规设置"`
@@ -9,10 +7,18 @@ type Config struct {
 	Advanced `yaml:"advanced" json:"advanced" attr:"高级设置"`
 }
 
+type PluginInfo struct {
+	Enable bool           `yaml:"enable" json:"enable"`
+	Type   string         `yaml:"type" json:"type"`
+	File   string         `yaml:"file" json:"file"`
+	Args   map[string]any `yaml:"args" json:"args"`
+	Vars   map[string]any `yaml:"vars" json:"vars"`
+}
+
 type Plugin struct {
-	Feed     []models.Plugin `yaml:"feed" json:"feed" attr:"订阅" comment:"解析订阅链接"`
-	Filter   []models.Plugin `yaml:"filter" json:"filter" attr:"过滤器插件" comment:"用来筛选符合条件的项目进行解析下载"`
-	Schedule []models.Plugin `yaml:"schedule" json:"schedule" attr:"定时任务" comment:"定时执行脚本"`
+	Feed     []PluginInfo `yaml:"feed" json:"feed" attr:"订阅" comment:"解析订阅链接"`
+	Filter   []PluginInfo `yaml:"filter" json:"filter" attr:"过滤器插件" comment:"用来筛选符合条件的项目进行解析下载"`
+	Schedule []PluginInfo `yaml:"schedule" json:"schedule" attr:"定时任务" comment:"定时执行脚本"`
 }
 
 type Setting struct {

@@ -4,6 +4,7 @@ import "sync"
 
 var (
 	WG             *sync.WaitGroup
+	ReInitWG       sync.WaitGroup
 	DownloaderConf Downloader
 	FilterConf     Filter
 )
@@ -35,6 +36,15 @@ type Options struct {
 
 func Init(opts *Options) {
 	WG = opts.WG
+	DownloaderConf = opts.Downloader
+	FilterConf = opts.Filter
+}
+
+func ReInit(opts *Options) {
+	ReInitWG.Wait()
+	opts.Downloader.DownloadPath = DownloaderConf.DownloadPath
+	opts.Downloader.SavePath = DownloaderConf.SavePath
+
 	DownloaderConf = opts.Downloader
 	FilterConf = opts.Filter
 }

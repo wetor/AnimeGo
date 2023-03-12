@@ -49,6 +49,8 @@ func NewManager(filter api.Filter, feed api.Feed, anisource api.AniSource, downl
 }
 
 func (m *Manager) Update(ctx context.Context, items []*models.FeedItem) {
+	manager.ReInitWG.Add(1)
+	defer manager.ReInitWG.Done()
 	// 筛选
 	if items == nil {
 		items = m.feed.Parse()

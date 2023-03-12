@@ -4,6 +4,8 @@ import (
 	"context"
 	"time"
 
+	"github.com/jinzhu/copier"
+
 	"github.com/wetor/AnimeGo/internal/animego/downloader"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/utils"
@@ -212,9 +214,9 @@ func (c *QBittorrent) List(opt *models.ClientListOptions) []*models.TorrentItem 
 		return nil
 	}
 	retn := make([]*models.TorrentItem, len(listResp.Items))
-	for i := range retn {
-		retn[i] = &models.TorrentItem{}
-		utils.ConvertModel(listResp.Items[i], retn[i])
+	err = copier.Copy(&retn, &listResp.Items)
+	if c.checkError(err) {
+		return nil
 	}
 	return retn
 }
@@ -255,15 +257,18 @@ func (c *QBittorrent) Get(opt *models.ClientGetOptions) *models.TorrentItem {
 	if !c.connected {
 		return nil
 	}
-	resp, err := c.client.GetTorrentGenericProperties(context.Background(), &qbapi.GetTorrentGenericPropertiesReq{
-		Hash: opt.Hash,
-	})
+	req := &qbapi.GetTorrentListReq{
+		Hashes: &opt.Hash,
+	}
+	listResp, err := c.client.GetTorrentList(context.Background(), req)
+	if c.checkError(err) || len(listResp.Items) == 0 {
+		return nil
+	}
+	retn := &models.TorrentItem{}
+	err = copier.Copy(retn, listResp.Items[0])
 	if c.checkError(err) {
 		return nil
 	}
-
-	retn := &models.TorrentItem{}
-	utils.ConvertModel(resp.Property, retn)
 	return retn
 }
 
@@ -281,9 +286,9 @@ func (c *QBittorrent) GetContent(opt *models.ClientGetOptions) []*models.Torrent
 		opt.Item = c.Get(opt)
 	}
 	retn := make([]*models.TorrentContentItem, len(contents.Contents))
-	for i := range retn {
-		retn[i] = &models.TorrentContentItem{}
-		utils.ConvertModel(contents.Contents[i], retn[i])
+	err = copier.Copy(&retn, &contents.Contents)
+	if c.checkError(err) {
+		return nil
 	}
 	return retn
 }

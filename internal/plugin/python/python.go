@@ -62,10 +62,9 @@ func (p *Python) execute() {
 }
 
 func (p *Python) endExecute() {
-
 	for name, function := range p.functions {
-		function.Func = func(params models.Object) models.Object {
-			pyObj := pyutils.Value2PyObject(params)
+		function.Func = func(args models.Object) models.Object {
+			pyObj := pyutils.Value2PyObject(args)
 			res, err := p.module.Call(name, py.Tuple{pyObj}, nil)
 			if err != nil {
 				py.TracebackDump(err)
@@ -85,12 +84,6 @@ func (p *Python) endExecute() {
 		if !has && !variable.Nullable {
 			log.Warnf("未找到全局变量 %s", name)
 			errors.NewAniErrorf("未找到全局变量 %s", name).TryPanic()
-		}
-		variable.Getter = func(name string) interface{} {
-			return pyutils.PyObject2Value(p.module.Globals[name])
-		}
-		variable.Setter = func(name string, val interface{}) {
-			p.module.Globals[name] = pyutils.Value2PyObject(val)
 		}
 	}
 
@@ -125,12 +118,12 @@ func (p *Python) endExecute() {
 
 }
 
-func (p *Python) Get(name string) interface{} {
-	return p.variables[name].Getter(name)
+func (p *Python) Get(name string) any {
+	return pyutils.PyObject2Value(p.module.Globals[name])
 }
 
-func (p *Python) Set(name string, val interface{}) {
-	p.variables[name].Setter(name, val)
+func (p *Python) Set(name string, val any) {
+	p.module.Globals[name] = pyutils.Value2PyObject(val)
 }
 
 func (p *Python) Type() string {
@@ -178,13 +171,13 @@ func (p *Python) Load(opts *models.PluginLoadOptions) {
 	})
 }
 
-func (p *Python) Run(function string, params models.Object) (result models.Object) {
+func (p *Python) Run(function string, args models.Object) (result models.Object) {
 	try.This(func() {
 		f := p.functions[function]
 		if !f.SkipSchemaCheck {
-			pluginutils.CheckSchema(f.ParamsSchema, params)
+			pluginutils.CheckSchema(f.ParamsSchema, args)
 		}
-		result = p.functions[function].Run(params)
+		result = p.functions[function].Run(args)
 
 		if !f.SkipSchemaCheck {
 			pluginutils.CheckSchema(f.ResultSchema, result)

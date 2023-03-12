@@ -16,11 +16,11 @@ type ScheduleTask struct {
 	parser *cron.Parser
 	cron   string
 	plugin api.Plugin
+	args   models.Object
 }
 
 type ScheduleOptions struct {
 	*models.Plugin
-	Cron string
 }
 
 func NewScheduleTask(opts *ScheduleOptions) *ScheduleTask {
@@ -43,16 +43,18 @@ func NewScheduleTask(opts *ScheduleOptions) *ScheduleTask {
 			},
 		},
 	})
-	if len(opts.Cron) > 0 {
-		_, err := SecondParser.Parse(opts.Cron)
-		if err == nil {
-			p.Set(VarCron, opts.Cron)
+	for name, val := range opts.Plugin.Vars {
+		if name == VarCron {
+			_, err := SecondParser.Parse(val.(string))
+			errors.NewAniErrorD(err).TryPanic()
 		}
+		p.Set(name, val)
 	}
 	return &ScheduleTask{
 		parser: &SecondParser,
 		cron:   p.Get(VarCron).(string),
 		plugin: p,
+		args:   opts.Args,
 	}
 }
 
@@ -68,12 +70,23 @@ func (t *ScheduleTask) Cron() string {
 	return t.plugin.Get(VarCron).(string)
 }
 
+func (t *ScheduleTask) SetVars(vars models.Object) {
+	for k, v := range vars {
+		t.plugin.Set(k, v)
+	}
+}
+
 func (t *ScheduleTask) NextTime() time.Time {
 	next, err := t.parser.Parse(t.cron)
 	errors.NewAniErrorD(err).TryPanic()
 	return next.Next(time.Now())
 }
 
-func (t *ScheduleTask) Run(params ...interface{}) {
-	t.plugin.Run(FuncRun, nil)
+func (t *ScheduleTask) Run(args models.Object) {
+	for k, v := range t.args {
+		if _, ok := args[k]; !ok {
+			args[k] = v
+		}
+	}
+	t.plugin.Run(FuncRun, args)
 }

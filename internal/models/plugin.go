@@ -15,7 +15,9 @@ type TitleParsed struct {
 }
 
 type Plugin struct {
-	Enable bool   `yaml:"enable" json:"enable"`
-	Type   string `yaml:"type" json:"type"`
-	File   string `yaml:"file" json:"file"`
+	Enable bool           `json:"enable"`
+	Type   string         `json:"type"`
+	File   string         `json:"file"`
+	Args   map[string]any `json:"args"`
+	Vars   map[string]any `json:"vars"`
 }

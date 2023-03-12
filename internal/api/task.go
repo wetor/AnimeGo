@@ -1,10 +1,14 @@
 package api
 
-import "time"
+import (
+	"github.com/wetor/AnimeGo/internal/models"
+	"time"
+)
 
 type Task interface {
 	Cron() string
 	NextTime() time.Time
 	Name() string
-	Run(params ...interface{})
+	Run(args models.Object)
+	SetVars(vars models.Object)
 }
