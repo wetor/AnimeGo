@@ -11,45 +11,54 @@
   -web
         启用Web API，默认启用 (default true)
 ```
-### 0.安装和使用MikanTool插件 [可选]
+### [可选]0 安装和使用MikanTool插件
 - 配置文件中`setting/filter/plugin`新增如下内容后即可开启插件。
   ```
-  setting:
-    # ...
+  plugin:
     filter:
-      plugin:
-        - enable: true
-          type: py
-          file: filter/mikan_tool.py
+      - enable: true
+        type: py
+        file: filter/mikan_tool.py
+        args: {}
+        vars: {}
   ```
-- 然后 [安装MikanTool Tampermonkey插件](https://greasyfork.org/zh-CN/scripts/449596) ，需要浏览器中已安装Tampermonkey（油猴插件）
+- 然后 [安装MikanTool Tampermonkey插件](https://greasyfork.org/zh-CN/scripts/449596) ，需要浏览器中已安装Tampermonkey（油猴插件）  
+- 具体过滤设置根据油猴插件面板的要求进行  
 
-### 1.首次启动
+### 1 首次启动：释放资源
 ```shell
 ./AnimeGo
 ```
+
+### 1.1 升级后启动：升级配置、释放资源
+```shell
+./AnimeGo
+```
+
 会在程序所在目录输出`data`文件夹，其中`data/animego.yaml`为配置文件。
-### 2.修改配置
+### 2 修改配置
 打开并编辑`data/animego.yaml`
 
 其中主要需要修改的配置项为：
-- `setting/client/qbittorrent` : 必填，qbittorrent客户端webapi信息
-- `setting/feed/mikan/url` : 可选，Mikan订阅url，如果仅使用浏览器插件手动下载则无需填写
-- `setting/download_path`: 下载器下载保存位置
-- `setting/save_path`: 重命名后移动到位置
+- `setting.client.qbittorrent` : 必选，qBittorrent客户端webapi信息
+- `setting.download_path`: 下载器下载保存位置。临时位置，移动后将会删除
+- `setting.save_path`: 重命名后移动到位置。此时将会改名
+- `plugin.feed`中的`builtin_mikan_rss.py`插件 : 可选，内置自动订阅插件
+  - `vars.__url__`: 订阅地址，如Mikan的rss订阅地址
+  - `vars.__cron__`: 订阅时间，Cron格式，参考[Feed订阅插件帮助](assets/plugin/feed/README.md)
 - 其余配置项根据需求修改
 
-### 3.启动程序
+### 3 启动程序
 ```shell
 ./AnimeGo
 ```
 > 可选`-debug`，启用后将输出更详细的日志
 
 可以使用如screen等工具放至后台执行，也可以创建服务并启动
-### 更多待补充...
-
+### 4 高级使用
+[插件函数文档](assets/plugin/README.md)  
 ## 文档
-1. [配置文件](configs/models.go)
+1. 配置文件，参考注释
 2. [插件函数文档](assets/plugin/README.md)
 3. [webapi(Swagger)接口文档](internal/web/README.md)
 
@@ -58,10 +67,12 @@
 - 学习
 
 ## 目前进度
-- 可使用配置、筛选和下载等基本功能
-- python编写定时订阅，[帮助文档](assets/plugin/feed/README.md)
-- python编写筛选器，[帮助文档](assets/plugin/filter/README.md)
-- python编写定时任务，[帮助文档](assets/plugin/schedule/README.md)
+- 可使用配置、筛选和下载等功能
+- 比较高度自由的插件配置  
+- python编写插件
+  - 定时订阅，[帮助文档](assets/plugin/feed/README.md)
+  - 筛选器，[帮助文档](assets/plugin/filter/README.md)
+  - 定时任务，[帮助文档](assets/plugin/schedule/README.md)
 - 支持Tampermonkey(油猴)插件 [AnimeGo\[Mikan快速订阅\]](https://greasyfork.org/zh-CN/scripts/449596) 快速订阅下载
 - Jellyfin支持
 

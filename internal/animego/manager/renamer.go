@@ -1,9 +1,8 @@
-package downloader
+package manager
 
 import (
 	"os"
 
-	"github.com/wetor/AnimeGo/internal/animego/manager"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/pkg/errors"
 	"github.com/wetor/AnimeGo/pkg/log"
@@ -23,7 +22,7 @@ func RenameAnime(opt *RenameOptions) {
 		return
 	}
 	var err error
-	rename := manager.DownloaderConf.Rename
+	rename := Conf.Rename
 	go func() {
 		for {
 			exit := false

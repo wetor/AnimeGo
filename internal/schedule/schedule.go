@@ -102,6 +102,7 @@ func (s *Schedule) Add(opts *AddTaskOptions) {
 	}
 	s.tasks[t.Name] = t
 	s.task2id[t.Name] = id
+	log.Infof("[定时任务] %s 创建完成，下次执行时间: %s", opts.Task.Name(), opts.Task.NextTime())
 }
 
 func (s *Schedule) Get(name string) *TaskInfo {

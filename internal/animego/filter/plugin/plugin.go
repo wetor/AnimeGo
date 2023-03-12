@@ -38,6 +38,7 @@ func (p *Filter) Filter(list []*models.FeedItem) []*models.FeedItem {
 		pluginInstance := &python.Python{}
 		pluginInstance.Load(&plugin.LoadOptions{
 			File: info.File,
+			Code: info.Code,
 			Functions: []*plugin.FunctionOptions{
 				{
 					Name:         FuncFilterAll,
@@ -70,14 +71,14 @@ func (p *Filter) Filter(list []*models.FeedItem) []*models.FeedItem {
 func filterData(items []*models.FeedItem, data []any) []*models.FeedItem {
 	itemResult := make([]*models.FeedItem, len(data))
 	for i, val := range data {
-		obj := val.(models.Object)
+		obj := val.(map[string]any)
 		index := int(obj["index"].(int64))
 		if index < 0 || index >= len(items) {
 			continue
 		}
 		if _, has := obj["parsed"]; has {
 			parsed := &models.TitleParsed{}
-			utils.MapToStruct(obj["parsed"].(models.Object), parsed)
+			utils.MapToStruct(obj["parsed"].(map[string]any), parsed)
 			items[index].NameParsed = parsed
 		}
 		itemResult[i] = items[index]

@@ -3,6 +3,7 @@ package schedule_test
 import (
 	"context"
 	"fmt"
+	"github.com/wetor/AnimeGo/assets"
 	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/internal/plugin/python/lib"
 	"github.com/wetor/AnimeGo/pkg/plugin/python"
@@ -93,9 +94,6 @@ func TestNewSchedule2(t *testing.T) {
 }
 
 func TestNewSchedule3_feed(t *testing.T) {
-	plugin.Init(&plugin.Options{
-		Path: "../../assets/plugin",
-	})
 	s.Add(&schedule.AddTaskOptions{
 		Name:     "test",
 		StartRun: true,
@@ -103,7 +101,7 @@ func TestNewSchedule3_feed(t *testing.T) {
 			Plugin: &models.Plugin{
 				Enable: true,
 				Type:   python.Type,
-				File:   "feed/mikan_rss.py",
+				Code:   assets.GetBuiltinPlugin("builtin_mikan_rss.py"),
 			},
 			Callback: func(items []*models.FeedItem) {
 				for i, item := range items {
@@ -111,6 +109,10 @@ func TestNewSchedule3_feed(t *testing.T) {
 				}
 			},
 		}),
+		Vars: map[string]any{
+			"__url__":  "https://mikanani.me/RSS/Bangumi?bangumiId=228&subgroupid=1",
+			"__cron__": "10 0/1 * * * ?",
+		},
 	})
 	s.Start(context.Background())
 	time.Sleep(100 * time.Second)

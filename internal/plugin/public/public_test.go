@@ -8,7 +8,6 @@ import (
 	"github.com/wetor/AnimeGo/internal/plugin/public"
 	"github.com/wetor/AnimeGo/pkg/json"
 	"github.com/wetor/AnimeGo/pkg/log"
-	"github.com/wetor/AnimeGo/third_party/gpython"
 )
 
 func TestParserName(t *testing.T) {
@@ -19,8 +18,6 @@ func TestParserName(t *testing.T) {
 		File:  "data/log.log",
 		Debug: true,
 	})
-
-	gpython.Init()
 	ep := public.ParserName("【百冬练习组】【身为女主角 ～被讨厌的女主角和秘密的工作～_Heroine Tarumono!】[07][1080p AVC AAC][繁体]")
 	///Users/wetor/GoProjects/AnimeGo/data/plugin/lib/Auto_Bangumi/raw_parser.py
 	marshal, _ := json.Marshal(ep)

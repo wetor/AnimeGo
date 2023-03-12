@@ -147,6 +147,25 @@ log.errorf(format, ...)
 ```
 其中go格式化文档参照：[https://pkg.go.dev/fmt](https://pkg.go.dev/fmt)
 
+
+## 插件配置
+可以在脚本中直接声明变量并赋值，也可以配置文件中为vars设置值，格式如下：
+```yaml
+ - enable: false
+   type: builtin
+   file: builtin_mikan_rss.py
+   args: 
+     test: input_test
+   vars:
+     __cron__: 0 0/20 * * * ?
+     __name__: Example
+     __url__: https://example.com/
+``` 
+`args`将会追加并覆盖 `builtin_mikan_rss.py` 中**入口函数**的参数`args['test']`  
+`vars`将会追加并覆盖 `builtin_mikan_rss.py` 中的全局变量`__cron__`,`__name__`,`__url__`变量  
+其他字段参考配置文件中的注释  
+
+
 ## Feed订阅插件
 解析订阅内容  
 [Feed订阅插件帮助](feed/README.md)

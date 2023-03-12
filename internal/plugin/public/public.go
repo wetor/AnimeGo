@@ -16,6 +16,7 @@ var (
 )
 
 func ParserName(title string) (ep *models.TitleParsed) {
+
 	py.Load(&plugin.LoadOptions{
 		File: parserScript,
 		Functions: []*plugin.FunctionOptions{

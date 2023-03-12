@@ -27,26 +27,18 @@ type Python struct {
 	name      string
 	dir       string
 	file      string
+	code      *string
 }
 
 // preExecute
 //
-//	@Description: 前置执行，将CRLF脚本转为LF并重新写入
+//	@Description: 前置执行
 //	@receiver p
 func (p *Python) preExecute() {
 	if p.ctx == nil {
 		p.ctx = py.NewContext(py.ContextOpts{
 			SysPaths: []string{p.dir},
 		})
-		code, err := os.ReadFile(p.file)
-		if err != nil {
-			errors.NewAniErrorD(err).TryPanic()
-		}
-		codeStr := strings.ReplaceAll(string(code), "\r\n", "\n")
-		err = os.WriteFile(p.file, []byte(codeStr), os.ModePerm)
-		if err != nil {
-			errors.NewAniErrorD(err).TryPanic()
-		}
 	}
 }
 
@@ -56,9 +48,19 @@ func (p *Python) preExecute() {
 //	@receiver p
 func (p *Python) execute() {
 	var err error
-	p.module, err = py.RunFile(p.ctx, p.file, py.CompileOpts{
-		CurDir: "/",
-	}, nil)
+	if p.code != nil {
+		var code *py.Code
+		code, err = py.Compile(*p.code, p.file, py.ExecMode, 0, true)
+		if err != nil {
+			py.TracebackDump(err)
+			errors.NewAniErrorD(err).TryPanic()
+		}
+		p.module, err = py.RunCode(p.ctx, code, "", nil)
+	} else {
+		p.module, err = py.RunFile(p.ctx, p.file, py.CompileOpts{
+			CurDir: "/",
+		}, nil)
+	}
 	if err != nil {
 		py.TracebackDump(err)
 		errors.NewAniErrorD(err).TryPanic()
@@ -178,7 +180,11 @@ func (p *Python) loadPre(file string) {
 //	@receiver p
 //	@param opts
 func (p *Python) Load(opts *plugin.LoadOptions) {
-	p.loadPre(opts.File)
+	if opts.Code == nil {
+		p.loadPre(opts.File)
+	} else {
+		p.code = opts.Code
+	}
 	p.functions = make(map[string]*Function, len(opts.Functions))
 	for _, f := range opts.Functions {
 		p.functions[f.Name] = &Function{

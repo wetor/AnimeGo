@@ -1,4 +1,4 @@
-package downloader_test
+package manager_test
 
 import (
 	"context"
@@ -11,7 +11,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/wetor/AnimeGo/internal/animego/manager"
-	downloaderMgr "github.com/wetor/AnimeGo/internal/animego/manager/downloader"
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/pkg/cache"
@@ -28,7 +27,7 @@ const (
 
 var (
 	qbt         api.Downloader
-	mgr         *downloaderMgr.Manager
+	mgr         *manager.Manager
 	wg          sync.WaitGroup
 	ctx, cancel = context.WithCancel(context.Background())
 )
@@ -63,7 +62,7 @@ func TestMain(m *testing.M) {
 
 	b := cache.NewBolt()
 	b.Open("data/test.db")
-	mgr = downloaderMgr.NewManager(qbt, b, nil)
+	mgr = manager.NewManager(qbt, b, nil)
 
 	m.Run()
 
@@ -71,7 +70,7 @@ func TestMain(m *testing.M) {
 	fmt.Println("end")
 }
 
-func Download1(m *downloaderMgr.Manager) *models.AnimeEntity {
+func Download1(m *manager.Manager) *models.AnimeEntity {
 	tempHash := utils.RandString(40)
 	anime := &models.AnimeEntity{
 		ID:      18692,
@@ -91,7 +90,7 @@ func Download1(m *downloaderMgr.Manager) *models.AnimeEntity {
 	return anime
 }
 
-func Download2(m *downloaderMgr.Manager) *models.AnimeEntity {
+func Download2(m *manager.Manager) *models.AnimeEntity {
 	tempHash := utils.RandString(40)
 	anime := &models.AnimeEntity{
 		ID:      18692,

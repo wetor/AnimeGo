@@ -15,7 +15,6 @@ import (
 
 type ScheduleTask struct {
 	parser *cron.Parser
-	cron   string
 	plugin api.Plugin
 	args   models.Object
 }
@@ -28,6 +27,7 @@ func NewScheduleTask(opts *ScheduleOptions) *ScheduleTask {
 	p := &python.Python{}
 	p.Load(&plugin.LoadOptions{
 		File: opts.File,
+		Code: opts.Code,
 		Functions: []*plugin.FunctionOptions{
 			{
 				Name:            FuncRun,
@@ -53,7 +53,6 @@ func NewScheduleTask(opts *ScheduleOptions) *ScheduleTask {
 	}
 	return &ScheduleTask{
 		parser: &SecondParser,
-		cron:   p.Get(VarCron).(string),
 		plugin: p,
 		args:   opts.Args,
 	}
@@ -78,7 +77,7 @@ func (t *ScheduleTask) SetVars(vars models.Object) {
 }
 
 func (t *ScheduleTask) NextTime() time.Time {
-	next, err := t.parser.Parse(t.cron)
+	next, err := t.parser.Parse(t.Cron())
 	errors.NewAniErrorD(err).TryPanic()
 	return next.Next(time.Now())
 }

@@ -1,7 +1,24 @@
 # Feed订阅解析插件
 自定义解析订阅的插件
 
+## [特殊]内置插件
+内置自动订阅下载插件  
+```yaml
+ - enable: false
+   type: builtin
+   file: builtin_mikan_rss.py
+   args: {}
+   vars:
+     __cron__: 0 0/20 * * * ?
+     __name__: Example
+     __url__: https://example.com/
+``` 
+对于内置的自动订阅插件，其中`type`和`file`为固定写法  
+启用自定订阅`enable`设置为`true`  
+设置`__cron__`设置定时(cron表达式)，设置`__url__`设置订阅地址  
+
 ## 插件设置
+
 ### \_\_name\_\_
 全局变量`__name__`，str类型，可选  
 定时任务的名称，方便日志中区分

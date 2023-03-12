@@ -2,6 +2,7 @@ package configs
 
 import (
 	"fmt"
+	"github.com/wetor/AnimeGo/assets"
 	"log"
 	"os"
 	"strings"
@@ -30,7 +31,7 @@ type Version struct {
 }
 
 var (
-	ConfigVersion = "1.3.0" // 当前配置文件版本
+	ConfigVersion = "1.4.0" // 当前配置文件版本
 
 	versions = []string{
 		"1.1.0",
@@ -216,6 +217,8 @@ func update_120_130(file string) {
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
 	}
+	// 强制写入
+	assets.WritePlugins(assets.Dir, xpath.Join(newConfig.DataPath, assets.Dir), false)
 }
 
 func update_130_140(file string) {
@@ -235,12 +238,28 @@ func update_130_140(file string) {
 		log.Fatal("配置文件升级失败：", err)
 	}
 	newConfig.Version = "1.4.0"
+
+	log.Printf("[变动] 配置项(setting.feed.mikan) 变更为 plugin.feed 中的一个插件:\n")
+	log.Printf("\t__name__: %s\n", oldConfig.Setting.Feed.Mikan.Name)
+	log.Printf("\t__url__: %s\n", oldConfig.Setting.Feed.Mikan.Url)
+	log.Printf("\t__cron__: %s\n", "0 0/20 * * * ?")
+	log.Printf("\t默认关闭，每整20分钟执行\n")
+	newConfig.Plugin.Feed = []PluginInfo{
+		{
+			Enable: false,
+			Type:   "builtin",
+			File:   "builtin_mikan_rss.py",
+			Vars: map[string]any{
+				"__name__": oldConfig.Setting.Feed.Mikan.Name,
+				"__url__":  oldConfig.Setting.Feed.Mikan.Url,
+				"__cron__": "0 0/20 * * * ?",
+			},
+		},
+	}
+
 	log.Printf("[新增] 配置项(plugin.filter) 支持 args\n")
 	newConfig.Plugin.Filter = make([]PluginInfo, len(oldConfig.Plugin.Filter))
 	_ = copier.Copy(&newConfig.Plugin.Filter, &oldConfig.Plugin.Filter)
-	log.Printf("[新增] 配置项(plugin.feed) 支持 args\n")
-	newConfig.Plugin.Feed = make([]PluginInfo, len(oldConfig.Plugin.Feed))
-	_ = copier.Copy(&newConfig.Plugin.Feed, &oldConfig.Plugin.Feed)
 	log.Printf("[新增] 配置项(plugin.schedule) 支持 args\n")
 	newConfig.Plugin.Schedule = make([]PluginInfo, len(oldConfig.Plugin.Schedule))
 	_ = copier.Copy(&newConfig.Plugin.Schedule, &oldConfig.Plugin.Schedule)
@@ -253,6 +272,8 @@ func update_130_140(file string) {
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
 	}
+	// 强制写入
+	assets.WritePlugins(assets.Dir, xpath.Join(newConfig.DataPath, assets.Dir), false)
 }
 
 func encodeConfig(conf any) ([]byte, error) {

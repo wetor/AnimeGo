@@ -27,6 +27,7 @@ type VariableOptions struct {
 
 type LoadOptions struct {
 	File      string
+	Code      *string
 	Functions []*FunctionOptions
 	Variables []*VariableOptions
 }

@@ -184,7 +184,6 @@ func TestPythonParseMikan(t *testing.T) {
 }
 
 func TestPythonMikanTool(t *testing.T) {
-	savePluginPath := plugin.Path
 	plugin.Init(&plugin.Options{
 		Path: "../../../assets/plugin",
 	})
@@ -218,7 +217,4 @@ func TestPythonMikanTool(t *testing.T) {
 		"items": items,
 	})
 	fmt.Println(result["data"])
-	plugin.Init(&plugin.Options{
-		Path: savePluginPath,
-	})
 }

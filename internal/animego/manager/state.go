@@ -1,4 +1,4 @@
-package downloader
+package manager
 
 import (
 	"github.com/wetor/AnimeGo/internal/animego/downloader/qbittorrent"
@@ -19,10 +19,10 @@ const (
 )
 
 // stateMap
-//  @Description: 下载器状态转换
-//  @param clientState string
-//  @return models.TorrentState
 //
+//	@Description: 下载器状态转换
+//	@param clientState string
+//	@return models.TorrentState
 func stateMap(clientState string) models.TorrentState {
 	switch clientState {
 	case qbittorrent.QbtAllocating, qbittorrent.QbtMetaDL, qbittorrent.QbtStalledDL,

@@ -22,12 +22,6 @@ type Plugin struct {
 }
 
 type Setting struct {
-	Feed struct {
-		Mikan struct {
-			Name string `yaml:"name" json:"name" attr:"别名"`
-			Url  string `yaml:"url" json:"url" attr:"订阅链接" comment:"可空，为空则不使用自动订阅"`
-		} `yaml:"mikan" json:"mikan" attr:"Mikan订阅"`
-	} `yaml:"feed" json:"feed" attr:"自动订阅设置"`
 	Client struct {
 		QBittorrent struct {
 			Url      string `yaml:"url" json:"url" attr:"地址"`
@@ -71,9 +65,8 @@ type Advanced struct {
 	} `yaml:"download" json:"download" attr:"下载设置"`
 
 	Feed struct {
-		UpdateDelayMinute int `yaml:"update_delay_minute" json:"update_delay_minute" attr:"订阅刷新时间"`
-		DelaySecond       int `yaml:"delay_second" json:"delay_second" attr:"订阅解析间隔时间"`
-		MultiGoroutine    struct {
+		DelaySecond    int `yaml:"delay_second" json:"delay_second" attr:"订阅解析间隔时间"`
+		MultiGoroutine struct {
 			Enable       bool `yaml:"enable" json:"enable" attr:"启用"`
 			GoroutineMax int  `yaml:"goroutine_max" json:"goroutine_max" attr:"最大协程数量"`
 		} `yaml:"multi_goroutine" json:"multi_goroutine" attr:"订阅多协程解析"`

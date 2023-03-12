@@ -19,7 +19,6 @@ import (
 
 type FeedTask struct {
 	parser   *cron.Parser
-	cron     string
 	plugin   api.Plugin
 	args     models.Object
 	callback func([]*models.FeedItem)
@@ -34,6 +33,7 @@ func NewFeedTask(opts *FeedOptions) *FeedTask {
 	p := &python.Python{}
 	p.Load(&plugin.LoadOptions{
 		File: opts.File,
+		Code: opts.Code,
 		Functions: []*plugin.FunctionOptions{
 			{
 				Name:         FuncParse,
@@ -63,7 +63,6 @@ func NewFeedTask(opts *FeedOptions) *FeedTask {
 	}
 	return &FeedTask{
 		parser:   &SecondParser,
-		cron:     p.Get(VarCron).(string),
 		plugin:   p,
 		args:     opts.Args,
 		callback: opts.Callback,
@@ -89,7 +88,7 @@ func (t *FeedTask) SetVars(vars models.Object) {
 }
 
 func (t *FeedTask) NextTime() time.Time {
-	next, err := t.parser.Parse(t.cron)
+	next, err := t.parser.Parse(t.Cron())
 	errors.NewAniErrorD(err).TryPanic()
 	return next.Next(time.Now())
 }
@@ -118,7 +117,7 @@ func (t *FeedTask) Run(args models.Object) {
 		items := make([]*models.FeedItem, len(itemsAny))
 		for i, item := range itemsAny {
 			items[i] = &models.FeedItem{}
-			utils.MapToStruct(item.(models.Object), items[i])
+			utils.MapToStruct(item.(map[string]any), items[i])
 		}
 		t.callback(items)
 	}).Catch(func(err try.E) {

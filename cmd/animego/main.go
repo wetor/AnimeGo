@@ -4,7 +4,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-
 	"log"
 	"os"
 	"os/signal"
@@ -24,11 +23,9 @@ import (
 	"github.com/wetor/AnimeGo/internal/animego/downloader"
 	"github.com/wetor/AnimeGo/internal/animego/downloader/qbittorrent"
 	feedPlugin "github.com/wetor/AnimeGo/internal/animego/feed/plugin"
-	feedRss "github.com/wetor/AnimeGo/internal/animego/feed/rss"
+	"github.com/wetor/AnimeGo/internal/animego/filter"
 	filterPlugin "github.com/wetor/AnimeGo/internal/animego/filter/plugin"
 	"github.com/wetor/AnimeGo/internal/animego/manager"
-	downloaderMgr "github.com/wetor/AnimeGo/internal/animego/manager/downloader"
-	filterMgr "github.com/wetor/AnimeGo/internal/animego/manager/filter"
 	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/logger"
 	"github.com/wetor/AnimeGo/internal/models"
@@ -118,15 +115,15 @@ func InitDefaultConfig() {
 		panic(err)
 	}
 
-	InitDefaultAssets(conf)
+	InitDefaultAssets(conf.DataPath, true)
 
 	log.Printf("初始化默认配置完成（%s）\n", conf.Setting.DataPath)
 	log.Println("请设置配置后重新启动")
 	os.Exit(0)
 }
 
-func InitDefaultAssets(conf *configs.Config) {
-	utils.CopyDir(assets.Plugin, "plugin", xpath.Join(conf.Setting.DataPath, "plugin"), true, false)
+func InitDefaultAssets(dataPath string, skip bool) {
+	assets.WritePlugins(assets.Dir, xpath.Join(dataPath, assets.Dir), skip)
 }
 
 func doExit() {
@@ -165,7 +162,7 @@ func Main(ctx context.Context) {
 	config.InitDir()
 
 	// 释放资源
-	InitDefaultAssets(config)
+	InitDefaultAssets(config.DataPath, true)
 
 	// 初始化日志
 	logger.Init(&logger.Options{
@@ -238,29 +235,26 @@ func Main(ctx context.Context) {
 			IgnoreSizeMaxKb:        config.Download.IgnoreSizeMaxKb,
 			Rename:                 config.Advanced.Download.Rename,
 		},
-		Filter: manager.Filter{
-			MultiGoroutineMax:     config.Advanced.Feed.MultiGoroutine.GoroutineMax,
-			MultiGoroutineEnabled: config.Advanced.Feed.MultiGoroutine.Enable,
-			UpdateDelayMinute:     config.Advanced.Feed.UpdateDelayMinute,
-			DelaySecond:           config.Advanced.Feed.DelaySecond,
-		},
 		WG: &WG,
 	})
 
 	// 初始化downloader manager
 	downloadChan := make(chan *models.AnimeEntity, 10)
-	downloaderManager := downloaderMgr.NewManager(qbt, bolt, downloadChan)
+	downloaderManager := manager.NewManager(qbt, bolt, downloadChan)
 
+	filter.Init(&filter.Options{
+		MultiGoroutineMax:     config.Advanced.Feed.MultiGoroutine.GoroutineMax,
+		MultiGoroutineEnabled: config.Advanced.Feed.MultiGoroutine.Enable,
+		DelaySecond:           config.Advanced.Feed.DelaySecond,
+	})
 	// 初始化filter manager
-	filterManager := filterMgr.NewManager(
+	filterManager := filter.NewFilter(
 		filterPlugin.NewFilterPlugin(configs.ConvertPluginInfo(config.Plugin.Filter)),
-		feedRss.NewRss(&feedRss.Options{Url: config.Setting.Feed.Mikan.Url}),
 		mikan.Mikan{ThemoviedbKey: config.Setting.Key.Themoviedb},
 		downloadChan)
 
 	// 启动manager
 	downloaderManager.Start(ctx)
-	filterManager.Start(ctx)
 
 	// 初始化并启动定时任务
 	scheduleVar := schedule.NewSchedule(&schedule.Options{

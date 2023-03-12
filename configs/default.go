@@ -27,8 +27,6 @@ func defaultSettingComment() {
 }
 
 func defaultSetting() {
-	defaultConfig.Setting.Feed.Mikan.Name = "Mikan"
-	defaultConfig.Setting.Feed.Mikan.Url = ""
 
 	defaultConfig.Setting.Client.QBittorrent.Url = "http://localhost:8080"
 	defaultConfig.Setting.Client.QBittorrent.Username = "admin"
@@ -55,11 +53,24 @@ func defaultPluginComment() {
 	configComment["plugin_help"] = `按顺序依次执行启用的插件
 列表类型，每一项需要有以下参数：
   enable: 启用
-  type: 插件类型，目前仅支持 'py' 插件类型。支持 'python' 全称，不区分大小写
-  file: 插件文件，相对于 'data/plugin' 文件夹的路径`
+  type: 插件类型，目前仅支持 'python'(py) 和 'builtin' 插件类型。builtin为内置插件
+  file: 插件文件，相对于 'data/plugin' 文件夹的路径，或内置插件名
+  args: [可空]插件额外参数，字典类型，会覆盖同名参数
+  vars: [可空]插件全局变量，字典类型，会覆盖插件脚本中同名变量，具体变量和作用参考订阅插件文档`
 }
 
 func defaultPlugin() {
+	defaultConfig.Plugin.Feed = []PluginInfo{
+		{
+			Enable: false,
+			Type:   "builtin",
+			File:   "builtin_mikan_rss.py",
+			Vars: map[string]any{
+				"__url__":  "",
+				"__cron__": "0 0/20 * * * ?",
+			},
+		},
+	}
 	defaultConfig.Plugin.Filter = []PluginInfo{
 		{
 			Enable: true,
@@ -95,7 +106,6 @@ func defaultAdvanced() {
 	defaultConfig.Advanced.Download.IgnoreSizeMaxKb = 1024
 	defaultConfig.Advanced.Download.Rename = "wait_move"
 
-	defaultConfig.Advanced.Feed.UpdateDelayMinute = 20
 	defaultConfig.Advanced.Feed.DelaySecond = 5
 	defaultConfig.Advanced.Feed.MultiGoroutine.Enable = false
 	defaultConfig.Advanced.Feed.MultiGoroutine.GoroutineMax = 4

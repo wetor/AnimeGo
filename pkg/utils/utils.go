@@ -145,9 +145,22 @@ func IsDir(path string) bool {
 	return s.IsDir()
 }
 
-func Md5Str(str string) string {
+func MD5Str(str string) string {
 	h := md5.New()
 	h.Write([]byte(str))
+	return hex.EncodeToString(h.Sum(nil))
+}
+
+func MD5(data []byte) string {
+	h := md5.New()
+	h.Write(data)
+	return hex.EncodeToString(h.Sum(nil))
+}
+
+func MD5File(file string) string {
+	f, _ := os.ReadFile(file)
+	h := md5.New()
+	h.Write(f)
 	return hex.EncodeToString(h.Sum(nil))
 }
 
