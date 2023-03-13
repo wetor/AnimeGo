@@ -1,32 +1,39 @@
 package public
 
 import (
+	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/pkg/plugin"
-	"github.com/wetor/AnimeGo/pkg/plugin/python"
+	"github.com/wetor/AnimeGo/internal/plugin"
+	pkgPlugin "github.com/wetor/AnimeGo/pkg/plugin"
 	"github.com/wetor/AnimeGo/pkg/utils"
 )
 
 const (
 	parserScript = "filter/Auto_Bangumi/raw_parser.py"
+	FuncMain     = "main"
 )
 
 var (
-	py = &python.Python{}
+	py api.Plugin = nil
 )
 
 func ParserName(title string) (ep *models.TitleParsed) {
-
-	py.Load(&plugin.LoadOptions{
-		File: parserScript,
-		Functions: []*plugin.FunctionOptions{
-			{
-				Name:            "main",
-				SkipSchemaCheck: true,
+	if py == nil {
+		py = plugin.LoadPlugin(&plugin.LoadPluginOptions{
+			Plugin: &models.Plugin{
+				Type: "builtin",
+				File: "raw_parser.py",
 			},
-		},
-	})
-	result := py.Run("main", map[string]any{
+			EntryFunc: FuncMain,
+			FuncSchema: []*pkgPlugin.FuncSchemaOptions{
+				{
+					Name:            FuncMain,
+					SkipSchemaCheck: true,
+				},
+			},
+		})
+	}
+	result := py.Run(FuncMain, map[string]any{
 		"title": title,
 	})
 	ep = &models.TitleParsed{

@@ -2,7 +2,6 @@ package plugin
 
 import (
 	"context"
-	"github.com/wetor/AnimeGo/assets"
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/schedule"
@@ -16,9 +15,6 @@ func AddFeedTasks(s *schedule.Schedule, plugins []models.Plugin, filterManager a
 	for _, p := range plugins {
 		if !p.Enable {
 			continue
-		}
-		if p.Type == Builtin {
-			p.Code = assets.GetBuiltinPlugin(p.File)
 		}
 		s.Add(&schedule.AddTaskOptions{
 			Name:     xpath.Base(p.File),

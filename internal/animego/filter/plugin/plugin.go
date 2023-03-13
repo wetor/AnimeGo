@@ -2,10 +2,10 @@ package plugin
 
 import (
 	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/pkg/errors"
 	"github.com/wetor/AnimeGo/pkg/log"
-	"github.com/wetor/AnimeGo/pkg/plugin"
-	"github.com/wetor/AnimeGo/pkg/plugin/python"
+	pkgPlugin "github.com/wetor/AnimeGo/pkg/plugin"
 	"github.com/wetor/AnimeGo/pkg/utils"
 )
 
@@ -35,24 +35,21 @@ func (p *Filter) Filter(list []*models.FeedItem) []*models.FeedItem {
 		}
 		log.Debugf("[Plugin] 开始执行Filter插件(%s): %s", info.Type, info.File)
 		// 入参
-		pluginInstance := &python.Python{}
-		pluginInstance.Load(&plugin.LoadOptions{
-			File: info.File,
-			Code: info.Code,
-			Functions: []*plugin.FunctionOptions{
+		pluginInstance := plugin.LoadPlugin(&plugin.LoadPluginOptions{
+			Plugin:    &info,
+			EntryFunc: FuncFilterAll,
+			FuncSchema: []*pkgPlugin.FuncSchemaOptions{
 				{
 					Name:         FuncFilterAll,
 					ParamsSchema: []string{"items"},
 					ResultSchema: []string{"error", "data,optional", "index,optional"},
+					DefaultArgs:  info.Args,
 				},
 			},
 		})
-		for name, val := range info.Vars {
-			pluginInstance.Set(name, val)
-		}
-		args := info.Args
-		args["items"] = inList
-		result := pluginInstance.Run(FuncFilterAll, args)
+		result := pluginInstance.Run(FuncFilterAll, map[string]any{
+			"items": inList,
+		})
 		if result["error"] != nil {
 			log.Debugf("", errors.NewAniErrorD(result["error"]))
 			log.Warnf("[Plugin] %s插件(%s)执行错误: %v", info.Type, info.File, result["error"])

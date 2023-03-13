@@ -8,10 +8,10 @@ import (
 
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/pkg/errors"
 	"github.com/wetor/AnimeGo/pkg/log"
-	"github.com/wetor/AnimeGo/pkg/plugin"
-	"github.com/wetor/AnimeGo/pkg/plugin/python"
+	pkgPlugin "github.com/wetor/AnimeGo/pkg/plugin"
 	"github.com/wetor/AnimeGo/pkg/request"
 	"github.com/wetor/AnimeGo/pkg/try"
 	"github.com/wetor/AnimeGo/pkg/utils"
@@ -30,18 +30,17 @@ type FeedOptions struct {
 }
 
 func NewFeedTask(opts *FeedOptions) *FeedTask {
-	p := &python.Python{}
-	p.Load(&plugin.LoadOptions{
-		File: opts.File,
-		Code: opts.Code,
-		Functions: []*plugin.FunctionOptions{
+	p := plugin.LoadPlugin(&plugin.LoadPluginOptions{
+		Plugin:    opts.Plugin,
+		EntryFunc: FuncParse,
+		FuncSchema: []*pkgPlugin.FuncSchemaOptions{
 			{
 				Name:         FuncParse,
 				ParamsSchema: []string{"data"},
 				ResultSchema: []string{"error", "items"},
 			},
 		},
-		Variables: []*plugin.VariableOptions{
+		VarSchema: []*pkgPlugin.VarSchemaOptions{
 			{
 				Name:     VarName,
 				Nullable: true,
@@ -54,13 +53,6 @@ func NewFeedTask(opts *FeedOptions) *FeedTask {
 			},
 		},
 	})
-	for name, val := range opts.Plugin.Vars {
-		if name == VarCron {
-			_, err := SecondParser.Parse(val.(string))
-			errors.NewAniErrorD(err).TryPanic()
-		}
-		p.Set(name, val)
-	}
 	return &FeedTask{
 		parser:   &SecondParser,
 		plugin:   p,
@@ -99,11 +91,6 @@ func (t *FeedTask) Run(args models.Object) {
 	if err != nil {
 		log.Warnf("[Plugin] %s插件(%s)执行错误: 请求 %s 失败", t.plugin.Type(), FuncParse, url)
 		log.Debugf("", err)
-	}
-	for k, v := range t.args {
-		if _, ok := args[k]; !ok {
-			args[k] = v
-		}
 	}
 	args["data"] = data
 	result := t.plugin.Run(FuncParse, args)

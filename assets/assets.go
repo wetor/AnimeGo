@@ -9,14 +9,21 @@ import (
 	"strings"
 )
 
-const Dir = "plugin"
-const BuiltinPrefix = "builtin_"
+const (
+	Dir = "plugin"
+)
 
 var (
 	//go:embed plugin
 	//go:embed plugin/filter/Auto_Bangumi/__init__.py
 	Plugin embed.FS
 
+	// BuiltinPrefix
+	//  内置插件前缀，不会写出
+	BuiltinPrefix = "builtin_"
+	// BuiltinFile
+	//  内置插件列表，会写出，但是内部调用的为内置文件
+	BuiltinFile   = []string{"raw_parser.py"}
 	BuiltinPlugin = make(map[string]*string)
 )
 
@@ -35,7 +42,14 @@ func loadBuiltinPlugin(src string) {
 			loadBuiltinPlugin(srcPath)
 			continue
 		}
-		if strings.HasPrefix(file.Name(), BuiltinPrefix) {
+		isBuiltin := false
+		for _, name := range BuiltinFile {
+			if file.Name() == name {
+				isBuiltin = true
+				break
+			}
+		}
+		if isBuiltin || strings.HasPrefix(file.Name(), BuiltinPrefix) {
 			data, err := Plugin.ReadFile(srcPath)
 			if err != nil {
 				panic(err)

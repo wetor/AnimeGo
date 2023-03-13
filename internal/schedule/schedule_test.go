@@ -3,21 +3,19 @@ package schedule_test
 import (
 	"context"
 	"fmt"
-	"github.com/wetor/AnimeGo/assets"
-	"github.com/wetor/AnimeGo/internal/plugin"
-	"github.com/wetor/AnimeGo/internal/plugin/python/lib"
-	"github.com/wetor/AnimeGo/pkg/plugin/python"
-	"github.com/wetor/AnimeGo/pkg/utils"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/plugin"
+	"github.com/wetor/AnimeGo/internal/plugin/python/lib"
 	"github.com/wetor/AnimeGo/internal/schedule"
 	"github.com/wetor/AnimeGo/internal/schedule/task"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/log"
+	"github.com/wetor/AnimeGo/pkg/utils"
 	"github.com/wetor/AnimeGo/third_party/gpython"
 )
 
@@ -71,7 +69,7 @@ func TestNewSchedule2(t *testing.T) {
 		Task: task.NewScheduleTask(&task.ScheduleOptions{
 			Plugin: &models.Plugin{
 				Enable: true,
-				Type:   python.Type,
+				Type:   "python",
 				File:   "schedule/refresh.py",
 				Vars: models.Object{
 					"__name__": "Vars_Test",
@@ -82,7 +80,7 @@ func TestNewSchedule2(t *testing.T) {
 			},
 		}),
 		Args: models.Object{
-			"Args_Test": "测试",
+			"Args_Test1": "测试",
 		},
 		Vars: models.Object{
 			"__name__": "outer_Vars_Test",
@@ -100,8 +98,8 @@ func TestNewSchedule3_feed(t *testing.T) {
 		Task: task.NewFeedTask(&task.FeedOptions{
 			Plugin: &models.Plugin{
 				Enable: true,
-				Type:   python.Type,
-				Code:   assets.GetBuiltinPlugin("builtin_mikan_rss.py"),
+				Type:   "builtin",
+				File:   "builtin_mikan_rss.py",
 			},
 			Callback: func(items []*models.FeedItem) {
 				for i, item := range items {

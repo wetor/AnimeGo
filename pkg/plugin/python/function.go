@@ -9,6 +9,7 @@ type Function struct {
 	ResultSchema    []*plugin.Schema
 	Name            string
 	SkipSchemaCheck bool
+	DefaultArgs     map[string]any
 	Func            func(args map[string]any) map[string]any
 }
 

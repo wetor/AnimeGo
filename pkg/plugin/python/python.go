@@ -20,14 +20,22 @@ import (
 const Type = "python"
 
 type Python struct {
-	functions map[string]*Function
-	variables map[string]*Variable
-	ctx       py.Context
-	module    *py.Module
-	name      string
-	dir       string
-	file      string
-	code      *string
+	functions  map[string]*Function
+	variables  map[string]*Variable
+	globalVars map[string]any
+	ctx        py.Context
+	module     *py.Module
+	name       string
+	dir        string
+	file       string
+	code       *string
+	_type      string
+}
+
+func NewPython(_type string) *Python {
+	return &Python{
+		_type: _type,
+	}
 }
 
 // preExecute
@@ -89,7 +97,9 @@ func (p *Python) endExecute() {
 			return obj
 		}
 	}
-
+	for name, val := range p.globalVars {
+		p.Set(name, val)
+	}
 	for name, variable := range p.variables {
 		_, has := p.module.Globals[name]
 		if !has && !variable.Nullable {
@@ -97,11 +107,10 @@ func (p *Python) endExecute() {
 			errors.NewAniErrorf("未找到全局变量 %s", name).TryPanic()
 		}
 	}
-
-	p.module.Globals["__plugin_name__"] = py.String(p.name)
-	p.module.Globals["__plugin_dir__"] = py.String(p.dir)
-	p.module.Globals["__animego_version__"] = py.String(os.Getenv("ANIMEGO_VERSION"))
-	p.module.Globals["_get_config"] = py.MustNewMethod("_get_config", func(self py.Object, args py.Tuple) (py.Object, error) {
+	p.Set("__plugin_name__", p.name)
+	p.Set("__plugin_dir__", p.dir)
+	p.Set("__animego_version__", os.Getenv("ANIMEGO_VERSION"))
+	p.Set("_get_config", py.MustNewMethod("_get_config", func(self py.Object, args py.Tuple) (py.Object, error) {
 		result := map[string]any{}
 		yamlFile := xpath.Join(p.dir, p.name+".yaml")
 		jsonFile := xpath.Join(p.dir, p.name+".json")
@@ -125,7 +134,7 @@ func (p *Python) endExecute() {
 			}
 		}
 		return plugin.Value2PyObject(result), nil
-	}, 0, `_get_config() -> dict`)
+	}, 0, `_get_config() -> dict`))
 
 }
 
@@ -155,7 +164,7 @@ func (p *Python) Set(name string, val any) {
 //	@receiver p
 //	@return string
 func (p *Python) Type() string {
-	return Type
+	return p._type
 }
 
 // loadPre
@@ -180,22 +189,24 @@ func (p *Python) loadPre(file string) {
 //	@receiver p
 //	@param opts
 func (p *Python) Load(opts *plugin.LoadOptions) {
+	p.globalVars = opts.GlobalVars
 	if opts.Code == nil {
 		p.loadPre(opts.File)
 	} else {
 		p.code = opts.Code
 	}
-	p.functions = make(map[string]*Function, len(opts.Functions))
-	for _, f := range opts.Functions {
+	p.functions = make(map[string]*Function, len(opts.FuncSchema))
+	for _, f := range opts.FuncSchema {
 		p.functions[f.Name] = &Function{
 			ParamsSchema:    plugin.ParseSchemas(f.ParamsSchema),
 			ResultSchema:    plugin.ParseSchemas(f.ResultSchema),
 			Name:            f.Name,
 			SkipSchemaCheck: f.SkipSchemaCheck,
+			DefaultArgs:     f.DefaultArgs,
 		}
 	}
-	p.variables = make(map[string]*Variable, len(opts.Variables))
-	for _, v := range opts.Variables {
+	p.variables = make(map[string]*Variable, len(opts.VarSchema))
+	for _, v := range opts.VarSchema {
 		p.variables[v.Name] = &Variable{
 			Name:     v.Name,
 			Nullable: v.Nullable,
@@ -223,14 +234,12 @@ func (p *Python) Load(opts *plugin.LoadOptions) {
 func (p *Python) Run(function string, args map[string]any) (result map[string]any) {
 	try.This(func() {
 		f := p.functions[function]
-		if !f.SkipSchemaCheck {
-			plugin.CheckSchema(f.ParamsSchema, args)
+		for k, v := range f.DefaultArgs {
+			if _, ok := args[k]; !ok {
+				args[k] = v
+			}
 		}
 		result = p.functions[function].Run(args)
-
-		if !f.SkipSchemaCheck {
-			plugin.CheckSchema(f.ResultSchema, result)
-		}
 	}).Catch(func(err try.E) {
 		log.Warnf("%s 脚本函数 %s 运行时出错", p.Type(), function)
 		log.Debugf("", err)

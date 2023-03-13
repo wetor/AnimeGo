@@ -8,9 +8,9 @@ import (
 
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/pkg/errors"
-	"github.com/wetor/AnimeGo/pkg/plugin"
-	"github.com/wetor/AnimeGo/pkg/plugin/python"
+	pkgPlugin "github.com/wetor/AnimeGo/pkg/plugin"
 )
 
 type ScheduleTask struct {
@@ -24,17 +24,16 @@ type ScheduleOptions struct {
 }
 
 func NewScheduleTask(opts *ScheduleOptions) *ScheduleTask {
-	p := &python.Python{}
-	p.Load(&plugin.LoadOptions{
-		File: opts.File,
-		Code: opts.Code,
-		Functions: []*plugin.FunctionOptions{
+	p := plugin.LoadPlugin(&plugin.LoadPluginOptions{
+		Plugin:    opts.Plugin,
+		EntryFunc: FuncRun,
+		FuncSchema: []*pkgPlugin.FuncSchemaOptions{
 			{
 				Name:            FuncRun,
 				SkipSchemaCheck: true,
 			},
 		},
-		Variables: []*plugin.VariableOptions{
+		VarSchema: []*pkgPlugin.VarSchemaOptions{
 			{
 				Name:     VarName,
 				Nullable: true,
@@ -44,13 +43,6 @@ func NewScheduleTask(opts *ScheduleOptions) *ScheduleTask {
 			},
 		},
 	})
-	for name, val := range opts.Plugin.Vars {
-		if name == VarCron {
-			_, err := SecondParser.Parse(val.(string))
-			errors.NewAniErrorD(err).TryPanic()
-		}
-		p.Set(name, val)
-	}
 	return &ScheduleTask{
 		parser: &SecondParser,
 		plugin: p,

@@ -31,7 +31,7 @@ func TestLib_log(t *testing.T) {
 	p := &python.Python{}
 	p.Load(&pkgPlugin.LoadOptions{
 		File: "test_log.py",
-		Functions: []*pkgPlugin.FunctionOptions{
+		FuncSchema: []*pkgPlugin.FuncSchemaOptions{
 			{
 				Name:         "main",
 				ParamsSchema: []string{"title"},
@@ -49,7 +49,7 @@ func TestPythonFunction(t *testing.T) {
 	p := &python.Python{}
 	p.Load(&pkgPlugin.LoadOptions{
 		File: "test.py",
-		Functions: []*pkgPlugin.FunctionOptions{
+		FuncSchema: []*pkgPlugin.FuncSchemaOptions{
 			{
 				Name:         "main",
 				ParamsSchema: []string{"params"},
@@ -75,13 +75,13 @@ func TestPythonVariable(t *testing.T) {
 	p := &python.Python{}
 	p.Load(&pkgPlugin.LoadOptions{
 		File: "var.py",
-		Functions: []*pkgPlugin.FunctionOptions{
+		FuncSchema: []*pkgPlugin.FuncSchemaOptions{
 			{
 				Name:            "main",
 				SkipSchemaCheck: true,
 			},
 		},
-		Variables: []*pkgPlugin.VariableOptions{
+		VarSchema: []*pkgPlugin.VarSchemaOptions{
 			{
 				Name: "Name",
 			},
@@ -109,7 +109,7 @@ func TestPythonJson(t *testing.T) {
 	p := &python.Python{}
 	p.Load(&pkgPlugin.LoadOptions{
 		File: "json.py",
-		Functions: []*pkgPlugin.FunctionOptions{
+		FuncSchema: []*pkgPlugin.FuncSchemaOptions{
 			{
 				Name:            "main",
 				SkipSchemaCheck: true,
@@ -144,7 +144,7 @@ func TestPythonConfig(t *testing.T) {
 	p := &python.Python{}
 	p.Load(&pkgPlugin.LoadOptions{
 		File: "config.py",
-		Functions: []*pkgPlugin.FunctionOptions{
+		FuncSchema: []*pkgPlugin.FuncSchemaOptions{
 			{
 				Name:            "test",
 				SkipSchemaCheck: true,
@@ -172,7 +172,7 @@ func TestPythonParseMikan(t *testing.T) {
 	p := &python.Python{}
 	p.Load(&pkgPlugin.LoadOptions{
 		File: "mikan.py",
-		Functions: []*pkgPlugin.FunctionOptions{
+		FuncSchema: []*pkgPlugin.FuncSchemaOptions{
 			{
 				Name:            "main",
 				SkipSchemaCheck: true,
@@ -205,7 +205,7 @@ func TestPythonMikanTool(t *testing.T) {
 	p := &python.Python{}
 	p.Load(&pkgPlugin.LoadOptions{
 		File: "filter/mikan_tool.py",
-		Functions: []*pkgPlugin.FunctionOptions{
+		FuncSchema: []*pkgPlugin.FuncSchemaOptions{
 			{
 				Name:            "filter_all",
 				SkipSchemaCheck: true,
