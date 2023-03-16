@@ -17,8 +17,6 @@ import (
 	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
-const Type = "python"
-
 type Python struct {
 	functions  map[string]*Function
 	variables  map[string]*Variable
@@ -83,12 +81,12 @@ func (p *Python) execute() {
 func (p *Python) endExecute() {
 	for name, function := range p.functions {
 		function.Func = func(args map[string]any) map[string]any {
-			pyObj := plugin.Value2PyObject(args)
+			pyObj := ToObject(args)
 			res, err := p.module.Call(name, py.Tuple{pyObj}, nil)
 			if err != nil {
 				py.TracebackDump(err)
 			}
-			obj, ok := plugin.PyObject2Value(res).(map[string]any)
+			obj, ok := ToValue(res).(map[string]any)
 			if !ok {
 				obj = map[string]any{
 					"result": obj,
@@ -133,7 +131,7 @@ func (p *Python) endExecute() {
 				return nil, err
 			}
 		}
-		return plugin.Value2PyObject(result), nil
+		return ToObject(result), nil
 	}, 0, `_get_config() -> dict`))
 
 }
@@ -145,7 +143,7 @@ func (p *Python) endExecute() {
 //	@param name
 //	@return any
 func (p *Python) Get(name string) any {
-	return plugin.PyObject2Value(p.module.Globals[name])
+	return ToValue(p.module.Globals[name])
 }
 
 // Set
@@ -155,7 +153,11 @@ func (p *Python) Get(name string) any {
 //	@param name
 //	@param val
 func (p *Python) Set(name string, val any) {
-	p.module.Globals[name] = plugin.Value2PyObject(val)
+	if m, ok := val.(*py.Method); ok {
+		p.module.Globals[name] = m
+	} else {
+		p.module.Globals[name] = ToObject(val)
+	}
 }
 
 // Type

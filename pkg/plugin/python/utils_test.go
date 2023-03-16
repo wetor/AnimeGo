@@ -1,10 +1,12 @@
-package plugin
+package python_test
 
 import (
 	"fmt"
 	"testing"
 
 	"github.com/go-python/gpython/py"
+
+	"github.com/wetor/AnimeGo/pkg/plugin/python"
 )
 
 func TestPyObject2Object(t *testing.T) {
@@ -21,7 +23,7 @@ func TestPyObject2Object(t *testing.T) {
 	})
 	fmt.Println(dict)
 
-	obj := PyObject2Value(dict)
+	obj := python.ToValue(dict)
 	fmt.Println(obj)
 }
 
@@ -49,6 +51,28 @@ func TestValue2PyObject(t *testing.T) {
 			false,
 		},
 	}
-	pyObj := Value2PyObject(object)
+	pyObj := python.ToObject(object)
 	fmt.Println(pyObj)
+}
+
+func TestStructToObject(t *testing.T) {
+	type InnerStruct struct {
+		Best    int    `json:"in_best"`
+		TestKey string `json:"in_test_key"`
+	}
+	type Struct struct {
+		Best    int         `json:"best"`
+		TestKey string      `json:"test_key"`
+		Inner   InnerStruct `json:"inner"`
+	}
+	model := Struct{
+		Best:    666,
+		TestKey: "这是",
+		Inner: InnerStruct{
+			Best:    777,
+			TestKey: "我",
+		},
+	}
+	obj := python.ToObject(model)
+	fmt.Println(obj)
 }
