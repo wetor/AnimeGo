@@ -21,11 +21,11 @@ setting:
             # 密码
             password: adminadmin
     # 下载文件夹. 下载器的下载文件夹
-    download_path: /Users/wetor/GoProjects/AnimeGo/download/incomplete
+    download_path: download/incomplete
     # 保存文件夹. 下载完成后，重命名并移动到的文件夹
-    save_path: /Users/wetor/GoProjects/AnimeGo/download/anime
+    save_path: download/anime
     # 数据文件夹. 用于保存数据库、插件等数据
-    data_path: /Users/wetor/GoProjects/AnimeGo/data
+    data_path: data
     # 过滤器设置. 用来筛选符合条件的项目进行解析下载
     filter:
         # JavaScript插件. js插件的文件名列表，依次执行。路径相对于data_path
@@ -34,6 +34,7 @@ setting:
         javascript:
             - plugin/filter/default.js
             - plugin/filter/regexp.js
+            - filter/mikan_tool.py
     # 分类名. 仅qBittorrent有效
     category: AnimeGo
     # 标签表达式. 仅qBittorrent有效，可用通配符列表：

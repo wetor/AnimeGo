@@ -2,14 +2,16 @@
 // Use of this source code is governed by a BSD-style
 // license that can be found in the LICENSE file.
 
-package re
+package re_test
 
 import (
 	"testing"
 
 	"github.com/go-python/gpython/pytest"
+	"github.com/wetor/AnimeGo/third_party/gpython/stdlib/re"
 )
 
 func TestRe(t *testing.T) {
-	pytest.RunScript(t, "./testdata/test.py")
+	re.Init()
+	pytest.RunScript(t, "testdata/test.py")
 }

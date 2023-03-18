@@ -2,6 +2,7 @@ package cache_test
 
 import (
 	"fmt"
+	"os"
 	"reflect"
 	"testing"
 
@@ -46,11 +47,12 @@ func TestMain(m *testing.M) {
 		File:  "data/log.log",
 		Debug: true,
 	})
-	db.Open("data/1.db")
+	db.Open("data/test.db")
 	db_sub.Open("testdata/bolt_sub.bolt")
 	m.Run()
 	db.Close()
 	db_sub.Close()
+	_ = os.RemoveAll("data")
 	fmt.Println("end")
 }
 

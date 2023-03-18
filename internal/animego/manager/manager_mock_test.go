@@ -27,7 +27,7 @@ type ClientMock struct {
 }
 
 func (m *ClientMock) Connected() bool {
-	return true
+	return qbtConnect
 }
 
 func (m *ClientMock) Start(ctx context.Context) {
@@ -40,12 +40,12 @@ func (m *ClientMock) Start(ctx context.Context) {
 				for _, item := range itemList {
 					if item.State == QbtDownloading {
 						item.Progress += 0.25
-						if item.Progress >= 1 {
+						if item.Progress >= 0.5 {
 							item.State = QbtUploading
 						}
 					} else if item.State == QbtUploading {
 						item.Progress += 0.25
-						if item.Progress >= 1.5 {
+						if item.Progress >= 1 {
 							item.State = QbtCheckingUP
 						}
 					}

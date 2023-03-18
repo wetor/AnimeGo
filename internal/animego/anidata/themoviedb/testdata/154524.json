@@ -1,0 +1,160 @@
+{
+  "adult": false,
+  "backdrop_path": "/g1DgfhkneXTRzJH38POYm4Es3gQ.jpg",
+  "created_by": [],
+  "episode_run_time": [
+    12
+  ],
+  "first_air_date": "2022-10-14",
+  "genres": [
+    {
+      "id": 16,
+      "name": "Animation"
+    },
+    {
+      "id": 35,
+      "name": "Comedy"
+    },
+    {
+      "id": 10759,
+      "name": "Action & Adventure"
+    },
+    {
+      "id": 10765,
+      "name": "Sci-Fi & Fantasy"
+    }
+  ],
+  "homepage": "https://uy-allstars.com",
+  "id": 154524,
+  "in_production": true,
+  "languages": [
+    "ja"
+  ],
+  "last_air_date": "2023-03-17",
+  "last_episode_to_air": {
+    "id": 4287721,
+    "name": "When Love Strikes",
+    "overview": "",
+    "vote_average": 0.0,
+    "vote_count": 0,
+    "air_date": "2023-03-17",
+    "episode_number": 44,
+    "production_code": "",
+    "runtime": 12,
+    "season_number": 1,
+    "show_id": 154524,
+    "still_path": "/wSzn8AFgfT6I07zI09lv4omj1xg.jpg"
+  },
+  "name": "Urusei Yatsura",
+  "next_episode_to_air": {
+    "id": 4301829,
+    "name": "Title Match!!",
+    "overview": "",
+    "vote_average": 0.0,
+    "vote_count": 0,
+    "air_date": "2023-03-24",
+    "episode_number": 45,
+    "production_code": "",
+    "runtime": 12,
+    "season_number": 1,
+    "show_id": 154524,
+    "still_path": null
+  },
+  "networks": [
+    {
+      "id": 1,
+      "logo_path": "/yS5UJjsSdZXML0YikWTYYHLPKhQ.png",
+      "name": "Fuji TV",
+      "origin_country": "JP"
+    }
+  ],
+  "number_of_episodes": 46,
+  "number_of_seasons": 1,
+  "origin_country": [
+    "JP"
+  ],
+  "original_language": "ja",
+  "original_name": "うる星やつら",
+  "overview": "Tokyo. Tomobiki Town. Lum, the gorgeous daughter of an invading race of Oni Aliens is smitten with High School student Ataru Moroboshi. A dedicated womanizer, Ataru is unfazed by Lum’s fierce electric shock attacks and continues his daily hunt for pretty girls. With a host of other unique characters, including classmate Shinobu, elegant shrine maiden Sakura, Lum’s best friend’s Oyuki, Benten and Ran, Buddhist Monk Cherry, Ten, the little brat, heir to a wealthy family Shutaro Mendo and the secretly female beauty Ryunosuke… A classic slapstick love comedy where anything goes!",
+  "popularity": 123.059,
+  "poster_path": "/gIvkC2kshTTF310fXMG1esFmVBA.jpg",
+  "production_companies": [
+    {
+      "id": 45188,
+      "logo_path": "/aPH68PzQDtz7QorAU369IlxwgnU.png",
+      "name": "David Production",
+      "origin_country": "JP"
+    },
+    {
+      "id": 171086,
+      "logo_path": null,
+      "name": "Fujipacific Music",
+      "origin_country": "JP"
+    },
+    {
+      "id": 3341,
+      "logo_path": "/dTG5dXE1kU2mpmL9BNnraffckLU.png",
+      "name": "Fuji Television Network",
+      "origin_country": "JP"
+    },
+    {
+      "id": 2883,
+      "logo_path": "/rDYExnBV61jGQnkhVVrPN4Yl7O1.png",
+      "name": "Aniplex",
+      "origin_country": "JP"
+    },
+    {
+      "id": 9149,
+      "logo_path": "/isLUpud9N56ifftJZ4XvzwBBpoG.png",
+      "name": "Shogakukan",
+      "origin_country": "JP"
+    },
+    {
+      "id": 12655,
+      "logo_path": "/dfGqf2NoMVPrDywDL90D5HAhBlW.png",
+      "name": "Shogakukan-Shueisha Productions",
+      "origin_country": "JP"
+    },
+    {
+      "id": 64421,
+      "logo_path": "/mB7zlD6FiYd0j0AtQ9AGyPbyAUA.png",
+      "name": "Fuji Creative Corporation",
+      "origin_country": "JP"
+    },
+    {
+      "id": 1778,
+      "logo_path": "/b5rT6VbYza3LyfltCmz1OcqzWJM.png",
+      "name": "dentsu",
+      "origin_country": "JP"
+    }
+  ],
+  "production_countries": [
+    {
+      "iso_3166_1": "JP",
+      "name": "Japan"
+    }
+  ],
+  "seasons": [
+    {
+      "air_date": "2022-10-14",
+      "episode_count": 46,
+      "id": 237892,
+      "name": "Season 1",
+      "overview": "",
+      "poster_path": "/4aYCqYn6orUX1bS6nFzdJA9cUUZ.jpg",
+      "season_number": 1
+    }
+  ],
+  "spoken_languages": [
+    {
+      "english_name": "Japanese",
+      "iso_639_1": "ja",
+      "name": "日本語"
+    }
+  ],
+  "status": "Returning Series",
+  "tagline": "",
+  "type": "Scripted",
+  "vote_average": 7.583,
+  "vote_count": 12
+}

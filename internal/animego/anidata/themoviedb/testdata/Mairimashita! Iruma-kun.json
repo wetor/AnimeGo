@@ -1,0 +1,28 @@
+{
+  "page": 1,
+  "results": [
+    {
+      "backdrop_path": "/d8bAI2EDM7L2q94wDZfjb82KRoh.jpg",
+      "first_air_date": "2019-10-05",
+      "genre_ids": [
+        16,
+        35,
+        10765
+      ],
+      "id": 91801,
+      "name": "入间同学入魔了！",
+      "origin_country": [
+        "JP"
+      ],
+      "original_language": "ja",
+      "original_name": "魔入りました！入間くん",
+      "overview": "无法拒绝任何拜托的老好人铃木入间，是个从1岁开始就踏入社会、为了金钱东奔西走、在修罗场求生的十四岁少年，他的父母为了金钱将他卖给了恶魔！阴差阳错之下他签下了恶魔契约、进入了恶魔学院、成为了特待生，并且即将与学院第一的新生代表决斗——",
+      "popularity": 105.84,
+      "poster_path": "/wvwWOSHk21S5eThiL6cdIJEvlEs.jpg",
+      "vote_average": 8.5,
+      "vote_count": 220
+    }
+  ],
+  "total_pages": 1,
+  "total_results": 1
+}

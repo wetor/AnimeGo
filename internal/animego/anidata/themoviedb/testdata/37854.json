@@ -1,0 +1,327 @@
+{
+  "adult": false,
+  "backdrop_path": "/a6ptrTUH1c5OdWanjyYtAkOuYD0.jpg",
+  "created_by": [],
+  "episode_run_time": [
+    24
+  ],
+  "first_air_date": "1999-10-20",
+  "genres": [
+    {
+      "id": 10759,
+      "name": "Action & Adventure"
+    },
+    {
+      "id": 35,
+      "name": "Comedy"
+    },
+    {
+      "id": 16,
+      "name": "Animation"
+    }
+  ],
+  "homepage": "http://www.toei-anim.co.jp/tv/onep",
+  "id": 37854,
+  "in_production": true,
+  "languages": [
+    "ja"
+  ],
+  "last_air_date": "2023-02-26",
+  "last_episode_to_air": {
+    "id": 4215795,
+    "name": "Sanji's Mutation - The Two Arms in Crisis!",
+    "overview": "Queen’s unforeseen move stuns everyone on the Performance Floor. And then, he goes on to utilize another special technique which can break every bone in Sanji’s body. On the verge of a crisis, Sanji feels something strange again.",
+    "vote_average": 8.0,
+    "vote_count": 1,
+    "air_date": "2023-02-26",
+    "episode_number": 1053,
+    "production_code": "1234",
+    "runtime": 23,
+    "season_number": 21,
+    "show_id": 37854,
+    "still_path": "/ubIw8qdxR65PGP5jYOLxCEPqvm.jpg"
+  },
+  "name": "One Piece",
+  "next_episode_to_air": {
+    "id": 4230066,
+    "name": "Death to Your Partner! Killer's Deadly Gamble!",
+    "overview": "",
+    "vote_average": 0.0,
+    "vote_count": 0,
+    "air_date": "2023-03-19",
+    "episode_number": 1054,
+    "production_code": "",
+    "runtime": 24,
+    "season_number": 21,
+    "show_id": 37854,
+    "still_path": "/1wRF8WvB1r7mVFAbkNw13miAedK.jpg"
+  },
+  "networks": [
+    {
+      "id": 1,
+      "logo_path": "/yS5UJjsSdZXML0YikWTYYHLPKhQ.png",
+      "name": "Fuji TV",
+      "origin_country": "JP"
+    }
+  ],
+  "number_of_episodes": 1056,
+  "number_of_seasons": 21,
+  "origin_country": [
+    "JP"
+  ],
+  "original_language": "ja",
+  "original_name": "ワンピース",
+  "overview": "Years ago, the fearsome Pirate King, Gol D. Roger was executed leaving a huge pile of treasure and the famous \"One Piece\" behind. Whoever claims the \"One Piece\" will be named the new King of the Pirates.\n\nMonkey D. Luffy, a boy who consumed a \"Devil Fruit,\" decides to follow in the footsteps of his idol, the pirate Shanks, and find the One Piece. It helps, of course, that his body has the properties of rubber and that he's surrounded by a bevy of skilled fighters and thieves to help him along the way.\n\nLuffy will do anything to get the One Piece and become King of the Pirates!",
+  "popularity": 253.189,
+  "poster_path": "/e3NBGiAifW9Xt8xD5tpARskjccO.jpg",
+  "production_companies": [
+    {
+      "id": 5542,
+      "logo_path": "/ayE4LIqoAWotavo7xdvYngwqGML.png",
+      "name": "Toei Animation",
+      "origin_country": "JP"
+    },
+    {
+      "id": 3341,
+      "logo_path": "/dTG5dXE1kU2mpmL9BNnraffckLU.png",
+      "name": "Fuji Television Network",
+      "origin_country": "JP"
+    },
+    {
+      "id": 130799,
+      "logo_path": null,
+      "name": "Avex Trax",
+      "origin_country": "JP"
+    },
+    {
+      "id": 2918,
+      "logo_path": "/gyEWUBWwqrm3H5T2hkERD9LxpOq.png",
+      "name": "Shueisha",
+      "origin_country": "JP"
+    },
+    {
+      "id": 4720,
+      "logo_path": "/7wQgZTA4FCkFMDedBYVZiVE87c7.png",
+      "name": "Asatsu-DK",
+      "origin_country": "JP"
+    }
+  ],
+  "production_countries": [
+    {
+      "iso_3166_1": "JP",
+      "name": "Japan"
+    }
+  ],
+  "seasons": [
+    {
+      "air_date": "1999-12-22",
+      "episode_count": 22,
+      "id": 49191,
+      "name": "Specials",
+      "overview": "",
+      "poster_path": "/8W5mRarSNh2SQ1SASoGx8lKWL2n.jpg",
+      "season_number": 0
+    },
+    {
+      "air_date": "1999-10-20",
+      "episode_count": 61,
+      "id": 49188,
+      "name": "East Blue Arc",
+      "overview": "Influenced by Shanks, Luffy starts his journey to become the Pirate King. At the beginning of his journey, he meets a boy named Koby, who wants to become a Marine. They reach Shells Town, where they meet corrupt Marine captain Axe-Hand Morgan, his son Helmeppo, and the pirate hunter Roronoa Zoro.",
+      "poster_path": "/bugiylxv53mpUaPUmq9clbv3Kfs.jpg",
+      "season_number": 1
+    },
+    {
+      "air_date": null,
+      "episode_count": 16,
+      "id": 49189,
+      "name": "Whiskey Peak \u0026 Little Garden Arcs",
+      "overview": "Led by the mysterious Mr. 9 and Ms. Wednesday, the Straw Hats go to Whisky Peak, where the townspeople immediately start a party to celebrate their arrival. But there is more to this town than there appears...",
+      "poster_path": "/bH9kQ6L9wdbfse0cuh1Zi71Qfss.jpg",
+      "season_number": 2
+    },
+    {
+      "air_date": null,
+      "episode_count": 14,
+      "id": 49190,
+      "name": "Drum Island Arc",
+      "overview": "When Nami catches a fatal illness, the crew is forced to stop at Drum Island, a kingless country that is trying to establish a new government. Due to the actions of the previous king, Wapol, there is only one doctor left—a \"witch\" named Kureha who lives at the top of a mountain. Luffy and Sanji must reach the peak, but the exiled King Wapol returns to reclaim his country.",
+      "poster_path": "/15AsC74hNf9UWAE60rp6HRapVkM.jpg",
+      "season_number": 3
+    },
+    {
+      "air_date": null,
+      "episode_count": 39,
+      "id": 49183,
+      "name": "Alabasta Arc",
+      "overview": "The Straw Hats, with Kureha's assistant Tony Tony Chopper, finally arrive at Arabasta, which is on the verge of civil war. Vivi must reach the rebels and tell them the real cause behind the conflict, but Crocodile, leader of Baroque Works and one of the Seven Warlords of the Sea, will not just stand by and watch. In the end, Baroque Works, marine forces, pirates, the royal guards, and the rebel army clash in a battle that will determine the fate of the country itself.",
+      "poster_path": "/p6zFgcC7fico6hXFhgkL6wrRMji.jpg",
+      "season_number": 4
+    },
+    {
+      "air_date": null,
+      "episode_count": 13,
+      "id": 49184,
+      "name": "Post-Alabasta \u0026 Goat Island / Ruluka Island Filler Arcs",
+      "overview": "The Post Arabasta Arc includes five stand alone episodes focusing on the histories and goals of the Straw Hat Pirates crew. Luffy and Robin are the only ones who do not get an episode. They follow after the Arabasta Arc. This is the second filler arc.  The Goat Island Arc is the third filler arc of the One Piece anime.\n\nWhile being chased by the Marines, Luffy and his crew get lost in the fog and discover an uncharted island. They find that the island is inhabited only by an old man named Zenny and a multitude of goats. They also find a partially constructed ship on the top of the island. The Straw Hat Pirates help the old man out while hiding from the Marines led by Moore and Minchey and working to get his ship into the water.  The Ruluka Island Arc, also referred to as the Rainbow Mist Arc, is the fourth filler arc in the One Piece anime. This is also the last arc dubbed by 4Kids.",
+      "poster_path": "/ljHnreFH6rUxLDLk8jvU9xOijPW.jpg",
+      "season_number": 5
+    },
+    {
+      "air_date": null,
+      "episode_count": 52,
+      "id": 49185,
+      "name": "Skypiea Arc",
+      "overview": "The Skypiea Arc is the thirteenth story arc in the series, and the second and last of two in the Sky Island Saga of the manga and anime, One Piece.\n\nThe Straw Hats arrive on the sky island Skypiea in search of gold, only to find out that the island is in danger of being destroyed by the cruel \"god\", Enel.",
+      "poster_path": "/kc35WzlOgZhLEg4nuB9Du0YZbjz.jpg",
+      "season_number": 6
+    },
+    {
+      "air_date": null,
+      "episode_count": 33,
+      "id": 49179,
+      "name": "Long Ring Long Land \u0026 G-8 / Ocean's Dream / Foxy's Return Filler Arcs",
+      "overview": "The G-8 Arc is the fifth filler arc in the One Piece anime. It comes after the end of the Sky Island Saga where instead of splashing down in the open sea, the Going Merry is trapped within the enclosed and heavily fortified waters of a marine base, where the crew must scatter to survive before attempting to retake their ship and escape.  The Long Ring Long Land Arc, also referred to as the Davy Back Fight Arc or Foxy Arc, is the fourteenth story arc in the series, and the first in the Water 7 Saga of the manga and anime, One Piece. It is also the first arc to be aired on Adult Swim's newly revised Toonami block.\n\nIt focuses around a contest between the Straw Hat Pirates and the Foxy Pirates, called the \"Davy Back Fight\". It is also the setting of the fight between Admiral Aokiji and Monkey D. Luffy. Long Ring Long Land is the seventh island the Straw Hat Pirates encounter on the Grand Line.",
+      "poster_path": "/aQec30wG7DnPnhi6Jwyfhq3nVKY.jpg",
+      "season_number": 7
+    },
+    {
+      "air_date": null,
+      "episode_count": 35,
+      "id": 49192,
+      "name": "Water Seven Arc",
+      "overview": "The Water 7 Arc is the fifteenth story arc in the series, and the second in the Water 7 Saga of the manga and anime series, One Piece. Water 7 is the seventh island that the Straw Hats encounter on the Grand Line. It is a water metropolis that was built on top of a previous sunken city. Things seem to be going fine for the Straw Hats until a mysterious organization called CP9 gets involved. This arc is well known for extensive use of plot twists and sudden shifts in the story-line, as well as the serious conflict within the Straw Hat crew.  There is some dispute as to how the Water 7 Arc should be categorized, particularly whether the journey on the sea train should be attached to the Water 7 Arc, the Enies Lobby Arc, or if it should stand alone. Another is whether or not the Water 7 and Enies Lobby Arcs should be considered separate arcs or not.",
+      "poster_path": "/qTW6smt7LAj3ZLhtmuP3wCEe7Eh.jpg",
+      "season_number": 8
+    },
+    {
+      "air_date": null,
+      "episode_count": 73,
+      "id": 49180,
+      "name": "Enies Lobby Arc",
+      "overview": "The Enies Lobby Arc is the sixteenth story arc in the manga and anime series, One Piece, and the third in the Water 7 Saga.\n\nThe Straw Hats, Sogeking, the Franky Family, and the shipwrights of the Galley-La Company arrive at Enies Lobby aboard Rocket Man to rescue Nico Robin and Franky. Standing in their way, however, are the forces of the World Government, including its deadly assassin organization, CP9. A massive battle ensues between the two sides when Luffy declares war against the World Government by having its flag shot down by Sogeking.\n\nEnies Lobby is the eighth island that the Straw Hat Pirates encounter on the Grand Line. This arc also serves as a point of advancement for each of the Straw Hats, as almost all of them become stronger in some way. In this arc, the Straw Hats also say farewell to their beloved ship, the Going Merry.",
+      "poster_path": "/hOMSHYaj94vz0yM1RhETQizr650.jpg",
+      "season_number": 9
+    },
+    {
+      "air_date": null,
+      "episode_count": 45,
+      "id": 49181,
+      "name": "Thriller Bark Arc",
+      "overview": "The Thriller Bark Arc is the eighteenth story arc in the series, and the first and only in the Thriller Bark Saga.\n\nThe Straw Hats, during their journey into the Florian Triangle arrive at a haunted island/ship called Thriller Bark, in which their shadows are stolen by Warlord of the Sea Gecko Moria and must hurry to get them back before the sun rises. After defeating Moria, another Warlord shows up to make the Straw Hats' situation worse. The Straw Hats also gain a new crewmate, a living skeleton named Brook who becomes their musician.",
+      "poster_path": "/lLvL44Yx0A2hzviKjdnF1j2Zgdr.jpg",
+      "season_number": 10
+    },
+    {
+      "air_date": null,
+      "episode_count": 26,
+      "id": 49186,
+      "name": "Sabaody Archipelago Arc",
+      "overview": "The Sabaody Archipelago Arc is the nineteenth story arc in the series, and the first in the Summit War Saga of the manga and anime series, One Piece. The arc takes place in the titular archipelago, and centers around Luffy and his crew coming into conflict with a deadly slave trading ring that sells to the World Nobles. While there, the eleven dangerous rookie pirates known as the Eleven Supernovas arrive, keen on entering the New World through the archipelago as well. This arc marks a turning point for the Straw Hat Pirates since they were all utterly defeated by powerful opponents such as Admiral Kizaru, the Pacifista, Bartholomew Kuma, and Sentomaru, even though they have grown stronger in their own right. Sabaody Archipelago is the tenth island that the Straw Hats encounter on the Grand Line.",
+      "poster_path": "/td4KxWvlzyiW5WvKdsDEvrsJFsW.jpg",
+      "season_number": 11
+    },
+    {
+      "air_date": null,
+      "episode_count": 14,
+      "id": 49182,
+      "name": "Amazon Lily Arc",
+      "overview": "The Amazon Lily Arc is the twentieth story arc in the series, and the second in the Summit War Saga of One Piece. After his defeat at the hands of Kuma in Sabaody Archipelago, Luffy is sent flying and crash lands on Amazon Lily, an island exclusive to women that executes males on sight.",
+      "poster_path": "/7bjcIfOlaxH1YxFnGiXdeBK9pqP.jpg",
+      "season_number": 12
+    },
+    {
+      "air_date": null,
+      "episode_count": 101,
+      "id": 49187,
+      "name": "Impel Down \u0026 Marineford Arcs",
+      "overview": "The Impel Down Arc is the twenty-first story arc in the series, and the third in the Summit War Saga of the One Piece series, continuing from the Amazon Lily Arc.\n\nLuffy puts finding his crew on hold in favor of rescuing his brother Ace from the underwater prison Impel Down. With some assistance from Boa Hancock, he manages to infiltrate the facility. However, fulfilling his objective and escaping the hellish prison might be easier said than done.\n\nThe Marineford Arc (known as the Paramount War in the Viz Manga translation and the War of the Best in the FUNimation dub and subs) is the twenty-second story arc in the series, and the fourth in the Summit War Saga of the One Piece series, continuing on from Impel Down Arc.",
+      "poster_path": "/bOzeTsI3MnYW9nzugTdsN4wrEE8.jpg",
+      "season_number": 13
+    },
+    {
+      "air_date": null,
+      "episode_count": 58,
+      "id": 49193,
+      "name": "Fishman Island Arc",
+      "overview": "The Fishman Island Arc is the twenty-fifth story arc. It is the second and last arc in the Fishman Island Saga of the One Piece series, continuing on from the Return to Sabaody Arc.\n\nThe Straw Hat Pirates finally head for Fishman Island after their two year hiatus. But many surprises await them as they head for their undersea destination and even more so once they reach it.\n\nFishman Island is the eleventh island that the Straw Hats encounter on the Grand Line.",
+      "poster_path": "/to0pVOrHt4yD6TGC8cszoElgJL6.jpg",
+      "season_number": 14
+    },
+    {
+      "air_date": null,
+      "episode_count": 62,
+      "id": 49194,
+      "name": "Punk Hazard Arc",
+      "overview": "The Punk Hazard Arc is the twenty-sixth story arc in the series and the first in the Dressrosa Saga of the One Piece series, continuing on from the Fishman Island Arc and the Fishman Island Saga.\n\nUpon finally entering the New World, the Straw Hat Pirates immediately receive a distress call from a group of people on an island called Punk Hazard, stating that they are being attacked by a samurai. Without hesitation, Luffy sets out to the blazing island, with Vice Admiral Smoker hot on his tail. On the supposedly death-ridden and empty island, the Straw Hats soon learn that they are not alone, meeting many new and old foes as they explore the purpose of the island. Punk Hazard is made up of a frozen side and a burning side. The island also contains the abandoned research laboratories of Dr. Vegapunk.\n\nPunk Hazard is the first island the Straw Hats encounter in the New World.",
+      "poster_path": "/zaZs40D5lKrf58B6IATTs16vZoo.jpg",
+      "season_number": 15
+    },
+    {
+      "air_date": null,
+      "episode_count": 50,
+      "id": 49195,
+      "name": "Dressrosa Arc",
+      "overview": "The Dressrosa Arc is the twenty-seventh story arc in the series and the second and final arc in the Dressrosa Saga (ドレスローザ編 Doresurōza-hen) of One Piece, continuing from the Punk Hazard Arc. Also known as the Pirate Alliance Saga, it is the second saga of the second half of the manga and anime series and is the eighth saga overall. After capturing Caesar Clown, the Straw Hats and Trafalgar Law travel with Kin'emon to Dressrosa; there, in the second stage of their plan for dethroning Kaido of the Four Emperors, they aim to take down the nation's king, Warlord of the Sea Donquixote Doflamingo. They challenge Doflamingo and uncover a decade-long conspiracy on Dressrosa island. Their resulting actions against the Warlord send a massive shockwave throughout the world and result in the birth of the Straw Hat Grand Fleet. Dressrosa is the second island the Straw Hats encounter in the New World, although the third island since the timeskip.",
+      "poster_path": "/6GsHMdBqWv9veW5peDv9U5yI9mU.jpg",
+      "season_number": 16
+    },
+    {
+      "air_date": null,
+      "episode_count": 56,
+      "id": 63735,
+      "name": "Dressrosa Arc (2)",
+      "overview": "The Dressrosa Arc is the twenty-seventh story arc in the series and the second and final arc in the Dressrosa Saga (ドレスローザ編 Doresurōza-hen) of One Piece, continuing from the Punk Hazard Arc. Also known as the Pirate Alliance Saga, it is the second saga of the second half of the manga and anime series and is the eighth saga overall.\n\nAfter capturing Caesar Clown, the Straw Hats and Trafalgar Law travel with Kin'emon to Dressrosa; there, in the second stage of their plan for dethroning Kaido of the Four Emperors, they aim to take down the nation's king, Warlord of the Sea Donquixote Doflamingo. They challenge Doflamingo and uncover a decade-long conspiracy on Dressrosa island. Their resulting actions against the Warlord send a massive shockwave throughout the world and result in the birth of the Straw Hat Grand Fleet.\n\nDressrosa is the second island the Straw Hats encounter in the New World, although the third island since the timeskip.",
+      "poster_path": "/h7tubdaYwVs3lIIkJmTvAi6Dnrn.jpg",
+      "season_number": 17
+    },
+    {
+      "air_date": "2016-07-11",
+      "episode_count": 55,
+      "id": 78873,
+      "name": "Silver Mine, Zou, Marine Rookie Arcs",
+      "overview": "The Zou Arc is the twenty-eighth story arc in the series and the first arc in the Four Emperors Saga of One Piece, continuing from the Dressrosa Arc and the Dressrosa Saga.\n\nAfter defeating Doflamingo, the Straw Hats, Trafalgar Law, Kin'emon, and Kanjuro continue on to Zou, in order to reunite with Sanji and the others. When they arrive, however, they discover that Sanji has been swept up in a set of personal and political entanglements, and that Zou has been subjected to siege by Jack of the Beasts Pirates. All of this includes the startling revelations involving the location of the Straw Hats' ultimate goal: One Piece.\n\nZou is the third island the Straw Hats encounter in the New World.",
+      "poster_path": "/2xJ6O7uF7JuBwqeDEoJBoYJkTfN.jpg",
+      "season_number": 18
+    },
+    {
+      "air_date": "2017-09-04",
+      "episode_count": 74,
+      "id": 91905,
+      "name": "Whole Cake Island Arc",
+      "overview": "The Whole Cake Island Arc (ホールケーキアイランド編 Hōru Kēki Airando-hen), also known as the Sanji Retrieval Arc and the Tea Party From Hell Arc, is the twenty-ninth story arc in the series, while the Levely Arc is the thirtieth story arc. They make up the second and third arcs in Four Emperors Saga of One Piece, continuing from the Zou Arc.\n\nLuffy, Nami, Tony Tony Chopper, Brook, Pekoms, Pedro and Carrot head to Whole Cake Island, where Big Mom of the Four Emperors resides. The Sanji Retrieval Team seeks to rescue their crewmate Sanji from his arranged marriage with Charlotte Pudding, set up to finalize a political alliance between the Charlotte Family and the Vinsmoke Family. In the midst of their operation, however, they become involved in a plot seeking to take down Big Mom herself.\n\nAfter the Straw Hat Pirates' actions against the Big Mom Pirates are revealed to the world, royalty across the globe gathers for the Levely. Meanwhile, the Revolutionary Army prepares for their next move.",
+      "poster_path": "/7DRgjLxLwUnxFaRownpY9dV8BZe.jpg",
+      "season_number": 19
+    },
+    {
+      "air_date": "2019-04-01",
+      "episode_count": 14,
+      "id": 121027,
+      "name": "Levely Arc",
+      "overview": "The Levely Arc is the thirtieth story arc in the series and the third in the Four Emperors Saga of One Piece, continuing from the Whole Cake Island Arc.\n\nAfter the Straw Hat Pirates' actions against the Big Mom Pirates are revealed to the world, royalty across the globe gathers for the Levely. Meanwhile, the Revolutionary Army prepares for their next move.",
+      "poster_path": "/aP7JsUBvZW1hYMQqU2WjhJGu9Y2.jpg",
+      "season_number": 20
+    },
+    {
+      "air_date": "2019-07-08",
+      "episode_count": 165,
+      "id": 125830,
+      "name": "Wano Country Arc",
+      "overview": "The Wano Country Arc (ワノ国編 Wano Kuni-hen) is the thirty-first story arc in the series and the fourth in the Four Emperors Saga of One Piece, continuing from the Levely Arc.\n\nThe Ninja-Pirate-Mink-Samurai Alliance sets into motion their plan to recruit allies within Wano Country to liberate it from the control of the shogun Kurozumi Orochi and his allies, the Emperor Kaido and his crew the Beasts Pirates. The Big Mom Pirates follow the Straw Hats to Wano to get revenge for the previous events back on Totto Land, and Big Mom decides to form an alliance with Kaido in order to conquer the world.",
+      "poster_path": "/r51BSV3mmbTM92PCh4eX4DgP4xX.jpg",
+      "season_number": 21
+    }
+  ],
+  "spoken_languages": [
+    {
+      "english_name": "Japanese",
+      "iso_639_1": "ja",
+      "name": "日本語"
+    }
+  ],
+  "status": "Returning Series",
+  "tagline": "",
+  "type": "Scripted",
+  "vote_average": 8.7,
+  "vote_count": 3643
+}

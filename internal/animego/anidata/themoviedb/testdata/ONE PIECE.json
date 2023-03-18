@@ -1,0 +1,28 @@
+{
+  "page": 1,
+  "results": [
+    {
+      "backdrop_path": "/4Mt7WHox67uJ1yErwTBFcV8KWgG.jpg",
+      "first_air_date": "1999-10-20",
+      "genre_ids": [
+        10759,
+        35,
+        16
+      ],
+      "id": 37854,
+      "name": "海贼王",
+      "origin_country": [
+        "JP"
+      ],
+      "original_language": "ja",
+      "original_name": "ワンピース",
+      "overview": "拥有财富、名声、势力，拥有整个世界的海贼王 – 哥尔.D.罗杰，他在临刑前的一句话，让人们趋之若鹜奔向大海。“想要我的财宝吗？想要的话可以全部给你，去找吧！我把所有财宝都放在那里。”于是所有男子汉航向伟大的航路追逐梦想，世界开始迎接“大海贼时代”。",
+      "popularity": 253.189,
+      "poster_path": "/viTq6Rfc3Hmv7tCK0jn0P28Lorr.jpg",
+      "vote_average": 8.7,
+      "vote_count": 3643
+    }
+  ],
+  "total_pages": 1,
+  "total_results": 1
+}

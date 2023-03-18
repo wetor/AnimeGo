@@ -6,7 +6,7 @@ __name__ = "Mikan_Rss"
 # 每分钟第10秒执行
 __cron__ = "10 0/1 * * * ?"
 
-__url__ = "https://mikanani.me/RSS/Bangumi?bangumiId=228&subgroupid=1"
+__url__ = "https://mikanani.me/RSS/Bangumi?bangumiId=2822&subgroupid=370"
 
 def parse(args):
     log.info(len(args['data']))

@@ -2,6 +2,7 @@ package log_test
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/wetor/AnimeGo/pkg/log"
@@ -14,6 +15,7 @@ func TestMain(m *testing.M) {
 		Debug: true,
 	})
 	m.Run()
+	_ = os.RemoveAll("data")
 	fmt.Println("end")
 }
 

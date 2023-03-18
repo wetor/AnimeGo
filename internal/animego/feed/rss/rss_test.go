@@ -8,7 +8,7 @@ import (
 )
 
 func TestRss_Parse(t *testing.T) {
-	r := rss.NewRss(&rss.Options{Url: "https://mikanani.me/RSS/MyBangumi?token=ky5DTt%2fMyAjCH2oKEN81FQ%3d%3d"})
+	r := rss.NewRss(&rss.Options{File: "testdata/Mikan.xml"})
 	items := r.Parse()
 	for _, item := range items {
 		fmt.Println(item.Url, item.Name, item.Length, item.Date, item.Hash())

@@ -1,6 +1,7 @@
 package bangumi
 
 import (
+	"fmt"
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/pkg/errors"
 	"github.com/wetor/AnimeGo/pkg/log"
@@ -14,8 +15,11 @@ const (
 )
 
 var (
-	Host   = "https://api.bgm.tv"
-	Bucket = "bangumi"
+	Host    = "https://api.bgm.tv"
+	Bucket  = "bangumi"
+	infoApi = func(id int) string {
+		return fmt.Sprintf("%s/v0/subjects/%d", Host, id)
+	}
 )
 
 type Bangumi struct {
@@ -57,23 +61,23 @@ func (b Bangumi) ParseCache(bangumiID int) (entity *Entity) {
 }
 
 // Parse
-//  @Description: 通过bangumiID和指定ep集数，获取番剧信息和剧集信息
-//  @receiver Bangumi
-//  @param bangumiID int
-//  @param ep int
-//  @return entity *Entity
 //
+//	@Description: 通过bangumiID和指定ep集数，获取番剧信息和剧集信息
+//	@receiver Bangumi
+//	@param bangumiID int
+//	@param ep int
+//	@return entity *Entity
 func (b Bangumi) Parse(bangumiID int) (entity *Entity) {
 	entity = b.parseAnimeInfo(bangumiID)
 	return entity
 }
 
 // parseAnimeInfo
-//  @Description: 解析番剧信息
-//  @receiver Bangumi
-//  @param bangumiID int
-//  @return entity *Entity
 //
+//	@Description: 解析番剧信息
+//	@receiver Bangumi
+//	@param bangumiID int
+//	@return entity *Entity
 func (b Bangumi) parseAnimeInfo(bangumiID int) (entity *Entity) {
 	uri := infoApi(bangumiID)
 	resp := res.SubjectV0{}

@@ -1,15 +1,7 @@
 # 配置文件版本
-version: 1.2.0
+version: 1.4.0
 # 常规设置
 setting:
-    # 自动订阅设置
-    feed:
-        # Mikan订阅
-        mikan:
-            # 别名
-            name: Mikan
-            # 订阅链接. 可空，为空则不使用自动订阅
-            url: ""
     # 下载客户端设置
     client:
         # qBittorrent客户端
@@ -21,24 +13,11 @@ setting:
             # 密码
             password: adminadmin
     # 下载文件夹. 下载器的下载文件夹
-    download_path: /Users/wetor/GoProjects/AnimeGo/download/incomplete
+    download_path: download/incomplete
     # 保存文件夹. 下载完成后，重命名并移动到的文件夹
-    save_path: /Users/wetor/GoProjects/AnimeGo/download/anime
+    save_path: download/anime
     # 数据文件夹. 用于保存数据库、插件等数据
-    data_path: /Users/wetor/GoProjects/AnimeGo/data
-    # 过滤器设置. 用来筛选符合条件的项目进行解析下载
-    filter:
-        # 插件
-        plugin:
-            - enable: true
-              type: js
-              file: filter/default.js
-            - enable: true
-              type: js
-              file: filter/regexp.js
-            - enable: true
-              type: py
-              file: filter/mikan_tool.py
+    data_path: data
     # 分类名. 仅qBittorrent有效
     category: AnimeGo
     # 标签表达式. 仅qBittorrent有效，可用通配符列表：
@@ -69,6 +48,33 @@ setting:
         # TheMovieDB的APIkey. 可以自行申请链接（需注册）：https://www.themoviedb.org/settings/api?language=zh-CN
         # 以下为wetor的个人APIkey，仅用于AnimeGo使用
         themoviedb: d3d8430aefee6c19520d0f7da145daf5
+# 插件设置. 按顺序依次执行启用的插件
+# 列表类型，每一项需要有以下参数：
+#   enable: 启用
+#   type: 插件类型，目前仅支持 'python'(py) 和 'builtin' 插件类型。builtin为内置插件
+#   file: 插件文件，相对于 'data/plugin' 文件夹的路径，或内置插件名
+#   args: [可空]插件额外参数，字典类型，会覆盖同名参数
+#   vars: [可空]插件全局变量，字典类型，会覆盖插件脚本中同名变量，具体变量和作用参考订阅插件文档
+plugin:
+    # 订阅. 解析订阅链接
+    feed:
+        - enable: false
+          type: builtin
+          file: builtin_mikan_rss.py
+          args: {}
+          vars:
+            __cron__: 0 0/20 * * * ?
+            __name__: Mikan
+            __url__: ""
+    # 过滤器插件. 用来筛选符合条件的项目进行解析下载
+    filter:
+        - enable: true
+          type: py
+          file: filter/mikan_tool.py
+          args: {}
+          vars: {}
+    # 定时任务. 定时执行脚本
+    schedule: []
 # 高级设置
 advanced:
     # 更新状态等待时间. 每隔这一段时间，都会更新一次下载进度、清空下载队列(添加到下载项)
@@ -101,8 +107,6 @@ advanced:
         rename: link_delete
     # 订阅设置
     feed:
-        # 订阅刷新时间
-        update_delay_minute: 15
         # 订阅解析间隔时间
         delay_second: 2
         # 订阅多协程解析

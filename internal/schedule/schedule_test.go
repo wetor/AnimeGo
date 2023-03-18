@@ -19,7 +19,10 @@ import (
 	"github.com/wetor/AnimeGo/third_party/gpython"
 )
 
-var s *schedule.Schedule
+var (
+	s  *schedule.Schedule
+	wg = sync.WaitGroup{}
+)
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
@@ -28,20 +31,24 @@ func TestMain(m *testing.M) {
 		File:  "data/log.log",
 		Debug: true,
 	})
+
+	plugin.Init(&plugin.Options{
+		Path: "testdata",
+	})
+
 	gpython.Init()
 	lib.Init()
 	_ = utils.CreateMutiDir("data")
 
-	wg := sync.WaitGroup{}
 	s = schedule.NewSchedule(&schedule.Options{
 		WG: &wg,
 	})
 	m.Run()
-	wg.Done()
 	fmt.Println("end")
 }
 
 func TestNewSchedule(t *testing.T) {
+	t.Skip("跳过BangumiCache更新测试")
 	b := cache.NewBolt()
 	b.Open("data/bolt_sub.db")
 	mutex := sync.Mutex{}
@@ -57,20 +64,19 @@ func TestNewSchedule(t *testing.T) {
 	s.Start(context.Background())
 	time.Sleep(1 * time.Second)
 	s.Delete("bangumi")
+	wg.Done()
+	b.Close()
 }
 
 func TestNewSchedule2(t *testing.T) {
-	plugin.Init(&plugin.Options{
-		Path: "../../assets/plugin",
-	})
 	s.Add(&schedule.AddTaskOptions{
 		Name:     "test",
-		StartRun: true,
+		StartRun: false,
 		Task: task.NewScheduleTask(&task.ScheduleOptions{
 			Plugin: &models.Plugin{
 				Enable: true,
 				Type:   "python",
-				File:   "schedule/refresh.py",
+				File:   "refresh.py",
 				Vars: models.Object{
 					"__name__": "Vars_Test",
 				},
@@ -84,35 +90,11 @@ func TestNewSchedule2(t *testing.T) {
 		},
 		Vars: models.Object{
 			"__name__": "outer_Vars_Test",
+			"__cron__": "*/3 * * * * ?",
 		},
 	})
 	s.Start(context.Background())
-	time.Sleep(11 * time.Second)
+	time.Sleep(7 * time.Second)
 	s.Delete("test")
-}
-
-func TestNewSchedule3_feed(t *testing.T) {
-	s.Add(&schedule.AddTaskOptions{
-		Name:     "test",
-		StartRun: true,
-		Task: task.NewFeedTask(&task.FeedOptions{
-			Plugin: &models.Plugin{
-				Enable: true,
-				Type:   "builtin",
-				File:   "builtin_mikan_rss.py",
-			},
-			Callback: func(items []*models.FeedItem) {
-				for i, item := range items {
-					fmt.Println(i, "download: ", item)
-				}
-			},
-		}),
-		Vars: map[string]any{
-			"__url__":  "https://mikanani.me/RSS/Bangumi?bangumiId=228&subgroupid=1",
-			"__cron__": "10 0/1 * * * ?",
-		},
-	})
-	s.Start(context.Background())
-	time.Sleep(100 * time.Second)
-	s.Delete("test")
+	wg.Done()
 }

@@ -25,9 +25,9 @@ func TestMain(m *testing.M) {
 	downloader.Init(&downloader.Options{
 		WG: &wg,
 	})
-	qbt = qbittorrent.NewQBittorrent("http://192.168.10.50:8080", "admin", "adminadmin")
+	qbt = qbittorrent.NewQBittorrent("http://127.0.0.1:8080", "admin", "adminadmin")
 	qbt.Start(context.Background())
-	for !qbt.Connected() {
+	for i := 0; i < 5 && !qbt.Connected(); i++ {
 		time.Sleep(time.Second)
 	}
 	m.Run()
@@ -35,6 +35,7 @@ func TestMain(m *testing.M) {
 }
 
 func Test_QBittorrent(t *testing.T) {
+	t.Skip("跳过Qbittorrent测试")
 	list := qbt.List(&models.ClientListOptions{
 		Category: "AnimeGo",
 	})
@@ -46,6 +47,7 @@ func Test_QBittorrent(t *testing.T) {
 }
 
 func TestQBittorrent_Add(t *testing.T) {
+	t.Skip("跳过Qbittorrent测试")
 	qbt.Add(&models.ClientAddOptions{
 		Urls: []string{
 			"https://mikanani.me/Download/20220612/4407d51f30f6033513cbe56cae0120881b0a7406.torrent",

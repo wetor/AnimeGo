@@ -2,6 +2,12 @@ package mikan_test
 
 import (
 	"fmt"
+	"github.com/brahma-adshonor/gohook"
+	"github.com/wetor/AnimeGo/pkg/request"
+	"io"
+	"net/url"
+	"os"
+	"path"
 	"sync"
 	"testing"
 
@@ -13,11 +19,47 @@ import (
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/json"
 	"github.com/wetor/AnimeGo/pkg/log"
-	"github.com/wetor/AnimeGo/pkg/request"
 	"github.com/wetor/AnimeGo/pkg/utils"
 )
 
 const ThemoviedbKey = "d3d8430aefee6c19520d0f7da145daf5"
+
+func HookGetWriter(uri string, w io.Writer) error {
+	log.Infof("Mock HTTP GET %s", uri)
+	id := path.Base(uri)
+	jsonData, err := os.ReadFile(path.Join("../../anidata/mikan/testdata", id+".html"))
+	if err != nil {
+		return err
+	}
+	_, err = w.Write(jsonData)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func HookGet(uri string, body interface{}) error {
+	log.Infof("Mock HTTP GET %s", uri)
+	u, err := url.Parse(uri)
+	if err != nil {
+		return err
+	}
+	id := u.Query().Get("with_text_query")
+	if len(id) == 0 {
+		id = path.Base(u.Path)
+	}
+	p := path.Join("../../anidata/themoviedb/testdata", id+".json")
+	if !utils.IsExist(p) {
+		p = path.Join("../../anidata/bangumi/testdata", id+".json")
+	}
+
+	jsonData, err := os.ReadFile(p)
+	if err != nil {
+		return err
+	}
+	_ = json.Unmarshal(jsonData, body)
+	return nil
+}
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
@@ -29,6 +71,9 @@ func TestMain(m *testing.M) {
 		File:  "data/log.log",
 		Debug: true,
 	})
+	_ = gohook.Hook(request.GetWriter, HookGetWriter, nil)
+	_ = gohook.Hook(request.Get, HookGet, nil)
+
 	b := cache.NewBolt()
 	b.Open("data/bolt.db")
 	anisource.Init(&anisource.Options{
@@ -59,6 +104,8 @@ func TestMain(m *testing.M) {
 	})
 	m.Run()
 	b.Close()
+	bangumiCache.Close()
+	_ = os.RemoveAll("data")
 	fmt.Println("end")
 }
 

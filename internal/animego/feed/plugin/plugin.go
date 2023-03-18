@@ -9,8 +9,6 @@ import (
 	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
-const Builtin = "builtin"
-
 func AddFeedTasks(s *schedule.Schedule, plugins []models.Plugin, filterManager api.FilterManager, ctx context.Context) {
 	for _, p := range plugins {
 		if !p.Enable {

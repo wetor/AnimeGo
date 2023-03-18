@@ -3,8 +3,11 @@ package themoviedb_test
 import (
 	"encoding/csv"
 	"fmt"
+	"github.com/brahma-adshonor/gohook"
 	"io"
+	"net/url"
 	"os"
+	"path"
 	"strconv"
 	"testing"
 	"time"
@@ -12,11 +15,30 @@ import (
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/internal/animego/anidata/themoviedb"
 	"github.com/wetor/AnimeGo/pkg/cache"
+	"github.com/wetor/AnimeGo/pkg/json"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/request"
 )
 
 const ThemoviedbKey = "d3d8430aefee6c19520d0f7da145daf5"
+
+func HookGet(uri string, body interface{}) error {
+	log.Infof("Mock HTTP GET %s", uri)
+	u, err := url.Parse(uri)
+	if err != nil {
+		return err
+	}
+	id := u.Query().Get("with_text_query")
+	if len(id) == 0 {
+		id = path.Base(u.Path)
+	}
+	jsonData, err := os.ReadFile(path.Join("testdata", id+".json"))
+	if err != nil {
+		return err
+	}
+	_ = json.Unmarshal(jsonData, body)
+	return nil
+}
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
@@ -28,9 +50,13 @@ func TestMain(m *testing.M) {
 	db.Open("data/bolt.db")
 	anidata.Init(&anidata.Options{Cache: db})
 	request.Init(&request.Options{
-		Proxy: "http://192.168.10.2:7890",
+		Debug: true,
 	})
+	_ = gohook.Hook(request.Get, HookGet, nil)
 	m.Run()
+
+	db.Close()
+	_ = os.RemoveAll("data")
 	fmt.Println("end")
 }
 

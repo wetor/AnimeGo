@@ -158,4 +158,5 @@ func TestPython_Filter5(t *testing.T) {
 	for _, r := range result {
 		fmt.Println(r.Name, r.NameParsed)
 	}
+	bangumiCache.Close()
 }

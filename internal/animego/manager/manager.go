@@ -20,7 +20,6 @@ import (
 )
 
 const (
-	UpdateWaitMinSecond    = 2  // 允许的最短刷新时间
 	DownloadChanDefaultCap = 10 // 下载通道默认容量
 	DownloadStateChan      = 5
 	NotFoundExpireHour     = 3
@@ -200,9 +199,9 @@ func (m *Manager) Start(ctx context.Context) {
 						log.Debugf("接收到下载项:「%s」", anime.FullName())
 						m.download(anime)
 					} else {
-						log.Warnf("无法连接客户端，等待。已接收到%d个下载项", len(m.downloadChan))
 						go func() {
 							m.downloadChan <- anime
+							log.Warnf("无法连接客户端，等待。已接收到%d个下载项", len(m.downloadChan))
 						}()
 						m.sleep(ctx)
 					}
@@ -219,11 +218,7 @@ func (m *Manager) Start(ctx context.Context) {
 }
 
 func (m *Manager) sleep(ctx context.Context) {
-	delay := Conf.UpdateDelaySecond
-	if delay < UpdateWaitMinSecond {
-		delay = UpdateWaitMinSecond
-	}
-	utils.Sleep(delay, ctx)
+	utils.Sleep(Conf.UpdateDelaySecond, ctx)
 }
 
 func (m *Manager) UpdateDownloadItem(status *models.DownloadStatus, anime *models.AnimeEntity, item *models.TorrentItem) {
@@ -353,6 +348,7 @@ func (m *Manager) UpdateList() {
 			} else {
 				// 不在下载列表中，标记完成
 				status.State = StateComplete
+				status.Init = true
 			}
 			m.cache.Put(Name2StatusBucket, name, status, 0)
 		} else {

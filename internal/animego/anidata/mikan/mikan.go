@@ -83,12 +83,12 @@ func (m Mikan) CacheParseMikanBangumiID(mikanID int) (bangumiID int) {
 }
 
 // Parse
-//  @Description: 通过mikan剧集的url，解析两次网页，分别获取到mikanID和bangumiID
-//  @receiver Mikan
-//  @param url string mikan剧集的url
-//  @return mikanID int
-//  @return bangumiID int
 //
+//	@Description: 通过mikan剧集的url，解析两次网页，分别获取到mikanID和bangumiID
+//	@receiver Mikan
+//	@param url string mikan剧集的url
+//	@return mikanID int
+//	@return bangumiID int
 func (m Mikan) Parse(url string) (mikanID int, bangumiID int) {
 	mikan := m.parseMikanInfo(url)
 	mikanID = mikan.ID
@@ -107,11 +107,11 @@ func (m Mikan) loadHtml(url string) *html.Node {
 }
 
 // parseMikanID
-//  @Description: 解析网页取出mikan的id、group等信息
-//  @receiver Mikan
-//  @param mikanUrl string
-//  @return mikan *MikanInfo
 //
+//	@Description: 解析网页取出mikan的id、group等信息
+//	@receiver Mikan
+//	@param mikanUrl string
+//	@return mikan *MikanInfo
 func (m Mikan) parseMikanInfo(mikanUrl string) (mikan *MikanInfo) {
 	doc := m.loadHtml(mikanUrl)
 
@@ -148,11 +148,11 @@ func (m Mikan) parseMikanInfo(mikanUrl string) (mikan *MikanInfo) {
 }
 
 // parseMikanBangumiID
-//  @Description: 解析网页取出bangumiID
-//  @receiver Mikan
-//  @param mikanID int
-//  @return bangumiID int
 //
+//	@Description: 解析网页取出bangumiID
+//	@receiver Mikan
+//	@param mikanID int
+//	@return bangumiID int
 func (m Mikan) parseMikanBangumiID(mikanID int) (bangumiID int) {
 	url_ := fmt.Sprintf("%s/Home/bangumi/%d", Host, mikanID)
 	doc := m.loadHtml(url_)

@@ -2,6 +2,11 @@ package mikan_test
 
 import (
 	"fmt"
+	"github.com/brahma-adshonor/gohook"
+	"github.com/wetor/AnimeGo/pkg/request"
+	"io"
+	"os"
+	"path"
 	"testing"
 
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
@@ -10,13 +15,36 @@ import (
 	"github.com/wetor/AnimeGo/pkg/log"
 )
 
+func HookGetWriter(uri string, w io.Writer) error {
+	log.Infof("Mock HTTP GET %s", uri)
+	id := path.Base(uri)
+	jsonData, err := os.ReadFile(path.Join("testdata", id+".html"))
+	if err != nil {
+		return err
+	}
+	_, err = w.Write(jsonData)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
 	log.Init(&log.Options{
 		File:  "data/test.log",
 		Debug: true,
 	})
+	_ = gohook.Hook(request.GetWriter, HookGetWriter, nil)
+
+	db := cache.NewBolt()
+	db.Open("data/bolt.db")
+	anidata.Init(&anidata.Options{Cache: db})
+
 	m.Run()
+
+	db.Close()
+	_ = os.RemoveAll("data")
 	fmt.Println("end")
 }
 
@@ -47,9 +75,6 @@ func TestMikan_Parse(t *testing.T) {
 			wantErr:       false,
 		},
 	}
-	db := cache.NewBolt()
-	db.Open("data/bolt.db")
-	anidata.Init(&anidata.Options{Cache: db})
 	m := &mikan.Mikan{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

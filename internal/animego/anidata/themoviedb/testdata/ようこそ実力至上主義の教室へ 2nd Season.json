@@ -1,0 +1,27 @@
+{
+  "page": 1,
+  "results": [
+    {
+      "backdrop_path": "/c2sl2dLlyFFeb18pJtOpBD8cidr.jpg",
+      "first_air_date": "2017-07-12",
+      "genre_ids": [
+        18,
+        16
+      ],
+      "id": 72517,
+      "name": "欢迎来到实力至上主义的教室",
+      "origin_country": [
+        "JP"
+      ],
+      "original_language": "ja",
+      "original_name": "ようこそ実力至上主義の教室へ",
+      "overview": "这个社会是否平等呢。真正的“实力”是什么——。东京都高度育成高等学校。那是宣扬彻底的实力至上主义，以升学率·就业率100%而引以为豪的升学学校。升入那里，被分配到1年D班的绫小路清隆，却发现学校与实力至上主义的招牌相反，学生每个月会得到相当于10万日元、与现金同等价值的分数，在授课和生活态度方面也贯彻放任主义。在梦幻般的高中生活当中，不断地挥金如土、过着自甘堕落日子的同班同学们。但，不久他就得知了学校系统的真面目，并被打入绝望的深渊……！来自吊车尾聚集的D班的少年少女们所发现的，是世界的矛盾，还是正当的实力社会？",
+      "popularity": 70.525,
+      "poster_path": "/tjIwx8bqqlHhGnDEyUg9z4NSXVr.jpg",
+      "vote_average": 8.6,
+      "vote_count": 553
+    }
+  ],
+  "total_pages": 1,
+  "total_results": 1
+}

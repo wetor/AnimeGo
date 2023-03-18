@@ -2,25 +2,44 @@ package bangumi_test
 
 import (
 	"fmt"
+	"os"
+	"path"
 	"sync"
 	"testing"
+
+	"github.com/brahma-adshonor/gohook"
 
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/internal/animego/anidata/bangumi"
 	"github.com/wetor/AnimeGo/pkg/cache"
+	"github.com/wetor/AnimeGo/pkg/json"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/request"
 	"github.com/wetor/AnimeGo/pkg/utils"
 )
 
+func HookGet(uri string, body interface{}) error {
+	log.Infof("Mock HTTP GET %s", uri)
+	id := path.Base(uri)
+	jsonData, err := os.ReadFile(path.Join("testdata", id+".json"))
+	if err != nil {
+		return err
+	}
+	_ = json.Unmarshal(jsonData, body)
+	return nil
+}
+
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
-	utils.CreateMutiDir("data")
+	_ = utils.CreateMutiDir("data")
 	log.Init(&log.Options{
 		File:  "data/log.log",
 		Debug: true,
 	})
-	request.Init(&request.Options{})
+	request.Init(&request.Options{
+		Debug: true,
+	})
+	_ = gohook.Hook(request.Get, HookGet, nil)
 	mutex := sync.Mutex{}
 
 	db := cache.NewBolt()
@@ -35,6 +54,10 @@ func TestMain(m *testing.M) {
 	})
 
 	m.Run()
+
+	db.Close()
+	bangumiCache.Close()
+	_ = os.RemoveAll("data")
 	fmt.Println("end")
 }
 
