@@ -4,6 +4,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 	"time"
 
@@ -59,19 +60,18 @@ func ReInit(opt *Options) {
 	UserAgent = opt.UserAgent
 }
 
-func get(uri string) *gorequest.SuperAgent {
+func get(uri string, header map[string]string) *gorequest.SuperAgent {
 	ReInitWG.Add(1)
 	defer ReInitWG.Done()
 	log.Infof("HTTP GET %s", uri)
 	retryWait := time.Duration(RetryWait) * time.Second
 	timeout := time.Duration(Timeout) * time.Second
 	allTimeout := timeout + (timeout+retryWait)*time.Duration(Retry) // 最长等待时间
-	return gorequest.New().
+	agent := gorequest.New().
 		Timeout(allTimeout).
 		Proxy(Proxy).
 		SetDebug(Debug).
 		Get(uri).
-		Set("User-Agent", UserAgent).
 		Retry(Retry, retryWait,
 			http.StatusBadRequest,
 			http.StatusNotFound,
@@ -79,6 +79,14 @@ func get(uri string) *gorequest.SuperAgent {
 			http.StatusBadGateway,
 			http.StatusServiceUnavailable,
 			http.StatusGatewayTimeout)
+
+	if header != nil {
+		for k, v := range header {
+			agent.Set(strings.ToLower(k), v)
+		}
+	}
+	agent.Set("user-agent", UserAgent)
+	return agent
 }
 
 func handleError(resp gorequest.Response, errs []error) (err error) {
@@ -102,10 +110,17 @@ func handleError(resp gorequest.Response, errs []error) (err error) {
 	return nil
 }
 
-func GetString(uri string) (string, error) {
+// GetString
+//  uri string 请求地址
+//  args[0] map[string]string 请求头header
+func GetString(uri string, args ...interface{}) (string, error) {
 	ReInitWG.Add(1)
 	defer ReInitWG.Done()
-	resp, str, errs := get(uri).End()
+	var header map[string]string = nil
+	if len(args) > 0 {
+		header = args[0].(map[string]string)
+	}
+	resp, str, errs := get(uri, header).End()
 	err := handleError(resp, errs)
 	if err != nil {
 		return "", err
@@ -116,7 +131,7 @@ func GetString(uri string) (string, error) {
 func Get(uri string, body interface{}) error {
 	ReInitWG.Add(1)
 	defer ReInitWG.Done()
-	resp, _, errs := get(uri).EndStruct(body)
+	resp, _, errs := get(uri, nil).EndStruct(body)
 	err := handleError(resp, errs)
 	if err != nil {
 		return err
@@ -127,7 +142,7 @@ func Get(uri string, body interface{}) error {
 func GetFile(uri string, file string) error {
 	ReInitWG.Add(1)
 	defer ReInitWG.Done()
-	resp, bodyBytes, errs := get(uri).EndBytes()
+	resp, bodyBytes, errs := get(uri, nil).EndBytes()
 	err := handleError(resp, errs)
 	if err != nil {
 		return err
@@ -142,7 +157,7 @@ func GetFile(uri string, file string) error {
 func GetWriter(uri string, w io.Writer) error {
 	ReInitWG.Add(1)
 	defer ReInitWG.Done()
-	resp, bodyBytes, errs := get(uri).EndBytes()
+	resp, bodyBytes, errs := get(uri, nil).EndBytes()
 	err := handleError(resp, errs)
 	if err != nil {
 		return err

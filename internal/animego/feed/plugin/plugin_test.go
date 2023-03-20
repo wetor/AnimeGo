@@ -33,8 +33,8 @@ func (m *MockFilterManager) Update(ctx context.Context, items []*models.FeedItem
 	}
 }
 
-func GetString(uri string) (string, error) {
-	log.Infof("Mock HTTP GET %s", uri)
+func GetString(uri string, args ...interface{}) (string, error) {
+	log.Infof("Mock HTTP GET %s, header %s", uri, args)
 	u, err := url.Parse(uri)
 	if err != nil {
 		return "", err

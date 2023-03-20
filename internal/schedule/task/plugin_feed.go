@@ -51,6 +51,10 @@ func NewFeedTask(opts *FeedOptions) *FeedTask {
 			{
 				Name: VarUrl,
 			},
+			{
+				Name:     VarHeader,
+				Nullable: true,
+			},
 		},
 	})
 	return &FeedTask{
@@ -87,7 +91,14 @@ func (t *FeedTask) NextTime() time.Time {
 
 func (t *FeedTask) Run(args models.Object) {
 	url := t.plugin.Get(VarUrl).(string)
-	data, err := request.GetString(url)
+	header := make(map[string]string)
+	varHeader := t.plugin.Get(VarHeader)
+	if varHeader != nil {
+		for k, v := range varHeader.(map[string]any) {
+			header[k] = v.(string)
+		}
+	}
+	data, err := request.GetString(url, header)
 	if err != nil {
 		log.Warnf("[Plugin] %s插件(%s)执行错误: 请求 %s 失败", t.plugin.Type(), FuncParse, url)
 		log.Debugf("", err)

@@ -25,7 +25,12 @@
 
 ### \_\_url\_\_
 全局变量`__url__`，str类型，必要  
-订阅地址，AnimeGo将会下载此地址的文件，传递给入口函数  
+订阅地址，AnimeGo将会使用GET方式请求此地址，将结果转为str类型，传递给入口函数。  
+其中`args['data']`为请求响应的body  
+
+### \_\_header\_\_
+全局变量`__header__`，dict类型，可选  
+请求订阅地址时所携带的header请求头，其中`user-agent`默认为AnimeGo信息，无法设置
 
 ### \_\_cron\_\_
 全局变量`__cron__`，str类型，必要  
@@ -44,10 +49,11 @@
 结构为：
 ```python
 args = {
+    "status": 200,
     "data": "..."
 }
 ```
-其中`args['data']`为`__url__`的下载内容，str类型  
+其中`args['data']`为`__url__`的请求结果，str类型  
 如果为mikan订阅地址，则可以使用`core.parse_mikan_rss(args['data'])`解析  
 也可以选择自行解析  
 

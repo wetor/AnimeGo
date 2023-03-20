@@ -7,6 +7,8 @@ __cron__ = ""
 
 __url__ = ""
 
+__header__ = {}
+
 def parse(args):
     items = core.parse_mikan_rss(args['data'])
     return {
