@@ -12,7 +12,6 @@ func Init() {
 	if !isInit {
 		builtin.Init()
 		re.Init()
-		Hook()
 		isInit = true
 	}
 }
