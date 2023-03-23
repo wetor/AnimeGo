@@ -2,20 +2,20 @@ package lib
 
 import (
 	"github.com/go-python/gpython/py"
-	log2 "github.com/wetor/AnimeGo/pkg/log"
+	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/plugin/python"
 )
 
 func InitLog() {
 	methods := []*py.Method{
-		py.MustNewMethod("debug", log("debug"), 0, "debug(args...)"),
-		py.MustNewMethod("debugf", log("debugf"), 0, "debugf(template, args...)"),
-		py.MustNewMethod("info", log("info"), 0, "info(args...)"),
-		py.MustNewMethod("infof", log("infof"), 0, "infof(template, args...)"),
-		py.MustNewMethod("error", log("error"), 0, "error(args...)"),
-		py.MustNewMethod("errorf", log("errorf"), 0, "errorf(template, args...)"),
-		py.MustNewMethod("warn", log("warn"), 0, "warn(args...)"),
-		py.MustNewMethod("warnf", log("warnf"), 0, "warnf(template, args...)"),
+		py.MustNewMethod("debug", logBase("debug"), 0, "debug(args...)"),
+		py.MustNewMethod("debugf", logBase("debugf"), 0, "debugf(template, args...)"),
+		py.MustNewMethod("info", logBase("info"), 0, "info(args...)"),
+		py.MustNewMethod("infof", logBase("infof"), 0, "infof(template, args...)"),
+		py.MustNewMethod("error", logBase("error"), 0, "error(args...)"),
+		py.MustNewMethod("errorf", logBase("errorf"), 0, "errorf(template, args...)"),
+		py.MustNewMethod("warn", logBase("warn"), 0, "warn(args...)"),
+		py.MustNewMethod("warnf", logBase("warnf"), 0, "warnf(template, args...)"),
 	}
 
 	py.RegisterModule(&py.ModuleImpl{
@@ -27,31 +27,51 @@ func InitLog() {
 	})
 }
 
-func log(name string) func(self py.Object, args py.Tuple) (py.Object, error) {
+func debugMode(self py.Object) bool {
+	m, _ := self.(*py.Module).Context.GetModule("__main__")
+	if m != nil {
+		if d, ok := m.Globals["__debug__"]; ok {
+			if debug, ok := d.(py.Bool); ok {
+				if debug {
+					return true
+				}
+			}
+		}
+	}
+	// 未找到__main__模块，未设置__debug__，已设置但不是bool类型，已设置但结果为false
+	return false
+}
+
+func logBase(name string) func(self py.Object, args py.Tuple) (py.Object, error) {
 	var logFunc func(args ...interface{})
 	var logFuncf func(template string, args ...interface{})
 	switch name {
 	case "debug":
-		logFunc = log2.Debug
+		logFunc = log.Debug
 	case "info":
-		logFunc = log2.Info
+		logFunc = log.Info
 	case "warn":
-		logFunc = log2.Warn
+		logFunc = log.Warn
 	case "error":
-		logFunc = log2.Error
+		logFunc = log.Error
 	case "debugf":
-		logFuncf = log2.Debugf
+		logFuncf = log.Debugf
 	case "infof":
-		logFuncf = log2.Infof
+		logFuncf = log.Infof
 	case "warnf":
-		logFuncf = log2.Warnf
+		logFuncf = log.Warnf
 	case "errorf":
-		logFuncf = log2.Errorf
+		logFuncf = log.Errorf
 	}
 	if name[len(name)-1] == 'f' {
 		return func(self py.Object, args py.Tuple) (py.Object, error) {
 			if len(args) < 1 {
 				return py.AttributeError, nil
+			}
+			if name == "debugf" {
+				if !debugMode(self) {
+					return py.None, nil
+				}
 			}
 			f := python.ToValue(args[0]).(string)
 			list := make([]any, len(args)-1)
@@ -64,6 +84,11 @@ func log(name string) func(self py.Object, args py.Tuple) (py.Object, error) {
 		}
 	} else {
 		return func(self py.Object, args py.Tuple) (py.Object, error) {
+			if name == "debug" {
+				if !debugMode(self) {
+					return py.None, nil
+				}
+			}
 			list := make([]any, len(args))
 			for i := 0; i < len(args); i++ {
 				list[i] = python.ToValue(args[i])

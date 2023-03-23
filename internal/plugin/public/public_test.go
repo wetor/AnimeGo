@@ -12,7 +12,8 @@ import (
 
 func TestParserName(t *testing.T) {
 	plugin.Init(&plugin.Options{
-		Path: "../../../assets/plugin",
+		Path:  "../../../assets/plugin",
+		Debug: true,
 	})
 	log.Init(&log.Options{
 		File:  "data/log.log",

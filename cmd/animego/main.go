@@ -6,12 +6,11 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/signal"
 	"sync"
-	"syscall"
 	"time"
 
 	"github.com/wetor/AnimeGo/assets"
+	"github.com/wetor/AnimeGo/cmd/common"
 	"github.com/wetor/AnimeGo/configs"
 	_ "github.com/wetor/AnimeGo/docs"
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
@@ -46,11 +45,6 @@ const (
 )
 
 var (
-	version   = "dev"
-	buildTime = "dev"
-)
-
-var (
 	ctx, cancel = context.WithCancel(context.Background())
 	configFile  string
 	debug       bool
@@ -60,36 +54,25 @@ var (
 	BangumiCacheMutex sync.Mutex
 )
 
-func init() {
-	var err error
-	err = os.Setenv("ANIMEGO_VERSION", fmt.Sprintf("%s-%s", version, buildTime))
-	if err != nil {
-		panic(err)
-	}
-}
-
 func main() {
-	printInfo()
+	common.PrintInfo()
 
 	flag.StringVar(&configFile, "config", DefaultConfigFile, "配置文件路径；配置文件中的相对路径均是相对与程序的位置")
 	flag.BoolVar(&debug, "debug", false, "Debug模式，将会显示更多的日志")
 	flag.BoolVar(&webapi, "web", true, "启用Web API，默认启用")
 	flag.Parse()
 
-	sigs := make(chan os.Signal, 1)
-	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGQUIT)
+	common.RegisterExit(doExit)
+	Main()
+}
+
+func doExit() {
+	pkgLog.Infof("正在退出...")
+	cancel()
 	go func() {
-		for s := range sigs {
-			switch s {
-			case syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGQUIT:
-				pkgLog.Infof("收到退出信号: %v", s)
-				doExit()
-			default:
-				pkgLog.Infof("收到其他信号: %v", s)
-			}
-		}
+		time.Sleep(5 * time.Second)
+		os.Exit(0)
 	}()
-	Main(ctx)
 }
 
 func InitDefaultConfig() {
@@ -126,30 +109,7 @@ func InitDefaultAssets(dataPath string, skip bool) {
 	assets.WritePlugins(assets.Dir, xpath.Join(dataPath, assets.Dir), skip)
 }
 
-func doExit() {
-	pkgLog.Infof("正在退出...")
-	cancel()
-	go func() {
-		time.Sleep(5 * time.Second)
-		os.Exit(0)
-	}()
-}
-
-func printInfo() {
-	fmt.Println(`--------------------------------------------------
-    ___            _                   ______     
-   /   |   ____   (_)____ ___   ___   / ____/____ 
-  / /| |  / __ \ / // __ \__ \ / _ \ / / __ / __ \
- / ___ | / / / // // / / / / //  __// /_/ // /_/ /
-/_/  |_|/_/ /_//_//_/ /_/ /_/ \___/ \____/ \____/
-    `)
-	fmt.Printf("AnimeGo %s\n", os.Getenv("ANIMEGO_VERSION"))
-	fmt.Printf("AnimeGo config v%s\n", configs.ConfigVersion)
-	fmt.Printf("%s\n", constant.AnimeGoGithub)
-	fmt.Println("--------------------------------------------------")
-}
-
-func Main(ctx context.Context) {
+func Main() {
 	configFile = xpath.Abs(configFile)
 	// 初始化默认配置、升级配置
 	InitDefaultConfig()
@@ -184,7 +144,8 @@ func Main(ctx context.Context) {
 
 	// 初始化插件-gpython
 	plugin.Init(&plugin.Options{
-		Path: constant.PluginPath,
+		Path:  constant.PluginPath,
+		Debug: debug,
 	})
 	// 载入AnimeGo数据库（缓存）
 	bolt := cache.NewBolt()

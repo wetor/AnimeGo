@@ -59,7 +59,8 @@ func TestMain(m *testing.M) {
 
 func TestLib_log(t *testing.T) {
 	plugin.Init(&plugin.Options{
-		Path: "testdata",
+		Path:  "testdata",
+		Debug: true,
 	})
 	p := &python.Python{}
 	p.Load(&pkgPlugin.LoadOptions{
@@ -80,7 +81,8 @@ func TestLib_log(t *testing.T) {
 
 func TestPythonFunction(t *testing.T) {
 	plugin.Init(&plugin.Options{
-		Path: "testdata",
+		Path:  "testdata",
+		Debug: true,
 	})
 	p := &python.Python{}
 	p.Load(&pkgPlugin.LoadOptions{
@@ -109,7 +111,8 @@ func TestPythonFunction(t *testing.T) {
 
 func TestPythonVariable(t *testing.T) {
 	plugin.Init(&plugin.Options{
-		Path: "testdata",
+		Path:  "testdata",
+		Debug: true,
 	})
 	p := &python.Python{}
 	p.Load(&pkgPlugin.LoadOptions{
@@ -146,7 +149,8 @@ func TestPythonVariable(t *testing.T) {
 
 func TestPythonJson(t *testing.T) {
 	plugin.Init(&plugin.Options{
-		Path: "testdata",
+		Path:  "testdata",
+		Debug: true,
 	})
 	p := &python.Python{}
 	p.Load(&pkgPlugin.LoadOptions{
@@ -183,7 +187,8 @@ language:
 
 func TestPythonConfig(t *testing.T) {
 	plugin.Init(&plugin.Options{
-		Path: "testdata",
+		Path:  "testdata",
+		Debug: true,
 	})
 	os.Setenv("ANIMEGO_VERSION", "0.6.8")
 	p := &python.Python{}
@@ -205,7 +210,8 @@ func TestPythonConfig(t *testing.T) {
 
 func TestPythonParseMikan(t *testing.T) {
 	plugin.Init(&plugin.Options{
-		Path: "testdata",
+		Path:  "testdata",
+		Debug: true,
 	})
 
 	p := &python.Python{}
@@ -224,7 +230,8 @@ func TestPythonParseMikan(t *testing.T) {
 
 func TestPythonMikanTool(t *testing.T) {
 	plugin.Init(&plugin.Options{
-		Path: "../../../assets/plugin",
+		Path:  "../../../assets/plugin",
+		Debug: true,
 	})
 	os.Setenv("ANIMEGO_VERSION", "0.6.8")
 

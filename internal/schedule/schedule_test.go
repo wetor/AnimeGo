@@ -33,7 +33,8 @@ func TestMain(m *testing.M) {
 	})
 
 	plugin.Init(&plugin.Options{
-		Path: "testdata",
+		Path:  "testdata",
+		Debug: true,
 	})
 
 	gpython.Init()

@@ -165,6 +165,28 @@ log.errorf(format, ...)
 `vars`将会追加并覆盖 `builtin_mikan_rss.py` 中的全局变量`__cron__`,`__name__`,`__url__`变量  
 其他字段参考配置文件中的注释  
 
+## 通用的内置变量和函数
+所有被AnimeGo载入的插件，都将拥有以下变量或方法
+### \_\_debug\_\_
+全局变量`__debug__`，bool类型，当前是否为debug模式   
+
+### \_\_plugin_name\_\_
+全局变量`__plugin_name__`，插件文件名，不含扩展名
+
+### \_\_plugin_dir\_\_
+全局变量`__plugin_dir__`，插件所在目录，绝对路径
+
+### \_\_animego_version\_\_
+全局变量`__animego_version__`，AnimeGo版本号，`vx.x.x`格式，如`v1.0.0`
+
+### \_get_config()
+内置函数`_get_config`，获取插件配置  
+`_get_config() -> dict`  
+读取插件所在目录下，同名的**yaml**或**json**文件并解析为dict。优先读取yaml，其次json，若都不存在返回空  
+
+```python
+conf = _get_config()
+```
 
 ## Feed订阅插件
 解析订阅内容  

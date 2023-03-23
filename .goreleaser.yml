@@ -3,7 +3,10 @@
 before:
   hooks: []
 builds:
-  - env:
+  - id: AnimeGo
+    main: cmd/animego/main.go
+    binary: AnimeGo
+    env:
       - CGO_ENABLED=0
     flags:
       - -trimpath
@@ -21,22 +24,56 @@ builds:
       - mips64
       - mips64le
     goarm:
-      - 5
       - 6
       - 7
     gomips:
       - hardfloat
       - softfloat
+    ignore:
+      - goos: windows
+        goarch: arm
+        goarm: 6
+      - goos: windows
+        goarch: arm
+        goarm: 7
     ldflags:
-      - -s -w -X main.version={{.Tag}} -X main.buildTime={{.Date}}
-    main: cmd/animego/main.go
+      - -s -w -X "github.com/wetor/AnimeGo/cmd/common.version={{.Tag}}" -X "github.com/wetor/AnimeGo/cmd/common.buildTime={{.Date}}"
+
+  - id: AnimeGo-plugin
+    main: cmd/plugin/main.go
+    binary: AnimeGo-plugin
+    env:
+      - CGO_ENABLED=0
+    flags:
+      - -trimpath
+    goos:
+      - linux
+      - windows
+      - darwin
+    goarch:
+      - 386
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w -X "github.com/wetor/AnimeGo/cmd/common.version={{.Tag}}" -X "github.com/wetor/AnimeGo/cmd/common.buildTime={{.Date}}"
 archives:
-  - replacements:
-      darwin: Darwin
-      linux: Linux
-      windows: Windows
-      386: i386
-      amd64: x86_64
+  - name_template: >-
+      {{- .Binary }}_
+      {{- .Tag }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+      {{- if .Arm }}v{{ .Arm }}{{ end }}
+      {{- if .Mips }}_{{ .Mips }}{{ end }}
+    allow_different_binary_count: true
+    builds:
+      - AnimeGo
+      - AnimeGo-plugin
+    format_overrides:
+      - goos: windows
+        format: zip
+
 checksum:
   name_template: 'checksums.txt'
 snapshot:

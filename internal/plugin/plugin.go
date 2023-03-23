@@ -1,6 +1,7 @@
 package plugin
 
 import (
+	"os"
 	"strings"
 
 	"github.com/wetor/AnimeGo/assets"
@@ -15,14 +16,16 @@ import (
 )
 
 type Options struct {
-	Path string
+	Path  string
+	Debug bool
 }
 
 func Init(opts *Options) {
 	gpython.Init()
 	lib.Init()
 	plugin.Init(&plugin.Options{
-		Path: opts.Path,
+		Path:  opts.Path,
+		Debug: opts.Debug,
 	})
 }
 
@@ -75,5 +78,6 @@ func LoadPlugin(opts *LoadPluginOptions) (p api.Plugin) {
 		FuncSchema: opts.FuncSchema,
 		VarSchema:  opts.VarSchema,
 	})
+	p.Set("__animego_version__", os.Getenv("ANIMEGO_VERSION"))
 	return
 }

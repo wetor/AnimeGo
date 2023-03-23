@@ -20,7 +20,8 @@ func TestMain(m *testing.M) {
 		Debug: true,
 	})
 	plugin.Init(&plugin.Options{
-		Path: "testdata",
+		Path:  "testdata",
+		Debug: true,
 	})
 	m.Run()
 	fmt.Println("end")
@@ -75,7 +76,8 @@ func TestPython_Filter2(t *testing.T) {
 
 func TestPython_Filter3(t *testing.T) {
 	plugin.Init(&plugin.Options{
-		Path: "../../../../assets/plugin",
+		Path:  "../../../../assets/plugin",
+		Debug: true,
 	})
 	rss := mikanRss.NewRss(&mikanRss.Options{File: "testdata/Mikan.xml"})
 	items := rss.Parse()
@@ -98,7 +100,8 @@ func TestPython_Filter3(t *testing.T) {
 
 func TestPython_Filter4(t *testing.T) {
 	plugin.Init(&plugin.Options{
-		Path: "../../../../assets/plugin",
+		Path:  "../../../../assets/plugin",
+		Debug: true,
 	})
 	list := []*models.FeedItem{
 		{
@@ -139,7 +142,8 @@ func TestPython_Filter5(t *testing.T) {
 	})
 
 	plugin.Init(&plugin.Options{
-		Path: "../../../../assets/plugin",
+		Path:  "../../../../assets/plugin",
+		Debug: true,
 	})
 	rss := mikanRss.NewRss(&mikanRss.Options{File: "testdata/Mikan.xml"})
 	items := rss.Parse()

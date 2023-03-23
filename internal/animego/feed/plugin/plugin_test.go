@@ -58,7 +58,8 @@ func TestMain(m *testing.M) {
 	_ = gohook.Hook(request.GetString, GetString, nil)
 
 	plugin.Init(&plugin.Options{
-		Path: "../../assets/plugin",
+		Path:  "../../assets/plugin",
+		Debug: true,
 	})
 
 	gpython.Init()

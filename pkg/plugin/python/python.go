@@ -105,9 +105,9 @@ func (p *Python) endExecute() {
 			errors.NewAniErrorf("未找到全局变量 %s", name).TryPanic()
 		}
 	}
+	p.Set("__debug__", plugin.Debug)
 	p.Set("__plugin_name__", p.name)
 	p.Set("__plugin_dir__", p.dir)
-	p.Set("__animego_version__", os.Getenv("ANIMEGO_VERSION"))
 	p.Set("_get_config", py.MustNewMethod("_get_config", func(self py.Object, args py.Tuple) (py.Object, error) {
 		result := map[string]any{}
 		yamlFile := xpath.Join(p.dir, p.name+".yaml")

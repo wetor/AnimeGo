@@ -65,7 +65,8 @@ func TestMain(m *testing.M) {
 	fmt.Println("begin")
 	_ = utils.CreateMutiDir("data")
 	plugin.Init(&plugin.Options{
-		Path: "../../../../assets/plugin",
+		Path:  "../../../../assets/plugin",
+		Debug: true,
 	})
 	log.Init(&log.Options{
 		File:  "data/log.log",

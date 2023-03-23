@@ -29,3 +29,4 @@ main
 modules/proxy/
 note_*.*
 .vscode/
+dist/
