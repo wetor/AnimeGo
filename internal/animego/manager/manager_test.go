@@ -11,6 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/wetor/AnimeGo/internal/animego/manager"
+	"github.com/wetor/AnimeGo/internal/animego/rename"
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/pkg/cache"
@@ -73,7 +74,7 @@ func TestMain(m *testing.M) {
 		Seeded:     true,
 	}, 0)
 
-	mgr = manager.NewManager(qbt, b, nil)
+	mgr = manager.NewManager(qbt, b, &rename.Rename{}, nil)
 
 	mgr.Start(ctx)
 	m.Run()

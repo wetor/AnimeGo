@@ -10,6 +10,7 @@ import (
 
 	"github.com/jinzhu/copier"
 
+	"github.com/wetor/AnimeGo/internal/animego/downloader"
 	"github.com/wetor/AnimeGo/internal/animego/downloader/qbittorrent"
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/models"
@@ -21,7 +22,7 @@ import (
 
 const (
 	DownloadChanDefaultCap = 10 // 下载通道默认容量
-	DownloadStateChan      = 5
+	DownloadStateChanCap   = 5
 	NotFoundExpireHour     = 3
 	Name2EntityBucket      = "name2entity"
 	Name2StatusBucket      = "name2status"
@@ -32,6 +33,7 @@ const (
 type Manager struct {
 	client api.Downloader
 	cache  api.Cacher
+	rename api.Renamer
 
 	// 通过管道传递下载项
 	downloadChan chan *models.AnimeEntity
@@ -47,12 +49,15 @@ type Manager struct {
 //	@Description: 初始化下载管理器
 //	@param client api.Downloader 下载客户端
 //	@param cache api.Cacher 缓存
+//	@param rename api.Renamer 重命名
 //	@param downloadChan chan *models.AnimeEntity 下载传递通道
 //	@return *Manager
-func NewManager(client api.Downloader, cache api.Cacher, downloadChan chan *models.AnimeEntity) *Manager {
+func NewManager(client api.Downloader, cache api.Cacher, rename api.Renamer,
+	downloadChan chan *models.AnimeEntity) *Manager {
 	m := &Manager{
 		client:           client,
 		cache:            cache,
+		rename:           rename,
 		name2chan:        make(map[string]chan models.TorrentState),
 		name2status:      make(map[string]*models.DownloadStatus),
 		sleepUpdateCount: SleepUpdateMaxCount,
@@ -83,6 +88,7 @@ func (m *Manager) loadCache() {
 		m.name2status[*k.(*string)] = nv
 	})
 
+	// 已下载项目，至少从头更新一遍
 	for _, status := range m.name2status {
 		status.Init = false
 	}
@@ -114,7 +120,7 @@ func (m *Manager) download(anime *models.AnimeEntity) {
 
 	if status, has := m.name2status[name]; has {
 		// 已有下载记录
-		if status.State != StateNotFound {
+		if status.State != downloader.StateNotFound {
 			// 文件已存在
 			if len(status.Path) != 0 && utils.IsExist(xpath.Join(Conf.SavePath, status.Path)) {
 				log.Infof("发现已下载「%s」", status.Path)
@@ -141,7 +147,7 @@ func (m *Manager) download(anime *models.AnimeEntity) {
 
 	status := &models.DownloadStatus{
 		Hash:  anime.Hash,
-		State: StateAdding,
+		State: downloader.StateAdding,
 	}
 	m.name2status[name] = status
 	m.cache.Put(Name2StatusBucket, name, status, 0)
@@ -222,7 +228,7 @@ func (m *Manager) sleep(ctx context.Context) {
 }
 
 func (m *Manager) UpdateDownloadItem(status *models.DownloadStatus, anime *models.AnimeEntity, item *models.TorrentItem) {
-	status.State = stateMap(item.State)
+	status.State = downloader.StateMap(item.State)
 	name := anime.FullName()
 
 	if !status.Init {
@@ -231,17 +237,21 @@ func (m *Manager) UpdateDownloadItem(status *models.DownloadStatus, anime *model
 			Item: item,
 		})
 
-		renamePath := xpath.Join(anime.DirName(), anime.FileName()+xpath.Ext(content.Name))
-		m.name2chan[name] = make(chan models.TorrentState, DownloadStateChan)
-		renameOpt := &RenameOptions{
-			Src:   xpath.Join(Conf.DownloadPath, content.Name),
-			Dst:   xpath.Join(Conf.SavePath, renamePath),
+		m.name2chan[name] = make(chan models.TorrentState, DownloadStateChanCap)
+		renameOpt := &models.RenameOptions{
+			Src: xpath.Join(Conf.DownloadPath, content.Name),
+			Dst: &models.RenameDst{
+				Anime:    anime,
+				Content:  content,
+				SavePath: Conf.SavePath,
+			},
+			Mode:  Conf.Rename,
 			State: m.name2chan[name],
-			RenameCallback: func() {
+			RenameCallback: func(renamePath string) {
 				status.Path = renamePath
 				status.Scraped = m.scrape(anime)
 			},
-			Callback: func() {
+			ExitCallback: func() {
 				status.Renamed = true
 				if c, ok := m.client.(*qbittorrent.QBittorrent); ok {
 					// qbt需要手动删除列表记录，否则无法重复下载
@@ -252,12 +262,10 @@ func (m *Manager) UpdateDownloadItem(status *models.DownloadStatus, anime *model
 				}
 			},
 		}
-		RenameAnime(renameOpt)
-		if status.State == StateSeeding || status.State == StateComplete {
-			go func() {
-				m.name2chan[name] <- status.State
-			}()
-		}
+		m.rename.Rename(renameOpt)
+		status.Seeded = false
+		status.Downloaded = false
+
 		status.Init = true
 	}
 
@@ -268,10 +276,10 @@ func (m *Manager) UpdateDownloadItem(status *models.DownloadStatus, anime *model
 
 	// 做种，或未下载完成，但State符合下载完成状态
 	if !status.Seeded {
-		if status.State == StateSeeding ||
-			(status.State == StateWaiting && item.Progress == 1) {
+		if status.State == downloader.StateSeeding || status.State == downloader.StateComplete ||
+			(status.State == downloader.StateWaiting && item.Progress == 1) {
 			go func() {
-				m.name2chan[name] <- status.State
+				m.name2chan[name] <- downloader.StateSeeding
 			}()
 			status.Seeded = true
 		}
@@ -280,9 +288,9 @@ func (m *Manager) UpdateDownloadItem(status *models.DownloadStatus, anime *model
 	// 未下载完成，但State符合下载完成状态
 	if !status.Downloaded {
 		// 完成下载
-		if status.State == StateComplete {
+		if status.State == downloader.StateComplete {
 			go func() {
-				m.name2chan[name] <- status.State
+				m.name2chan[name] <- downloader.StateComplete
 			}()
 			status.Downloaded = true
 		}
@@ -319,7 +327,7 @@ func (m *Manager) UpdateList() {
 	hash2item := make(map[string]*models.TorrentItem)
 	for _, item := range items {
 		hash2item[item.Hash] = item
-		if state := stateMap(item.State); state == StateDownloading || state == StateSeeding || state == StateComplete {
+		if state := downloader.StateMap(item.State); state == downloader.StateDownloading || state == downloader.StateSeeding || state == downloader.StateComplete {
 			m.sleepUpdateCount = SleepUpdateMaxCount
 		}
 	}
@@ -330,7 +338,7 @@ func (m *Manager) UpdateList() {
 	}
 
 	for name, status := range m.name2status {
-		if status.State == StateAdding {
+		if status.State == downloader.StateAdding {
 			continue
 		}
 		// 文件是否存在
@@ -347,7 +355,7 @@ func (m *Manager) UpdateList() {
 				}
 			} else {
 				// 不在下载列表中，标记完成
-				status.State = StateComplete
+				status.State = downloader.StateComplete
 				status.Init = true
 			}
 			m.cache.Put(Name2StatusBucket, name, status, 0)
@@ -356,7 +364,7 @@ func (m *Manager) UpdateList() {
 			if status.ExpireAt <= 0 {
 				// 未设置过期，设置3小时过期
 				status.ExpireAt = time.Now().Add(NotFoundExpireHour * time.Hour).Unix()
-				status.State = StateNotFound
+				status.State = downloader.StateNotFound
 				m.cache.Put(Name2StatusBucket, name, status, 0)
 			} else if status.ExpireAt-time.Now().Unix() <= 0 {
 				// 已过期，删除
@@ -379,14 +387,14 @@ func (m *Manager) UpdateList() {
 		// 判断是否已下载
 		if status, has := m.name2status[name]; has {
 			// 已下载
-			if status.State != StateNotFound && status.State != StateAdding {
+			if status.State != downloader.StateNotFound && status.State != downloader.StateAdding {
 				// 文件存在，跳过下载
 				continue
 			}
 		}
 		status := &models.DownloadStatus{
 			Hash:     item.Hash,
-			State:    stateMap(item.State),
+			State:    downloader.StateMap(item.State),
 			ExpireAt: 0,
 		}
 		m.name2status[name] = status

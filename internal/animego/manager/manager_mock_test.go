@@ -73,8 +73,14 @@ func (m *ClientMock) Add(opt *models.ClientAddOptions) {
 		Size: 1024,
 	}
 
-	_ = utils.CreateMutiDir(xpath.Join(DownloadPath, opt.Rename))
-	_ = os.WriteFile(xpath.Join(DownloadPath, opt.Rename, ContentFile), []byte{}, os.ModePerm)
+	err := utils.CreateMutiDir(xpath.Join(DownloadPath, opt.Rename))
+	if err != nil {
+		panic(err)
+	}
+	err = os.WriteFile(xpath.Join(DownloadPath, opt.Rename, ContentFile), []byte{}, os.ModePerm)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (m *ClientMock) Delete(opt *models.ClientDeleteOptions) {
