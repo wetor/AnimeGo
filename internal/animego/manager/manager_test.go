@@ -11,9 +11,11 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/wetor/AnimeGo/internal/animego/manager"
-	"github.com/wetor/AnimeGo/internal/animego/rename"
+	"github.com/wetor/AnimeGo/internal/animego/renamer"
+	renamerPlugin "github.com/wetor/AnimeGo/internal/animego/renamer/plugin"
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/utils"
@@ -41,6 +43,10 @@ func TestMain(m *testing.M) {
 	_ = utils.CreateMutiDir(SavePath)
 	log.Init(&log.Options{
 		File:  "data/log.log",
+		Debug: true,
+	})
+	plugin.Init(&plugin.Options{
+		Path:  "../../../assets/plugin",
 		Debug: true,
 	})
 	qbt = &ClientMock{}
@@ -73,8 +79,14 @@ func TestMain(m *testing.M) {
 		Scraped:    true,
 		Seeded:     true,
 	}, 0)
-
-	mgr = manager.NewManager(qbt, b, &rename.Rename{}, nil)
+	rename := renamer.NewRenamer(renamerPlugin.NewRenamePlugin([]models.Plugin{
+		{
+			Enable: true,
+			Type:   "python",
+			File:   "rename/builtin_rename.py",
+		},
+	}))
+	mgr = manager.NewManager(qbt, b, rename, nil)
 
 	mgr.Start(ctx)
 	m.Run()

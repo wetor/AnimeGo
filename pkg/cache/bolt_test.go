@@ -38,7 +38,7 @@ type Entity struct {
 
 var (
 	db     = cache.NewBolt()
-	db_sub = cache.NewBolt()
+	db_sub = cache.NewBolt(true)
 )
 
 func TestMain(m *testing.M) {

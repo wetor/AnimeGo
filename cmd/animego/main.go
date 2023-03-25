@@ -25,7 +25,8 @@ import (
 	"github.com/wetor/AnimeGo/internal/animego/filter"
 	filterPlugin "github.com/wetor/AnimeGo/internal/animego/filter/plugin"
 	"github.com/wetor/AnimeGo/internal/animego/manager"
-	"github.com/wetor/AnimeGo/internal/animego/rename"
+	"github.com/wetor/AnimeGo/internal/animego/renamer"
+	renamerPlugin "github.com/wetor/AnimeGo/internal/animego/renamer/plugin"
 	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/logger"
 	"github.com/wetor/AnimeGo/internal/models"
@@ -200,9 +201,10 @@ func Main() {
 		WG: &WG,
 	})
 
+	rename := renamer.NewRenamer(renamerPlugin.NewRenamePlugin(configs.ConvertPluginInfo(config.Plugin.Rename)))
 	// 初始化downloader manager
 	downloadChan := make(chan *models.AnimeEntity, 10)
-	downloaderManager := manager.NewManager(qbt, bolt, &rename.Rename{}, downloadChan)
+	downloaderManager := manager.NewManager(qbt, bolt, rename, downloadChan)
 
 	filter.Init(&filter.Options{
 		MultiGoroutineMax:     config.Advanced.Feed.MultiGoroutine.GoroutineMax,

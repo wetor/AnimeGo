@@ -42,7 +42,7 @@ func TestMain(m *testing.M) {
 
 	db := cache.NewBolt()
 	db.Open("data/bolt.db")
-	bangumiCache := cache.NewBolt()
+	bangumiCache := cache.NewBolt(true)
 	bangumiCache.Open("../../../test/testdata/bolt_sub.bolt")
 	anidata.Init(&anidata.Options{
 		Cache:        db,

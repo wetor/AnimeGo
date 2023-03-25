@@ -8,13 +8,14 @@ import (
 )
 
 // AnimeEntity 动画信息结构体
-//  必须要有的值
-//    NameCN: 用于保存文件名，可用 Name 和 ID 替代
-//    Season: 用于保存文件名
-//    Ep: 用于保存文件名
-//  可选值
-//    ID: bangumi id，用于生成nfo文件
-//    ThemoviedbID: themoviedb id，用于生成nfo文件
+//
+//	必须要有的值
+//	  NameCN: 用于保存文件名，可用 Name 和 ID 替代
+//	  Season: 用于保存文件名
+//	  Ep: 用于保存文件名
+//	可选值
+//	  ID: bangumi id，用于生成nfo文件
+//	  ThemoviedbID: themoviedb id，用于生成nfo文件
 type AnimeEntity struct {
 	ID           int    `json:"id"`            // bangumi id
 	ThemoviedbID int    `json:"themoviedb_id"` // themoviedb ID
@@ -44,7 +45,7 @@ func (b *AnimeEntity) FullName() string {
 }
 
 func (b *AnimeEntity) FileName() string {
-	return xpath.Join(fmt.Sprintf("S%02d", b.Season), fmt.Sprintf("E%03d", b.Ep))
+	return xpath.Join(fmt.Sprintf("S%02d", b.Season), fmt.Sprintf("E%d", b.Ep))
 }
 
 func (b *AnimeEntity) DirName() string {

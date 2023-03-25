@@ -1,6 +1,7 @@
-package rename
+package renamer
 
 import (
+	"github.com/wetor/AnimeGo/internal/api"
 	"os"
 
 	"github.com/wetor/AnimeGo/internal/animego/downloader"
@@ -11,10 +12,17 @@ import (
 	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
-type Rename struct {
+type Renamer struct {
+	plugin api.RenamerPlugin
 }
 
-func (r *Rename) stateSeeding(mode string, src, dst, renamePath string, callback func(string)) bool {
+func NewRenamer(plugin api.RenamerPlugin) *Renamer {
+	return &Renamer{
+		plugin: plugin,
+	}
+}
+
+func (r *Renamer) stateSeeding(mode string, src, dst, renamePath string, callback func(string)) bool {
 	var err error
 	switch mode {
 	case "link_delete":
@@ -38,7 +46,7 @@ func (r *Rename) stateSeeding(mode string, src, dst, renamePath string, callback
 	return false
 }
 
-func (r *Rename) stateComplete(mode string, src, dst, renamePath string, callback func(string)) bool {
+func (r *Renamer) stateComplete(mode string, src, dst, renamePath string, callback func(string)) bool {
 	var err error
 	switch mode {
 	case "wait_move":
@@ -62,9 +70,14 @@ func (r *Rename) stateComplete(mode string, src, dst, renamePath string, callbac
 	return false
 }
 
-func (r *Rename) Rename(opt *models.RenameOptions) {
-
-	renamePath := xpath.Join(opt.Dst.Anime.DirName(), opt.Dst.Anime.FileName()+xpath.Ext(opt.Dst.Content.Name))
+func (r *Renamer) Rename(opt *models.RenameOptions) {
+	var renamePath string
+	if r.plugin != nil {
+		renamePath = r.plugin.Rename(opt.Dst.Anime, opt.Dst.Content.Name)
+	}
+	if len(renamePath) == 0 {
+		renamePath = xpath.Join(opt.Dst.Anime.DirName(), opt.Dst.Anime.FileName()+xpath.Ext(opt.Dst.Content.Name))
+	}
 	dst := xpath.Join(opt.Dst.SavePath, renamePath)
 	go func() {
 		for {

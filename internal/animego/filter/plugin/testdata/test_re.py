@@ -2,11 +2,11 @@ import log
 import re
 
 
-def main(argv):
+def filter_all(argv):
     result_index = []
-    for i, item in enumerate(argv['feedItems']):
+    for i, item in enumerate(argv['items']):
         log.info(item)
-        if re.search('1080', item.Name):
+        if re.search('1080', item['name']):
             result_index.append(i)
 
     return {

@@ -5,11 +5,11 @@ sys.path.append("../../../../../assets/plugin/filter")
 from Auto_Bangumi.raw_parser import analyse
 
 
-def main(argv):
+def filter_all(argv):
     result_index = []
-    for i, item in enumerate(argv['feedItems']):
-        result = analyse(item.Name)
-        log.info(item.Name, result)
+    for i, item in enumerate(argv['items']):
+        result = analyse(item['name'])
+        log.info(item['name'], result)
         if result.group == 'NC-Raws':
             result_index.append(i)
     return {

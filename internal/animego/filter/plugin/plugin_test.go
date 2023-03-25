@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	mikanRss "github.com/wetor/AnimeGo/internal/animego/feed/rss"
 	filterPlugin "github.com/wetor/AnimeGo/internal/animego/filter/plugin"
@@ -39,7 +41,7 @@ func TestPython_Filter(t *testing.T) {
 		},
 	})
 	result := js.Filter(items)
-	fmt.Println(len(result))
+	assert.Equal(t, 4, len(result))
 	for _, r := range result {
 		fmt.Println(r)
 	}
@@ -68,10 +70,8 @@ func TestPython_Filter2(t *testing.T) {
 		},
 	})
 	result := js.Filter(list)
-	fmt.Println(len(result))
-	for _, r := range result {
-		fmt.Println(r.Name)
-	}
+	assert.Equal(t, 1, len(result))
+	assert.Equal(t, "1108011", result[0].Name)
 }
 
 func TestPython_Filter3(t *testing.T) {
@@ -91,8 +91,7 @@ func TestPython_Filter3(t *testing.T) {
 		},
 	})
 	result := js.Filter(items)
-	fmt.Println("===========")
-	fmt.Println(len(result))
+	assert.Equal(t, 9, len(result))
 	for _, r := range result {
 		fmt.Println(r.Name, r.NameParsed)
 	}
@@ -125,7 +124,7 @@ func TestPython_Filter4(t *testing.T) {
 		},
 	})
 	result := js.Filter(list)
-	fmt.Println(len(result))
+	assert.Equal(t, 4, len(result))
 	for _, r := range result {
 		fmt.Println(r.Name, r.NameParsed)
 	}
@@ -134,7 +133,7 @@ func TestPython_Filter4(t *testing.T) {
 func TestPython_Filter5(t *testing.T) {
 	db := cache.NewBolt()
 	db.Open("data/bolt.db")
-	bangumiCache := cache.NewBolt()
+	bangumiCache := cache.NewBolt(true)
 	bangumiCache.Open("../../../../test/testdata/bolt_sub.bolt")
 	anidata.Init(&anidata.Options{
 		Cache:        db,
@@ -157,8 +156,7 @@ func TestPython_Filter5(t *testing.T) {
 		},
 	})
 	result := js.Filter(items)
-	fmt.Println("===========")
-	fmt.Println(len(result))
+	assert.Equal(t, 13, len(result))
 	for _, r := range result {
 		fmt.Println(r.Name, r.NameParsed)
 	}

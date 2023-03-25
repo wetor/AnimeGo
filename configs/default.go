@@ -78,6 +78,13 @@ func defaultPlugin() {
 			File:   "filter/default.py",
 		},
 	}
+	defaultConfig.Plugin.Rename = []PluginInfo{
+		{
+			Enable: true,
+			Type:   "builtin",
+			File:   "builtin_rename.py",
+		},
+	}
 }
 
 func defaultAdvancedComment() {

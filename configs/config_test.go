@@ -57,3 +57,16 @@ func TestUpdateConfig_140(t *testing.T) {
 		t.Errorf("UpdateConfig() = %s, want %s", got, want)
 	}
 }
+
+func TestUpdateConfig_141(t *testing.T) {
+	configs.ConfigVersion = "1.4.1"
+	file, _ := os.ReadFile("testdata/animego_140.yaml")
+	_ = os.WriteFile("data/animego.yaml", file, 0666)
+	configs.UpdateConfig("data/animego.yaml", false)
+
+	want, _ := os.ReadFile("testdata/animego_141.yaml")
+	got, _ := os.ReadFile("data/animego.yaml")
+	if !bytes.Equal(got, want) {
+		t.Errorf("UpdateConfig() = %s, want %s", got, want)
+	}
+}

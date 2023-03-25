@@ -3,6 +3,7 @@ package configs
 import (
 	"fmt"
 	"github.com/wetor/AnimeGo/assets"
+	"github.com/wetor/AnimeGo/configs/version/v_140"
 	"log"
 	"os"
 	"path"
@@ -32,13 +33,14 @@ type Version struct {
 }
 
 var (
-	ConfigVersion = "1.4.0" // 当前配置文件版本
+	ConfigVersion = "1.4.1" // 当前配置文件版本
 
 	versions = []string{
 		"1.1.0",
 		"1.2.0",
 		"1.3.0",
 		"1.4.0",
+		"1.4.1",
 	}
 	versionList = []Version{
 		{
@@ -59,6 +61,11 @@ var (
 			Name:       versions[3],
 			Desc:       "插件配置结构变更，支持设置参数",
 			UpdateFunc: update_130_140,
+		},
+		{
+			Name:       versions[4],
+			Desc:       "新增重命名插件",
+			UpdateFunc: update_140_141,
 		},
 	}
 )
@@ -233,7 +240,7 @@ func update_130_140(file string) {
 		log.Fatal("配置文件加载错误：", err)
 	}
 
-	newConfig := DefaultConfig()
+	newConfig := &v_140.Config{}
 	err = copier.Copy(newConfig, oldConfig)
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
@@ -245,7 +252,7 @@ func update_130_140(file string) {
 	log.Printf("\t__url__: %s\n", oldConfig.Setting.Feed.Mikan.Url)
 	log.Printf("\t__cron__: %s\n", "0 0/20 * * * ?")
 	log.Printf("\t默认关闭，每整20分钟执行\n")
-	newConfig.Plugin.Feed = []PluginInfo{
+	newConfig.Plugin.Feed = []v_140.PluginInfo{
 		{
 			Enable: false,
 			Type:   "builtin",
@@ -259,12 +266,50 @@ func update_130_140(file string) {
 	}
 
 	log.Printf("[新增] 配置项(plugin.filter) 支持 args\n")
-	newConfig.Plugin.Filter = make([]PluginInfo, len(oldConfig.Plugin.Filter))
+	newConfig.Plugin.Filter = make([]v_140.PluginInfo, len(oldConfig.Plugin.Filter))
 	_ = copier.Copy(&newConfig.Plugin.Filter, &oldConfig.Plugin.Filter)
 	log.Printf("[新增] 配置项(plugin.schedule) 支持 args\n")
-	newConfig.Plugin.Schedule = make([]PluginInfo, len(oldConfig.Plugin.Schedule))
+	newConfig.Plugin.Schedule = make([]v_140.PluginInfo, len(oldConfig.Plugin.Schedule))
 	_ = copier.Copy(&newConfig.Plugin.Schedule, &oldConfig.Plugin.Schedule)
 
+	content, err := encodeConfig(newConfig)
+	if err != nil {
+		log.Fatal("配置文件升级失败：", err)
+	}
+	err = os.WriteFile(file, content, 0644)
+	if err != nil {
+		log.Fatal("配置文件升级失败：", err)
+	}
+	// 强制写入
+	assets.WritePlugins(assets.Dir, xpath.Join(newConfig.DataPath, assets.Dir), false)
+}
+
+func update_140_141(file string) {
+	data, err := os.ReadFile(file)
+	if err != nil {
+		log.Fatal("配置文件加载错误：", err)
+	}
+	oldConfig := &v_140.Config{}
+	err = yaml.Unmarshal(data, oldConfig)
+	if err != nil {
+		log.Fatal("配置文件加载错误：", err)
+	}
+
+	newConfig := DefaultConfig()
+	err = copier.Copy(newConfig, oldConfig)
+	if err != nil {
+		log.Fatal("配置文件升级失败：", err)
+	}
+	newConfig.Version = "1.4.1"
+
+	log.Println("[新增] 配置项(plugin.rename)")
+	newConfig.Plugin.Rename = []PluginInfo{
+		{
+			Enable: false,
+			Type:   "builtin",
+			File:   "builtin_rename.py",
+		},
+	}
 	content, err := encodeConfig(newConfig)
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)

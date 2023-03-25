@@ -19,6 +19,7 @@ type Plugin struct {
 	Feed     []PluginInfo `yaml:"feed" json:"feed" attr:"订阅" comment:"解析订阅链接"`
 	Filter   []PluginInfo `yaml:"filter" json:"filter" attr:"过滤器插件" comment:"用来筛选符合条件的项目进行解析下载"`
 	Schedule []PluginInfo `yaml:"schedule" json:"schedule" attr:"定时任务" comment:"定时执行脚本"`
+	Rename   []PluginInfo `yaml:"rename" json:"rename" attr:"重命名" comment:"下载完成后重命名规则"`
 }
 
 type Setting struct {

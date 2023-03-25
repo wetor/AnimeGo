@@ -18,16 +18,25 @@ import (
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 type Bolt struct {
-	db *bolt.DB
+	db       *bolt.DB
+	readOnly bool
 }
 
-func NewBolt() *Bolt {
-	return &Bolt{}
+func NewBolt(readOnly ...bool) *Bolt {
+	r := false
+	if len(readOnly) > 0 {
+		r = readOnly[0]
+	}
+	return &Bolt{
+		readOnly: r,
+	}
 }
 
 func (c *Bolt) Open(file string) {
 	_ = os.MkdirAll(xpath.Dir(file), os.ModePerm)
-	db, err := bolt.Open(file, 0600, nil)
+	db, err := bolt.Open(file, 0600, &bolt.Options{
+		ReadOnly: c.readOnly,
+	})
 	if err != nil {
 		log.Debugf("", errors.NewAniErrorD(err))
 		log.Warnf("打开bolt数据库失败")
@@ -172,13 +181,13 @@ func (c *Bolt) GetValue(bucket string, key interface{}) (int64, string, error) {
 }
 
 // GetAll
-//  @Description: 获取bucket所有kv数据
-//  @receiver *Bolt
-//  @param bucket string
-//  @param tk interface{} key类型转换临时变量
-//  @param tv interface{} value类型转换临时变量
-//  @param fn func(k, v interface{})
 //
+//	@Description: 获取bucket所有kv数据
+//	@receiver *Bolt
+//	@param bucket string
+//	@param tk interface{} key类型转换临时变量
+//	@param tv interface{} value类型转换临时变量
+//	@param fn func(k, v interface{})
 func (c *Bolt) GetAll(bucket string, tk, tv interface{}, fn func(k, v interface{})) {
 	_ = c.db.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(bucket))
@@ -207,11 +216,11 @@ func (c *Bolt) Delete(bucket string, key interface{}) error {
 }
 
 // toBytes
-//  @Description:
-//  @param val
-//  @param extra 若为-1则仅用作key，无法转换为value
-//  @return []byte
 //
+//	@Description:
+//	@param val
+//	@param extra 若为-1则仅用作key，无法转换为value
+//	@return []byte
 func (c *Bolt) toBytes(val interface{}, extra int64) []byte {
 	buf := bytes.NewBuffer(nil)
 	if extra >= 0 {
