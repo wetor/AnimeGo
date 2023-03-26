@@ -1,15 +1,22 @@
+import core
+
+
+__write_tvshow__ = True
 
 def rename(args):
     anime = args['anime']
-    ext = args['src'].split(".")[-1]
+    ext = args['filename'].split(".")[-1]
     if anime['name_cn'] != '':
         name = anime['name_cn']
     elif anime['name'] != '':
         name = anime['name']
     else:
         name = str(anime['id'])
-    dst = '%s/S%02d/E%d.%s' % (name, anime['season'], anime['ep'], ext)
+
+    name = core.filename(name)
+    filepath = '%s/S%02d/E%d.%s' % (name, anime['season'], anime['ep'], ext)
     return {
         'error': None,
-        'dst': dst
+        'filepath': filepath,
+        'tvshow_dir': name
     }

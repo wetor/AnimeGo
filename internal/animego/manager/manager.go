@@ -247,11 +247,11 @@ func (m *Manager) UpdateDownloadItem(status *models.DownloadStatus, anime *model
 			},
 			Mode:  Conf.Rename,
 			State: m.name2chan[name],
-			RenameCallback: func(renamePath string) {
-				status.Path = renamePath
-				status.Scraped = m.scrape(anime)
+			RenameCallback: func(opts *models.RenameResult) {
+				status.Path = opts.Filepath
+				status.Scraped = m.scrape(anime, opts.TVShowDir)
 			},
-			ExitCallback: func() {
+			CompleteCallback: func() {
 				status.Renamed = true
 				if c, ok := m.client.(*qbittorrent.QBittorrent); ok {
 					// qbt需要手动删除列表记录，否则无法重复下载
@@ -262,16 +262,11 @@ func (m *Manager) UpdateDownloadItem(status *models.DownloadStatus, anime *model
 				}
 			},
 		}
-		m.rename.Rename(renameOpt)
+		m.rename.AddRenameTask(renameOpt)
 		status.Seeded = false
 		status.Downloaded = false
 
 		status.Init = true
-	}
-
-	// 移动完成，且搜刮元数据失败
-	if status.Renamed && !status.Scraped {
-		status.Scraped = m.scrape(anime)
 	}
 
 	// 做种，或未下载完成，但State符合下载完成状态
@@ -402,8 +397,11 @@ func (m *Manager) UpdateList() {
 	}
 }
 
-func (m *Manager) scrape(bangumi *models.AnimeEntity) bool {
-	nfo := xpath.Join(Conf.SavePath, bangumi.DirName(), "tvshow.nfo")
+func (m *Manager) scrape(bangumi *models.AnimeEntity, dir string) bool {
+	if len(dir) == 0 {
+		return true
+	}
+	nfo := xpath.Join(Conf.SavePath, dir, "tvshow.nfo")
 	log.Infof("写入元数据文件「%s」", nfo)
 
 	if !utils.IsExist(nfo) {

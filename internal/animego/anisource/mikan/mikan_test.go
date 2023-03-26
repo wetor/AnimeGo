@@ -140,6 +140,16 @@ func TestMikan_Parse(t *testing.T) {
 			},
 			wantAnime: &models.AnimeEntity{ID: 371546, ThemoviedbID: 72517, MikanID: 2775, Name: "ようこそ実力至上主義の教室へ 2nd Season", NameCN: "欢迎来到实力至上主义教室 第二季", Season: 2, Ep: 7, Eps: 13, AirDate: "2022-07-04"},
 		},
+		{
+			name: "想要成为影之实力者",
+			args: args{
+				opts: &models.AnimeParseOptions{
+					Url:  "https://mikanani.me/Home/Episode/dcc28079dfda415cdcdf46159aad0fa94f1a2f11",
+					Name: "[LoliHouse] 想要成为影之实力者 / 我想成为影之强者 / Kage no Jitsuryokusha ni Naritakute! - 19 [WebRip 1080p HEVC-10bit AAC][简繁内封字幕]",
+				},
+			},
+			wantAnime: &models.AnimeEntity{ID: 329114, ThemoviedbID: 119495, MikanID: 2822, Name: "陰の実力者になりたくて！", NameCN: "想要成为影之实力者！", Season: 1, Ep: 19, Eps: 20, AirDate: "2022-10-05"},
+		},
 	}
 	m := mikan.Mikan{}
 	for _, tt := range tests {

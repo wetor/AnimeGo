@@ -2,11 +2,13 @@ package configs_test
 
 import (
 	"bytes"
-	"github.com/wetor/AnimeGo/pkg/utils"
 	"os"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/wetor/AnimeGo/configs"
+	"github.com/wetor/AnimeGo/pkg/utils"
 )
 
 func TestMain(m *testing.M) {
@@ -27,9 +29,9 @@ func TestUpdateConfig_120(t *testing.T) {
 
 	want, _ := os.ReadFile("testdata/animego_120.yaml")
 	got, _ := os.ReadFile("data/animego.yaml")
-	if !bytes.Equal(got, want) {
-		t.Errorf("UpdateConfig() = %s, want %s", got, want)
-	}
+	want = bytes.ReplaceAll(want, []byte("\r\n"), []byte("\n"))
+	got = bytes.ReplaceAll(got, []byte("\r\n"), []byte("\n"))
+	assert.Equal(t, string(got), string(want))
 }
 
 func TestUpdateConfig_130(t *testing.T) {
@@ -40,9 +42,9 @@ func TestUpdateConfig_130(t *testing.T) {
 
 	want, _ := os.ReadFile("testdata/animego_130.yaml")
 	got, _ := os.ReadFile("data/animego.yaml")
-	if !bytes.Equal(got, want) {
-		t.Errorf("UpdateConfig() = %s, want %s", got, want)
-	}
+	want = bytes.ReplaceAll(want, []byte("\r\n"), []byte("\n"))
+	got = bytes.ReplaceAll(got, []byte("\r\n"), []byte("\n"))
+	assert.Equal(t, string(got), string(want))
 }
 
 func TestUpdateConfig_140(t *testing.T) {
@@ -53,9 +55,9 @@ func TestUpdateConfig_140(t *testing.T) {
 
 	want, _ := os.ReadFile("testdata/animego_140.yaml")
 	got, _ := os.ReadFile("data/animego.yaml")
-	if !bytes.Equal(got, want) {
-		t.Errorf("UpdateConfig() = %s, want %s", got, want)
-	}
+	want = bytes.ReplaceAll(want, []byte("\r\n"), []byte("\n"))
+	got = bytes.ReplaceAll(got, []byte("\r\n"), []byte("\n"))
+	assert.Equal(t, string(got), string(want))
 }
 
 func TestUpdateConfig_141(t *testing.T) {
@@ -66,7 +68,7 @@ func TestUpdateConfig_141(t *testing.T) {
 
 	want, _ := os.ReadFile("testdata/animego_141.yaml")
 	got, _ := os.ReadFile("data/animego.yaml")
-	if !bytes.Equal(got, want) {
-		t.Errorf("UpdateConfig() = %s, want %s", got, want)
-	}
+	want = bytes.ReplaceAll(want, []byte("\r\n"), []byte("\n"))
+	got = bytes.ReplaceAll(got, []byte("\r\n"), []byte("\n"))
+	assert.Equal(t, string(got), string(want))
 }

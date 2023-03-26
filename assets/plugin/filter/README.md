@@ -27,10 +27,12 @@ args = {
 结构分为两种：  
 1.  只返回筛选后入参的索引
     ```python
-    return {
-        "index": [0, 1, 4],
-        "error": None
-    }
+    def filter_all(args):
+        # ...
+        return {
+            "index": [0, 1, 4],
+            "error": None
+        }
     ```
 
 2.  返回筛选后入参的索引的同时，携带`item.name`标题解析结果  
@@ -54,26 +56,28 @@ args = {
     ```
     返回结构如下：
     ```python
-    return {
-        "data": [
-            {
-                "index": 0,
-                "parsed": {
-                    "episode": 3,
-                    "group": "猎户不鸽压制",
-                    "resolution": "1080p",
-                    "season": 1,
-                    "season_raw": "",
-                    "source": "",
-                    "sub": "繁中内嵌",
-                    "title_en": "斋藤先生无所不能 Benriya Saitou-san, Isekai ni Iku",
-                    "title_jp": "",
-                    "title_zh": "万事屋斋藤先生转生异世界"
-                }
-            },
-            {...},
-        ]
-        "error": None
-    }
+    def filter_all(args):
+    # ...
+        return {
+            "data": [
+                {
+                    "index": 0,
+                    "parsed": {
+                        "episode": 3,
+                        "group": "猎户不鸽压制",
+                        "resolution": "1080p",
+                        "season": 1,
+                        "season_raw": "",
+                        "source": "",
+                        "sub": "繁中内嵌",
+                        "title_en": "斋藤先生无所不能 Benriya Saitou-san, Isekai ni Iku",
+                        "title_jp": "",
+                        "title_zh": "万事屋斋藤先生转生异世界"
+                    }
+                },
+                {...},
+            ]
+            "error": None
+        }
     ```
     

@@ -79,6 +79,11 @@ func TestMain(m *testing.M) {
 		Scraped:    true,
 		Seeded:     true,
 	}, 0)
+	renamer.Init(&renamer.Options{
+		WG:                &wg,
+		UpdateDelaySecond: 2,
+	})
+
 	rename := renamer.NewRenamer(renamerPlugin.NewRenamePlugin([]models.Plugin{
 		{
 			Enable: true,
@@ -86,6 +91,8 @@ func TestMain(m *testing.M) {
 			File:   "rename/builtin_rename.py",
 		},
 	}))
+	rename.Start(ctx)
+
 	mgr = manager.NewManager(qbt, b, rename, nil)
 
 	mgr.Start(ctx)

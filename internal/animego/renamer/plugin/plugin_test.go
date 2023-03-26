@@ -18,7 +18,7 @@ func TestMain(m *testing.M) {
 		Debug: true,
 	})
 	plugin.Init(&plugin.Options{
-		Path:  "../../../../assets/plugin",
+		Path:  "testdata",
 		Debug: true,
 	})
 	m.Run()
@@ -26,34 +26,64 @@ func TestMain(m *testing.M) {
 }
 
 func TestRename_Rename(t *testing.T) {
+	type args struct {
+		anime    *models.AnimeEntity
+		filename string
+	}
+	tests := []struct {
+		name string
+		args args
+		want *models.RenameResult
+	}{
+		// TODO: Add test cases.
+		{
+			args: args{
+				anime: &models.AnimeEntity{
+					ID:     18692,
+					Name:   "ドラえもん",
+					NameCN: "动画1",
+					Season: 1,
+					Ep:     712,
+				},
+				filename: "test/path/v.mp4",
+			},
+			want: &models.RenameResult{Filepath: "动画1/S01/E712.mp4", TVShowDir: "动画1"},
+		},
+		{
+			args: args{
+				anime: &models.AnimeEntity{
+					ID:     18692,
+					Name:   "ドラえもん",
+					NameCN: "动画1",
+					Season: 1,
+					Ep:     712,
+				},
+				filename: "test/path/v.mp4",
+			},
+			want: &models.RenameResult{Filepath: "动画1/S01/E712.mp4", TVShowDir: "动画1"},
+		},
+		{
+			args: args{
+				anime: &models.AnimeEntity{
+					ID:     18692,
+					Season: 2,
+					Ep:     1,
+				},
+				filename: "test/path/v.mp4",
+			},
+			want: &models.RenameResult{Filepath: "18692/S02/E1.mp4", TVShowDir: "18692"},
+		},
+	}
 	p := renamerPlugin.NewRenamePlugin([]models.Plugin{
 		{
 			Enable: true,
 			Type:   "python",
-			File:   "rename/builtin_rename.py",
+			File:   "rename.py",
 		},
 	})
-	dst := p.Rename(&models.AnimeEntity{
-		ID:     18692,
-		Name:   "ドラえもん",
-		NameCN: "动画1",
-		Season: 1,
-		Ep:     712,
-	}, "test/path/v.mp4")
-	assert.Equal(t, dst, "动画1/S01/E712.mp4")
-
-	dst = p.Rename(&models.AnimeEntity{
-		ID:     18692,
-		Name:   "ドラえもん",
-		Season: 1,
-		Ep:     7121,
-	}, "test/path/v.mp4")
-	assert.Equal(t, dst, "ドラえもん/S01/E7121.mp4")
-
-	dst = p.Rename(&models.AnimeEntity{
-		ID:     18692,
-		Season: 2,
-		Ep:     1,
-	}, "test/path/v.mp4")
-	assert.Equal(t, dst, "18692/S02/E1.mp4")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equalf(t, tt.want, p.Rename(tt.args.anime, tt.args.filename), "Rename(%v, %v)", tt.args.anime, tt.args.filename)
+		})
+	}
 }

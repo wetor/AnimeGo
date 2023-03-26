@@ -42,6 +42,22 @@ s = core.dumps({'a': 123, 'b': 'ccc'})
 # s = '{"a": 123, "b": "ccc"}'
 ```
 
+#### core.filename
+
+`filename(file) -> str`  
+替换文件名中不允许的字符  
+
+移除`/`和`\ ` 字符  
+`[`替换为`(`, `]`替换为`)`  
+`:` `;` `=` `,`替换为`-`  
+
+```python
+import core
+
+result = core.filename('[OPFans/枫雪动漫][ONE PIECE 海贼王:第1051话].mp4')
+# result = "(OPFans枫雪动漫)(ONE PIECE 海贼王-第1051话).mp4"
+```
+
 #### core.parse_mikan
 
 `parse_mikan(url) -> dict`  
@@ -199,3 +215,7 @@ conf = _get_config()
 ## Schedule定时任务插件
 使用Cron表达式定时执行任务的插件
 [Schedule定时任务插件帮助](schedule/README.md)
+
+## Rename重命名插件
+根据信息设置保存路径
+[Rename重命名插件帮助](rename/README.md)

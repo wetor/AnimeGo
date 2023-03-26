@@ -116,8 +116,11 @@ func Main() {
 	// 初始化默认配置、升级配置
 	InitDefaultConfig()
 
+	// ===============================================================================================================
 	// 载入配置文件
 	config := configs.Init(configFile)
+	// 检查参数限制
+	config.Check()
 	constant.Init(&constant.Options{
 		DataPath: config.DataPath,
 	})
@@ -126,6 +129,7 @@ func Main() {
 	// 释放资源
 	InitDefaultAssets(config.DataPath, true)
 
+	// ===============================================================================================================
 	// 初始化日志
 	logger.Init(&logger.Options{
 		File:    constant.LogFile,
@@ -144,7 +148,8 @@ func Main() {
 		Debug:     debug,
 	})
 
-	// 初始化插件-gpython
+	// ===============================================================================================================
+	// 初始化插件 gpython
 	plugin.Init(&plugin.Options{
 		Path:  constant.PluginPath,
 		Debug: debug,
@@ -157,6 +162,7 @@ func Main() {
 	bangumiCache := cache.NewBolt()
 	bangumiCache.Open(constant.BangumiCacheFile)
 
+	// ===============================================================================================================
 	// 初始化并连接下载器
 	downloader.Init(&downloader.Options{
 		ConnectTimeoutSecond: config.Advanced.Client.ConnectTimeoutSecond,
@@ -165,9 +171,10 @@ func Main() {
 		WG:                   &WG,
 	})
 	qbtConf := config.Setting.Client.QBittorrent
-	qbt := qbittorrent.NewQBittorrent(qbtConf.Url, qbtConf.Username, qbtConf.Password)
-	qbt.Start(ctx)
+	qbittorrentSrv := qbittorrent.NewQBittorrent(qbtConf.Url, qbtConf.Username, qbtConf.Password)
+	qbittorrentSrv.Start(ctx)
 
+	// ===============================================================================================================
 	// 初始化anisource配置
 	anisource.Init(&anisource.Options{
 		Options: &anidata.Options{
@@ -185,6 +192,18 @@ func Main() {
 		TMDBFailUseFirstSeason: config.Default.TMDBFailUseFirstSeason,
 	})
 
+	// ===============================================================================================================
+	// 初始化renamer配置
+	renamer.Init(&renamer.Options{
+		WG:                &WG,
+		UpdateDelaySecond: config.UpdateDelaySecond,
+	})
+	// 初始化rename
+	renameSrv := renamer.NewRenamer(renamerPlugin.NewRenamePlugin(configs.ConvertPluginInfo(config.Plugin.Rename)))
+	// 启动rename
+	renameSrv.Start(ctx)
+
+	// ===============================================================================================================
 	// 初始化manager配置
 	manager.Init(&manager.Options{
 		Downloader: manager.Downloader{
@@ -200,31 +219,32 @@ func Main() {
 		},
 		WG: &WG,
 	})
-
-	rename := renamer.NewRenamer(renamerPlugin.NewRenamePlugin(configs.ConvertPluginInfo(config.Plugin.Rename)))
-	// 初始化downloader manager
+	// 初始化manager
 	downloadChan := make(chan *models.AnimeEntity, 10)
-	downloaderManager := manager.NewManager(qbt, bolt, rename, downloadChan)
+	managerSrv := manager.NewManager(qbittorrentSrv, bolt, renameSrv, downloadChan)
+	// 启动manager
+	managerSrv.Start(ctx)
 
+	// ===============================================================================================================
+	// 初始化filter配置
 	filter.Init(&filter.Options{
 		MultiGoroutineMax:     config.Advanced.Feed.MultiGoroutine.GoroutineMax,
 		MultiGoroutineEnabled: config.Advanced.Feed.MultiGoroutine.Enable,
 		DelaySecond:           config.Advanced.Feed.DelaySecond,
 	})
-	// 初始化filter manager
-	filterManager := filter.NewFilter(
+	// 初始化filter
+	filterSrv := filter.NewFilter(
 		filterPlugin.NewFilterPlugin(configs.ConvertPluginInfo(config.Plugin.Filter)),
 		mikan.Mikan{ThemoviedbKey: config.Setting.Key.Themoviedb},
 		downloadChan)
 
-	// 启动manager
-	downloaderManager.Start(ctx)
-
-	// 初始化并启动定时任务
-	scheduleVar := schedule.NewSchedule(&schedule.Options{
+	// ===============================================================================================================
+	// 初始化定时任务
+	scheduleSrv := schedule.NewSchedule(&schedule.Options{
 		WG: &WG,
 	})
-	scheduleVar.Add(&schedule.AddTaskOptions{
+	// 添加定时任务
+	scheduleSrv.Add(&schedule.AddTaskOptions{
 		Name:     "bangumi",
 		StartRun: true,
 		Task: task.NewBangumiTask(&task.BangumiOptions{
@@ -232,12 +252,14 @@ func Main() {
 			CacheMutex: &BangumiCacheMutex,
 		}),
 	})
-	schedule.AddScheduleTasks(scheduleVar, configs.ConvertPluginInfo(config.Plugin.Schedule))
-	feedPlugin.AddFeedTasks(scheduleVar, configs.ConvertPluginInfo(config.Plugin.Feed), filterManager, ctx)
-	scheduleVar.Start(ctx)
+	schedule.AddScheduleTasks(scheduleSrv, configs.ConvertPluginInfo(config.Plugin.Schedule))
+	feedPlugin.AddFeedTasks(scheduleSrv, configs.ConvertPluginInfo(config.Plugin.Feed), filterSrv, ctx)
+	// 启动化定时任务
+	scheduleSrv.Start(ctx)
 
+	// ===============================================================================================================
 	if webapi {
-		// 初始化并运行Web API
+		// 初始化Web API
 		web.Init(&web.Options{
 			Options: &api.Options{
 				Ctx:                           ctx,
@@ -246,17 +268,18 @@ func Main() {
 				Config:                        config,
 				BangumiCache:                  bangumiCache,
 				BangumiCacheLock:              &BangumiCacheMutex,
-				FilterManager:                 filterManager,
-				DownloaderManagerCacheDeleter: downloaderManager,
+				FilterManager:                 filterSrv,
+				DownloaderManagerCacheDeleter: managerSrv,
 			},
 			Host:  config.WebApi.Host,
 			Port:  config.WebApi.Port,
 			WG:    &WG,
 			Debug: debug,
 		})
+		// 启动Web API
 		web.Run(ctx)
 	}
 
-	// 等待运行结束
+	// 等待程序运行结束
 	WG.Wait()
 }

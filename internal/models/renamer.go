@@ -6,11 +6,19 @@ type RenameDst struct {
 	SavePath string
 }
 
+type RenameResult struct {
+	Filepath  string `json:"filepath"`
+	TVShowDir string `json:"tvshow_dir"`
+}
+
+type RenameCallback func(*RenameResult)
+type CompleteCallback func()
+
 type RenameOptions struct {
-	Src            string     // 原名
-	Dst            *RenameDst // 目标名
-	Mode           string
-	State          <-chan TorrentState
-	RenameCallback func(string) // 重命名完成后回调
-	ExitCallback   func()       // 完成重命名所有流程后回调
+	Src              string     // 原名
+	Dst              *RenameDst // 目标名
+	Mode             string
+	State            <-chan TorrentState
+	RenameCallback   RenameCallback   // 重命名完成后回调
+	CompleteCallback CompleteCallback // 完成重命名所有流程后回调
 }

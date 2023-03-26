@@ -29,6 +29,9 @@ pub_group_id: Mikan pubgroup ID
 group_name: 字幕组名`),
 		py.MustNewMethod("parse_mikan_rss", parseMikanRss, 0,
 			`parse_mikan_rss(rss_data) -> dict`),
+		py.MustNewMethod("filename", filename, 0,
+			`filename(name) -> str
+替换文件名中不允许的字符`),
 	}
 
 	py.RegisterModule(&py.ModuleImpl{
@@ -130,4 +133,18 @@ func parseMikanRss(self py.Object, arg py.Object) (py.Object, error) {
 		return nil, err
 	}
 	return python.ToObject(items), nil
+}
+
+func filename(self py.Object, arg py.Object) (py.Object, error) {
+	var file string
+	var err error
+	try.This(func() {
+		file = models.Filename(string(arg.(py.String)))
+	}).Catch(func(e try.E) {
+		err = e.(error)
+	})
+	if err != nil {
+		return nil, err
+	}
+	return python.ToObject(file), nil
 }
