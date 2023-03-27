@@ -19,7 +19,7 @@ const (
 type Manager struct {
 	filter       api.Filter
 	anisource    api.AniSource
-	downloadChan chan *models.AnimeEntity
+	downloadChan chan any
 	animeList    []*models.AnimeEntity
 }
 
@@ -30,13 +30,13 @@ type Manager struct {
 //	@param feed api.Feed
 //	@param anisource api.AniSource
 //	@return *Manager
-func NewFilter(filter api.Filter, anisource api.AniSource, downloadChan chan *models.AnimeEntity) *Manager {
+func NewFilter(filter api.Filter, anisource api.AniSource, downloadChan chan any) *Manager {
 	m := &Manager{
 		filter:    filter,
 		anisource: anisource,
 	}
 	if downloadChan == nil || cap(downloadChan) <= 1 {
-		downloadChan = make(chan *models.AnimeEntity, DownloadChanDefaultCap)
+		downloadChan = make(chan any, DownloadChanDefaultCap)
 	}
 	m.downloadChan = downloadChan
 	return m
@@ -81,7 +81,7 @@ func (m *Manager) Update(ctx context.Context, items []*models.FeedItem) {
 
 					log.Debugf("发送下载项:「%s」", anime.FullName())
 					// 向管道中发送需要下载的信息
-					//m.downloadChan <- anime
+					m.downloadChan <- anime
 
 				}
 				utils.Sleep(DelaySecond, ctx)

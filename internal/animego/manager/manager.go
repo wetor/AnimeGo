@@ -36,7 +36,7 @@ type Manager struct {
 	rename api.Renamer
 
 	// 通过管道传递下载项
-	downloadChan chan *models.AnimeEntity
+	downloadChan chan any
 	name2chan    map[string]chan models.TorrentState
 	name2status  map[string]*models.DownloadStatus // 同时存在于db和内存中
 
@@ -50,10 +50,10 @@ type Manager struct {
 //	@param client api.Downloader 下载客户端
 //	@param cache api.Cacher 缓存
 //	@param rename api.Renamer 重命名
-//	@param downloadChan chan *models.AnimeEntity 下载传递通道
+//	@param downloadChan chan any 下载传递通道
 //	@return *Manager
 func NewManager(client api.Downloader, cache api.Cacher, rename api.Renamer,
-	downloadChan chan *models.AnimeEntity) *Manager {
+	downloadChan chan any) *Manager {
 	m := &Manager{
 		client:           client,
 		cache:            cache,
@@ -64,7 +64,7 @@ func NewManager(client api.Downloader, cache api.Cacher, rename api.Renamer,
 	}
 
 	if downloadChan == nil || cap(downloadChan) <= 1 {
-		downloadChan = make(chan *models.AnimeEntity, DownloadChanDefaultCap)
+		downloadChan = make(chan any, DownloadChanDefaultCap)
 	}
 	m.downloadChan = downloadChan
 
@@ -200,7 +200,8 @@ func (m *Manager) Start(ctx context.Context) {
 					log.Debugf("正常退出 manager downloader")
 					exit = true
 					return
-				case anime := <-m.downloadChan:
+				case download := <-m.downloadChan:
+					anime := download.(*models.AnimeEntity)
 					if m.client.Connected() {
 						log.Debugf("接收到下载项:「%s」", anime.FullName())
 						m.download(anime)

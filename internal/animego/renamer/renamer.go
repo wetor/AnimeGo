@@ -131,7 +131,6 @@ func (r *Renamer) Update(ctx context.Context) {
 		select {
 		case state := <-task.State:
 			go func(task *RenameTask) {
-				log.Infof("%v, %v, 收到：%v", task.Src, task.Mode, state)
 				defer func() {
 					if task.Complete {
 						task.CompleteCallback()

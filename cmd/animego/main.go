@@ -29,7 +29,6 @@ import (
 	renamerPlugin "github.com/wetor/AnimeGo/internal/animego/renamer/plugin"
 	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/logger"
-	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/internal/schedule"
 	"github.com/wetor/AnimeGo/internal/schedule/task"
@@ -220,7 +219,7 @@ func Main() {
 		WG: &WG,
 	})
 	// 初始化manager
-	downloadChan := make(chan *models.AnimeEntity, 10)
+	downloadChan := make(chan any, 10)
 	managerSrv := manager.NewManager(qbittorrentSrv, bolt, renameSrv, downloadChan)
 	// 启动manager
 	managerSrv.Start(ctx)
