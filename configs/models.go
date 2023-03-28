@@ -66,11 +66,7 @@ type Advanced struct {
 	} `yaml:"download" json:"download" attr:"下载设置"`
 
 	Feed struct {
-		DelaySecond    int `yaml:"delay_second" json:"delay_second" attr:"订阅解析间隔时间"`
-		MultiGoroutine struct {
-			Enable       bool `yaml:"enable" json:"enable" attr:"启用"`
-			GoroutineMax int  `yaml:"goroutine_max" json:"goroutine_max" attr:"最大协程数量"`
-		} `yaml:"multi_goroutine" json:"multi_goroutine" attr:"订阅多协程解析"`
+		DelaySecond int `yaml:"delay_second" json:"delay_second" attr:"订阅解析间隔时间"`
 	} `yaml:"feed" json:"feed" attr:"订阅设置"`
 
 	Default struct {

@@ -50,10 +50,8 @@ type Manager struct {
 //	@param client api.Downloader 下载客户端
 //	@param cache api.Cacher 缓存
 //	@param rename api.Renamer 重命名
-//	@param downloadChan chan any 下载传递通道
 //	@return *Manager
-func NewManager(client api.Downloader, cache api.Cacher, rename api.Renamer,
-	downloadChan chan any) *Manager {
+func NewManager(client api.Downloader, cache api.Cacher, rename api.Renamer) *Manager {
 	m := &Manager{
 		client:           client,
 		cache:            cache,
@@ -62,11 +60,7 @@ func NewManager(client api.Downloader, cache api.Cacher, rename api.Renamer,
 		name2status:      make(map[string]*models.DownloadStatus),
 		sleepUpdateCount: SleepUpdateMaxCount,
 	}
-
-	if downloadChan == nil || cap(downloadChan) <= 1 {
-		downloadChan = make(chan any, DownloadChanDefaultCap)
-	}
-	m.downloadChan = downloadChan
+	m.downloadChan = make(chan any, DownloadChanDefaultCap)
 
 	m.cache.Add(Name2EntityBucket)
 	m.cache.Add(Name2StatusBucket)
@@ -106,8 +100,8 @@ func (m *Manager) Delete(hash []string) {
 //	@Description: 将下载任务加入到下载队列中
 //	@Description: 如果队列满，调用此方法会阻塞
 //	@receiver *Manager
-//	@param anime *models.AnimeEntity
-func (m *Manager) Download(anime *models.AnimeEntity) {
+//	@param anime any
+func (m *Manager) Download(anime any) {
 	m.downloadChan <- anime
 }
 

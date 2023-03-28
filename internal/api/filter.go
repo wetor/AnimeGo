@@ -6,7 +6,7 @@ import (
 	"github.com/wetor/AnimeGo/internal/models"
 )
 
-type Filter interface {
+type FilterPlugin interface {
 	Filter([]*models.FeedItem) []*models.FeedItem
 }
 

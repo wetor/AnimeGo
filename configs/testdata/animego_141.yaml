@@ -116,12 +116,6 @@ advanced:
     feed:
         # 订阅解析间隔时间
         delay_second: 2
-        # 订阅多协程解析
-        multi_goroutine:
-            # 启用
-            enable: false
-            # 最大协程数量
-            goroutine_max: 4
     # 解析季度默认值. 使用tmdb解析季度失败时，同类型默认值按优先级执行。数值越大，优先级越高
     default:
         # 跳过当前项. tmdb解析季度失败时，跳过当前项。优先级3

@@ -302,6 +302,7 @@ func update_140_141(file string) {
 	}
 	newConfig.Version = "1.4.1"
 
+	log.Println("[移除] 配置项(advanced.feed.multi_goroutine)")
 	log.Println("[新增] 配置项(plugin.rename)")
 	newConfig.Plugin.Rename = []PluginInfo{
 		{

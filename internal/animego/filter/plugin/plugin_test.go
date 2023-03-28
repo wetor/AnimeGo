@@ -33,14 +33,12 @@ func TestPython_Filter(t *testing.T) {
 	rss := mikanRss.NewRss(&mikanRss.Options{File: "testdata/Mikan.xml"})
 	items := rss.Parse()
 	fmt.Println(len(items))
-	js := filterPlugin.NewFilterPlugin([]models.Plugin{
-		{
-			Enable: true,
-			Type:   "py",
-			File:   "filter.py",
-		},
+	p := filterPlugin.NewFilterPlugin(&models.Plugin{
+		Enable: true,
+		Type:   "py",
+		File:   "filter.py",
 	})
-	result := js.Filter(items)
+	result := p.Filter(items)
 	assert.Equal(t, 4, len(result))
 	for _, r := range result {
 		fmt.Println(r)
@@ -62,14 +60,12 @@ func TestPython_Filter2(t *testing.T) {
 			Name: "3333",
 		},
 	}
-	js := filterPlugin.NewFilterPlugin([]models.Plugin{
-		{
-			Enable: true,
-			Type:   "py",
-			File:   "test_re.py",
-		},
+	p := filterPlugin.NewFilterPlugin(&models.Plugin{
+		Enable: true,
+		Type:   "py",
+		File:   "test_re.py",
 	})
-	result := js.Filter(list)
+	result := p.Filter(list)
 	assert.Equal(t, 1, len(result))
 	assert.Equal(t, "1108011", result[0].Name)
 }
@@ -83,14 +79,12 @@ func TestPython_Filter3(t *testing.T) {
 	items := rss.Parse()
 	fmt.Println(len(items))
 	fmt.Println("===========")
-	js := filterPlugin.NewFilterPlugin([]models.Plugin{
-		{
-			Enable: true,
-			Type:   "py",
-			File:   "filter/pydemo.py",
-		},
+	p := filterPlugin.NewFilterPlugin(&models.Plugin{
+		Enable: true,
+		Type:   "py",
+		File:   "filter/pydemo.py",
 	})
-	result := js.Filter(items)
+	result := p.Filter(items)
 	assert.Equal(t, 9, len(result))
 	for _, r := range result {
 		fmt.Println(r.Name, r.NameParsed)
@@ -116,14 +110,12 @@ func TestPython_Filter4(t *testing.T) {
 			Name: "[梦蓝字幕组]New Doraemon 哆啦A梦新番[716][2022.07.23][AVC][1080P][GB_JP]",
 		},
 	}
-	js := filterPlugin.NewFilterPlugin([]models.Plugin{
-		{
-			Enable: true,
-			Type:   "py",
-			File:   "filter/default.py",
-		},
+	p := filterPlugin.NewFilterPlugin(&models.Plugin{
+		Enable: true,
+		Type:   "py",
+		File:   "filter/default.py",
 	})
-	result := js.Filter(list)
+	result := p.Filter(list)
 	assert.Equal(t, 4, len(result))
 	for _, r := range result {
 		fmt.Println(r.Name, r.NameParsed)
@@ -148,14 +140,12 @@ func TestPython_Filter5(t *testing.T) {
 	items := rss.Parse()
 	fmt.Println(len(items))
 	fmt.Println("===========")
-	js := filterPlugin.NewFilterPlugin([]models.Plugin{
-		{
-			Enable: true,
-			Type:   "py",
-			File:   "filter/mikan_tool.py",
-		},
+	p := filterPlugin.NewFilterPlugin(&models.Plugin{
+		Enable: true,
+		Type:   "py",
+		File:   "filter/mikan_tool.py",
 	})
-	result := js.Filter(items)
+	result := p.Filter(items)
 	assert.Equal(t, 13, len(result))
 	for _, r := range result {
 		fmt.Println(r.Name, r.NameParsed)

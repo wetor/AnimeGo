@@ -77,9 +77,7 @@ func pluginFilter(info *models.Plugin) []*models.FeedItem {
 		panic(err)
 	}
 
-	f := filterPlugin.NewFilterPlugin([]models.Plugin{
-		*info,
-	})
+	f := filterPlugin.NewFilterPlugin(info)
 	return f.Filter(items)
 }
 

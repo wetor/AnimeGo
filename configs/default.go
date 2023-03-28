@@ -114,8 +114,6 @@ func defaultAdvanced() {
 	defaultConfig.Advanced.Download.Rename = "wait_move"
 
 	defaultConfig.Advanced.Feed.DelaySecond = 5
-	defaultConfig.Advanced.Feed.MultiGoroutine.Enable = false
-	defaultConfig.Advanced.Feed.MultiGoroutine.GoroutineMax = 4
 
 	defaultConfig.Advanced.Default.TMDBFailSkip = false
 	defaultConfig.Advanced.Default.TMDBFailUseTitleSeason = true

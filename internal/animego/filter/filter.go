@@ -1,45 +1,39 @@
-// Package filter
-// @Description: 筛选输入feed条目，并通过anisource获取符合条目的详细信息，信息完整则传递给下载器进行下载
 package filter
 
 import (
 	"context"
-	"sync"
 
+	filterPlugin "github.com/wetor/AnimeGo/internal/animego/filter/plugin"
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/utils"
 )
 
-const (
-	DownloadChanDefaultCap = 10 // 下载通道默认容量
-)
-
 type Manager struct {
-	filter       api.Filter
-	anisource    api.AniSource
-	downloadChan chan any
-	animeList    []*models.AnimeEntity
+	filters   []api.FilterPlugin
+	anisource api.AniSource
+	manager   api.ManagerDownloader
 }
 
-// NewFilter
+// NewManager
 //
 //	@Description:
-//	@param filter *filter.Filter
 //	@param feed api.Feed
 //	@param anisource api.AniSource
 //	@return *Manager
-func NewFilter(filter api.Filter, anisource api.AniSource, downloadChan chan any) *Manager {
+func NewManager(anisource api.AniSource, manager api.ManagerDownloader) *Manager {
 	m := &Manager{
-		filter:    filter,
+		filters:   make([]api.FilterPlugin, 0),
 		anisource: anisource,
+		manager:   manager,
 	}
-	if downloadChan == nil || cap(downloadChan) <= 1 {
-		downloadChan = make(chan any, DownloadChanDefaultCap)
-	}
-	m.downloadChan = downloadChan
 	return m
+}
+
+func (m *Manager) Add(pluginInfo *models.Plugin) {
+	p := filterPlugin.NewFilterPlugin(pluginInfo)
+	m.filters = append(m.filters, p)
 }
 
 func (m *Manager) Update(ctx context.Context, items []*models.FeedItem) {
@@ -49,51 +43,27 @@ func (m *Manager) Update(ctx context.Context, items []*models.FeedItem) {
 	if len(items) == 0 {
 		return
 	}
-	items = m.filter.Filter(items)
 
-	animeList := make([]*models.AnimeEntity, len(items))
-	working := make(chan int, MultiGoroutineMax) // 限制同时执行个数
-	wg := sync.WaitGroup{}
-	exit := false
-	for i, item := range items {
-		if exit {
-			return
-		}
-		working <- i //计数器+1 可能会发生阻塞
-		wg.Add(1)
-		go func(_i int, _item *models.FeedItem) {
-			select {
-			case <-ctx.Done():
-				exit = true
-			default:
-				anime := m.anisource.Parse(&models.AnimeParseOptions{
-					Url:    _item.Url,
-					Name:   _item.Name,
-					Parsed: _item.NameParsed,
-				})
-				if anime != nil {
-					anime.DownloadInfo = &models.DownloadInfo{
-						Url:  _item.Download,
-						Hash: _item.Hash(),
-					}
-
-					animeList[_i] = anime
-
-					log.Debugf("发送下载项:「%s」", anime.FullName())
-					// 向管道中发送需要下载的信息
-					m.downloadChan <- anime
-
-				}
-				utils.Sleep(DelaySecond, ctx)
-			}
-			<-working
-			wg.Done()
-		}(i, item)
-
-		if !exit && !MultiGoroutineEnabled {
-			wg.Wait()
-		}
+	for _, f := range m.filters {
+		items = f.Filter(items)
 	}
-	// 等待处理完成
-	wg.Wait()
+
+	for _, item := range items {
+		anime := m.anisource.Parse(&models.AnimeParseOptions{
+			Url:    item.Url,
+			Name:   item.Name,
+			Parsed: item.NameParsed,
+		})
+		if anime != nil {
+			anime.DownloadInfo = &models.DownloadInfo{
+				Url:  item.Download,
+				Hash: item.Hash(),
+			}
+
+			log.Debugf("发送下载项:「%s」", anime.FullName())
+			// 发送需要下载的信息
+			m.manager.Download(anime)
+		}
+		utils.Sleep(DelaySecond, ctx)
+	}
 }

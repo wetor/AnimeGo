@@ -14,55 +14,48 @@ const (
 )
 
 type Filter struct {
-	plugin []models.Plugin
+	plugin *models.Plugin
 }
 
-func NewFilterPlugin(pluginInfo []models.Plugin) *Filter {
+func NewFilterPlugin(pluginInfo *models.Plugin) *Filter {
 	return &Filter{
 		plugin: pluginInfo,
 	}
 }
 
-func (p *Filter) Filter(list []*models.FeedItem) []*models.FeedItem {
+func (p *Filter) Filter(items []*models.FeedItem) (resultItems []*models.FeedItem) {
 
-	inList := make([]*models.FeedItem, len(list))
-	for i, item := range list {
-		inList[i] = item
+	if !p.plugin.Enable {
+		return items
 	}
-	for _, info := range p.plugin {
-		if !info.Enable {
-			continue
-		}
-		log.Debugf("[Plugin] 开始执行Filter插件(%s): %s", info.Type, info.File)
-		// 入参
-		pluginInstance := plugin.LoadPlugin(&plugin.LoadPluginOptions{
-			Plugin:    &info,
-			EntryFunc: FuncFilterAll,
-			FuncSchema: []*pkgPlugin.FuncSchemaOptions{
-				{
-					Name:         FuncFilterAll,
-					ParamsSchema: []string{"items"},
-					ResultSchema: []string{"error", "data,optional", "index,optional"},
-					DefaultArgs:  info.Args,
-				},
+	log.Debugf("[Plugin] 开始执行Filter插件(%s): %s", p.plugin.Type, p.plugin.File)
+	// 入参
+	pluginInstance := plugin.LoadPlugin(&plugin.LoadPluginOptions{
+		Plugin:    p.plugin,
+		EntryFunc: FuncFilterAll,
+		FuncSchema: []*pkgPlugin.FuncSchemaOptions{
+			{
+				Name:         FuncFilterAll,
+				ParamsSchema: []string{"items"},
+				ResultSchema: []string{"error", "data,optional", "index,optional"},
+				DefaultArgs:  p.plugin.Args,
 			},
-		})
-		result := pluginInstance.Run(FuncFilterAll, map[string]any{
-			"items": inList,
-		})
-		if result["error"] != nil {
-			log.Debugf("", errors.NewAniErrorD(result["error"]))
-			log.Warnf("[Plugin] %s插件(%s)执行错误: %v", info.Type, info.File, result["error"])
-		}
-
-		if _, has := result["data"]; has {
-			inList = filterData(list, result["data"].([]any))
-		} else if _, has := result["index"]; has {
-			inList = filterIndex(list, result["index"].([]any))
-		}
+		},
+	})
+	result := pluginInstance.Run(FuncFilterAll, map[string]any{
+		"items": items,
+	})
+	if result["error"] != nil {
+		log.Debugf("", errors.NewAniErrorD(result["error"]))
+		log.Warnf("[Plugin] %s插件(%s)执行错误: %v", p.plugin.Type, p.plugin.File, result["error"])
 	}
-	// 返回筛选结果
-	return inList
+
+	if _, has := result["data"]; has {
+		resultItems = filterData(items, result["data"].([]any))
+	} else if _, has := result["index"]; has {
+		resultItems = filterIndex(items, result["index"].([]any))
+	}
+	return
 }
 
 func filterData(items []*models.FeedItem, data []any) []*models.FeedItem {

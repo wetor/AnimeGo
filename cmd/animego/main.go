@@ -23,17 +23,17 @@ import (
 	"github.com/wetor/AnimeGo/internal/animego/downloader/qbittorrent"
 	feedPlugin "github.com/wetor/AnimeGo/internal/animego/feed/plugin"
 	"github.com/wetor/AnimeGo/internal/animego/filter"
-	filterPlugin "github.com/wetor/AnimeGo/internal/animego/filter/plugin"
 	"github.com/wetor/AnimeGo/internal/animego/manager"
 	"github.com/wetor/AnimeGo/internal/animego/renamer"
 	renamerPlugin "github.com/wetor/AnimeGo/internal/animego/renamer/plugin"
+	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/logger"
 	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/internal/schedule"
 	"github.com/wetor/AnimeGo/internal/schedule/task"
 	"github.com/wetor/AnimeGo/internal/web"
-	"github.com/wetor/AnimeGo/internal/web/api"
+	webapi "github.com/wetor/AnimeGo/internal/web/api"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	pkgLog "github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/request"
@@ -46,10 +46,10 @@ const (
 )
 
 var (
-	ctx, cancel = context.WithCancel(context.Background())
-	configFile  string
-	debug       bool
-	webapi      bool
+	ctx, cancel  = context.WithCancel(context.Background())
+	configFile   string
+	debug        bool
+	webapiEnable bool
 
 	WG                sync.WaitGroup
 	BangumiCacheMutex sync.Mutex
@@ -60,7 +60,7 @@ func main() {
 
 	flag.StringVar(&configFile, "config", DefaultConfigFile, "配置文件路径；配置文件中的相对路径均是相对与程序的位置")
 	flag.BoolVar(&debug, "debug", false, "Debug模式，将会显示更多的日志")
-	flag.BoolVar(&webapi, "web", true, "启用Web API，默认启用")
+	flag.BoolVar(&webapiEnable, "web", true, "启用Web API，默认启用")
 	flag.Parse()
 
 	common.RegisterExit(doExit)
@@ -197,8 +197,16 @@ func Main() {
 		WG:                &WG,
 		UpdateDelaySecond: config.UpdateDelaySecond,
 	})
+	// 第一个启用的rename插件
+	var rename api.RenamerPlugin
+	for _, p := range configs.ConvertPluginInfo(config.Plugin.Rename) {
+		if p.Enable {
+			rename = renamerPlugin.NewRenamePlugin(&p)
+			break
+		}
+	}
 	// 初始化rename
-	renameSrv := renamer.NewRenamer(renamerPlugin.NewRenamePlugin(configs.ConvertPluginInfo(config.Plugin.Rename)))
+	renameSrv := renamer.NewManager(rename)
 	// 启动rename
 	renameSrv.Start(ctx)
 
@@ -219,24 +227,22 @@ func Main() {
 		WG: &WG,
 	})
 	// 初始化manager
-	downloadChan := make(chan any, 10)
-	managerSrv := manager.NewManager(qbittorrentSrv, bolt, renameSrv, downloadChan)
+	managerSrv := manager.NewManager(qbittorrentSrv, bolt, renameSrv)
 	// 启动manager
 	managerSrv.Start(ctx)
 
 	// ===============================================================================================================
 	// 初始化filter配置
 	filter.Init(&filter.Options{
-		MultiGoroutineMax:     config.Advanced.Feed.MultiGoroutine.GoroutineMax,
-		MultiGoroutineEnabled: config.Advanced.Feed.MultiGoroutine.Enable,
-		DelaySecond:           config.Advanced.Feed.DelaySecond,
+		DelaySecond: config.Advanced.Feed.DelaySecond,
 	})
 	// 初始化filter
-	filterSrv := filter.NewFilter(
-		filterPlugin.NewFilterPlugin(configs.ConvertPluginInfo(config.Plugin.Filter)),
-		mikan.Mikan{ThemoviedbKey: config.Setting.Key.Themoviedb},
-		downloadChan)
-
+	filterSrv := filter.NewManager(
+		&mikan.Mikan{ThemoviedbKey: config.Setting.Key.Themoviedb},
+		managerSrv)
+	for _, p := range configs.ConvertPluginInfo(config.Plugin.Filter) {
+		filterSrv.Add(&p)
+	}
 	// ===============================================================================================================
 	// 初始化定时任务
 	scheduleSrv := schedule.NewSchedule(&schedule.Options{
@@ -257,10 +263,10 @@ func Main() {
 	scheduleSrv.Start(ctx)
 
 	// ===============================================================================================================
-	if webapi {
+	if webapiEnable {
 		// 初始化Web API
 		web.Init(&web.Options{
-			Options: &api.Options{
+			Options: &webapi.Options{
 				Ctx:                           ctx,
 				AccessKey:                     config.WebApi.AccessKey,
 				Cache:                         bolt,

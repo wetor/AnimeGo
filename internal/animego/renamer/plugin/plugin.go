@@ -18,15 +18,10 @@ type Rename struct {
 	plugin *models.Plugin
 }
 
-func NewRenamePlugin(pluginInfo []models.Plugin) *Rename {
-	for _, p := range pluginInfo {
-		if p.Enable {
-			return &Rename{
-				plugin: &p,
-			}
-		}
+func NewRenamePlugin(pluginInfo *models.Plugin) *Rename {
+	return &Rename{
+		plugin: pluginInfo,
 	}
-	return &Rename{}
 }
 
 func (p *Rename) Rename(anime *models.AnimeEntity, filename string) *models.RenameResult {

@@ -84,16 +84,14 @@ func TestMain(m *testing.M) {
 		UpdateDelaySecond: 2,
 	})
 
-	rename := renamer.NewRenamer(renamerPlugin.NewRenamePlugin([]models.Plugin{
-		{
-			Enable: true,
-			Type:   "python",
-			File:   "rename/builtin_rename.py",
-		},
+	rename := renamer.NewManager(renamerPlugin.NewRenamePlugin(&models.Plugin{
+		Enable: true,
+		Type:   "python",
+		File:   "rename/builtin_rename.py",
 	}))
 	rename.Start(ctx)
 
-	mgr = manager.NewManager(qbt, b, rename, nil)
+	mgr = manager.NewManager(qbt, b, rename)
 
 	mgr.Start(ctx)
 	m.Run()

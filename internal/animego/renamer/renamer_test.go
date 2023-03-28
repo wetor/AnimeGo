@@ -47,7 +47,7 @@ func TestMain(m *testing.M) {
 	fmt.Println("end")
 }
 
-func rename(r *renamer.Renamer, state <-chan models.TorrentState, name, mode, src string, anime *models.AnimeEntity) string {
+func rename(r *renamer.Manager, state <-chan models.TorrentState, name, mode, src string, anime *models.AnimeEntity) string {
 	_ = os.WriteFile(src, []byte{}, os.ModePerm)
 	r.AddRenameTask(&models.RenameOptions{
 		Src: src,
@@ -71,7 +71,7 @@ func rename(r *renamer.Renamer, state <-chan models.TorrentState, name, mode, sr
 	return xpath.Join(SavePath, anime.DirName(), anime.FileName()+xpath.Ext(name))
 }
 
-func Rename1(r *renamer.Renamer, state <-chan models.TorrentState) string {
+func Rename1(r *renamer.Manager, state <-chan models.TorrentState) string {
 	name := "1.mp4"
 	mode := "link_delete"
 	src := xpath.Join(DownloadPath, name)
@@ -88,7 +88,7 @@ func Rename1(r *renamer.Renamer, state <-chan models.TorrentState) string {
 	return rename(r, state, name, mode, src, anime)
 }
 
-func Rename2(r *renamer.Renamer, state <-chan models.TorrentState) string {
+func Rename2(r *renamer.Manager, state <-chan models.TorrentState) string {
 	name := "2.mp4"
 	mode := "wait_move"
 	src := xpath.Join(DownloadPath, name)
@@ -105,7 +105,7 @@ func Rename2(r *renamer.Renamer, state <-chan models.TorrentState) string {
 	return rename(r, state, name, mode, src, anime)
 }
 
-func Rename3(r *renamer.Renamer, state <-chan models.TorrentState) string {
+func Rename3(r *renamer.Manager, state <-chan models.TorrentState) string {
 	name := "3.mp4"
 	mode := "move"
 	src := xpath.Join(DownloadPath, name)
@@ -127,14 +127,12 @@ func TestRenamer_Start(t *testing.T) {
 		WG:                &wg,
 		UpdateDelaySecond: 3,
 	})
-	p := renamerPlugin.NewRenamePlugin([]models.Plugin{
-		{
-			Enable: true,
-			Type:   "python",
-			File:   "rename.py",
-		},
+	p := renamerPlugin.NewRenamePlugin(&models.Plugin{
+		Enable: true,
+		Type:   "python",
+		File:   "rename.py",
 	})
-	r := renamer.NewRenamer(p)
+	r := renamer.NewManager(p)
 	state1 := make(chan models.TorrentState)
 	f1 := Rename1(r, state1)
 	state2 := make(chan models.TorrentState)

@@ -28,19 +28,19 @@ type RenameTask struct {
 	Complete bool // 是否完成任务
 }
 
-type Renamer struct {
+type Manager struct {
 	plugin api.RenamerPlugin
 	tasks  map[string]*RenameTask
 }
 
-func NewRenamer(plugin api.RenamerPlugin) *Renamer {
-	return &Renamer{
+func NewManager(plugin api.RenamerPlugin) *Manager {
+	return &Manager{
 		plugin: plugin,
 		tasks:  make(map[string]*RenameTask),
 	}
 }
 
-func (r *Renamer) stateSeeding(task *RenameTask) (complete bool) {
+func (m *Manager) stateSeeding(task *RenameTask) (complete bool) {
 	var err error
 	switch task.Mode {
 	case "wait_move":
@@ -69,7 +69,7 @@ func (r *Renamer) stateSeeding(task *RenameTask) (complete bool) {
 	return
 }
 
-func (r *Renamer) stateComplete(task *RenameTask) (complete bool) {
+func (m *Manager) stateComplete(task *RenameTask) (complete bool) {
 	var err error
 	switch task.Mode {
 	case "wait_move":
@@ -80,7 +80,7 @@ func (r *Renamer) stateComplete(task *RenameTask) (complete bool) {
 		task.RenameCallback(task.RenameResult)
 	case "link_delete":
 		if !utils.IsExist(task.Dst) {
-			r.stateSeeding(task)
+			m.stateSeeding(task)
 		}
 		log.Infof("[重命名] 删除「%s」", task.Src)
 		err = os.Remove(task.Src)
@@ -96,10 +96,10 @@ func (r *Renamer) stateComplete(task *RenameTask) (complete bool) {
 	return
 }
 
-func (r *Renamer) AddRenameTask(opt *models.RenameOptions) {
+func (m *Manager) AddRenameTask(opt *models.RenameOptions) {
 	var result *models.RenameResult
-	if r.plugin != nil {
-		result = r.plugin.Rename(opt.Dst.Anime, opt.Dst.Content.Name)
+	if m.plugin != nil {
+		result = m.plugin.Rename(opt.Dst.Anime, opt.Dst.Content.Name)
 	}
 	if result == nil {
 		result = &models.RenameResult{
@@ -108,7 +108,7 @@ func (r *Renamer) AddRenameTask(opt *models.RenameOptions) {
 		}
 	}
 	dst := xpath.Join(opt.Dst.SavePath, result.Filepath)
-	r.tasks[opt.Src] = &RenameTask{
+	m.tasks[opt.Src] = &RenameTask{
 		Src:              opt.Src,
 		RenameDst:        opt.Dst,
 		Mode:             opt.Mode,
@@ -121,9 +121,12 @@ func (r *Renamer) AddRenameTask(opt *models.RenameOptions) {
 	}
 }
 
-func (r *Renamer) Update(ctx context.Context) {
+func (m *Manager) Update(ctx context.Context) {
+	ReInitWG.Add(1)
+	defer ReInitWG.Done()
+
 	var deleteKeys []string
-	for name, task := range r.tasks {
+	for name, task := range m.tasks {
 		if task.Complete {
 			deleteKeys = append(deleteKeys, name)
 			continue
@@ -148,32 +151,31 @@ func (r *Renamer) Update(ctx context.Context) {
 					// 已经移动完成
 					log.Warnf("[跳过重命名] 可能已经移动完成「%s」->「%s」", task.Src, task.Dst)
 					if state == downloader.StateComplete {
-						task.Complete = r.stateComplete(task)
+						task.Complete = m.stateComplete(task)
 						return
 					}
 				}
 				if state == downloader.StateSeeding {
-					task.Complete = r.stateSeeding(task)
+					task.Complete = m.stateSeeding(task)
 				} else if state == downloader.StateComplete {
-					task.Complete = r.stateSeeding(task)
-					task.Complete = r.stateComplete(task)
+					task.Complete = m.stateSeeding(task)
+					task.Complete = m.stateComplete(task)
 				}
 			}(task)
 		default:
 
 		}
 	}
-
 	for _, k := range deleteKeys {
-		delete(r.tasks, k)
+		delete(m.tasks, k)
 	}
 }
 
-func (r *Renamer) sleep(ctx context.Context) {
+func (m *Manager) sleep(ctx context.Context) {
 	utils.Sleep(UpdateDelaySecond, ctx)
 }
 
-func (r *Renamer) Start(ctx context.Context) {
+func (m *Manager) Start(ctx context.Context) {
 	WG.Add(1)
 	// 刷新信息、接收下载、接收退出指令协程
 	go func() {
@@ -183,7 +185,7 @@ func (r *Renamer) Start(ctx context.Context) {
 			func() {
 				defer errors.HandleError(func(err error) {
 					log.Errorf("", err)
-					r.sleep(ctx)
+					m.sleep(ctx)
 				})
 				select {
 				case <-ctx.Done():
@@ -191,8 +193,8 @@ func (r *Renamer) Start(ctx context.Context) {
 					exit = true
 					return
 				default:
-					r.Update(ctx)
-					r.sleep(ctx)
+					m.Update(ctx)
+					m.sleep(ctx)
 				}
 			}()
 			if exit {

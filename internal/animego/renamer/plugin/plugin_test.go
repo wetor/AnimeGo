@@ -74,12 +74,10 @@ func TestRename_Rename(t *testing.T) {
 			want: &models.RenameResult{Filepath: "18692/S02/E1.mp4", TVShowDir: "18692"},
 		},
 	}
-	p := renamerPlugin.NewRenamePlugin([]models.Plugin{
-		{
-			Enable: true,
-			Type:   "python",
-			File:   "rename.py",
-		},
+	p := renamerPlugin.NewRenamePlugin(&models.Plugin{
+		Enable: true,
+		Type:   "python",
+		File:   "rename.py",
 	})
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
