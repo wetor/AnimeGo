@@ -6,6 +6,7 @@ import (
 	filterPlugin "github.com/wetor/AnimeGo/internal/animego/filter/plugin"
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/plugin/public"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/utils"
 )
@@ -49,10 +50,19 @@ func (m *Manager) Update(ctx context.Context, items []*models.FeedItem) {
 	}
 
 	for _, item := range items {
+		log.Infof("获取「%s」信息开始...", item.Name)
+		// ------------------- 解析文件名获取ep -------------------
+		if item.NameParsed == nil || item.NameParsed.Ep == 0 {
+			item.NameParsed = public.ParserName(item.Name)
+			if item.NameParsed.Ep == 0 {
+				log.Warnf("解析集数信息失败，结束此流程")
+				continue
+			}
+		}
 		anime := m.anisource.Parse(&models.AnimeParseOptions{
 			Url:    item.Url,
-			Name:   item.Name,
-			Parsed: item.NameParsed,
+			Ep:     item.NameParsed.Ep,
+			Season: item.NameParsed.Season,
 		})
 		if anime != nil {
 			anime.DownloadInfo = &models.DownloadInfo{

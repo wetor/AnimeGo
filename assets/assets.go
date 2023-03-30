@@ -11,19 +11,23 @@ import (
 
 const (
 	Dir = "plugin"
+
+	// BuiltinPrefix
+	//  内置插件前缀，不会写出
+	BuiltinPrefix = "builtin"
+
+	// BuiltinRawParser
+	//  plugin/filter/Auto_Bangumi/raw_parser.py
+	BuiltinRawParser = "raw_parser.py"
 )
 
 var (
 	//go:embed plugin
 	//go:embed plugin/filter/Auto_Bangumi/__init__.py
 	Plugin embed.FS
-
-	// BuiltinPrefix
-	//  内置插件前缀，不会写出
-	BuiltinPrefix = "builtin_"
 	// BuiltinFile
 	//  内置插件列表，会写出，但是内部调用的为内置文件
-	BuiltinFile   = []string{"raw_parser.py"}
+	BuiltinFile   = []string{BuiltinRawParser}
 	BuiltinPlugin = make(map[string]*string)
 )
 

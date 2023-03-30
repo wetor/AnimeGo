@@ -9,6 +9,8 @@ import (
 
 	"github.com/wetor/AnimeGo/cmd/common"
 	filterPlugin "github.com/wetor/AnimeGo/internal/animego/filter/plugin"
+	renamerPlugin "github.com/wetor/AnimeGo/internal/animego/renamer/plugin"
+	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/internal/schedule"
@@ -30,6 +32,8 @@ var (
 	pArgsJson        string
 	pVarsJson        string
 	pFilterInputFile string
+	pRenameAnime     string
+	pRenameFilename  string
 )
 
 func main() {
@@ -37,12 +41,14 @@ func main() {
 
 	flag.BoolVar(&pDebug, "debug", true, "Debug模式，将会显示更多的日志")
 	flag.StringVar(&pFile, "file", "", "插件脚本文件")
-	flag.StringVar(&pPlugin, "plugin", "python", "插件类型，支持['python', 'filter', 'schedule', 'feed']")
+	flag.StringVar(&pPlugin, "plugin", "python", "插件类型，支持['python', 'filter', 'rename', 'schedule', 'feed']")
 	flag.StringVar(&pType, "type", "python", "插件脚本类型，支持['python']")
 	flag.StringVar(&pArgsJson, "args", "", "插件入口函数默认参数，json格式字符串")
 	flag.StringVar(&pVarsJson, "vars", "", "插件全局变量，json格式字符串")
 	flag.StringVar(&pPythonEntryFunc, "python_entry", "main", "python插件入口函数名")
 	flag.StringVar(&pFilterInputFile, "filter_input", "", "filter插件输入json文件")
+	flag.StringVar(&pRenameAnime, "rename_anime", "", "rename插件用于重命名的动画信息，json格式字符串")
+	flag.StringVar(&pRenameFilename, "rename_filename", "", "rename插件的待重命名文件名")
 	flag.Parse()
 
 	common.RegisterExit(doExit)
@@ -79,6 +85,16 @@ func pluginFilter(info *models.Plugin) []*models.FeedItem {
 
 	f := filterPlugin.NewFilterPlugin(info)
 	return f.Filter(items)
+}
+
+func pluginRename(info *models.Plugin) *models.RenameResult {
+	anime := &models.AnimeEntity{}
+	err := json.Unmarshal([]byte(pRenameAnime), anime)
+	if err != nil {
+		panic(err)
+	}
+	r := renamerPlugin.NewRenamePlugin(info)
+	return r.Rename(anime, pRenameFilename)
 }
 
 func pluginSchedule(s *schedule.Schedule, info *models.Plugin) {
@@ -140,22 +156,25 @@ func Main() {
 		pluginInfo.Vars = vars
 	}
 	switch pPlugin {
-	case "python":
+	case constant.PluginTemplatePython:
 		result := pluginPython(pluginInfo)
 		log.Info(result)
-	case "filter":
+	case constant.PluginTemplateRename:
+		result := pluginRename(pluginInfo)
+		log.Infof("rename结果: %v -> %v, tvshow.nfo位置: %v", pRenameFilename, result.Filepath, result.TVShowDir)
+	case constant.PluginTemplateFilter:
 		result := pluginFilter(pluginInfo)
 		for i, item := range result {
 			jsonData, _ := json.Marshal(item)
 			log.Infof("[%d] filter结果: %v", i, string(jsonData))
 		}
-	case "schedule", "feed":
+	case constant.PluginTemplateSchedule, constant.PluginTemplateFeed:
 		s := schedule.NewSchedule(&schedule.Options{
 			WG: &wg,
 		})
-		if pPlugin == "schedule" {
+		if pPlugin == constant.PluginTemplateSchedule {
 			pluginSchedule(s, pluginInfo)
-		} else if pPlugin == "feed" {
+		} else if pPlugin == constant.PluginTemplateFeed {
 			pluginFeed(s, pluginInfo, func(items []*models.FeedItem) {
 				for i, item := range items {
 					jsonData, _ := json.Marshal(item)

@@ -6,6 +6,7 @@ import (
 
 	"github.com/wetor/AnimeGo/assets"
 	"github.com/wetor/AnimeGo/internal/api"
+	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin/python/lib"
 	"github.com/wetor/AnimeGo/pkg/errors"
@@ -56,9 +57,9 @@ func LoadPlugin(opts *LoadPluginOptions) (p api.Plugin) {
 	var code *string = nil
 	pluginType := strings.ToLower(opts.Type)
 	switch pluginType {
-	case "python", "py":
+	case constant.PluginTypePython:
 		p = python.NewPython(pluginType)
-	case "builtin":
+	case constant.PluginTypeBuiltin:
 		p = python.NewPython(pluginType)
 		code = assets.GetBuiltinPlugin(opts.File)
 	default:

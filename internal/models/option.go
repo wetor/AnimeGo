@@ -31,6 +31,6 @@ type ClientGetOptions struct {
 
 type AnimeParseOptions struct {
 	Url    string // Mikan url
-	Name   string
-	Parsed *TitleParsed
+	Ep     int
+	Season int
 }

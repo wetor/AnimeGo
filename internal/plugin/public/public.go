@@ -1,6 +1,7 @@
 package public
 
 import (
+	"github.com/wetor/AnimeGo/assets"
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin"
@@ -9,8 +10,7 @@ import (
 )
 
 const (
-	parserScript = "filter/Auto_Bangumi/raw_parser.py"
-	FuncMain     = "main"
+	FuncMain = "main"
 )
 
 var (
@@ -22,7 +22,7 @@ func ParserName(title string) (ep *models.TitleParsed) {
 		py = plugin.LoadPlugin(&plugin.LoadPluginOptions{
 			Plugin: &models.Plugin{
 				Type: "builtin",
-				File: "raw_parser.py",
+				File: assets.BuiltinRawParser,
 			},
 			EntryFunc: FuncMain,
 			FuncSchema: []*pkgPlugin.FuncSchemaOptions{
