@@ -12,3 +12,7 @@ type DownloadStatus struct {
 	Seeded     bool `json:"seeded"`     // 是否做种
 	Scraped    bool `json:"scraped"`    // 是否已经完成搜刮
 }
+
+func (d DownloadStatus) Expire(now int64) bool {
+	return d.ExpireAt > 0 && d.ExpireAt-now <= 0
+}

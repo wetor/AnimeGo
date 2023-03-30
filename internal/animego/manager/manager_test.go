@@ -13,7 +13,6 @@ import (
 	"github.com/wetor/AnimeGo/internal/animego/manager"
 	"github.com/wetor/AnimeGo/internal/animego/renamer"
 	renamerPlugin "github.com/wetor/AnimeGo/internal/animego/renamer/plugin"
-	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/pkg/cache"
@@ -29,11 +28,11 @@ const (
 )
 
 var (
-	qbt         api.Downloader
-	qbtConnect  = true
-	mgr         *manager.Manager
-	wg          sync.WaitGroup
-	ctx, cancel = context.WithCancel(context.Background())
+	qbt        *ClientMock
+	qbtConnect = true
+	rename     *renamer.Manager
+	mgr        *manager.Manager
+	db         *cache.Bolt
 )
 
 func TestMain(m *testing.M) {
@@ -50,8 +49,7 @@ func TestMain(m *testing.M) {
 		Debug: true,
 	})
 	qbt = &ClientMock{}
-	qbt.Start(ctx)
-
+	wg := sync.WaitGroup{}
 	manager.Init(&manager.Options{
 		Downloader: manager.Downloader{
 			UpdateDelaySecond:      1,
@@ -66,10 +64,10 @@ func TestMain(m *testing.M) {
 		},
 		WG: &wg,
 	})
-	b := cache.NewBolt()
-	b.Open("data/test.db")
-	b.Add("name2status")
-	b.Put("name2status", "test", &models.DownloadStatus{
+	db = cache.NewBolt()
+	db.Open("data/test.db")
+	db.Add("name2status")
+	db.Put("name2status", "test[第1季][第1集]", &models.DownloadStatus{
 		Hash:       "0000a4042b0bac2406b71023fdfe5e9054ebb832",
 		State:      "complete",
 		Path:       SavePath + "/test/test.mp4",
@@ -82,149 +80,279 @@ func TestMain(m *testing.M) {
 	}, 0)
 	renamer.Init(&renamer.Options{
 		WG:                &wg,
-		UpdateDelaySecond: 2,
+		UpdateDelaySecond: 1,
 	})
 
-	rename := renamer.NewManager(renamerPlugin.NewRenamePlugin(&models.Plugin{
+	rename = renamer.NewManager(renamerPlugin.NewRenamePlugin(&models.Plugin{
 		Enable: true,
 		Type:   "python",
 		File:   "rename/builtin_rename.py",
 	}))
-	rename.Start(ctx)
 
-	mgr = manager.NewManager(qbt, b, rename)
+	mgr = manager.NewManager(qbt, db, rename)
 
-	mgr.Start(ctx)
 	m.Run()
 
 	_ = os.RemoveAll("data")
 	fmt.Println("end")
 }
 
-func Download1(m *manager.Manager) *models.AnimeEntity {
-	tempHash := "4199a4042b0bac2406b71023fdfe5e9054ebb832"
+func download(name string, season, ep int) (file, fullname, hash string) {
+	hash = utils.MD5([]byte(fmt.Sprintf("%v%v%v", name, season, ep)))
 	anime := &models.AnimeEntity{
-		ID:      18692,
-		Name:    "ドラえもん",
-		NameCN:  "动画1",
-		AirDate: "2005-04-15",
-		Eps:     0,
-		Season:  1,
-		Ep:      712,
-		MikanID: 681,
+		NameCN: name,
+		Season: season,
+		Ep:     ep,
 		DownloadInfo: &models.DownloadInfo{
-			Hash: tempHash,
+			Hash: hash,
 		},
 	}
-	name2hash[anime.FullName()] = tempHash
-	m.Download(anime)
-	return anime
+	fullname = anime.FullName()
+	qbt.AddName(fullname, hash)
+	mgr.Download(anime)
+	file = xpath.Join(SavePath, anime.DirName(), anime.FileName()+xpath.Ext(ContentFile))
+	return
 }
 
-func Download2(m *manager.Manager) *models.AnimeEntity {
-	tempHash := "6666a4042b0bac2406b71023fdfe5e9054ebb832"
-	anime := &models.AnimeEntity{
-		ID:      18692,
-		Name:    "ONE PIECE",
-		NameCN:  "动画2",
-		AirDate: "2005-04-15",
-		Eps:     0,
-		Season:  1,
-		Ep:      1026,
-		MikanID: 228,
-		DownloadInfo: &models.DownloadInfo{
-			Hash: tempHash,
-		},
-	}
-	name2hash[anime.FullName()] = tempHash
-	m.Download(anime)
-	return anime
+func initTest() (*sync.WaitGroup, func()) {
+	wg := sync.WaitGroup{}
+	renamer.WG = &wg
+	manager.WG = &wg
+	ctx, cancel := context.WithCancel(context.Background())
+	qbt.Init()
+	qbt.Start(ctx)
+	rename.Start(ctx)
+	mgr.Start(ctx)
+	return &wg, cancel
 }
 
-func Download3(m *manager.Manager) *models.AnimeEntity {
-	tempHash := "7777a4042b0bac2406b71023fdfe5e9054ebb832"
-	anime := &models.AnimeEntity{
-		ID:      18692,
-		Name:    "ONE PIECE",
-		NameCN:  "动画3",
-		AirDate: "2005-04-15",
-		Eps:     0,
-		Season:  1,
-		Ep:      996,
-		MikanID: 228,
-		DownloadInfo: &models.DownloadInfo{
-			Hash: tempHash,
-		},
-	}
-	name2hash[anime.FullName()] = tempHash
-	m.Download(anime)
-	return anime
-}
+func TestManager_Success(t *testing.T) {
+	wg, cancel := initTest()
 
-func TestManager_Start(t *testing.T) {
-	var a1, a2, a3 *models.AnimeEntity
+	var file1 string
 	go func() {
-		time.Sleep(18 * time.Second)
+		time.Sleep(7 * time.Second)
 		cancel()
-		time.Sleep(1*time.Second + 500*time.Millisecond)
-		wg.Done()
 	}()
 	manager.Conf.Rename = "move"
 	{
-		fmt.Println("下载 1")
-		a1 = Download1(mgr)
+		log.Info("下载 1")
+		file1, _, _ = download("动画1", 1, 1)
 	}
-	{
-		fmt.Println("下载 2")
-		a2 = Download2(mgr)
-	}
-	time.Sleep(2*time.Second + 500*time.Millisecond)
-	{
-		fmt.Println("删除 2")
-		qbt.Delete(&models.ClientDeleteOptions{
-			Hash: []string{a2.Hash},
-		})
-		mgr.DeleteCache(a2.FullName())
-	}
-	{
-		fmt.Println("掉线")
-		qbtConnect = false
-	}
+	wg.Wait()
+	assert.FileExists(t, file1)
+	_ = os.Remove(file1)
+}
 
+func TestManager_Exist(t *testing.T) {
+	wg, cancel := initTest()
+
+	var file1 string
+	go func() {
+		time.Sleep(7 * time.Second)
+		cancel()
+	}()
+	manager.Conf.Rename = "move"
 	{
-		fmt.Println("下载 3")
-		a3 = Download3(mgr)
+		log.Info("下载 1")
+		file1, _, _ = download("动画1", 1, 1)
+
 	}
-	time.Sleep(2*time.Second + 500*time.Millisecond)
+	{
+		log.Info("下载 1")
+		file1, _, _ = download("动画1", 1, 1)
+	}
+	wg.Wait()
+	assert.FileExists(t, file1)
+	_ = os.Remove(file1)
+}
+
+func TestManager_DeleteFile_ReDownload(t *testing.T) {
+	wg, cancel := initTest()
+
+	var file1 string
+	go func() {
+		time.Sleep(13 * time.Second)
+		cancel()
+	}()
+	manager.Conf.Rename = "move"
+	go func() {
+		time.Sleep(300 * time.Millisecond)
+		{
+			log.Info("下载 1")
+			file1, _, _ = download("动画1", 1, 1)
+
+		}
+		time.Sleep(6*time.Second + 300*time.Millisecond)
+		{
+			log.Info("删除 1 文件")
+			_ = os.Remove(file1)
+			assert.NoFileExists(t, file1)
+		}
+		time.Sleep(500 * time.Millisecond)
+		{
+			log.Info("下载 1")
+			file1, _, _ = download("动画1", 1, 1)
+		}
+	}()
+	wg.Wait()
+	assert.FileExists(t, file1)
+	_ = os.Remove(file1)
+}
+
+func TestManager_DeleteCache_ReDownload(t *testing.T) {
+	wg, cancel := initTest()
+
+	var file1 string
+	var name1 string
+	go func() {
+		time.Sleep(13 * time.Second)
+		cancel()
+	}()
+	manager.Conf.Rename = "move"
+	go func() {
+		time.Sleep(300 * time.Millisecond)
+		{
+			log.Info("下载 1")
+			file1, name1, _ = download("动画1", 1, 1)
+
+		}
+		time.Sleep(6*time.Second + 300*time.Millisecond)
+		{
+			log.Info("删除 1 缓存")
+			mgr.DeleteCache(name1)
+			assert.FileExists(t, file1)
+		}
+		time.Sleep(500 * time.Millisecond)
+		{
+			log.Info("下载 1")
+			file1, _, _ = download("动画1", 1, 1)
+		}
+	}()
+	wg.Wait()
+	assert.FileExists(t, file1)
+	_ = os.Remove(file1)
+}
+
+func TestManager_WaitClient(t *testing.T) {
+	wg, cancel := initTest()
+
+	var file1, file2 string
+	go func() {
+		time.Sleep(10 * time.Second)
+		cancel()
+	}()
+	go func() {
+		{
+			log.Info("Client离线")
+			qbtConnect = false
+		}
+		time.Sleep(2 * time.Second)
+		{
+			log.Info("Client恢复")
+			qbtConnect = true
+		}
+	}()
 	manager.Conf.Rename = "link_delete"
-	{
-		fmt.Println("重连")
-		qbtConnect = true
-	}
-	time.Sleep(1*time.Second + 500*time.Millisecond)
-	{
-		fmt.Println("重复下载 1")
-		Download1(mgr)
-		// 失败
-	}
-	{
-		fmt.Println("再次下载 2")
-		Download2(mgr)
-		// 成功
-	}
-	time.Sleep(1*time.Second + 500*time.Millisecond)
-	{
-		fmt.Println("删除 1 文件")
-		_ = os.Remove(xpath.Join(SavePath, a1.DirName(), a1.FileName()+xpath.Ext(ContentFile)))
-	}
-	{
-		fmt.Println("再次下载 1")
-		Download1(mgr)
-		// 成功
-	}
+	go func() {
+		time.Sleep(300 * time.Millisecond)
+		{
+			log.Info("下载 1")
+			file1, _, _ = download("动画1", 1, 1)
+
+		}
+		time.Sleep(1*time.Second + 300*time.Millisecond)
+		{
+			log.Info("下载 2")
+			file2, _, _ = download("动画2", 1, 1)
+		}
+	}()
 
 	wg.Wait()
-	assert.FileExists(t, xpath.Join(SavePath, a1.DirName(), a1.FileName()+xpath.Ext(ContentFile)))
-	assert.FileExists(t, xpath.Join(SavePath, a2.DirName(), a2.FileName()+xpath.Ext(ContentFile)))
-	assert.FileExists(t, xpath.Join(SavePath, a3.DirName(), a3.FileName()+xpath.Ext(ContentFile)))
+	assert.FileExists(t, file1)
+	assert.FileExists(t, file2)
+	_ = os.Remove(file1)
+	_ = os.Remove(file2)
+}
+
+func TestManager_WaitClient_FullChan(t *testing.T) {
+	wg, cancel := initTest()
+
+	var file []string
+	go func() {
+		time.Sleep(12 * time.Second)
+		cancel()
+	}()
+	go func() {
+		{
+			log.Info("Client离线")
+			qbtConnect = false
+		}
+		time.Sleep(5 * time.Second)
+		{
+			log.Info("Client恢复")
+			qbtConnect = true
+		}
+	}()
+	manager.Conf.Rename = "move"
+	go func() {
+		time.Sleep(300 * time.Millisecond)
+		{
+			for i := 1; i <= manager.DownloadChanDefaultCap; i++ {
+				log.Infof("下载 %d", i)
+				f, _, _ := download("动画1", 1, i)
+				file = append(file, f)
+			}
+		}
+		{
+			log.Info("下载 2")
+			f, _, _ := download("动画2", 1, 1)
+			file = append(file, f)
+			log.Info("下载 3")
+			f, _, _ = download("动画3", 1, 1)
+			file = append(file, f)
+		}
+	}()
+
+	wg.Wait()
+	for _, f := range file {
+		assert.FileExists(t, f)
+	}
+}
+
+func TestManager_ReStart_NotDownloaded(t *testing.T) {
+	var file1 string
+	{
+		wg, cancel := initTest()
+		go func() {
+			time.Sleep(5 * time.Second)
+			cancel()
+		}()
+		manager.Conf.Rename = "move"
+		{
+			log.Info("下载 1")
+			file1, _, _ = download("动画1", 1, 1)
+
+		}
+		wg.Wait()
+		assert.FileExists(t, file1)
+	}
+	time.Sleep(1 * time.Second)
+	{
+		log.Info("重启")
+		wg, cancel := initTest()
+		go func() {
+			time.Sleep(3 * time.Second)
+			cancel()
+		}()
+		{
+			log.Info("下载 1")
+			file1, _, _ = download("动画1", 1, 1)
+		}
+		wg.Wait()
+	}
+
+	assert.FileExists(t, file1)
+	_ = os.Remove(file1)
+
 }

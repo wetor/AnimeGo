@@ -11,7 +11,6 @@ import (
 	"github.com/jinzhu/copier"
 
 	"github.com/wetor/AnimeGo/internal/animego/downloader"
-	"github.com/wetor/AnimeGo/internal/animego/downloader/qbittorrent"
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/pkg/errors"
@@ -202,7 +201,7 @@ func (m *Manager) Start(ctx context.Context) {
 					} else {
 						go func() {
 							m.downloadChan <- anime
-							log.Warnf("无法连接客户端，等待。已接收到%d个下载项", len(m.downloadChan))
+							log.Warnf("等待连接到下载器。已接收到%d个下载项", len(m.downloadChan))
 						}()
 						m.sleep(ctx)
 					}
@@ -247,13 +246,9 @@ func (m *Manager) updateDownloadItem(status *models.DownloadStatus, anime *model
 				status.Renamed = true
 				status.Scraped = m.scrape(anime, opts.TVShowDir)
 			},
-			CompleteCallback: func() {
-				if c, ok := m.client.(*qbittorrent.QBittorrent); ok {
-					// qbt需要手动删除列表记录，否则无法重复下载
-					c.Delete(&models.ClientDeleteOptions{
-						Hash:       []string{status.Hash},
-						DeleteFile: false,
-					})
+			CompleteCallback: func(opts *models.RenameResult) {
+				if !status.Scraped {
+					status.Scraped = m.scrape(anime, opts.TVShowDir)
 				}
 			},
 		}
@@ -283,6 +278,11 @@ func (m *Manager) updateDownloadItem(status *models.DownloadStatus, anime *model
 				m.name2chan[name] <- downloader.StateComplete
 			}()
 			status.Downloaded = true
+			// 自动删除列表记录，否则无法重复下载
+			m.client.Delete(&models.ClientDeleteOptions{
+				Hash:       []string{status.Hash},
+				DeleteFile: false,
+			})
 		}
 		log.Debugf("下载进度: %v, 名称: %v, qbt状态: %v, 状态: %v",
 			fmt.Sprintf("%.1f", item.Progress*100),
@@ -312,6 +312,15 @@ func (m *Manager) isDownloading(status *models.DownloadStatus) bool {
 		status.State != downloader.StateNotFound
 }
 
+func (m *Manager) setDownloaded(status *models.DownloadStatus) {
+	status.Init = true
+	status.Seeded = true
+	status.Downloaded = true
+	status.Renamed = true
+	status.Scraped = true
+	status.State = downloader.StateComplete
+}
+
 func (m *Manager) fileExist(path string) bool {
 	return len(path) != 0 && utils.IsExist(xpath.Join(Conf.SavePath, path))
 }
@@ -329,9 +338,8 @@ func (m *Manager) UpdateList() {
 	hash2item := make(map[string]*models.TorrentItem)
 	for _, item := range items {
 		hash2item[item.Hash] = item
-		if state := downloader.StateMap(item.State); state == downloader.StateDownloading ||
-			state == downloader.StateSeeding ||
-			state == downloader.StateComplete {
+		if state := downloader.StateMap(item.State); state != downloader.StateComplete &&
+			state != downloader.StateError && state != downloader.StateUnknown {
 			m.sleepUpdateCount = SleepUpdateMaxCount
 		}
 	}
@@ -355,7 +363,7 @@ func (m *Manager) UpdateList() {
 		fileExist := m.fileExist(status.Path)
 		if len(status.Path) != 0 && !fileExist {
 			// 文件不存在，设置缓存将在 NotFoundExpireHour 小时后过期
-			if status.ExpireAt <= 0 {
+			if status.ExpireAt == 0 {
 				status.ExpireAt = time.Now().Add(NotFoundExpireHour * time.Hour).Unix()
 				status.State = downloader.StateNotFound
 				m.cache.Put(Name2StatusBucket, name, status, 0)
@@ -377,8 +385,9 @@ func (m *Manager) UpdateList() {
 				} else if fileExist {
 					// 不在下载列表中，但文件存在
 					// 可能是在下载过程中，在下载器中被手动删除下载项，默认已下载完成
-					log.Warnf("存在可能未下载完成的项目：%s", status.Path)
-				} else if status.ExpireAt-now <= 0 {
+					log.Warnf("存在可能未下载完成的项目「%s」，检查后选择是否删除", status.Path)
+					m.setDownloaded(status)
+				} else if status.Expire(now) {
 					// 不在下载列表，且文件不存在
 					// 文件不存在，缓存已过期
 					deleteNames = append(deleteNames, name)
@@ -389,7 +398,7 @@ func (m *Manager) UpdateList() {
 			}
 			updateStatusKeys = append(updateStatusKeys, name)
 			updateStatusValues = append(updateStatusValues, status)
-		} else if status.ExpireAt-now <= 0 {
+		} else if status.Expire(now) {
 			// 文件不存在，缓存已过期
 			deleteNames = append(deleteNames, name)
 		}

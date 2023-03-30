@@ -1,17 +1,23 @@
 package utils
 
 import (
+	"bytes"
 	"context"
 	"crypto/md5"
+	"crypto/sha1"
 	"crypto/sha256"
 	"encoding/hex"
-
+	"errors"
 	"fmt"
+	"io"
 	"math/rand"
 	"os"
 	"reflect"
+	"regexp"
 	"strings"
 	"time"
+
+	"github.com/jackpal/bencode-go"
 
 	"github.com/wetor/AnimeGo/pkg/json"
 	"github.com/wetor/AnimeGo/pkg/xpath"
@@ -212,4 +218,52 @@ func RandString(n int) string {
 		b[i] = letterBytes[rand.Int63()%int64(len(letterBytes))]
 	}
 	return string(b)
+}
+
+func TorrentHash(link string) (hash string, isTorrent bool) {
+	if !regexp.MustCompile(`^http.*\.torrent.*$`).MatchString(link) {
+		return
+	}
+	isTorrent = true
+	hashRegex := regexp.MustCompile(`^http.*([a-fA-F0-9]{40})\.torrent`)
+	hashMatches := hashRegex.FindStringSubmatch(link)
+	if len(hashMatches) > 1 {
+		hash = hashMatches[1]
+	}
+	return
+}
+
+func MagnetHash(link string) (hash string) {
+	if !regexp.MustCompile("^magnet:").MatchString(link) {
+		return
+	}
+	hashRegex := regexp.MustCompile("urn:btih:([a-fA-F0-9]{40})")
+	hashMatches := hashRegex.FindStringSubmatch(link)
+	if len(hashMatches) > 1 {
+		hash = hashMatches[1]
+	}
+	return
+}
+
+func TorrentDataHash(d []byte) (string, error) {
+	r := bytes.NewReader(d)
+	return TorrentHashReader(r)
+}
+
+func TorrentHashReader(r io.Reader) (string, error) {
+	data, err := bencode.Decode(r)
+	if err != nil {
+		return "", err
+	}
+	info, ok := data.(map[string]interface{})["info"]
+	if !ok {
+		return "", errors.New("torrent中未找到info信息")
+	}
+	hash := sha1.New()
+	err = bencode.Marshal(hash, info)
+	if err != nil {
+		return "", err
+	}
+	res := hex.EncodeToString(hash.Sum(nil))
+	return res, nil
 }

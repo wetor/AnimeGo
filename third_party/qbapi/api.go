@@ -171,7 +171,7 @@ func (q *QBAPI) postWithDecoder(ctx context.Context, path string, req interface{
 	return nil
 }
 
-//Login /api/v2/auth/login
+// Login /api/v2/auth/login
 func (q *QBAPI) Login(ctx context.Context) error {
 	req := &LoginReq{Username: q.c.Username, Password: q.c.Password}
 	var rsp string
@@ -185,7 +185,7 @@ func (q *QBAPI) Login(ctx context.Context) error {
 	return nil
 }
 
-//GetApplicationVersion /api/v2/app/version
+// GetApplicationVersion /api/v2/app/version
 func (q *QBAPI) GetApplicationVersion(ctx context.Context, req *GetApplicationVersionReq) (*GetApplicationVersionRsp, error) {
 	var version string
 	err := q.getWithDecoder(ctx, apiGetAPPVersion, nil, &version, StrDec)
@@ -195,7 +195,7 @@ func (q *QBAPI) GetApplicationVersion(ctx context.Context, req *GetApplicationVe
 	return &GetApplicationVersionRsp{version}, nil
 }
 
-//GetAPIVersion /api/v2/app/webapiVersion
+// GetAPIVersion /api/v2/app/webapiVersion
 func (q *QBAPI) GetAPIVersion(ctx context.Context, req *GetAPIVersionReq) (*GetAPIVersionRsp, error) {
 	var version string
 	err := q.getWithDecoder(ctx, apiGetAPIVersion, nil, &version, StrDec)
@@ -205,7 +205,7 @@ func (q *QBAPI) GetAPIVersion(ctx context.Context, req *GetAPIVersionReq) (*GetA
 	return &GetAPIVersionRsp{Version: version}, nil
 }
 
-//GetBuildInfo /api/v2/app/buildInfo
+// GetBuildInfo /api/v2/app/buildInfo
 func (q *QBAPI) GetBuildInfo(ctx context.Context, req *GetBuildInfoReq) (*GetBuildInfoRsp, error) {
 	rsp := &GetBuildInfoRsp{Info: &BuildInfo{}}
 	if err := q.getWithDecoder(ctx, apiGetBuildInfo, req, rsp.Info, JsonDec); err != nil {
@@ -214,7 +214,7 @@ func (q *QBAPI) GetBuildInfo(ctx context.Context, req *GetBuildInfoReq) (*GetBui
 	return rsp, nil
 }
 
-//ShutDownAPPlication /api/v2/app/shutdown
+// ShutDownAPPlication /api/v2/app/shutdown
 func (q *QBAPI) ShutDownAPPlication(ctx context.Context, req *ShutdownApplicationReq) (*ShutdownApplicationRsp, error) {
 	err := q.postWithDecoder(ctx, apiShutdownAPP, nil, nil, JsonDec)
 	if err != nil {
@@ -223,7 +223,7 @@ func (q *QBAPI) ShutDownAPPlication(ctx context.Context, req *ShutdownApplicatio
 	return &ShutdownApplicationRsp{}, nil
 }
 
-//GetApplicationPreferences /api/v2/app/preferences
+// GetApplicationPreferences /api/v2/app/preferences
 func (q *QBAPI) GetApplicationPreferences(ctx context.Context, req *GetApplicationPreferencesReq) (*GetApplicationPreferencesRsp, error) {
 	rsp := &GetApplicationPreferencesRsp{}
 	err := q.getWithDecoder(ctx, apiGetAPPPerf, req, rsp, JsonDec)
@@ -233,7 +233,7 @@ func (q *QBAPI) GetApplicationPreferences(ctx context.Context, req *GetApplicati
 	return rsp, nil
 }
 
-//SetApplicationPreferences /api/v2/app/setPreferences
+// SetApplicationPreferences /api/v2/app/setPreferences
 func (q *QBAPI) SetApplicationPreferences(ctx context.Context, req *SetApplicationPreferencesReq) (*SetApplicationPreferencesRsp, error) {
 	js, err := json.Marshal(req)
 	if err != nil {
@@ -248,7 +248,7 @@ func (q *QBAPI) SetApplicationPreferences(ctx context.Context, req *SetApplicati
 	return &SetApplicationPreferencesRsp{}, nil
 }
 
-//GetDefaultSavePath /api/v2/app/defaultSavePath
+// GetDefaultSavePath /api/v2/app/defaultSavePath
 func (q *QBAPI) GetDefaultSavePath(ctx context.Context, req *GetDefaultSavePathReq) (*GetDefaultSavePathRsp, error) {
 	var path string
 	if err := q.getWithDecoder(ctx, apiGetDefaultSavePath, nil, &path, StrDec); err != nil {
@@ -257,7 +257,7 @@ func (q *QBAPI) GetDefaultSavePath(ctx context.Context, req *GetDefaultSavePathR
 	return &GetDefaultSavePathRsp{Path: path}, nil
 }
 
-//GetLog /api/v2/log/main
+// GetLog /api/v2/log/main
 func (q *QBAPI) GetLog(ctx context.Context, req *GetLogReq) (*GetLogRsp, error) {
 	rsp := &GetLogRsp{Items: make([]*LogItem, 0)}
 	if err := q.getWithDecoder(ctx, apiGetLog, req, &rsp.Items, JsonDec); err != nil {
@@ -266,7 +266,7 @@ func (q *QBAPI) GetLog(ctx context.Context, req *GetLogReq) (*GetLogRsp, error) 
 	return rsp, nil
 }
 
-//GetPeerLog /api/v2/log/peers
+// GetPeerLog /api/v2/log/peers
 func (q *QBAPI) GetPeerLog(ctx context.Context, req *GetPeerLogReq) (*GetPeerLogRsp, error) {
 	rsp := &GetPeerLogRsp{Items: make([]*PeerLogItem, 0)}
 	if err := q.getWithDecoder(ctx, apiGetPeerLog, req, &rsp.Items, JsonDec); err != nil {
@@ -275,7 +275,7 @@ func (q *QBAPI) GetPeerLog(ctx context.Context, req *GetPeerLogReq) (*GetPeerLog
 	return rsp, nil
 }
 
-//GetMainData /api/v2/sync/maindata
+// GetMainData /api/v2/sync/maindata
 func (q *QBAPI) GetMainData(ctx context.Context, req *GetMainDataReq) (*GetMainDataRsp, error) {
 	rsp := &GetMainDataRsp{}
 	if err := q.getWithDecoder(ctx, apiGetMainData, req, &rsp, JsonDec); err != nil {
@@ -284,7 +284,7 @@ func (q *QBAPI) GetMainData(ctx context.Context, req *GetMainDataReq) (*GetMainD
 	return rsp, nil
 }
 
-//GetTorrentPeerData /api/v2/sync/torrentPeers
+// GetTorrentPeerData /api/v2/sync/torrentPeers
 func (q *QBAPI) GetTorrentPeerData(ctx context.Context, req *GetTorrentPeerDataReq) (*GetTorrentPeerDataRsp, error) {
 	rsp := &GetTorrentPeerDataRsp{Data: &TorrentPeerData{}}
 	if err := q.getWithDecoder(ctx, apiGetTorrentPeerData, req, rsp.Data, JsonDec); err != nil {
@@ -293,7 +293,7 @@ func (q *QBAPI) GetTorrentPeerData(ctx context.Context, req *GetTorrentPeerDataR
 	return rsp, nil
 }
 
-//GetGlobalTransferInfo /api/v2/transfer/info
+// GetGlobalTransferInfo /api/v2/transfer/info
 func (q *QBAPI) GetGlobalTransferInfo(ctx context.Context, req *GetGlobalTransferInfoReq) (*GetGlobalTransferInfoRsp, error) {
 	rsp := &GetGlobalTransferInfoRsp{Info: &GlobalTransferInfo{}}
 	if err := q.getWithDecoder(ctx, apiGetGlobalTransferInfo, req, rsp.Info, JsonDec); err != nil {
@@ -302,7 +302,7 @@ func (q *QBAPI) GetGlobalTransferInfo(ctx context.Context, req *GetGlobalTransfe
 	return rsp, nil
 }
 
-//GetAlternativeSpeedLimitsState /api/v2/transfer/speedLimitsMode
+// GetAlternativeSpeedLimitsState /api/v2/transfer/speedLimitsMode
 func (q *QBAPI) GetAlternativeSpeedLimitsState(ctx context.Context, req *GetAlternativeSpeedLimitsStateReq) (*GetAlternativeSpeedLimitsStateRsp, error) {
 	var intEnabled int
 	rsp := &GetAlternativeSpeedLimitsStateRsp{Enabled: true}
@@ -315,7 +315,7 @@ func (q *QBAPI) GetAlternativeSpeedLimitsState(ctx context.Context, req *GetAlte
 	return rsp, nil
 }
 
-//ToggleAlternativeSpeedLimits /api/v2/transfer/toggleSpeedLimitsMode
+// ToggleAlternativeSpeedLimits /api/v2/transfer/toggleSpeedLimitsMode
 func (q *QBAPI) ToggleAlternativeSpeedLimits(ctx context.Context, req *ToggleAlternativeSpeedLimitsReq) (*ToggleAlternativeSpeedLimitsRsp, error) {
 	rsp := &ToggleAlternativeSpeedLimitsRsp{}
 	if err := q.postWithDecoder(ctx, apiToggleAltSpeedLimits, req, nil, JsonDec); err != nil {
@@ -324,7 +324,7 @@ func (q *QBAPI) ToggleAlternativeSpeedLimits(ctx context.Context, req *ToggleAlt
 	return rsp, nil
 }
 
-//GetGlobalDownloadLimit /api/v2/transfer/downloadLimit
+// GetGlobalDownloadLimit /api/v2/transfer/downloadLimit
 func (q *QBAPI) GetGlobalDownloadLimit(ctx context.Context, req *GetGlobalDownloadLimitReq) (*GetGlobalDownloadLimitRsp, error) {
 	rsp := &GetGlobalDownloadLimitRsp{}
 	if err := q.getWithDecoder(ctx, apiGetGlobalDownloadLimit, req, &rsp.Speed, IntDec); err != nil {
@@ -333,7 +333,7 @@ func (q *QBAPI) GetGlobalDownloadLimit(ctx context.Context, req *GetGlobalDownlo
 	return rsp, nil
 }
 
-//SetGlobalDownloadLimit /api/v2/transfer/setDownloadLimit
+// SetGlobalDownloadLimit /api/v2/transfer/setDownloadLimit
 func (q *QBAPI) SetGlobalDownloadLimit(ctx context.Context, req *SetGlobalDownloadLimitReq) (*SetGlobalDownloadLimitRsp, error) {
 	if err := q.postWithDecoder(ctx, apiSetGlobalDownloadLimit, req, nil, JsonDec); err != nil {
 		return nil, err
@@ -341,7 +341,7 @@ func (q *QBAPI) SetGlobalDownloadLimit(ctx context.Context, req *SetGlobalDownlo
 	return &SetGlobalDownloadLimitRsp{}, nil
 }
 
-//GetGlobalUploadLimit /api/v2/transfer/uploadLimit
+// GetGlobalUploadLimit /api/v2/transfer/uploadLimit
 func (q *QBAPI) GetGlobalUploadLimit(ctx context.Context, req *GetGlobalUploadLimitReq) (*GetGlobalUploadLimitRsp, error) {
 	rsp := &GetGlobalUploadLimitRsp{}
 	if err := q.getWithDecoder(ctx, apiGetGlobalUploadLimit, req, &rsp.Speed, IntDec); err != nil {
@@ -350,7 +350,7 @@ func (q *QBAPI) GetGlobalUploadLimit(ctx context.Context, req *GetGlobalUploadLi
 	return rsp, nil
 }
 
-//SetGlobalUploadLimit /api/v2/transfer/setUploadLimit
+// SetGlobalUploadLimit /api/v2/transfer/setUploadLimit
 func (q *QBAPI) SetGlobalUploadLimit(ctx context.Context, req *SetGlobalUploadLimitReq) (*SetGlobalUploadLimitRsp, error) {
 	if err := q.postWithDecoder(ctx, apiSetGlobalUploadLimit, req, nil, JsonDec); err != nil {
 		return nil, err
@@ -358,7 +358,7 @@ func (q *QBAPI) SetGlobalUploadLimit(ctx context.Context, req *SetGlobalUploadLi
 	return &SetGlobalUploadLimitRsp{}, nil
 }
 
-//BanPeers /api/v2/transfer/banPeers
+// BanPeers /api/v2/transfer/banPeers
 func (q *QBAPI) BanPeers(ctx context.Context, req *BanPeersReq) (*BanPeersRsp, error) {
 	for _, item := range req.Peers {
 		if !strings.Contains(item, ":") {
@@ -372,7 +372,7 @@ func (q *QBAPI) BanPeers(ctx context.Context, req *BanPeersReq) (*BanPeersRsp, e
 	return &BanPeersRsp{}, nil
 }
 
-//GetTorrentList /api/v2/torrents/info
+// GetTorrentList /api/v2/torrents/info
 func (q *QBAPI) GetTorrentList(ctx context.Context, req *GetTorrentListReq) (*GetTorrentListRsp, error) {
 	rsp := &GetTorrentListRsp{Items: make([]*TorrentListItem, 0)}
 	if err := q.getWithDecoder(ctx, apiGetTorrentList, req, &rsp.Items, JsonDec); err != nil {
@@ -381,7 +381,7 @@ func (q *QBAPI) GetTorrentList(ctx context.Context, req *GetTorrentListReq) (*Ge
 	return rsp, nil
 }
 
-//GetTorrentGenericProperties /api/v2/torrents/properties
+// GetTorrentGenericProperties /api/v2/torrents/properties
 func (q *QBAPI) GetTorrentGenericProperties(ctx context.Context, req *GetTorrentGenericPropertiesReq) (*GetTorrentGenericPropertiesRsp, error) {
 	rsp := &GetTorrentGenericPropertiesRsp{Property: &TorrentGenericProperty{}}
 	if err := q.getWithDecoder(ctx, apiGetTorrentGenericProp, req, rsp.Property, JsonDec); err != nil {
@@ -390,7 +390,7 @@ func (q *QBAPI) GetTorrentGenericProperties(ctx context.Context, req *GetTorrent
 	return rsp, nil
 }
 
-//GetTorrentTrackers /api/v2/torrents/trackers
+// GetTorrentTrackers /api/v2/torrents/trackers
 func (q *QBAPI) GetTorrentTrackers(ctx context.Context, req *GetTorrentTrackersReq) (*GetTorrentTrackersRsp, error) {
 	rsp := &GetTorrentTrackersRsp{Trackers: make([]*TorrentTrackerItem, 0)}
 	if err := q.getWithDecoder(ctx, apiGetTorrentTrackers, req, &rsp.Trackers, JsonDec); err != nil {
@@ -399,7 +399,7 @@ func (q *QBAPI) GetTorrentTrackers(ctx context.Context, req *GetTorrentTrackersR
 	return rsp, nil
 }
 
-//GetTorrentWebSeeds /api/v2/torrents/webseeds
+// GetTorrentWebSeeds /api/v2/torrents/webseeds
 func (q *QBAPI) GetTorrentWebSeeds(ctx context.Context, req *GetTorrentWebSeedsReq) (*GetTorrentWebSeedsRsp, error) {
 	rsp := &GetTorrentWebSeedsRsp{WebSeeds: make([]*TorrentWebSeedItem, 0)}
 	if err := q.getWithDecoder(ctx, apiGetTorrentWebSeeds, req, &rsp.WebSeeds, JsonDec); err != nil {
@@ -408,7 +408,7 @@ func (q *QBAPI) GetTorrentWebSeeds(ctx context.Context, req *GetTorrentWebSeedsR
 	return rsp, nil
 }
 
-//GetTorrentContents /api/v2/torrents/files
+// GetTorrentContents /api/v2/torrents/files
 func (q *QBAPI) GetTorrentContents(ctx context.Context, req *GetTorrentContentsReq) (*GetTorrentContentsRsp, error) {
 	rsp := &GetTorrentContentsRsp{Contents: make([]*TorrentContentItem, 0)}
 
@@ -423,7 +423,7 @@ func (q *QBAPI) GetTorrentContents(ctx context.Context, req *GetTorrentContentsR
 	return rsp, nil
 }
 
-//GetTorrentPiecesStates /api/v2/torrents/pieceStates
+// GetTorrentPiecesStates /api/v2/torrents/pieceStates
 func (q *QBAPI) GetTorrentPiecesStates(ctx context.Context, req *GetTorrentPiecesStatesReq) (*GetTorrentPiecesStatesRsp, error) {
 	rsp := &GetTorrentPiecesStatesRsp{States: make([]int, 0)}
 	if err := q.getWithDecoder(ctx, apiGetTorrentPiecesStates, req, &rsp.States, JsonDec); err != nil {
@@ -432,7 +432,7 @@ func (q *QBAPI) GetTorrentPiecesStates(ctx context.Context, req *GetTorrentPiece
 	return rsp, nil
 }
 
-//GetTorrentPiecesHashes /api/v2/torrents/pieceHashes
+// GetTorrentPiecesHashes /api/v2/torrents/pieceHashes
 func (q *QBAPI) GetTorrentPiecesHashes(ctx context.Context, req *GetTorrentPiecesHashesReq) (*GetTorrentPiecesHashesRsp, error) {
 	rsp := &GetTorrentPiecesHashesRsp{Hashes: make([]string, 0)}
 	if err := q.getWithDecoder(ctx, apiGetTorrentPiecesHashes, req, &rsp.Hashes, JsonDec); err != nil {
@@ -441,7 +441,7 @@ func (q *QBAPI) GetTorrentPiecesHashes(ctx context.Context, req *GetTorrentPiece
 	return rsp, nil
 }
 
-//PauseTorrents /api/v2/torrents/pause
+// PauseTorrents /api/v2/torrents/pause
 func (q *QBAPI) PauseTorrents(ctx context.Context, req *PauseTorrentsReq) (*PauseTorrentsRsp, error) {
 	if len(req.Hash) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("non hashes found"))
@@ -453,7 +453,7 @@ func (q *QBAPI) PauseTorrents(ctx context.Context, req *PauseTorrentsReq) (*Paus
 	return &PauseTorrentsRsp{}, nil
 }
 
-//ResumeTorrents /api/v2/torrents/resume
+// ResumeTorrents /api/v2/torrents/resume
 func (q *QBAPI) ResumeTorrents(ctx context.Context, req *ResumeTorrentsReq) (*ResumeTorrentsRsp, error) {
 	if len(req.Hash) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("non hashes found"))
@@ -465,7 +465,7 @@ func (q *QBAPI) ResumeTorrents(ctx context.Context, req *ResumeTorrentsReq) (*Re
 	return &ResumeTorrentsRsp{}, nil
 }
 
-//DeleteTorrents /api/v2/torrents/delete
+// DeleteTorrents /api/v2/torrents/delete
 func (q *QBAPI) DeleteTorrents(ctx context.Context, req *DeleteTorrentsReq) (*DeleteTorrentsRsp, error) {
 	if !req.IsDeleteAll && len(req.Hash) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("non hashes found"))
@@ -478,13 +478,13 @@ func (q *QBAPI) DeleteTorrents(ctx context.Context, req *DeleteTorrentsReq) (*De
 	} else {
 		innerReq.Hashes = strings.Join(req.Hash, "|")
 	}
-	if err := q.getWithDecoder(ctx, apiDeleteTorrents, innerReq, nil, JsonDec); err != nil {
+	if err := q.postWithDecoder(ctx, apiDeleteTorrents, innerReq, nil, JsonDec); err != nil {
 		return nil, err
 	}
 	return &DeleteTorrentsRsp{}, nil
 }
 
-//RecheckTorrents /api/v2/torrents/recheck
+// RecheckTorrents /api/v2/torrents/recheck
 func (q *QBAPI) RecheckTorrents(ctx context.Context, req *RecheckTorrentsReq) (*RecheckTorrentsRsp, error) {
 	if !req.IsRecheckAll && len(req.Hash) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("non hashes found"))
@@ -501,7 +501,7 @@ func (q *QBAPI) RecheckTorrents(ctx context.Context, req *RecheckTorrentsReq) (*
 	return &RecheckTorrentsRsp{}, nil
 }
 
-//ReannounceTorrents /api/v2/torrents/reannounce
+// ReannounceTorrents /api/v2/torrents/reannounce
 func (q *QBAPI) ReannounceTorrents(ctx context.Context, req *ReannounceTorrentsReq) (*ReannounceTorrentsRsp, error) {
 	if !req.IsReannounceAll && len(req.Hash) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("non hashes found"))
@@ -539,7 +539,7 @@ func (q *QBAPI) writeProperties(writer *multipart.Writer, meta *AddTorrentMeta) 
 	return nil
 }
 
-//AddNewTorrent /api/v2/torrents/add
+// AddNewTorrent /api/v2/torrents/add
 func (q *QBAPI) AddNewTorrent(ctx context.Context, req *AddNewTorrentReq) (*AddNewTorrentRsp, error) {
 	if len(req.File) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("params err"))
@@ -574,7 +574,7 @@ func (q *QBAPI) AddNewTorrent(ctx context.Context, req *AddNewTorrentReq) (*AddN
 	return &AddNewTorrentRsp{}, nil
 }
 
-//AddNewLink /api/v2/torrents/add
+// AddNewLink /api/v2/torrents/add
 func (q *QBAPI) AddNewLink(ctx context.Context, req *AddNewLinkReq) (*AddNewLinkRsp, error) {
 	if len(req.Url) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("params err"))
@@ -602,7 +602,7 @@ func (q *QBAPI) AddNewLink(ctx context.Context, req *AddNewLinkReq) (*AddNewLink
 	return &AddNewLinkRsp{}, nil
 }
 
-//AddTrackersToTorrent /api/v2/torrents/addTrackers
+// AddTrackersToTorrent /api/v2/torrents/addTrackers
 func (q *QBAPI) AddTrackersToTorrent(ctx context.Context, req *AddTrackersToTorrentReq) (*AddTrackersToTorrentRsp, error) {
 	if len(req.Url) == 0 || len(req.Hash) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -714,7 +714,7 @@ func (q *QBAPI) DecreaseTorrentPriority(ctx context.Context, req *DecreaseTorren
 	return &DecreaseTorrentPriorityRsp{}, nil
 }
 
-//MaximalTorrentPriority /api/v2/torrents/topPrio
+// MaximalTorrentPriority /api/v2/torrents/topPrio
 func (q *QBAPI) MaximalTorrentPriority(ctx context.Context, req *MaximalTorrentPriorityReq) (*MaximalTorrentPriorityRsp, error) {
 	if !req.IsMaximalAllTorrent && len(req.Hash) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -731,7 +731,7 @@ func (q *QBAPI) MaximalTorrentPriority(ctx context.Context, req *MaximalTorrentP
 	return &MaximalTorrentPriorityRsp{}, nil
 }
 
-//MinimalTorrentPriority /api/v2/torrents/bottomPrio
+// MinimalTorrentPriority /api/v2/torrents/bottomPrio
 func (q *QBAPI) MinimalTorrentPriority(ctx context.Context, req *MinimalTorrentPriorityReq) (*MinimalTorrentPriorityRsp, error) {
 	if !req.IsMinimalAllTorrent && len(req.Hash) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -772,7 +772,7 @@ func (q *QBAPI) SetFilePriority(ctx context.Context, req *SetFilePriorityReq) (*
 	return &SetFilePriorityRsp{}, nil
 }
 
-//GetTorrentDownloadLimit /api/v2/torrents/downloadLimit
+// GetTorrentDownloadLimit /api/v2/torrents/downloadLimit
 func (q *QBAPI) GetTorrentDownloadLimit(ctx context.Context, req *GetTorrentDownloadLimitReq) (*GetTorrentDownloadLimitRsp, error) {
 	if !req.IsGetAll && len(req.Hash) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -788,7 +788,7 @@ func (q *QBAPI) GetTorrentDownloadLimit(ctx context.Context, req *GetTorrentDown
 	return rsp, nil
 }
 
-//SetTorrentDownloadLimit /api/v2/torrents/setDownloadLimit
+// SetTorrentDownloadLimit /api/v2/torrents/setDownloadLimit
 func (q *QBAPI) SetTorrentDownloadLimit(ctx context.Context, req *SetTorrentDownloadLimitReq) (*SetTorrentDownloadLimitRsp, error) {
 	if !req.IsSetAll && len(req.Hash) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -806,7 +806,7 @@ func (q *QBAPI) SetTorrentDownloadLimit(ctx context.Context, req *SetTorrentDown
 	return &SetTorrentDownloadLimitRsp{}, nil
 }
 
-//SetTorrentShareLimit /api/v2/torrents/setShareLimits
+// SetTorrentShareLimit /api/v2/torrents/setShareLimits
 func (q *QBAPI) SetTorrentShareLimit(ctx context.Context, req *SetTorrentShareLimitReq) (*SetTorrentShareLimitRsp, error) {
 	if (!req.IsSetAll && len(req.Hash) == 0) || req.RatioLimit == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -825,7 +825,7 @@ func (q *QBAPI) SetTorrentShareLimit(ctx context.Context, req *SetTorrentShareLi
 	return &SetTorrentShareLimitRsp{}, nil
 }
 
-//GetTorrentUploadLimit /api/v2/torrents/uploadLimit
+// GetTorrentUploadLimit /api/v2/torrents/uploadLimit
 func (q *QBAPI) GetTorrentUploadLimit(ctx context.Context, req *GetTorrentUploadLimitReq) (*GetTorrentUploadLimitRsp, error) {
 	if !req.IsGetAll && len(req.Hash) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -843,7 +843,7 @@ func (q *QBAPI) GetTorrentUploadLimit(ctx context.Context, req *GetTorrentUpload
 	return rsp, nil
 }
 
-//SetTorrentUploadLimit /api/v2/torrents/setUploadLimit
+// SetTorrentUploadLimit /api/v2/torrents/setUploadLimit
 func (q *QBAPI) SetTorrentUploadLimit(ctx context.Context, req *SetTorrentUploadLimitReq) (*SetTorrentUploadLimitRsp, error) {
 	if !req.IsSetAll && len(req.Hash) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -923,7 +923,7 @@ func (q *QBAPI) SetTorrentCategory(ctx context.Context, req *SetTorrentCategoryR
 	return &SetTorrentCategoryRsp{}, nil
 }
 
-//GetAllCategories /api/v2/torrents/categories
+// GetAllCategories /api/v2/torrents/categories
 func (q *QBAPI) GetAllCategories(ctx context.Context, req *GetAllCategoriesReq) (*GetAllCategoriesRsp, error) {
 	rsp := &GetAllCategoriesRsp{Categories: make(map[string]*CategoryInfo)}
 	if err := q.getWithDecoder(ctx, apiGetAllCategories, req, &rsp.Categories, JsonDec); err != nil {
@@ -964,7 +964,7 @@ func (q *QBAPI) EditCategory(ctx context.Context, req *EditCategoryReq) (*EditCa
 	return &EditCategoryRsp{}, nil
 }
 
-//RemoveCategories /api/v2/torrents/removeCategories
+// RemoveCategories /api/v2/torrents/removeCategories
 func (q *QBAPI) RemoveCategories(ctx context.Context, req *RemoveCategoriesReq) (*RemoveCategoriesRsp, error) {
 	if len(req.Category) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -978,7 +978,7 @@ func (q *QBAPI) RemoveCategories(ctx context.Context, req *RemoveCategoriesReq) 
 	return &RemoveCategoriesRsp{}, nil
 }
 
-//AddTorrentTags /api/v2/torrents/addTags
+// AddTorrentTags /api/v2/torrents/addTags
 func (q *QBAPI) AddTorrentTags(ctx context.Context, req *AddTorrentTagsReq) (*AddTorrentTagsRsp, error) {
 	if len(req.Tag) == 0 || (!req.IsAddAll && len(req.Hash) == 0) {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -996,7 +996,7 @@ func (q *QBAPI) AddTorrentTags(ctx context.Context, req *AddTorrentTagsReq) (*Ad
 	return &AddTorrentTagsRsp{}, nil
 }
 
-//RemoveTorrentTags /api/v2/torrents/removeTags
+// RemoveTorrentTags /api/v2/torrents/removeTags
 func (q *QBAPI) RemoveTorrentTags(ctx context.Context, req *RemoveTorrentTagsReq) (*RemoveTorrentTagsRsp, error) {
 	if len(req.Tag) == 0 || (!req.IsRemoveAll && len(req.Hash) == 0) {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -1014,7 +1014,7 @@ func (q *QBAPI) RemoveTorrentTags(ctx context.Context, req *RemoveTorrentTagsReq
 	return &RemoveTorrentTagsRsp{}, nil
 }
 
-//GetAllTags /api/v2/torrents/tags
+// GetAllTags /api/v2/torrents/tags
 func (q *QBAPI) GetAllTags(ctx context.Context, req *GetAllTagsReq) (*GetAllTagsRsp, error) {
 	rsp := &GetAllTagsRsp{Tags: make([]string, 0)}
 	if err := q.getWithDecoder(ctx, apiGetAllTags, req, &rsp.Tags, JsonDec); err != nil {
@@ -1023,7 +1023,7 @@ func (q *QBAPI) GetAllTags(ctx context.Context, req *GetAllTagsReq) (*GetAllTags
 	return rsp, nil
 }
 
-//CreateTags /api/v2/torrents/createTags
+// CreateTags /api/v2/torrents/createTags
 func (q *QBAPI) CreateTags(ctx context.Context, req *CreateTagsReq) (*CreateTagsRsp, error) {
 	if len(req.Tag) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -1037,7 +1037,7 @@ func (q *QBAPI) CreateTags(ctx context.Context, req *CreateTagsReq) (*CreateTags
 	return &CreateTagsRsp{}, nil
 }
 
-//DeleteTags /api/v2/torrents/deleteTags
+// DeleteTags /api/v2/torrents/deleteTags
 func (q *QBAPI) DeleteTags(ctx context.Context, req *DeleteTagsReq) (*DeleteTagsRsp, error) {
 	if len(req.Tag) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -1052,7 +1052,7 @@ func (q *QBAPI) DeleteTags(ctx context.Context, req *DeleteTagsReq) (*DeleteTags
 
 }
 
-//SetAutomaticTorrentManagement /api/v2/torrents/setAutoManagement
+// SetAutomaticTorrentManagement /api/v2/torrents/setAutoManagement
 func (q *QBAPI) SetAutomaticTorrentManagement(ctx context.Context, req *SetAutomaticTorrentManagementReq) (*SetAutomaticTorrentManagementRsp, error) {
 	if !req.IsSetAll && len(req.Hash) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -1070,7 +1070,7 @@ func (q *QBAPI) SetAutomaticTorrentManagement(ctx context.Context, req *SetAutom
 	return &SetAutomaticTorrentManagementRsp{}, nil
 }
 
-//ToggleSequentialDownload /api/v2/torrents/toggleSequentialDownload
+// ToggleSequentialDownload /api/v2/torrents/toggleSequentialDownload
 func (q *QBAPI) ToggleSequentialDownload(ctx context.Context, req *ToggleSequentialDownloadReq) (*ToggleSequentialDownloadRsp, error) {
 	if !req.IsSetAll && len(req.Hash) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -1087,7 +1087,7 @@ func (q *QBAPI) ToggleSequentialDownload(ctx context.Context, req *ToggleSequent
 	return &ToggleSequentialDownloadRsp{}, nil
 }
 
-//SetFirstOrLastPiecePriority /api/v2/torrents/toggleFirstLastPiecePrio
+// SetFirstOrLastPiecePriority /api/v2/torrents/toggleFirstLastPiecePrio
 func (q *QBAPI) SetFirstOrLastPiecePriority(ctx context.Context, req *SetFirstOrLastPiecePriorityReq) (*SetFirstOrLastPiecePriorityRsp, error) {
 	if !req.IsSetAll && len(req.Hash) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -1104,7 +1104,7 @@ func (q *QBAPI) SetFirstOrLastPiecePriority(ctx context.Context, req *SetFirstOr
 	return &SetFirstOrLastPiecePriorityRsp{}, nil
 }
 
-//SetForceStart /api/v2/torrents/setForceStart
+// SetForceStart /api/v2/torrents/setForceStart
 func (q *QBAPI) SetForceStart(ctx context.Context, req *SetForceStartReq) (*SetForceStartRsp, error) {
 	if !req.IsSetAll && len(req.Hash) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -1122,7 +1122,7 @@ func (q *QBAPI) SetForceStart(ctx context.Context, req *SetForceStartReq) (*SetF
 	return &SetForceStartRsp{}, nil
 }
 
-//SetSuperSeeding /api/v2/torrents/setSuperSeeding
+// SetSuperSeeding /api/v2/torrents/setSuperSeeding
 func (q *QBAPI) SetSuperSeeding(ctx context.Context, req *SetSuperSeedingReq) (*SetSuperSeedingRsp, error) {
 	if !req.IsSetAll && len(req.Hash) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))
@@ -1156,7 +1156,7 @@ func (q *QBAPI) RenameFile(ctx context.Context, req *RenameFileReq) (*RenameFile
 	return &RenameFileRsp{}, nil
 }
 
-//RenameFolder /api/v2/torrents/renameFolder
+// RenameFolder /api/v2/torrents/renameFolder
 func (q *QBAPI) RenameFolder(ctx context.Context, req *RenameFolderReq) (*RenameFolderRsp, error) {
 	if len(req.Hash) == 0 {
 		return nil, NewError(ErrParams, fmt.Errorf("invalid params"))

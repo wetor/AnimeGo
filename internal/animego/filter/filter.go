@@ -51,6 +51,12 @@ func (m *Manager) Update(ctx context.Context, items []*models.FeedItem) {
 
 	for _, item := range items {
 		log.Infof("获取「%s」信息开始...", item.Name)
+		err := ParseFeedItem(item)
+		if err != nil {
+			log.Debug(err)
+			log.Warnf("解析下载链接失败，目前仅支持torrent文件和magnet链接，结束此流程")
+			continue
+		}
 		// ------------------- 解析文件名获取ep -------------------
 		if item.NameParsed == nil || item.NameParsed.Ep == 0 {
 			item.NameParsed = public.ParserName(item.Name)
@@ -67,10 +73,10 @@ func (m *Manager) Update(ctx context.Context, items []*models.FeedItem) {
 		if anime != nil {
 			anime.DownloadInfo = &models.DownloadInfo{
 				Url:  item.Download,
-				Hash: item.Hash(),
+				Hash: item.Hash,
 			}
 
-			log.Debugf("发送下载项:「%s」", anime.FullName())
+			log.Debugf("发送 %s 下载项:「%s」", item.DownloadType, anime.FullName())
 			// 发送需要下载的信息
 			m.manager.Download(anime)
 		}

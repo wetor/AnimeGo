@@ -35,7 +35,7 @@ func TestMain(m *testing.M) {
 }
 
 func Test_QBittorrent(t *testing.T) {
-	t.Skip("跳过Qbittorrent测试")
+	//t.Skip("跳过Qbittorrent测试")
 	list := qbt.List(&models.ClientListOptions{
 		Category: "AnimeGo",
 	})
@@ -43,6 +43,10 @@ func Test_QBittorrent(t *testing.T) {
 	for _, i := range list {
 		fmt.Println(i.Name, i.Hash, i.State)
 	}
+	qbt.Delete(&models.ClientDeleteOptions{
+		Hash:       []string{"fb47f2acf7d8d0c82fb310b511fa024815e227d9"},
+		DeleteFile: false,
+	})
 
 }
 

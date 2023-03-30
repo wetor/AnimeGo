@@ -3,20 +3,39 @@ package filter_test
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
+	"path"
 	"testing"
+
+	"github.com/brahma-adshonor/gohook"
 
 	"github.com/wetor/AnimeGo/internal/animego/filter"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/pkg/json"
 	"github.com/wetor/AnimeGo/pkg/log"
+	"github.com/wetor/AnimeGo/pkg/request"
 )
 
 var (
 	mgr *filter.Manager
 	ctx = context.Background()
 )
+
+func HookGetWriter(uri string, w io.Writer) error {
+	log.Infof("Mock HTTP GET %s", uri)
+	id := path.Base(uri)
+	jsonData, err := os.ReadFile(path.Join("testdata", id))
+	if err != nil {
+		return err
+	}
+	_, err = w.Write(jsonData)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
 type MockManager struct {
 }
@@ -50,6 +69,8 @@ func TestMain(m *testing.M) {
 		File:  "data/log.log",
 		Debug: true,
 	})
+	_ = gohook.Hook(request.GetWriter, HookGetWriter, nil)
+
 	plugin.Init(&plugin.Options{
 		Path:  "../../../assets/plugin",
 		Debug: true,
@@ -70,8 +91,13 @@ func TestManager_Update(t *testing.T) {
 	items := []*models.FeedItem{
 		{
 			Url:      "url1",
-			Name:     "OPFans枫雪动漫][ONE PIECE 海贼王][第1029话][1080p][周日版][MP4][简体]",
-			Download: "download1",
+			Name:     "[轻之国度字幕组][想要成为影之实力者！/我想成为影之强者！][12][GB][720P][MP4][附小剧场]",
+			Download: "https://mikanani.me/Download/20221223/8b0b9621f7f7b8425ed0f6162d03b92c93db2270.torrent",
+		},
+		{
+			Url:      "url2",
+			Name:     "[轻之国度字幕组][想要成为影之实力者！/我想成为影之强者！][12][GB][720P][MP4][附小剧场]",
+			Download: "magnet:?xt=urn:btih:4c81fc90f8db37eae70a29a82e7abf8d8f1867c2&dn=example+file&tr=udp%3A%2F%2Ftracker.example.com%3A80",
 		},
 	}
 	mgr.Update(ctx, items)

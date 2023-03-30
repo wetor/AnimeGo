@@ -3,6 +3,7 @@ package renamer
 import (
 	"context"
 	"os"
+	"sync"
 
 	"github.com/wetor/AnimeGo/internal/animego/downloader"
 	"github.com/wetor/AnimeGo/internal/api"
@@ -31,6 +32,7 @@ type RenameTask struct {
 type Manager struct {
 	plugin api.RenamerPlugin
 	tasks  map[string]*RenameTask
+	sync.Mutex
 }
 
 func NewManager(plugin api.RenamerPlugin) *Manager {
@@ -97,6 +99,8 @@ func (m *Manager) stateComplete(task *RenameTask) (complete bool) {
 }
 
 func (m *Manager) AddRenameTask(opt *models.RenameOptions) {
+	m.Lock()
+	defer m.Unlock()
 	var result *models.RenameResult
 	if m.plugin != nil {
 		result = m.plugin.Rename(opt.Dst.Anime, opt.Dst.Content.Name)
@@ -124,6 +128,8 @@ func (m *Manager) AddRenameTask(opt *models.RenameOptions) {
 func (m *Manager) Update(ctx context.Context) {
 	ReInitWG.Add(1)
 	defer ReInitWG.Done()
+	m.Lock()
+	defer m.Unlock()
 
 	var deleteKeys []string
 	for name, task := range m.tasks {
@@ -136,7 +142,7 @@ func (m *Manager) Update(ctx context.Context) {
 			go func(task *RenameTask) {
 				defer func() {
 					if task.Complete {
-						task.CompleteCallback()
+						task.CompleteCallback(task.RenameResult)
 					}
 				}()
 				defer errors.HandleError(func(err error) {

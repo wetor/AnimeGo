@@ -1,51 +1,14 @@
 package models
 
-import "github.com/wetor/AnimeGo/pkg/xpath"
-
-const (
-	MagnetType  = "magnet"
-	TorrentType = "torrent"
-)
-
 type FeedItem struct {
-	Url        string       `json:"url"`      // Link，详情页连接，用于下一步解析番剧信息
-	Name       string       `json:"name"`     // 种子名
-	Date       string       `json:"date"`     // 发布日期
-	Type       string       `json:"type"`     // 下载类型，[application/x-bittorrent]
-	Download   string       `json:"download"` // 下载链接
-	Length     int64        `json:"length"`   // 种子大小
-	NameParsed *TitleParsed `json:"parsed"`   // 标题解析信息
-}
+	Url      string `json:"url"`      // feed解析。Link，详情页连接，用于下一步解析番剧信息
+	Name     string `json:"name"`     // feed解析。种子名
+	Date     string `json:"date"`     // feed解析。发布日期
+	Type     string `json:"type"`     // feed解析。下载类型，[application/x-bittorrent]
+	Download string `json:"download"` // feed解析。下载链接
+	Length   int64  `json:"length"`   // feed解析。种子大小
 
-// DownloadType
-//
-//	@Description: 下载链接类型，[torrent, magnet, unknown]
-//	@receiver FeedItem
-//	@return string
-func (i FeedItem) DownloadType() string {
-	if len(i.Download) > 8 {
-		if i.Download[:8] == "magnet:?" {
-			return MagnetType
-		}
-
-		if i.Download[len(i.Download)-8:] == ".torrent" {
-			return TorrentType
-		}
-	}
-	return ""
-}
-
-// Hash
-//
-//	@Description: torrent 类型的hash
-//	@receiver FeedItem
-//	@return string
-func (i FeedItem) Hash() string {
-	if i.DownloadType() == TorrentType {
-		_, hash := xpath.Split(i.Download)
-		if len(hash) >= 40 {
-			return hash[:40]
-		}
-	}
-	return "ItemUrl_" + Md5Str(i.Url)
+	Hash         string       `json:"hash"`          // bt唯一hash
+	DownloadType string       `json:"download_type"` // 下载链接类型，[magnet, torrent]
+	NameParsed   *TitleParsed `json:"parsed"`        // 标题解析信息
 }

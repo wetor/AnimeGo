@@ -12,7 +12,7 @@ type RenameResult struct {
 }
 
 type RenameCallback func(*RenameResult)
-type CompleteCallback func()
+type CompleteCallback func(*RenameResult)
 
 type RenameOptions struct {
 	Src              string     // 原名

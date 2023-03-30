@@ -64,7 +64,7 @@ func rename(r *renamer.Manager, state <-chan models.TorrentState, name, mode, sr
 			d, _ := json.Marshal(result)
 			fmt.Println(string(d))
 		},
-		CompleteCallback: func() {
+		CompleteCallback: func(result *models.RenameResult) {
 			fmt.Println("exit", src)
 		},
 	})
