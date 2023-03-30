@@ -57,7 +57,7 @@ func LoadPlugin(opts *LoadPluginOptions) (p api.Plugin) {
 	var code *string = nil
 	pluginType := strings.ToLower(opts.Type)
 	switch pluginType {
-	case constant.PluginTypePython:
+	case constant.PluginTypePython, "py":
 		p = python.NewPython(pluginType)
 	case constant.PluginTypeBuiltin:
 		p = python.NewPython(pluginType)

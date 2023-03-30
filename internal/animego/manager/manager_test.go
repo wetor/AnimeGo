@@ -78,6 +78,7 @@ func TestMain(m *testing.M) {
 		Downloaded: true,
 		Scraped:    true,
 		Seeded:     true,
+		ExpireAt:   0,
 	}, 0)
 	renamer.Init(&renamer.Options{
 		WG:                &wg,
@@ -161,32 +162,69 @@ func Download3(m *manager.Manager) *models.AnimeEntity {
 }
 
 func TestManager_Start(t *testing.T) {
+	var a1, a2, a3 *models.AnimeEntity
 	go func() {
-		time.Sleep(15 * time.Second)
+		time.Sleep(18 * time.Second)
 		cancel()
 		time.Sleep(1*time.Second + 500*time.Millisecond)
 		wg.Done()
 	}()
-	fmt.Println("下载 1")
-	a1 := Download1(mgr)
-	fmt.Println("下载 2")
-	a2 := Download2(mgr)
+	manager.Conf.Rename = "move"
+	{
+		fmt.Println("下载 1")
+		a1 = Download1(mgr)
+	}
+	{
+		fmt.Println("下载 2")
+		a2 = Download2(mgr)
+	}
 	time.Sleep(2*time.Second + 500*time.Millisecond)
-	fmt.Println("删除 2")
-	mgr.DeleteCache(a2.FullName())
-	qbtConnect = false
-	fmt.Println("下载 3")
-	a3 := Download3(mgr)
+	{
+		fmt.Println("删除 2")
+		qbt.Delete(&models.ClientDeleteOptions{
+			Hash: []string{a2.Hash},
+		})
+		mgr.DeleteCache(a2.FullName())
+	}
+	{
+		fmt.Println("掉线")
+		qbtConnect = false
+	}
+
+	{
+		fmt.Println("下载 3")
+		a3 = Download3(mgr)
+	}
 	time.Sleep(2*time.Second + 500*time.Millisecond)
 	manager.Conf.Rename = "link_delete"
-	qbtConnect = true
+	{
+		fmt.Println("重连")
+		qbtConnect = true
+	}
 	time.Sleep(1*time.Second + 500*time.Millisecond)
-	fmt.Println("重复下载 1")
-	Download1(mgr)
-	fmt.Println("重复下载 3")
-	Download3(mgr)
+	{
+		fmt.Println("重复下载 1")
+		Download1(mgr)
+		// 失败
+	}
+	{
+		fmt.Println("再次下载 2")
+		Download2(mgr)
+		// 成功
+	}
+	time.Sleep(1*time.Second + 500*time.Millisecond)
+	{
+		fmt.Println("删除 1 文件")
+		_ = os.Remove(xpath.Join(SavePath, a1.DirName(), a1.FileName()+xpath.Ext(ContentFile)))
+	}
+	{
+		fmt.Println("再次下载 1")
+		Download1(mgr)
+		// 成功
+	}
 
 	wg.Wait()
 	assert.FileExists(t, xpath.Join(SavePath, a1.DirName(), a1.FileName()+xpath.Ext(ContentFile)))
+	assert.FileExists(t, xpath.Join(SavePath, a2.DirName(), a2.FileName()+xpath.Ext(ContentFile)))
 	assert.FileExists(t, xpath.Join(SavePath, a3.DirName(), a3.FileName()+xpath.Ext(ContentFile)))
 }

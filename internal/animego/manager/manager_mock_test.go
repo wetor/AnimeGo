@@ -18,8 +18,8 @@ const (
 
 var (
 	name2hash    = make(map[string]string)
-	itemList     = make([]*models.TorrentItem, 0)
-	name2content = make(map[string]*models.TorrentContentItem, 0)
+	itemList     = make(map[string]*models.TorrentItem)
+	name2content = make(map[string]*models.TorrentContentItem)
 )
 
 type ClientMock struct {
@@ -57,17 +57,21 @@ func (m *ClientMock) Start(ctx context.Context) {
 }
 
 func (m *ClientMock) List(opt *models.ClientListOptions) []*models.TorrentItem {
-	return itemList
+	list := make([]*models.TorrentItem, 0, len(itemList))
+	for _, item := range itemList {
+		list = append(list, item)
+	}
+	return list
 }
 
 func (m *ClientMock) Add(opt *models.ClientAddOptions) {
-	itemList = append(itemList, &models.TorrentItem{
+	itemList[opt.Rename] = &models.TorrentItem{
 		ContentPath: opt.Rename,
 		Hash:        name2hash[opt.Rename],
 		Name:        opt.Rename,
 		Progress:    0.0,
 		State:       QbtDownloading,
-	})
+	}
 	name2content[opt.Rename] = &models.TorrentContentItem{
 		Name: xpath.Join(opt.Rename, ContentFile),
 		Size: 1024,
@@ -84,7 +88,11 @@ func (m *ClientMock) Add(opt *models.ClientAddOptions) {
 }
 
 func (m *ClientMock) Delete(opt *models.ClientDeleteOptions) {
-
+	for key, value := range name2hash {
+		if value == opt.Hash[0] {
+			delete(itemList, key)
+		}
+	}
 }
 
 func (m *ClientMock) GetContent(opt *models.ClientGetOptions) []*models.TorrentContentItem {
