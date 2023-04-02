@@ -8,6 +8,7 @@ import (
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin/public"
 	"github.com/wetor/AnimeGo/pkg/log"
+	"github.com/wetor/AnimeGo/pkg/torrent"
 	"github.com/wetor/AnimeGo/pkg/utils"
 )
 
@@ -51,10 +52,10 @@ func (m *Manager) Update(ctx context.Context, items []*models.FeedItem) {
 
 	for _, item := range items {
 		log.Infof("获取「%s」信息开始...", item.Name)
-		err := ParseFeedItem(item)
+		torrentInfo, err := torrent.LoadUri(item.Download)
 		if err != nil {
 			log.Debug(err)
-			log.Warnf("解析下载链接失败，目前仅支持torrent文件和magnet链接，结束此流程")
+			log.Warnf("解析torrent失败，结束此流程")
 			continue
 		}
 		// ------------------- 解析文件名获取ep -------------------
@@ -71,11 +72,7 @@ func (m *Manager) Update(ctx context.Context, items []*models.FeedItem) {
 			Season: item.NameParsed.Season,
 		})
 		if anime != nil {
-			anime.DownloadInfo = &models.DownloadInfo{
-				Url:  item.Download,
-				Hash: item.Hash,
-			}
-
+			anime.Torrent = torrentInfo
 			log.Debugf("发送 %s 下载项:「%s」", item.DownloadType, anime.FullName())
 			// 发送需要下载的信息
 			m.manager.Download(anime)

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/wetor/AnimeGo/pkg/torrent"
 	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
@@ -26,12 +27,7 @@ type AnimeEntity struct {
 	Ep           int    `json:"ep"`            // 当前集，从下载文件名解析
 	Eps          int    `json:"eps"`           // [暂时无用] 总集数，从bgm获取
 	AirDate      string `json:"air_date"`      // 最初播放日期，从bgm获取
-	*DownloadInfo
-}
-
-type DownloadInfo struct {
-	Url  string `json:"url"`  // 当前集下载链接
-	Hash string `json:"hash"` // 当前集Hash，唯一ID
+	*torrent.Torrent
 }
 
 func (b *AnimeEntity) FullName() string {

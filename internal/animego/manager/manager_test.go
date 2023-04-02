@@ -17,6 +17,7 @@ import (
 	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/log"
+	"github.com/wetor/AnimeGo/pkg/torrent"
 	"github.com/wetor/AnimeGo/pkg/utils"
 	"github.com/wetor/AnimeGo/pkg/xpath"
 )
@@ -103,7 +104,7 @@ func download(name string, season, ep int) (file, fullname, hash string) {
 		NameCN: name,
 		Season: season,
 		Ep:     ep,
-		DownloadInfo: &models.DownloadInfo{
+		Torrent: &torrent.Torrent{
 			Hash: hash,
 		},
 	}
@@ -317,6 +318,7 @@ func TestManager_WaitClient_FullChan(t *testing.T) {
 	wg.Wait()
 	for _, f := range file {
 		assert.FileExists(t, f)
+		_ = os.Remove(f)
 	}
 }
 
