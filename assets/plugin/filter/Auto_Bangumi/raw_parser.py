@@ -1,7 +1,5 @@
 import re
 
-# from parser.episode import Episode
-
 EPISODE_RE = re.compile(r"\d+")
 TITLE_RE = re.compile(
     r"(.*|\[.*])( -? \d+|\[\d+]|\[\d+.?[vV]\d{1}]|[第]\d+[话話集]|\[\d+.?END])(.*)"
@@ -9,6 +7,8 @@ TITLE_RE = re.compile(
 RESOLUTION_RE = re.compile(r"1080|720|2160|4K")
 SOURCE_RE = re.compile(r"B-Global|[Bb]aha|[Bb]ilibili|AT-X|Web")
 SUB_RE = re.compile(r"[简繁日字幕]|CH|BIG5|GB")
+
+PREFIX_RE = re.compile("[^\w\s\u4e00-\u9fff\u3040-\u309f\u30a0-\u30ff-]")
 
 CHINESE_NUMBER_MAP = {
     "一": 1,
@@ -58,11 +58,24 @@ class RawParser:
         return raw_name.replace("【", "[").replace("】", "]")
 
     @staticmethod
+    def prefix_process(raw, group):
+        raw = re.sub(".%s." % group, "", raw)
+        raw_process = PREFIX_RE.sub("/", raw)
+        arg_group = raw_process.split("/")
+        for arg in arg_group:
+            if re.search(r"新番|月?番", arg) and len(arg) <= 5:
+                raw = re.sub(".%s." % arg, "", raw)
+            elif re.search(r"港澳台地区", arg):
+                raw = re.sub(".%s." % arg, "", raw)
+        return raw
+
+    @staticmethod
     def season_process(season_info):
-        if re.search(r"新番|月?番", season_info):
-            name_season = re.sub(".*新番.", "", season_info)
-        else:
-            name_season = re.sub(r"^[^]】]*[]】]", "", season_info).strip()
+        name_season = season_info
+        # if re.search(r"新番|月?番", season_info):
+        #     name_season = re.sub(".*新番.", "", season_info)
+        #     # 去除「新番」信息
+        # name_season = re.sub(r"^[^]】]*[]】]", "", name_season).strip()
         season_rule = r"S\d{1,2}|Season \d{1,2}|[第].[季期]"
         name_season = re.sub(r"[\[\]]", " ", name_season)
         seasons = re.findall(season_rule, name_season)
@@ -71,10 +84,10 @@ class RawParser:
         name = re.sub(season_rule, "", name_season)
         for season in seasons:
             season_raw = season
-            if re.search(r"S|Season", season) is not None:
-                season = int(re.sub(r"S|Season", "", season))
+            if re.search(r"Season|S", season) is not None:
+                season = int(re.sub(r"Season|S", "", season))
                 break
-            elif re.search(r"[第 ].*[季期]", season) is not None:
+            elif re.search(r"[第 ].*[季期(部分)]|部分", season) is not None:
                 season_pro = re.sub(r"[第季期 ]", "", season)
                 try:
                     season = int(season_pro)
@@ -87,7 +100,8 @@ class RawParser:
     def name_process(name):
         name_en, name_zh, name_jp = "", "", ""
         name = name.strip()
-        split = re.split("/|\s{2}|-\s{2}", name.replace("（仅限港澳台地区）", ""))
+        name = re.sub(r"[(（]仅限港澳台地区[）)]", "", name)
+        split = re.split("/|\s{2}|-\s{2}", name)
         while "" in split:
             split.remove("")
         if len(split) == 1:
@@ -96,7 +110,7 @@ class RawParser:
             elif re.search(" - {1}", name) is not None:
                 split = re.split("-", name)
         if len(split) == 1:
-            split_space = name.split(" ")
+            split_space = split[0].split(" ")
             for idx, item in enumerate(split_space):
                 if re.search("^[\u4e00-\u9fa5]{2,}", item) is not None:
                     split_space.remove(item)
@@ -129,18 +143,25 @@ class RawParser:
 
     def process(self, raw_title):
         raw_title = raw_title.strip()
-        content_title = self.pre_process(raw_title)  # 预处理标题
-        group = self.get_group(content_title)  # 翻译组的名字
-        match_obj = TITLE_RE.match(content_title)  # 处理标题
+        content_title = self.pre_process(raw_title)
+        # 预处理标题
+        group = self.get_group(content_title)
+        # 翻译组的名字
+        match_obj = TITLE_RE.match(content_title)
         season_info, episode_info, other = "", "", ""
+        # 处理标题
         if match_obj:
             season_info, episode_info, other = list(map(
                 lambda x: x.strip(), match_obj.groups()
             ))
-        raw_name, season_raw, season = self.season_process(season_info)  # 处理 第n季
+        process_raw = self.prefix_process(season_info, group)
+        # 处理 前缀
+        raw_name, season_raw, season = self.season_process(process_raw)
+        # 处理 第n季
         name_en, name_zh, name_jp = "", "", ""
         try:
-            name_en, name_zh, name_jp = self.name_process(raw_name)  # 处理 名字
+            name_en, name_zh, name_jp = self.name_process(raw_name)
+            # 处理 名字
         except ValueError:
             pass
         # 处理 集数
@@ -152,14 +173,12 @@ class RawParser:
         return name_en, name_zh, name_jp, season, season_raw, episode, sub, dpi, source, group
 
     def analyse(self, raw):
-        try:
-            ret = self.process(raw)
-            if ret is None:
-                return None
-            name_en, name_zh, name_jp, season, sr, episode, sub, dpi, source, group = ret
-        except Exception as e:
-            print('Parser cannot analyse', raw, e)
+        ret = self.process(raw)
+        if ret is None:
+            print('Parser cannot analyse', raw)
             return None
+        name_en, name_zh, name_jp, season, sr, episode, \
+            sub, dpi, source, group = ret
         return Episode(name_en, name_zh, name_jp, season, sr, episode, sub, group, dpi, source)
 
 

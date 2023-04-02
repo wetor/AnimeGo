@@ -22,7 +22,7 @@ import (
 const (
 	DownloadChanDefaultCap = 10 // 下载通道默认容量
 	DownloadStateChanCap   = 5
-	NotFoundExpireHour     = 3
+	NotFoundExpireHour     = 24
 	Name2EntityBucket      = "name2entity"
 	Name2StatusBucket      = "name2status"
 	Hash2NameBucket        = "hash2name"
@@ -366,7 +366,8 @@ func (m *Manager) UpdateList() {
 			if status.ExpireAt == 0 {
 				status.ExpireAt = time.Now().Add(NotFoundExpireHour * time.Hour).Unix()
 				status.State = downloader.StateNotFound
-				m.cache.Put(Name2StatusBucket, name, status, 0)
+				updateStatusKeys = append(updateStatusKeys, name)
+				updateStatusValues = append(updateStatusValues, status)
 			}
 		}
 		isDownloading := m.isDownloading(status)
