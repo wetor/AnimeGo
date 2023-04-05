@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/wetor/AnimeGo/assets"
 	"github.com/wetor/AnimeGo/configs/version/v_140"
+	"github.com/wetor/AnimeGo/configs/version/v_141"
 	"log"
 	"os"
 	"path"
@@ -33,15 +34,16 @@ type Version struct {
 }
 
 var (
-	ConfigVersion = "1.4.1" // 当前配置文件版本
-
 	versions = []string{
 		"1.1.0",
 		"1.2.0",
 		"1.3.0",
 		"1.4.0",
 		"1.4.1",
+		"1.5.0",
 	}
+	ConfigVersion = versions[len(versions)-1] // 当前配置文件版本
+
 	versionList = []Version{
 		{
 			Name:       versions[0],
@@ -66,6 +68,11 @@ var (
 			Name:       versions[4],
 			Desc:       "新增重命名插件",
 			UpdateFunc: update_140_141,
+		},
+		{
+			Name:       versions[5],
+			Desc:       "新增标题解析插件",
+			UpdateFunc: update_141_150,
 		},
 	}
 )
@@ -295,7 +302,7 @@ func update_140_141(file string) {
 		log.Fatal("配置文件加载错误：", err)
 	}
 
-	newConfig := DefaultConfig()
+	newConfig := &v_141.Config{}
 	err = copier.Copy(newConfig, oldConfig)
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
@@ -304,11 +311,49 @@ func update_140_141(file string) {
 
 	log.Println("[移除] 配置项(advanced.feed.multi_goroutine)")
 	log.Println("[新增] 配置项(plugin.rename)")
-	newConfig.Plugin.Rename = []PluginInfo{
+	newConfig.Plugin.Rename = []v_141.PluginInfo{
 		{
 			Enable: false,
 			Type:   "builtin",
 			File:   "builtin_rename.py",
+		},
+	}
+	content, err := encodeConfig(newConfig)
+	if err != nil {
+		log.Fatal("配置文件升级失败：", err)
+	}
+	err = os.WriteFile(file, content, 0644)
+	if err != nil {
+		log.Fatal("配置文件升级失败：", err)
+	}
+	// 强制写入
+	assets.WritePlugins(assets.Dir, xpath.Join(newConfig.DataPath, assets.Dir), false)
+}
+
+func update_141_150(file string) {
+	data, err := os.ReadFile(file)
+	if err != nil {
+		log.Fatal("配置文件加载错误：", err)
+	}
+	oldConfig := &v_141.Config{}
+	err = yaml.Unmarshal(data, oldConfig)
+	if err != nil {
+		log.Fatal("配置文件加载错误：", err)
+	}
+
+	newConfig := DefaultConfig()
+	err = copier.Copy(newConfig, oldConfig)
+	if err != nil {
+		log.Fatal("配置文件升级失败：", err)
+	}
+	newConfig.Version = "1.5.0"
+
+	log.Println("[新增] 配置项(plugin.parser)")
+	newConfig.Plugin.Parser = []PluginInfo{
+		{
+			Enable: false,
+			Type:   "builtin",
+			File:   "builtin_parser.py",
 		},
 	}
 	content, err := encodeConfig(newConfig)

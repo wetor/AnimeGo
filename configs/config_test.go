@@ -21,17 +21,21 @@ func TestDefaultConfig(t *testing.T) {
 	_ = configs.DefaultFile("data/animego_default.yaml")
 }
 
+func EqualFile(t *testing.T, file1, file2 string) {
+	want, _ := os.ReadFile(file1)
+	got, _ := os.ReadFile(file2)
+	want = bytes.ReplaceAll(want, []byte("\r\n"), []byte("\n"))
+	got = bytes.ReplaceAll(got, []byte("\r\n"), []byte("\n"))
+	assert.Equal(t, string(got), string(want))
+}
+
 func TestUpdateConfig_120(t *testing.T) {
 	configs.ConfigVersion = "1.2.0"
 	file, _ := os.ReadFile("testdata/animego_110.yaml")
 	_ = os.WriteFile("data/animego.yaml", file, 0666)
 	configs.UpdateConfig("data/animego.yaml", false)
 
-	want, _ := os.ReadFile("testdata/animego_120.yaml")
-	got, _ := os.ReadFile("data/animego.yaml")
-	want = bytes.ReplaceAll(want, []byte("\r\n"), []byte("\n"))
-	got = bytes.ReplaceAll(got, []byte("\r\n"), []byte("\n"))
-	assert.Equal(t, string(got), string(want))
+	EqualFile(t, "data/animego.yaml", "testdata/animego_120.yaml")
 }
 
 func TestUpdateConfig_130(t *testing.T) {
@@ -40,11 +44,7 @@ func TestUpdateConfig_130(t *testing.T) {
 	_ = os.WriteFile("data/animego.yaml", file, 0666)
 	configs.UpdateConfig("data/animego.yaml", false)
 
-	want, _ := os.ReadFile("testdata/animego_130.yaml")
-	got, _ := os.ReadFile("data/animego.yaml")
-	want = bytes.ReplaceAll(want, []byte("\r\n"), []byte("\n"))
-	got = bytes.ReplaceAll(got, []byte("\r\n"), []byte("\n"))
-	assert.Equal(t, string(got), string(want))
+	EqualFile(t, "data/animego.yaml", "testdata/animego_130.yaml")
 }
 
 func TestUpdateConfig_140(t *testing.T) {
@@ -53,11 +53,7 @@ func TestUpdateConfig_140(t *testing.T) {
 	_ = os.WriteFile("data/animego.yaml", file, 0666)
 	configs.UpdateConfig("data/animego.yaml", false)
 
-	want, _ := os.ReadFile("testdata/animego_140.yaml")
-	got, _ := os.ReadFile("data/animego.yaml")
-	want = bytes.ReplaceAll(want, []byte("\r\n"), []byte("\n"))
-	got = bytes.ReplaceAll(got, []byte("\r\n"), []byte("\n"))
-	assert.Equal(t, string(got), string(want))
+	EqualFile(t, "data/animego.yaml", "testdata/animego_140.yaml")
 }
 
 func TestUpdateConfig_141(t *testing.T) {
@@ -66,9 +62,14 @@ func TestUpdateConfig_141(t *testing.T) {
 	_ = os.WriteFile("data/animego.yaml", file, 0666)
 	configs.UpdateConfig("data/animego.yaml", false)
 
-	want, _ := os.ReadFile("testdata/animego_141.yaml")
-	got, _ := os.ReadFile("data/animego.yaml")
-	want = bytes.ReplaceAll(want, []byte("\r\n"), []byte("\n"))
-	got = bytes.ReplaceAll(got, []byte("\r\n"), []byte("\n"))
-	assert.Equal(t, string(got), string(want))
+	EqualFile(t, "data/animego.yaml", "testdata/animego_141.yaml")
+}
+
+func TestUpdateConfig_151(t *testing.T) {
+	configs.ConfigVersion = "1.5.0"
+	file, _ := os.ReadFile("testdata/animego_141.yaml")
+	_ = os.WriteFile("data/animego.yaml", file, 0666)
+	configs.UpdateConfig("data/animego.yaml", false)
+
+	EqualFile(t, "data/animego.yaml", "testdata/animego_150.yaml")
 }

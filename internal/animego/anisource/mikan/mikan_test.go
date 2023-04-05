@@ -158,9 +158,9 @@ func TestMikan_Parse(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			p := public.ParserName(tt.args.name)
 			assert.NotEmpty(t, p)
-			tt.args.opts.Ep = p.Ep
 			tt.args.opts.Season = p.Season
 			gotAnime := m.Parse(tt.args.opts)
+			gotAnime.Ep = p.Ep
 			assert.Equalf(t, tt.wantAnime, gotAnime, "Parse(%v)", tt.args.opts)
 		})
 	}

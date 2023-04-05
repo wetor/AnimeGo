@@ -1,6 +1,6 @@
 module github.com/wetor/AnimeGo
 
-go 1.18
+go 1.20
 
 require (
 	github.com/anacrolix/torrent v1.49.0

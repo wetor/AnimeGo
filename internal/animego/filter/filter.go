@@ -2,6 +2,7 @@ package filter
 
 import (
 	"context"
+	"fmt"
 
 	filterPlugin "github.com/wetor/AnimeGo/internal/animego/filter/plugin"
 	"github.com/wetor/AnimeGo/internal/api"
@@ -59,6 +60,11 @@ func (m *Manager) Update(ctx context.Context, items []*models.FeedItem) {
 			continue
 		}
 		// ------------------- 解析文件名获取ep -------------------
+		for _, torrentFile := range torrentInfo.Files {
+			nameParsed := public.ParserName(torrentFile.Name)
+			fmt.Println(nameParsed)
+		}
+
 		if item.NameParsed == nil || item.NameParsed.Ep == 0 {
 			item.NameParsed = public.ParserName(item.Name)
 			if item.NameParsed.Ep == 0 {
@@ -68,11 +74,14 @@ func (m *Manager) Update(ctx context.Context, items []*models.FeedItem) {
 		}
 		anime := m.anisource.Parse(&models.AnimeParseOptions{
 			Url:    item.Url,
-			Ep:     item.NameParsed.Ep,
 			Season: item.NameParsed.Season,
 		})
 		if anime != nil {
-			anime.Torrent = torrentInfo
+			anime.Ep = item.NameParsed.Ep
+			anime.Torrent = &models.AnimeTorrent{
+				Hash: torrentInfo.Hash,
+				Url:  torrentInfo.Url,
+			}
 			log.Debugf("发送 %s 下载项:「%s」", item.DownloadType, anime.FullName())
 			// 发送需要下载的信息
 			m.manager.Download(anime)

@@ -11,12 +11,13 @@ type PluginInfo struct {
 	Enable bool           `yaml:"enable" json:"enable"`
 	Type   string         `yaml:"type" json:"type"`
 	File   string         `yaml:"file" json:"file"`
-	Args   map[string]any `yaml:"args" json:"args"`
-	Vars   map[string]any `yaml:"vars" json:"vars"`
+	Args   map[string]any `yaml:"args,omitempty" json:"args,omitempty"`
+	Vars   map[string]any `yaml:"vars,omitempty" json:"vars,omitempty"`
 }
 
 type Plugin struct {
 	Feed     []PluginInfo `yaml:"feed" json:"feed" attr:"订阅" comment:"解析订阅链接"`
+	Parser   []PluginInfo `yaml:"parser" json:"parser" attr:"解析器" comment:"解析项目标题"`
 	Filter   []PluginInfo `yaml:"filter" json:"filter" attr:"过滤器插件" comment:"用来筛选符合条件的项目进行解析下载"`
 	Schedule []PluginInfo `yaml:"schedule" json:"schedule" attr:"定时任务" comment:"定时执行脚本"`
 	Rename   []PluginInfo `yaml:"rename" json:"rename" attr:"重命名" comment:"下载完成后重命名规则"`
@@ -50,7 +51,7 @@ type Setting struct {
 }
 
 type Advanced struct {
-	UpdateDelaySecond int `yaml:"update_delay_second" json:"update_delay_second" attr:"更新状态等待时间"`
+	UpdateDelaySecond int `yaml:"update_delay_second" json:"update_delay_second" attr:"更新状态等待时间" comment_key:"update_delay_second_help"`
 
 	Request struct {
 		TimeoutSecond   int `yaml:"timeout_second" json:"timeout_second" attr:"请求超时时间"`
@@ -62,7 +63,7 @@ type Advanced struct {
 		AllowDuplicateDownload bool   `yaml:"allow_duplicate_download" json:"allow_duplicate_download" attr:"允许重复下载"`
 		SeedingTimeMinute      int    `yaml:"seeding_time_minute" json:"seeding_time_minute" attr:"做种时间"`
 		IgnoreSizeMaxKb        int    `yaml:"ignore_size_max_kb" json:"ignore_size_max_kb" attr:"忽略小文件大小"`
-		Rename                 string `yaml:"rename" json:"rename" attr:"重命名方式" comment_key:"rename"`
+		Rename                 string `yaml:"rename" json:"rename" attr:"重命名方式" comment_key:"rename_help"`
 	} `yaml:"download" json:"download" attr:"下载设置"`
 
 	Feed struct {

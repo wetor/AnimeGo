@@ -56,7 +56,6 @@ func (m *MockFeed) Parse(opt *models.AnimeParseOptions) *models.AnimeEntity {
 		Name:         "ONE PIECE",
 		NameCN:       "海贼王",
 		Season:       opt.Season,
-		Ep:           opt.Ep,
 		Eps:          1079,
 		AirDate:      "1999-10-20",
 	}
@@ -98,6 +97,11 @@ func TestManager_Update(t *testing.T) {
 			Url:      "url2",
 			Name:     "[轻之国度字幕组][想要成为影之实力者！/我想成为影之强者！][12][GB][720P][MP4][附小剧场]",
 			Download: "magnet:?xt=urn:btih:4c81fc90f8db37eae70a29a82e7abf8d8f1867c2&dn=example+file&tr=udp%3A%2F%2Ftracker.example.com%3A80",
+		},
+		{
+			Url:      "https://mikanani.me/Home/Episode/1069f01462c90b1065f4fc5576529422451a90a9",
+			Name:     "[猎户不鸽压制] 万事屋斋藤先生转生异世界 / 斋藤先生无所不能 Benriya Saitou-san, Isekai ni Iku [01-12] [合集] [WebRip 1080p] [简中内嵌] [H265 AAC] [2023年1月番]",
+			Download: "https://mikanani.me/Download/20230328/1069f01462c90b1065f4fc5576529422451a90a9.torrent",
 		},
 	}
 	mgr.Update(ctx, items)

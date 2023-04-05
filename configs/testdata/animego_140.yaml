@@ -37,10 +37,6 @@ plugin:
           vars: {}
     schedule: []
 advanced:
-    # 每隔这一段时间，都会将下载队列添加到下载项、更新下载进度和重命名已完成下载项
-    # 等待过程是异步的，等待期间不影响操作
-    # 在下载项较多、等待时间过少时会出现请求超时，所以有个最小等待时间为2秒的限制
-    # 默认为10，最小值为2
     update_delay_second: 10
     request:
         timeout_second: 5
@@ -50,12 +46,6 @@ advanced:
         allow_duplicate_download: false
         seeding_time_minute: 1
         ignore_size_max_kb: 1024
-        # 下载状态顺序为: 创建下载项->下载->下载完成->做种->做种完成
-        # 可选值为: ['link', 'link_delete', 'move', 'wait_move']
-        #   link: 使用硬链接方式，下载完成后触发。不影响做种
-        #   link_delete: 使用硬链接方式，下载完成后触发。不影响做种，做种完成后删除原文件
-        #   move: 使用移动方式，下载完成后触发。无法做种
-        #   wait_move: 使用移动方式，做种完成后触发
         rename: link_delete
     feed:
         delay_second: 2

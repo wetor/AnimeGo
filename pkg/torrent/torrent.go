@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/anacrolix/torrent/metainfo"
-	"github.com/wetor/AnimeGo/pkg/errors"
 	"github.com/wetor/AnimeGo/pkg/request"
 )
 
@@ -23,6 +22,10 @@ type File struct {
 	Name   string `json:"name"`
 	Dir    string `json:"dir"`
 	Length int64  `json:"length"`
+}
+
+func (f File) Path() string {
+	return path.Join(f.Dir, f.Name)
 }
 
 type Torrent struct {
@@ -98,5 +101,5 @@ func LoadUri(uri string) (t *Torrent, err error) {
 		t, err = LoadTorrent(w)
 	}
 	t.Url = uri
-	return nil, errors.NewAniError("解析torrent url错误")
+	return
 }

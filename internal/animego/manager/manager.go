@@ -128,18 +128,18 @@ func (m *Manager) download(anime *models.AnimeEntity) {
 	}
 	log.Infof("开始下载「%s」", name)
 	m.client.Add(&models.ClientAddOptions{
-		Urls:        []string{anime.Url},
+		Urls:        []string{anime.Torrent.Url},
 		SavePath:    Conf.DownloadPath,
 		Category:    Conf.Category,
 		Tag:         utils.Tag(Conf.Tag, anime.AirDate, anime.Ep),
 		SeedingTime: Conf.SeedingTimeMinute,
 		Rename:      name,
 	})
-	m.cache.Put(Hash2NameBucket, anime.Hash, name, 0)
+	m.cache.Put(Hash2NameBucket, anime.Torrent.Hash, name, 0)
 	m.cache.Put(Name2EntityBucket, name, anime, 0)
 
 	status := &models.DownloadStatus{
-		Hash:  anime.Hash,
+		Hash:  anime.Torrent.Hash,
 		State: downloader.StateAdding,
 	}
 	m.name2status[name] = status
