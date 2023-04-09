@@ -55,7 +55,6 @@ func (m *MockFeed) Parse(opt *models.AnimeParseOptions) *models.AnimeEntity {
 		MikanID:      228,
 		Name:         "ONE PIECE",
 		NameCN:       "海贼王",
-		Season:       opt.Season,
 		Eps:          1079,
 		AirDate:      "1999-10-20",
 	}

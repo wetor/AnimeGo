@@ -1,6 +1,5 @@
 import core
 
-
 __write_tvshow__ = True
 
 def rename(args):

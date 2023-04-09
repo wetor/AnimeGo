@@ -30,6 +30,11 @@ type ClientGetOptions struct {
 // =========== AnimeEntity ===========
 
 type AnimeParseOptions struct {
-	Url    string // Mikan url
-	Season int
+	Url string // Mikan url
+}
+
+type ParseOptions struct {
+	Title      string
+	TorrentUrl string
+	MikanUrl   string
 }

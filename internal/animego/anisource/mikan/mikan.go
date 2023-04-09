@@ -28,7 +28,7 @@ func (m Mikan) Parse(opts *models.AnimeParseOptions) (anime *models.AnimeEntity)
 		err = e.(error)
 	})
 	if err != nil {
-		log.Warnf("解析Mikan获取bangumi id失败，结束此流程")
+		log.Warnf("解析Mikan获取bangumi id失败")
 		log.Debugf("", err)
 		return nil
 	}
@@ -41,14 +41,13 @@ func (m Mikan) Parse(opts *models.AnimeParseOptions) (anime *models.AnimeEntity)
 		err = e.(error)
 	})
 	if err != nil {
-		log.Warnf("解析bangumi获取番剧信息失败失败，结束此流程")
+		log.Warnf("解析bangumi获取番剧信息失败失败")
 		log.Debugf("", err)
 		return nil
 	}
 
 	// ------------------- 获取tmdb信息(季度信息) -------------------
 	log.Debugf("步骤3，解析Themoviedb，%s, %s", entity.Name, entity.AirDate)
-	season = 1
 	try.This(func() {
 		tmdbEntity, tmdbSeason = anisource.Themoviedb(m.ThemoviedbKey).ParseCache(entity.Name, entity.AirDate)
 		season = tmdbSeason.Season
@@ -56,23 +55,8 @@ func (m Mikan) Parse(opts *models.AnimeParseOptions) (anime *models.AnimeEntity)
 		err = e.(error)
 	})
 	if err != nil {
-		if anisource.TMDBFailSkip {
-			log.Warnf("无法获取准确的季度信息，结束此流程")
-			log.Debugf("", err)
-			return nil
-		} else if anisource.TMDBFailUseTitleSeason && opts.Season != 0 {
-			season = opts.Season
-			log.Warnf("使用标题解析季度信息：第%d季", opts.Season)
-		}
-		if season == 0 {
-			if anisource.TMDBFailUseFirstSeason {
-				season = 1
-				log.Warnf("无法获取准确季度信息，默认：第%d季", season)
-			} else {
-				log.Warnf("无法获取准确的季度信息，结束此流程")
-				return nil
-			}
-		}
+		log.Debugf("", err)
+		return nil
 	}
 	anime = &models.AnimeEntity{
 		ID:           entity.ID,
@@ -85,6 +69,6 @@ func (m Mikan) Parse(opts *models.AnimeParseOptions) (anime *models.AnimeEntity)
 		AirDate:      entity.AirDate,
 	}
 	anime.Default()
-	log.Infof("获取「%s」信息成功！原名「%s」", anime.FullNameNoEp(), anime.Name)
+	log.Infof("获取「%s」信息成功！原名「%s」", anime.NameCN, anime.Name)
 	return anime
 }

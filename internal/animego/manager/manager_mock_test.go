@@ -2,12 +2,13 @@ package manager_test
 
 import (
 	"context"
+	"github.com/wetor/AnimeGo/pkg/xpath"
 	"os"
+	"path"
 	"sync"
 
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/pkg/utils"
-	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
 const (
@@ -17,25 +18,34 @@ const (
 )
 
 type ClientMock struct {
-	name2content map[string]*models.TorrentContentItem
-	name2item    map[string]*models.TorrentItem
-	name2hash    map[string]string
-	hash2name    map[string]string
+	name2item map[string]*models.TorrentItem
+	name2hash map[string]string
+	hash2name map[string]string
 	sync.Mutex
 }
 
 func (m *ClientMock) Init() {
-	m.name2content = make(map[string]*models.TorrentContentItem)
 	m.name2item = make(map[string]*models.TorrentItem)
 	m.name2hash = make(map[string]string)
 	m.hash2name = make(map[string]string)
 }
 
-func (m *ClientMock) AddName(name, hash string) {
+func (m *ClientMock) AddName(name, hash string, src []string) {
 	m.Lock()
 	defer m.Unlock()
 	m.name2hash[name] = hash
 	m.hash2name[hash] = name
+
+	err := utils.CreateMutiDir(xpath.Join(DownloadPath, path.Dir(src[0])))
+	if err != nil {
+		panic(err)
+	}
+	for _, s := range src {
+		err = os.WriteFile(xpath.Join(DownloadPath, s), []byte{}, os.ModePerm)
+		if err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (m *ClientMock) Connected() bool {
@@ -94,19 +104,6 @@ func (m *ClientMock) Add(opt *models.ClientAddOptions) {
 		Progress:    0.0,
 		State:       QbtDownloading,
 	}
-	m.name2content[opt.Rename] = &models.TorrentContentItem{
-		Name: xpath.Join(opt.Rename, ContentFile),
-		Size: 1024,
-	}
-
-	err := utils.CreateMutiDir(xpath.Join(DownloadPath, opt.Rename))
-	if err != nil {
-		panic(err)
-	}
-	err = os.WriteFile(xpath.Join(DownloadPath, opt.Rename, ContentFile), []byte{}, os.ModePerm)
-	if err != nil {
-		panic(err)
-	}
 }
 
 func (m *ClientMock) Delete(opt *models.ClientDeleteOptions) {
@@ -115,7 +112,6 @@ func (m *ClientMock) Delete(opt *models.ClientDeleteOptions) {
 	for _, hash := range opt.Hash {
 		name := m.hash2name[hash]
 		delete(m.name2item, name)
-		delete(m.name2content, name)
 		delete(m.name2hash, name)
 		delete(m.hash2name, hash)
 	}
@@ -123,8 +119,6 @@ func (m *ClientMock) Delete(opt *models.ClientDeleteOptions) {
 }
 
 func (m *ClientMock) GetContent(opt *models.ClientGetOptions) []*models.TorrentContentItem {
-	if name, has := m.hash2name[opt.Hash]; has {
-		return []*models.TorrentContentItem{m.name2content[name]}
-	}
+
 	return []*models.TorrentContentItem{}
 }

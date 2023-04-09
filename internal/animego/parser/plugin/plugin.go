@@ -28,7 +28,7 @@ func NewParserPlugin(pluginInfo *models.Plugin, single bool) *Parser {
 }
 
 func (p *Parser) Parse(title string) *models.TitleParsed {
-	if p.plugin == nil || !p.single {
+	if p.pluginInstance == nil || !p.single {
 		p.pluginInstance = plugin.LoadPlugin(&plugin.LoadPluginOptions{
 			Plugin:    p.plugin,
 			EntryFunc: FuncParse,

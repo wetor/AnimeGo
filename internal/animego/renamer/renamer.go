@@ -16,13 +16,12 @@ import (
 
 type RenameTask struct {
 	// 只读
-	Src              string            // 原名
-	RenameDst        *models.RenameDst // 目标名
+	Src              string // 原名
+	Dst              string
 	Mode             string
 	State            <-chan models.TorrentState
 	RenameCallback   models.RenameCallback   // 重命名完成后回调
 	CompleteCallback models.CompleteCallback // 完成重命名所有流程后回调
-	Dst              string
 	RenameResult     *models.RenameResult
 
 	// 读写
@@ -101,27 +100,35 @@ func (m *Manager) stateComplete(task *RenameTask) (complete bool) {
 func (m *Manager) AddRenameTask(opt *models.RenameOptions) {
 	m.Lock()
 	defer m.Unlock()
-	var result *models.RenameResult
-	if m.plugin != nil {
-		result = m.plugin.Rename(opt.Dst.Anime, opt.Dst.Content.Name)
-	}
-	if result == nil {
-		result = &models.RenameResult{
-			Filepath:  xpath.Join(opt.Dst.Anime.DirName(), opt.Dst.Anime.FileName()+xpath.Ext(opt.Dst.Content.Name)),
-			TVShowDir: opt.Dst.Anime.DirName(),
+
+	srcFiles := opt.Entity.FilePathSrc()
+	dstFiles := opt.Entity.FilePath()
+
+	for i := range opt.Entity.Ep {
+		dst := xpath.Join(opt.DstDir, dstFiles[i])
+		src := xpath.Join(opt.SrcDir, srcFiles[i])
+
+		var result *models.RenameResult
+		if m.plugin != nil {
+			result = m.plugin.Rename(opt.Entity, i, srcFiles[i])
 		}
-	}
-	dst := xpath.Join(opt.Dst.SavePath, result.Filepath)
-	m.tasks[opt.Src] = &RenameTask{
-		Src:              opt.Src,
-		RenameDst:        opt.Dst,
-		Mode:             opt.Mode,
-		State:            opt.State,
-		RenameCallback:   opt.RenameCallback,
-		CompleteCallback: opt.CompleteCallback,
-		Dst:              dst,
-		RenameResult:     result,
-		Complete:         false,
+		if result == nil {
+			result = &models.RenameResult{
+				Filepath:  dstFiles[i],
+				TVShowDir: opt.Entity.DirName(),
+			}
+		}
+		result.Index = i
+		m.tasks[dstFiles[i]] = &RenameTask{
+			Src:              src,
+			Dst:              dst,
+			Mode:             opt.Mode,
+			State:            opt.State[i],
+			RenameCallback:   opt.RenameCallback,
+			CompleteCallback: opt.CompleteCallback,
+			RenameResult:     result,
+			Complete:         false,
+		}
 	}
 }
 

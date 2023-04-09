@@ -27,6 +27,10 @@ const (
 	Name2StatusBucket      = "name2status"
 	Hash2NameBucket        = "hash2name"
 	SleepUpdateMaxCount    = 10
+
+	FileAllExist   = 0
+	FileSomeExist  = 1
+	FileAllNoExist = 2
 )
 
 type Manager struct {
@@ -36,7 +40,7 @@ type Manager struct {
 
 	// 通过管道传递下载项
 	downloadChan chan any
-	name2chan    map[string]chan models.TorrentState
+	name2chan    map[string][]chan models.TorrentState
 	name2status  map[string]*models.DownloadStatus // 同时存在于db和内存中
 
 	sleepUpdateCount int // UpdateList 休眠倒计数，当不存在正在下载、做种以及下载完成的项目时，在 SleepUpdateMaxCount 后停止更新
@@ -55,7 +59,7 @@ func NewManager(client api.Downloader, cache api.Cacher, rename api.Renamer) *Ma
 		client:           client,
 		cache:            cache,
 		rename:           rename,
-		name2chan:        make(map[string]chan models.TorrentState),
+		name2chan:        make(map[string][]chan models.TorrentState),
 		name2status:      make(map[string]*models.DownloadStatus),
 		sleepUpdateCount: SleepUpdateMaxCount,
 	}
@@ -112,9 +116,9 @@ func (m *Manager) download(anime *models.AnimeEntity) {
 	name := anime.FullName()
 
 	if status, has := m.name2status[name]; has {
-		if m.isDownloading(status) || m.fileExist(status.Path) {
+		if m.isDownloading(status) || m.fileExist(status.Path) == FileAllExist {
 			if status.Init {
-				if status.Renamed {
+				if status.RenamedAll() {
 					log.Infof("发现已下载「%s」", status.Path)
 				} else {
 					log.Infof("发现正在下载「%s」", name)
@@ -131,7 +135,7 @@ func (m *Manager) download(anime *models.AnimeEntity) {
 		Urls:        []string{anime.Torrent.Url},
 		SavePath:    Conf.DownloadPath,
 		Category:    Conf.Category,
-		Tag:         utils.Tag(Conf.Tag, anime.AirDate, anime.Ep),
+		Tag:         utils.Tag(Conf.Tag, anime.AirDate, anime.Ep[0].Ep),
 		SeedingTime: Conf.SeedingTimeMinute,
 		Rename:      name,
 	})
@@ -224,26 +228,32 @@ func (m *Manager) sleep(ctx context.Context) {
 func (m *Manager) updateDownloadItem(status *models.DownloadStatus, anime *models.AnimeEntity, item *models.TorrentItem) {
 	status.State = downloader.StateMap(item.State)
 	name := anime.FullName()
-
+	if status.Path == nil || len(status.Path) == 0 {
+		status.Path = make(map[int]string)
+		for i := range anime.Ep {
+			status.Path[i] = ""
+		}
+	}
+	if status.Renamed == nil || len(status.Renamed) == 0 {
+		status.Renamed = make(map[int]bool)
+		for i := range anime.Ep {
+			status.Renamed[i] = false
+		}
+	}
 	if !status.Init {
-		content := m.GetContent(&models.ClientGetOptions{
-			Hash: status.Hash,
-			Item: item,
-		})
-
-		m.name2chan[name] = make(chan models.TorrentState, DownloadStateChanCap)
+		m.name2chan[name] = make([]chan models.TorrentState, len(anime.Ep))
+		for i := range anime.Ep {
+			m.name2chan[name][i] = make(chan models.TorrentState, DownloadStateChanCap)
+		}
 		renameOpt := &models.RenameOptions{
-			Src: xpath.Join(Conf.DownloadPath, content.Name),
-			Dst: &models.RenameDst{
-				Anime:    anime,
-				Content:  content,
-				SavePath: Conf.SavePath,
-			},
-			Mode:  Conf.Rename,
-			State: m.name2chan[name],
+			Entity: anime,
+			SrcDir: Conf.DownloadPath,
+			DstDir: Conf.SavePath,
+			Mode:   Conf.Rename,
+			State:  m.name2chan[name],
 			RenameCallback: func(opts *models.RenameResult) {
-				status.Path = opts.Filepath
-				status.Renamed = true
+				status.Path[opts.Index] = opts.Filepath
+				status.Renamed[opts.Index] = true
 				status.Scraped = m.scrape(anime, opts.TVShowDir)
 			},
 			CompleteCallback: func(opts *models.RenameResult) {
@@ -264,7 +274,9 @@ func (m *Manager) updateDownloadItem(status *models.DownloadStatus, anime *model
 		if status.State == downloader.StateSeeding || status.State == downloader.StateComplete ||
 			(status.State == downloader.StateWaiting && item.Progress == 1) {
 			go func() {
-				m.name2chan[name] <- downloader.StateSeeding
+				for i := range anime.Ep {
+					m.name2chan[name][i] <- downloader.StateSeeding
+				}
 			}()
 			status.Seeded = true
 		}
@@ -275,7 +287,9 @@ func (m *Manager) updateDownloadItem(status *models.DownloadStatus, anime *model
 		// 完成下载
 		if status.State == downloader.StateComplete {
 			go func() {
-				m.name2chan[name] <- downloader.StateComplete
+				for i := range anime.Ep {
+					m.name2chan[name][i] <- downloader.StateComplete
+				}
 			}()
 			status.Downloaded = true
 			// 自动删除列表记录，否则无法重复下载
@@ -308,7 +322,7 @@ func (m *Manager) DeleteCache(fullname string) {
 }
 
 func (m *Manager) isDownloading(status *models.DownloadStatus) bool {
-	return (!status.Init || !status.Seeded || !status.Downloaded || !status.Renamed || !status.Scraped) &&
+	return (!status.Init || !status.Seeded || !status.Downloaded || !status.RenamedAll() || !status.Scraped) &&
 		status.State != downloader.StateNotFound
 }
 
@@ -316,13 +330,25 @@ func (m *Manager) setDownloaded(status *models.DownloadStatus) {
 	status.Init = true
 	status.Seeded = true
 	status.Downloaded = true
-	status.Renamed = true
+	status.Renamed = make(map[int]bool)
 	status.Scraped = true
 	status.State = downloader.StateComplete
 }
 
-func (m *Manager) fileExist(path string) bool {
-	return len(path) != 0 && utils.IsExist(xpath.Join(Conf.SavePath, path))
+func (m *Manager) fileExist(path map[int]string) int {
+	existNum := 0
+	for _, p := range path {
+		if len(p) != 0 && utils.IsExist(xpath.Join(Conf.SavePath, p)) {
+			existNum++
+		}
+	}
+	if len(path) == existNum {
+		return FileAllExist
+	} else if existNum > 0 {
+		return FileSomeExist
+	} else {
+		return FileAllNoExist
+	}
 }
 
 func (m *Manager) UpdateList() {
@@ -360,8 +386,8 @@ func (m *Manager) UpdateList() {
 			continue
 		}
 		// 文件是否存在
-		fileExist := m.fileExist(status.Path)
-		if len(status.Path) != 0 && !fileExist {
+		fileExist := m.fileExist(status.Path) == FileAllExist
+		if !status.PathNull() && !fileExist {
 			// 文件不存在，设置缓存将在 NotFoundExpireHour 小时后过期
 			if status.ExpireAt == 0 {
 				status.ExpireAt = time.Now().Add(NotFoundExpireHour * time.Hour).Unix()

@@ -7,5 +7,5 @@ type Renamer interface {
 }
 
 type RenamerPlugin interface {
-	Rename(anime *models.AnimeEntity, src string) *models.RenameResult
+	Rename(anime *models.AnimeEntity, index int, src string) *models.RenameResult
 }

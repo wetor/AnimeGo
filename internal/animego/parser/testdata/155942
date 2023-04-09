@@ -1,0 +1,101 @@
+{
+  "adult": false,
+  "backdrop_path": "/6c1tMSLoWmy0rPic1j0cihExfmP.jpg",
+  "created_by": [],
+  "episode_run_time": [
+    24
+  ],
+  "first_air_date": "2023-01-08",
+  "genres": [
+    {
+      "id": 16,
+      "name": "Animation"
+    },
+    {
+      "id": 35,
+      "name": "Comedy"
+    },
+    {
+      "id": 10765,
+      "name": "Sci-Fi & Fantasy"
+    }
+  ],
+  "homepage": "https://saitou-anime.com",
+  "id": 155942,
+  "in_production": false,
+  "languages": [
+    "ja"
+  ],
+  "last_air_date": "2023-03-26",
+  "last_episode_to_air": {
+    "id": 4116587,
+    "name": "The One Who Needs It Most",
+    "overview": "Saitou and the others have returned to their everyday lives. Then, one day, Lafanpan takes a bath in a mysteriously pattered cup and something completely unexpected happens.",
+    "vote_average": 8.0,
+    "vote_count": 1,
+    "air_date": "2023-03-26",
+    "episode_number": 12,
+    "production_code": "",
+    "runtime": 24,
+    "season_number": 1,
+    "show_id": 155942,
+    "still_path": "/3dXSYqkggPQw1CFsnmQbjHeDBvN.jpg"
+  },
+  "name": "Handyman Saitou in Another World",
+  "next_episode_to_air": null,
+  "networks": [
+    {
+      "id": 173,
+      "logo_path": "/fERjndErEpveJmQZccJbJDi93rj.png",
+      "name": "AT-X",
+      "origin_country": "JP"
+    }
+  ],
+  "number_of_episodes": 12,
+  "number_of_seasons": 1,
+  "origin_country": [
+    "JP"
+  ],
+  "original_language": "ja",
+  "original_name": "便利屋斎藤さん、異世界に行く",
+  "overview": "Handyman Saito has never been anyone special. All his life, he’s had average grades, ordinary athletic skill, a commonplace job… But his unremarkable path takes a turn when he wakes up in another world. Here, warriors, wizards, and elves accompany him on quests delving deep into dungeons, and Saito realizes for the first time what it’s like to be needed. After all, who other than the handyman could be trusted to open locked treasure chests or repair his allies’ equipment? Beginning with a simple “thank you,” this is the story of an ordinary person’s fulfilling life.",
+  "popularity": 39.676,
+  "poster_path": "/xp404PMU2cGsODMTIkkUizbYhcm.jpg",
+  "production_companies": [
+    {
+      "id": 87536,
+      "logo_path": "/59FqPKWsfCc4e1LmKoVfXeblaRK.png",
+      "name": "C2C",
+      "origin_country": "JP"
+    }
+  ],
+  "production_countries": [
+    {
+      "iso_3166_1": "JP",
+      "name": "Japan"
+    }
+  ],
+  "seasons": [
+    {
+      "air_date": "2023-01-08",
+      "episode_count": 12,
+      "id": 240731,
+      "name": "Season 1",
+      "overview": "",
+      "poster_path": "/i1p2YpW3WPFPdZ8UWpQCMAqR8aY.jpg",
+      "season_number": 1
+    }
+  ],
+  "spoken_languages": [
+    {
+      "english_name": "Japanese",
+      "iso_639_1": "ja",
+      "name": "日本語"
+    }
+  ],
+  "status": "Ended",
+  "tagline": "",
+  "type": "Scripted",
+  "vote_average": 7.4,
+  "vote_count": 14
+}

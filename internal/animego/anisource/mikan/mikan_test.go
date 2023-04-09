@@ -130,7 +130,7 @@ func TestMikan_Parse(t *testing.T) {
 				},
 				name: "OPFans枫雪动漫][ONE PIECE 海贼王][第1029话][1080p][周日版][MP4][简体] [299.5MB]",
 			},
-			wantAnime: &models.AnimeEntity{ID: 975, ThemoviedbID: 37854, MikanID: 228, Name: "ONE PIECE", NameCN: "海贼王", Season: 1, Ep: 1029, Eps: 1079, AirDate: "1999-10-20"},
+			wantAnime: &models.AnimeEntity{ID: 975, ThemoviedbID: 37854, MikanID: 228, Name: "ONE PIECE", NameCN: "海贼王", Season: 1, Ep: []*models.AnimeEpEntity{{Ep: 1029}}, Eps: 1079, AirDate: "1999-10-20"},
 		},
 		{
 			name: "欢迎来到实力至上主义的教室 第二季",
@@ -140,7 +140,7 @@ func TestMikan_Parse(t *testing.T) {
 				},
 				name: "[ANi] Classroom of the Elite S2 - 欢迎来到实力至上主义的教室 第二季 - 07 [1080P][Baha][WEB-DL][AAC AVC][CHT][MP4] [254.26 MB]",
 			},
-			wantAnime: &models.AnimeEntity{ID: 371546, ThemoviedbID: 72517, MikanID: 2775, Name: "ようこそ実力至上主義の教室へ 2nd Season", NameCN: "欢迎来到实力至上主义教室 第二季", Season: 2, Ep: 7, Eps: 13, AirDate: "2022-07-04"},
+			wantAnime: &models.AnimeEntity{ID: 371546, ThemoviedbID: 72517, MikanID: 2775, Name: "ようこそ実力至上主義の教室へ 2nd Season", NameCN: "欢迎来到实力至上主义教室 第二季", Season: 2, Ep: []*models.AnimeEpEntity{{Ep: 7}}, Eps: 13, AirDate: "2022-07-04"},
 		},
 		{
 			name: "想要成为影之实力者",
@@ -150,7 +150,7 @@ func TestMikan_Parse(t *testing.T) {
 				},
 				name: "[LoliHouse] 想要成为影之实力者 / 我想成为影之强者 / Kage no Jitsuryokusha ni Naritakute! - 19 [WebRip 1080p HEVC-10bit AAC][简繁内封字幕]",
 			},
-			wantAnime: &models.AnimeEntity{ID: 329114, ThemoviedbID: 119495, MikanID: 2822, Name: "陰の実力者になりたくて！", NameCN: "想要成为影之实力者！", Season: 1, Ep: 19, Eps: 20, AirDate: "2022-10-05"},
+			wantAnime: &models.AnimeEntity{ID: 329114, ThemoviedbID: 119495, MikanID: 2822, Name: "陰の実力者になりたくて！", NameCN: "想要成为影之实力者！", Season: 1, Ep: []*models.AnimeEpEntity{{Ep: 19}}, Eps: 20, AirDate: "2022-10-05"},
 		},
 	}
 	m := mikan.Mikan{}
@@ -158,9 +158,8 @@ func TestMikan_Parse(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			p := public.ParserName(tt.args.name)
 			assert.NotEmpty(t, p)
-			tt.args.opts.Season = p.Season
 			gotAnime := m.Parse(tt.args.opts)
-			gotAnime.Ep = p.Ep
+			gotAnime.Ep = []*models.AnimeEpEntity{{Ep: p.Ep}}
 			assert.Equalf(t, tt.wantAnime, gotAnime, "Parse(%v)", tt.args.opts)
 		})
 	}

@@ -73,11 +73,12 @@ func (m *Manager) Update(ctx context.Context, items []*models.FeedItem) {
 			}
 		}
 		anime := m.anisource.Parse(&models.AnimeParseOptions{
-			Url:    item.Url,
-			Season: item.NameParsed.Season,
+			Url: item.Url,
 		})
 		if anime != nil {
-			anime.Ep = item.NameParsed.Ep
+			anime.Ep = []*models.AnimeEpEntity{
+				{Ep: item.NameParsed.Ep},
+			}
 			anime.Torrent = &models.AnimeTorrent{
 				Hash: torrentInfo.Hash,
 				Url:  torrentInfo.Url,

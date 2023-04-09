@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path"
 	"sync"
 	"testing"
 	"time"
@@ -47,34 +48,30 @@ func TestMain(m *testing.M) {
 	fmt.Println("end")
 }
 
-func rename(r *renamer.Manager, state <-chan models.TorrentState, name, mode, src string, anime *models.AnimeEntity) string {
-	_ = os.WriteFile(src, []byte{}, os.ModePerm)
+func rename(r *renamer.Manager, state <-chan models.TorrentState, mode string, anime *models.AnimeEntity) string {
+	srcs := anime.FilePathSrc()
+	for _, s := range srcs {
+		_ = os.WriteFile(path.Join(DownloadPath, s), []byte{}, os.ModePerm)
+	}
 	r.AddRenameTask(&models.RenameOptions{
-		Src: src,
-		Dst: &models.RenameDst{
-			Anime: anime,
-			Content: &models.TorrentContentItem{
-				Name: name,
-			},
-			SavePath: SavePath,
-		},
-		Mode:  mode,
-		State: state,
+		Entity: anime,
+		SrcDir: DownloadPath,
+		DstDir: SavePath,
+		Mode:   mode,
+		State:  state,
 		RenameCallback: func(result *models.RenameResult) {
 			d, _ := json.Marshal(result)
 			fmt.Println(string(d))
 		},
 		CompleteCallback: func(result *models.RenameResult) {
-			fmt.Println("exit", src)
+			fmt.Println("exit", anime.DirName())
 		},
 	})
-	return xpath.Join(SavePath, anime.DirName(), anime.FileName()+xpath.Ext(name))
+	return xpath.Join(SavePath, anime.DirName(), anime.FileName(0)+".mp4")
 }
 
 func Rename1(r *renamer.Manager, state <-chan models.TorrentState) string {
-	name := "1.mp4"
 	mode := "link_delete"
-	src := xpath.Join(DownloadPath, name)
 	anime := &models.AnimeEntity{
 		ID:      18692,
 		Name:    "ドラえもん",
@@ -82,16 +79,18 @@ func Rename1(r *renamer.Manager, state <-chan models.TorrentState) string {
 		AirDate: "2005-04-15",
 		Eps:     0,
 		Season:  1,
-		Ep:      712,
+		Ep: []*models.AnimeEpEntity{
+			{Ep: 712, Src: "src_712.mp4"},
+			{Ep: 713, Src: "src_713.mp4"},
+			{Ep: 714, Src: "src_714.mp4"},
+		},
 		MikanID: 681,
 	}
-	return rename(r, state, name, mode, src, anime)
+	return rename(r, state, mode, anime)
 }
 
 func Rename2(r *renamer.Manager, state <-chan models.TorrentState) string {
-	name := "2.mp4"
 	mode := "wait_move"
-	src := xpath.Join(DownloadPath, name)
 	anime := &models.AnimeEntity{
 		ID:      18692,
 		Name:    "ONE PIECE",
@@ -99,16 +98,16 @@ func Rename2(r *renamer.Manager, state <-chan models.TorrentState) string {
 		AirDate: "2005-04-15",
 		Eps:     0,
 		Season:  1,
-		Ep:      1026,
+		Ep: []*models.AnimeEpEntity{
+			{Ep: 1026, Src: "src_1026.mp4"},
+		},
 		MikanID: 228,
 	}
-	return rename(r, state, name, mode, src, anime)
+	return rename(r, state, mode, anime)
 }
 
 func Rename3(r *renamer.Manager, state <-chan models.TorrentState) string {
-	name := "3.mp4"
 	mode := "move"
-	src := xpath.Join(DownloadPath, name)
 	anime := &models.AnimeEntity{
 		ID:      18692,
 		Name:    "ONE PIECE",
@@ -116,10 +115,12 @@ func Rename3(r *renamer.Manager, state <-chan models.TorrentState) string {
 		AirDate: "2005-04-15",
 		Eps:     0,
 		Season:  1,
-		Ep:      996,
+		Ep: []*models.AnimeEpEntity{
+			{Ep: 996, Src: "src_996.mp4"},
+		},
 		MikanID: 228,
 	}
-	return rename(r, state, name, mode, src, anime)
+	return rename(r, state, mode, anime)
 }
 
 func TestRenamer_Start(t *testing.T) {

@@ -6,6 +6,7 @@ import (
 	"github.com/wetor/AnimeGo/pkg/errors"
 	"github.com/wetor/AnimeGo/pkg/log"
 	pkgPlugin "github.com/wetor/AnimeGo/pkg/plugin"
+	"github.com/wetor/AnimeGo/pkg/utils"
 	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
@@ -24,14 +25,14 @@ func NewRenamePlugin(pluginInfo *models.Plugin) *Rename {
 	}
 }
 
-func (p *Rename) Rename(anime *models.AnimeEntity, filename string) *models.RenameResult {
+func (p *Rename) Rename(anime *models.AnimeEntity, index int, filename string) *models.RenameResult {
 	pluginInstance := plugin.LoadPlugin(&plugin.LoadPluginOptions{
 		Plugin:    p.plugin,
 		EntryFunc: FuncRename,
 		FuncSchema: []*pkgPlugin.FuncSchemaOptions{
 			{
 				Name:         FuncRename,
-				ParamsSchema: []string{"anime", "filename", "default_filepath"},
+				ParamsSchema: []string{"anime", "filename"},
 				ResultSchema: []string{"error", "filepath", "tvshow_dir,optional"},
 				DefaultArgs:  p.plugin.Args,
 			},
@@ -43,10 +44,12 @@ func (p *Rename) Rename(anime *models.AnimeEntity, filename string) *models.Rena
 			},
 		},
 	})
+
+	obj := utils.StructToMap(anime)
+	obj["ep"] = anime.Ep[index].Ep
 	result := pluginInstance.Run(FuncRename, map[string]any{
-		"anime":            anime,
-		"filename":         filename,
-		"default_filepath": xpath.Join(anime.DirName(), anime.FileName()+xpath.Ext(filename)),
+		"anime":    obj,
+		"filename": filename,
 	})
 	if result["error"] != nil {
 		log.Debugf("", errors.NewAniErrorD(result["error"]))

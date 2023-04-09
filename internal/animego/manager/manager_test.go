@@ -17,7 +17,6 @@ import (
 	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/log"
-	"github.com/wetor/AnimeGo/pkg/torrent"
 	"github.com/wetor/AnimeGo/pkg/utils"
 	"github.com/wetor/AnimeGo/pkg/xpath"
 )
@@ -71,9 +70,9 @@ func TestMain(m *testing.M) {
 	db.Put("name2status", "test[第1季][第1集]", &models.DownloadStatus{
 		Hash:       "0000a4042b0bac2406b71023fdfe5e9054ebb832",
 		State:      "complete",
-		Path:       SavePath + "/test/test.mp4",
+		Path:       map[int]string{0: SavePath + "/test/test.mp4"},
 		Init:       true,
-		Renamed:    true,
+		Renamed:    map[int]bool{0: true},
 		Downloaded: true,
 		Scraped:    true,
 		Seeded:     true,
@@ -98,20 +97,25 @@ func TestMain(m *testing.M) {
 	fmt.Println("end")
 }
 
-func download(name string, season, ep int) (file, fullname, hash string) {
+func download(name string, season int, ep []int) (file, fullname, hash string) {
 	hash = utils.MD5([]byte(fmt.Sprintf("%v%v%v", name, season, ep)))
 	anime := &models.AnimeEntity{
 		NameCN: name,
 		Season: season,
-		Ep:     ep,
-		Torrent: &torrent.Torrent{
+		Torrent: &models.AnimeTorrent{
 			Hash: hash,
 		},
 	}
+	anime.Ep = make([]*models.AnimeEpEntity, 0, len(ep))
+	for _, e := range ep {
+		anime.Ep = append(anime.Ep, &models.AnimeEpEntity{
+			Ep: e, Src: fmt.Sprintf("%s/src_%d.mp4", name, e),
+		})
+	}
 	fullname = anime.FullName()
-	qbt.AddName(fullname, hash)
+	qbt.AddName(fullname, hash, anime.FilePathSrc())
 	mgr.Download(anime)
-	file = xpath.Join(SavePath, anime.DirName(), anime.FileName()+xpath.Ext(ContentFile))
+	file = xpath.Join(SavePath, anime.DirName(), anime.FileName(0)+xpath.Ext(ContentFile))
 	return
 }
 
@@ -138,7 +142,7 @@ func TestManager_Success(t *testing.T) {
 	manager.Conf.Rename = "move"
 	{
 		log.Info("下载 1")
-		file1, _, _ = download("动画1", 1, 1)
+		file1, _, _ = download("动画1", 1, []int{1, 2, 3})
 	}
 	wg.Wait()
 	assert.FileExists(t, file1)
@@ -156,12 +160,12 @@ func TestManager_Exist(t *testing.T) {
 	manager.Conf.Rename = "move"
 	{
 		log.Info("下载 1")
-		file1, _, _ = download("动画1", 1, 1)
+		file1, _, _ = download("动画1", 1, []int{1, 2, 4})
 
 	}
 	{
 		log.Info("下载 1")
-		file1, _, _ = download("动画1", 1, 1)
+		file1, _, _ = download("动画1", 1, []int{1, 2, 4})
 	}
 	wg.Wait()
 	assert.FileExists(t, file1)
@@ -181,7 +185,7 @@ func TestManager_DeleteFile_ReDownload(t *testing.T) {
 		time.Sleep(300 * time.Millisecond)
 		{
 			log.Info("下载 1")
-			file1, _, _ = download("动画1", 1, 1)
+			file1, _, _ = download("动画1", 1, []int{1})
 
 		}
 		time.Sleep(6*time.Second + 300*time.Millisecond)
@@ -193,7 +197,7 @@ func TestManager_DeleteFile_ReDownload(t *testing.T) {
 		time.Sleep(500 * time.Millisecond)
 		{
 			log.Info("下载 1")
-			file1, _, _ = download("动画1", 1, 1)
+			file1, _, _ = download("动画1", 1, []int{1})
 		}
 	}()
 	wg.Wait()
@@ -215,7 +219,7 @@ func TestManager_DeleteCache_ReDownload(t *testing.T) {
 		time.Sleep(300 * time.Millisecond)
 		{
 			log.Info("下载 1")
-			file1, name1, _ = download("动画1", 1, 1)
+			file1, name1, _ = download("动画1", 1, []int{1})
 
 		}
 		time.Sleep(6*time.Second + 300*time.Millisecond)
@@ -227,7 +231,7 @@ func TestManager_DeleteCache_ReDownload(t *testing.T) {
 		time.Sleep(500 * time.Millisecond)
 		{
 			log.Info("下载 1")
-			file1, _, _ = download("动画1", 1, 1)
+			file1, _, _ = download("动画1", 1, []int{1})
 		}
 	}()
 	wg.Wait()
@@ -259,13 +263,13 @@ func TestManager_WaitClient(t *testing.T) {
 		time.Sleep(300 * time.Millisecond)
 		{
 			log.Info("下载 1")
-			file1, _, _ = download("动画1", 1, 1)
+			file1, _, _ = download("动画1", 1, []int{1})
 
 		}
 		time.Sleep(1*time.Second + 300*time.Millisecond)
 		{
 			log.Info("下载 2")
-			file2, _, _ = download("动画2", 1, 1)
+			file2, _, _ = download("动画2", 1, []int{1})
 		}
 	}()
 
@@ -301,16 +305,16 @@ func TestManager_WaitClient_FullChan(t *testing.T) {
 		{
 			for i := 1; i <= manager.DownloadChanDefaultCap; i++ {
 				log.Infof("下载 %d", i)
-				f, _, _ := download("动画1", 1, i)
+				f, _, _ := download("动画1", 1, []int{i})
 				file = append(file, f)
 			}
 		}
 		{
 			log.Info("下载 2")
-			f, _, _ := download("动画2", 1, 1)
+			f, _, _ := download("动画2", 1, []int{1})
 			file = append(file, f)
 			log.Info("下载 3")
-			f, _, _ = download("动画3", 1, 1)
+			f, _, _ = download("动画3", 1, []int{1})
 			file = append(file, f)
 		}
 	}()
@@ -333,7 +337,7 @@ func TestManager_ReStart_NotDownloaded(t *testing.T) {
 		manager.Conf.Rename = "move"
 		{
 			log.Info("下载 1")
-			file1, _, _ = download("动画1", 1, 1)
+			file1, _, _ = download("动画1", 1, []int{1})
 
 		}
 		wg.Wait()
@@ -349,7 +353,7 @@ func TestManager_ReStart_NotDownloaded(t *testing.T) {
 		}()
 		{
 			log.Info("下载 1")
-			file1, _, _ = download("动画1", 1, 1)
+			file1, _, _ = download("动画1", 1, []int{1})
 		}
 		wg.Wait()
 	}
