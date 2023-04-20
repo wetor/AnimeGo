@@ -32,13 +32,12 @@ var (
 	pArgsJson        string
 	pVarsJson        string
 	pFilterInputFile string
-	pRenameAnime     string
-	pRenameFilename  string
+	pRenameInput     string
 )
 
 func main() {
 	common.PrintInfo()
-
+	// -file=assets/plugin/rename/rename.py -plugin=rename -rename_input=assets/plugin/rename/testdata.json
 	flag.BoolVar(&pDebug, "debug", true, "Debug模式，将会显示更多的日志")
 	flag.StringVar(&pFile, "file", "", "插件脚本文件")
 	flag.StringVar(&pPlugin, "plugin", "python", "插件类型，支持['python', 'filter', 'rename', 'schedule', 'feed']")
@@ -46,9 +45,8 @@ func main() {
 	flag.StringVar(&pArgsJson, "args", "", "插件入口函数默认参数，json格式字符串")
 	flag.StringVar(&pVarsJson, "vars", "", "插件全局变量，json格式字符串")
 	flag.StringVar(&pPythonEntryFunc, "python_entry", "main", "python插件入口函数名")
-	flag.StringVar(&pFilterInputFile, "filter_input", "", "filter插件输入json文件")
-	flag.StringVar(&pRenameAnime, "rename_anime", "", "rename插件用于重命名的动画信息，json格式字符串")
-	flag.StringVar(&pRenameFilename, "rename_filename", "", "rename插件的待重命名文件名")
+	flag.StringVar(&pFilterInputFile, "filter_input", "", "filter插件要过滤的内容json文件")
+	flag.StringVar(&pRenameInput, "rename_input", "", "rename插件用于重命名的动画信息json文件")
 	flag.Parse()
 
 	common.RegisterExit(doExit)
@@ -64,42 +62,31 @@ func doExit() {
 	}()
 }
 
-func pluginPython(info *models.Plugin) map[string]any {
+func pluginPython(entryFunc string, info *models.Plugin) map[string]any {
 	p := plugin.LoadPlugin(&plugin.LoadPluginOptions{
 		Plugin:    info,
-		EntryFunc: pPythonEntryFunc,
+		EntryFunc: entryFunc,
 	})
-	return p.Run(pPythonEntryFunc, map[string]any{})
+	return p.Run(entryFunc, map[string]any{})
 }
 
-func pluginFilter(info *models.Plugin) []*models.FeedItem {
-	data, err := os.ReadFile(pFilterInputFile)
-	if err != nil {
-		panic(err)
-	}
-	items := make([]*models.FeedItem, 0)
-	err = json.Unmarshal(data, &items)
-	if err != nil {
-		panic(err)
-	}
-
+func pluginFilter(items []*models.FeedItem, info *models.Plugin) []*models.FeedItem {
 	f := filterPlugin.NewFilterPlugin(info)
 	return f.Filter(items)
 }
 
-func pluginRename(info *models.Plugin) *models.RenameResult {
-	anime := &models.AnimeEntity{}
-	err := json.Unmarshal([]byte(pRenameAnime), anime)
-	if err != nil {
-		panic(err)
-	}
+func pluginRename(anime *models.AnimeEntity, info *models.Plugin) []*models.RenameResult {
+	result := make([]*models.RenameResult, len(anime.Ep))
 	r := renamerPlugin.NewRenamePlugin(info)
-	return r.Rename(anime, pRenameFilename)
+	for i, ep := range anime.Ep {
+		result[i] = r.Rename(anime, i, ep.Src)
+	}
+	return result
 }
 
-func pluginSchedule(s *schedule.Schedule, info *models.Plugin) {
+func pluginSchedule(file string, s *schedule.Schedule, info *models.Plugin) {
 	s.Add(&schedule.AddTaskOptions{
-		Name:     xpath.Base(pFile),
+		Name:     xpath.Base(file),
 		StartRun: false,
 		Task: task.NewScheduleTask(&task.ScheduleOptions{
 			Plugin: info,
@@ -107,9 +94,9 @@ func pluginSchedule(s *schedule.Schedule, info *models.Plugin) {
 	})
 }
 
-func pluginFeed(s *schedule.Schedule, info *models.Plugin, callback func(items []*models.FeedItem)) {
+func pluginFeed(file string, s *schedule.Schedule, info *models.Plugin, callback func(items []*models.FeedItem)) {
 	s.Add(&schedule.AddTaskOptions{
-		Name:     xpath.Base(pFile),
+		Name:     xpath.Base(file),
 		StartRun: false,
 		Task: task.NewFeedTask(&task.FeedOptions{
 			Plugin:   info,
@@ -157,13 +144,34 @@ func Main() {
 	}
 	switch pPlugin {
 	case constant.PluginTemplatePython:
-		result := pluginPython(pluginInfo)
+		result := pluginPython(pPythonEntryFunc, pluginInfo)
 		log.Info(result)
 	case constant.PluginTemplateRename:
-		result := pluginRename(pluginInfo)
-		log.Infof("rename结果: %v -> %v, tvshow.nfo位置: %v", pRenameFilename, result.Filepath, result.TVShowDir)
+		data, err := os.ReadFile(pRenameInput)
+		if err != nil {
+			panic(err)
+		}
+		anime := &models.AnimeEntity{}
+		err = json.Unmarshal(data, anime)
+		if err != nil {
+			panic(err)
+		}
+		result := pluginRename(anime, pluginInfo)
+		log.Infof("rename结果: ")
+		for _, r := range result {
+			log.Infof("    [%d] %v -> %v, tvshow.nfo位置: %v", r.Index, anime.Ep[r.Index].Src, r.Filepath, r.TVShowDir)
+		}
 	case constant.PluginTemplateFilter:
-		result := pluginFilter(pluginInfo)
+		data, err := os.ReadFile(pFilterInputFile)
+		if err != nil {
+			panic(err)
+		}
+		items := make([]*models.FeedItem, 0)
+		err = json.Unmarshal(data, &items)
+		if err != nil {
+			panic(err)
+		}
+		result := pluginFilter(items, pluginInfo)
 		for i, item := range result {
 			jsonData, _ := json.Marshal(item)
 			log.Infof("[%d] filter结果: %v", i, string(jsonData))
@@ -173,9 +181,9 @@ func Main() {
 			WG: &wg,
 		})
 		if pPlugin == constant.PluginTemplateSchedule {
-			pluginSchedule(s, pluginInfo)
+			pluginSchedule(pFile, s, pluginInfo)
 		} else if pPlugin == constant.PluginTemplateFeed {
-			pluginFeed(s, pluginInfo, func(items []*models.FeedItem) {
+			pluginFeed(pFile, s, pluginInfo, func(items []*models.FeedItem) {
 				for i, item := range items {
 					jsonData, _ := json.Marshal(item)
 					log.Infof("[%d] feed结果: %v", i, string(jsonData))

@@ -48,7 +48,7 @@ func TestMain(m *testing.M) {
 	fmt.Println("end")
 }
 
-func rename(r *renamer.Manager, state <-chan models.TorrentState, mode string, anime *models.AnimeEntity) string {
+func rename(r *renamer.Manager, state []chan models.TorrentState, mode string, anime *models.AnimeEntity) []string {
 	srcs := anime.FilePathSrc()
 	for _, s := range srcs {
 		_ = os.WriteFile(path.Join(DownloadPath, s), []byte{}, os.ModePerm)
@@ -67,10 +67,23 @@ func rename(r *renamer.Manager, state <-chan models.TorrentState, mode string, a
 			fmt.Println("exit", anime.DirName())
 		},
 	})
-	return xpath.Join(SavePath, anime.DirName(), anime.FileName(0)+".mp4")
+	dst := anime.FilePath()
+	result := make([]string, len(dst))
+	for i := range result {
+		result[i] = xpath.Join(SavePath, dst[i])
+	}
+	return result
 }
 
-func Rename1(r *renamer.Manager, state <-chan models.TorrentState) string {
+func makeChans(size int) []chan models.TorrentState {
+	state := make([]chan models.TorrentState, size)
+	for i := range state {
+		state[i] = make(chan models.TorrentState)
+	}
+	return state
+}
+
+func Rename1(r *renamer.Manager) ([]string, []chan models.TorrentState) {
 	mode := "link_delete"
 	anime := &models.AnimeEntity{
 		ID:      18692,
@@ -86,10 +99,13 @@ func Rename1(r *renamer.Manager, state <-chan models.TorrentState) string {
 		},
 		MikanID: 681,
 	}
-	return rename(r, state, mode, anime)
+	d, _ := json.Marshal(anime)
+	os.WriteFile("D:\\code\\AnimeGo\\assets\\plugin\\rename\\testdata.json", d, 0666)
+	state := makeChans(len(anime.Ep))
+	return rename(r, state, mode, anime), state
 }
 
-func Rename2(r *renamer.Manager, state <-chan models.TorrentState) string {
+func Rename2(r *renamer.Manager) ([]string, []chan models.TorrentState) {
 	mode := "wait_move"
 	anime := &models.AnimeEntity{
 		ID:      18692,
@@ -103,10 +119,11 @@ func Rename2(r *renamer.Manager, state <-chan models.TorrentState) string {
 		},
 		MikanID: 228,
 	}
-	return rename(r, state, mode, anime)
+	state := makeChans(len(anime.Ep))
+	return rename(r, state, mode, anime), state
 }
 
-func Rename3(r *renamer.Manager, state <-chan models.TorrentState) string {
+func Rename3(r *renamer.Manager) ([]string, []chan models.TorrentState) {
 	mode := "move"
 	anime := &models.AnimeEntity{
 		ID:      18692,
@@ -120,7 +137,8 @@ func Rename3(r *renamer.Manager, state <-chan models.TorrentState) string {
 		},
 		MikanID: 228,
 	}
-	return rename(r, state, mode, anime)
+	state := makeChans(len(anime.Ep))
+	return rename(r, state, mode, anime), state
 }
 
 func TestRenamer_Start(t *testing.T) {
@@ -134,35 +152,44 @@ func TestRenamer_Start(t *testing.T) {
 		File:   "rename.py",
 	})
 	r := renamer.NewManager(p)
-	state1 := make(chan models.TorrentState)
-	f1 := Rename1(r, state1)
-	state2 := make(chan models.TorrentState)
-	f2 := Rename2(r, state2)
-	state3 := make(chan models.TorrentState)
-	f3 := Rename3(r, state3)
+	f1, state1 := Rename1(r)
+	f2, state2 := Rename2(r)
+	f3, state3 := Rename3(r)
 
 	r.Start(ctx)
 	time.Sleep(500 * time.Millisecond)
 	go func() {
-		state1 <- downloader.StateSeeding
-		state1 <- downloader.StateComplete
+		for i := range state1 {
+			state1[i] <- downloader.StateSeeding
+			state1[i] <- downloader.StateComplete
+		}
 	}()
 	go func() {
-		state2 <- downloader.StateSeeding
-		state2 <- downloader.StateComplete
+		for i := range state2 {
+			state2[i] <- downloader.StateSeeding
+			state2[i] <- downloader.StateComplete
+		}
 	}()
 	go func() {
-		state3 <- downloader.StateSeeding
-		state3 <- downloader.StateComplete
+		for i := range state3 {
+			state3[i] <- downloader.StateSeeding
+			state3[i] <- downloader.StateComplete
+		}
 	}()
 
 	go func() {
-		time.Sleep(10 * time.Second)
+		time.Sleep(20 * time.Second)
 		cancel()
 	}()
 	wg.Wait()
 
-	assert.FileExists(t, f1)
-	assert.FileExists(t, f2)
-	assert.FileExists(t, f3)
+	for i := range f1 {
+		assert.FileExists(t, f1[i])
+	}
+	for i := range f2 {
+		assert.FileExists(t, f2[i])
+	}
+	for i := range f3 {
+		assert.FileExists(t, f3[i])
+	}
 }

@@ -1,0 +1,31 @@
+{
+  "id": 18692,
+  "themoviedb_id": 0,
+  "mikan_id": 681,
+  "name": "ドラえもん",
+  "name_cn": "动画1",
+  "season": 1,
+  "eps": 0,
+  "air_date": "2005-04-15",
+  "ep": [
+    {
+      "type": 0,
+      "ep": 9,
+      "src": "src_9.mp4",
+      "air_date": ""
+    },
+    {
+      "type": 0,
+      "ep": 713,
+      "src": "src_713.mp4",
+      "air_date": ""
+    },
+    {
+      "type": 0,
+      "ep": 1024,
+      "src": "src_1024.mp4",
+      "air_date": ""
+    }
+  ],
+  "torrent": null
+}

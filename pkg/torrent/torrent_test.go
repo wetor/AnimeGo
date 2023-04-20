@@ -2,30 +2,10 @@ package torrent_test
 
 import (
 	"fmt"
-	"os"
 	"testing"
 
-	"github.com/wetor/AnimeGo/pkg/json"
 	"github.com/wetor/AnimeGo/pkg/torrent"
 )
-
-func TestLoadTorrent(t *testing.T) {
-	file := "C:\\Users\\wetor\\Downloads\\b88ba4c86278b05ddfa025b94b0c65597ff72968.torrent"
-	f, err := os.Open(file)
-	if err != nil {
-		panic(err)
-	}
-	defer f.Close()
-	ts, err := torrent.LoadTorrent(f)
-	if err != nil {
-		panic(err)
-	}
-
-	d, _ := json.Marshal(ts)
-
-	fmt.Println(string(d))
-
-}
 
 func TestLoadMagnet(t *testing.T) {
 

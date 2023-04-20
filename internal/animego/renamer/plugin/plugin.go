@@ -63,7 +63,9 @@ func (p *Rename) Rename(anime *models.AnimeEntity, index int, filename string) *
 		tvshow = val.(bool)
 	}
 
-	renameResult := &models.RenameResult{}
+	renameResult := &models.RenameResult{
+		Index: index,
+	}
 	if dst, ok := result["filepath"].(string); ok && len(dst) != 0 {
 		renameResult.Filepath = dst
 		log.Debugf("[Plugin] Rename插件(%s): %s -> %s", p.plugin.File, filename, dst)
