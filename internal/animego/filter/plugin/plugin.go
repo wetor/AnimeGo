@@ -23,7 +23,7 @@ func NewFilterPlugin(pluginInfo *models.Plugin) *Filter {
 	}
 }
 
-func (p *Filter) Filter(items []*models.FeedItem) (resultItems []*models.FeedItem) {
+func (p *Filter) FilterAll(items []*models.FeedItem) (resultItems []*models.FeedItem) {
 
 	if !p.plugin.Enable {
 		return items
@@ -45,6 +45,10 @@ func (p *Filter) Filter(items []*models.FeedItem) (resultItems []*models.FeedIte
 	result := pluginInstance.Run(FuncFilterAll, map[string]any{
 		"items": items,
 	})
+	// 运行出错，或不存在入口函数，返回全部
+	if result == nil {
+		return items
+	}
 	if result["error"] != nil {
 		log.Debugf("", errors.NewAniErrorD(result["error"]))
 		log.Warnf("[Plugin] %s插件(%s)执行错误: %v", p.plugin.Type, p.plugin.File, result["error"])

@@ -7,7 +7,7 @@ import (
 )
 
 type FilterPlugin interface {
-	Filter([]*models.FeedItem) []*models.FeedItem
+	FilterAll([]*models.FeedItem) []*models.FeedItem
 }
 
 type FilterManager interface {

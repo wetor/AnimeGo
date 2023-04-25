@@ -45,18 +45,29 @@ func (m *MockManager) Download(anime any) {
 	fmt.Println(string(d))
 }
 
-type MockFeed struct {
+type MockParser struct {
 }
 
-func (m *MockFeed) Parse(opt *models.AnimeParseOptions) *models.AnimeEntity {
+func (m *MockParser) Parse(opt *models.ParseOptions) *models.AnimeEntity {
 	return &models.AnimeEntity{
 		ID:           975,
 		ThemoviedbID: 37854,
 		MikanID:      228,
+		Season:       1,
 		Name:         "ONE PIECE",
 		NameCN:       "海贼王",
 		Eps:          1079,
 		AirDate:      "1999-10-20",
+		Ep: []*models.AnimeEpEntity{
+			{
+				Ep:  109,
+				Src: "src_109.mp4",
+			},
+			{
+				Ep:  110,
+				Src: "src_110.mp4",
+			},
+		},
 	}
 }
 
@@ -78,7 +89,7 @@ func TestMain(m *testing.M) {
 		DelaySecond: 1,
 	})
 
-	mgr = filter.NewManager(&MockFeed{}, &MockManager{})
+	mgr = filter.NewManager(&MockManager{}, &MockParser{})
 	m.Run()
 
 	_ = os.RemoveAll("data")

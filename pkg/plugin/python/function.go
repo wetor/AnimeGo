@@ -5,6 +5,7 @@ import (
 )
 
 type Function struct {
+	Exist           bool
 	ParamsSchema    []*plugin.Schema
 	ResultSchema    []*plugin.Schema
 	Name            string

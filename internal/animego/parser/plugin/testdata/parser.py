@@ -80,7 +80,7 @@ class RawParser:
         name_season = re.sub(r"[\[\]]", " ", name_season)
         seasons = re.findall(season_rule, name_season)
         if not seasons:
-            return name_season, "", 1
+            return name_season, "", 0
         name = re.sub(season_rule, "", name_season)
         for season in seasons:
             season_raw = season

@@ -80,9 +80,18 @@ func (p *Python) execute() {
 //	@receiver p
 func (p *Python) endExecute() {
 	for name, function := range p.functions {
+		f, ok := p.module.Globals[name]
+		if !ok {
+			continue
+		}
+		caller, ok := f.(py.I__call__)
+		if !ok {
+			continue
+		}
+		function.Exist = true
 		function.Func = func(args map[string]any) map[string]any {
 			pyObj := ToObject(args)
-			res, err := p.module.Call(name, py.Tuple{pyObj}, nil)
+			res, err := caller.M__call__(py.Tuple{pyObj}, nil)
 			if err != nil {
 				py.TracebackDump(err)
 			}
@@ -236,6 +245,10 @@ func (p *Python) Load(opts *plugin.LoadOptions) {
 func (p *Python) Run(function string, args map[string]any) (result map[string]any) {
 	try.This(func() {
 		f := p.functions[function]
+		if !f.Exist {
+			log.Warnf("%s 脚本函数 %s 不存在，跳过", p.Type(), function)
+			return
+		}
 		for k, v := range f.DefaultArgs {
 			if _, ok := args[k]; !ok {
 				args[k] = v

@@ -7,5 +7,5 @@ type ParserPlugin interface {
 }
 
 type ParserManager interface {
-	Parse(title, url string) *models.AnimeEntity
+	Parse(*models.ParseOptions) *models.AnimeEntity
 }

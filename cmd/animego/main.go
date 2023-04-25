@@ -4,6 +4,8 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/wetor/AnimeGo/internal/animego/parser"
+	parserPlugin "github.com/wetor/AnimeGo/internal/animego/parser/plugin"
 	"log"
 	"os"
 	"sync"
@@ -186,9 +188,6 @@ func Main() {
 			BangumiCache:     bangumiCache,
 			BangumiCacheLock: &BangumiCacheMutex,
 		},
-		TMDBFailSkip:           config.Default.TMDBFailSkip,
-		TMDBFailUseTitleSeason: config.Default.TMDBFailUseTitleSeason,
-		TMDBFailUseFirstSeason: config.Default.TMDBFailUseFirstSeason,
 	})
 
 	// ===============================================================================================================
@@ -230,6 +229,23 @@ func Main() {
 	managerSrv := manager.NewManager(qbittorrentSrv, bolt, renameSrv)
 	// 启动manager
 	managerSrv.Start(ctx)
+	// ===============================================================================================================
+	// 初始化parser配置
+	parser.Init(&parser.Options{
+		TMDBFailSkip:           config.Default.TMDBFailSkip,
+		TMDBFailUseTitleSeason: config.Default.TMDBFailUseTitleSeason,
+		TMDBFailUseFirstSeason: config.Default.TMDBFailUseFirstSeason,
+	})
+	// 第一个启用的parser插件
+	var parse api.ParserPlugin
+	for _, p := range configs.ConvertPluginInfo(config.Plugin.Parser) {
+		if p.Enable {
+			parse = parserPlugin.NewParserPlugin(&p, false)
+			break
+		}
+	}
+	// 初始化parser
+	parserSrv := parser.NewManager(parse, &mikan.Mikan{ThemoviedbKey: config.Setting.Key.Themoviedb})
 
 	// ===============================================================================================================
 	// 初始化filter配置
@@ -237,9 +253,7 @@ func Main() {
 		DelaySecond: config.Advanced.Feed.DelaySecond,
 	})
 	// 初始化filter
-	filterSrv := filter.NewManager(
-		&mikan.Mikan{ThemoviedbKey: config.Setting.Key.Themoviedb},
-		managerSrv)
+	filterSrv := filter.NewManager(managerSrv, parserSrv)
 	for _, p := range configs.ConvertPluginInfo(config.Plugin.Filter) {
 		filterSrv.Add(&p)
 	}

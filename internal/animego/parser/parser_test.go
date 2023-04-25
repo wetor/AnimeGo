@@ -82,6 +82,8 @@ func TestMain(m *testing.M) {
 				"themoviedb": int64(14 * 24 * 60 * 60),
 			},
 		},
+	})
+	parser.Init(&parser.Options{
 		TMDBFailSkip:           false,
 		TMDBFailUseTitleSeason: true,
 		TMDBFailUseFirstSeason: true,

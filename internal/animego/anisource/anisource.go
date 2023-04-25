@@ -14,32 +14,20 @@ var (
 	mikanInstance      *mikan.Mikan
 	bangumiInstance    *bangumi.Bangumi
 	themoviedbInstance *themoviedb.Themoviedb
-
-	TMDBFailSkip           bool
-	TMDBFailUseTitleSeason bool
-	TMDBFailUseFirstSeason bool
 )
 
 type Options struct {
 	*anidata.Options
-	TMDBFailSkip           bool
-	TMDBFailUseTitleSeason bool
-	TMDBFailUseFirstSeason bool
 }
 
 // Init
 //
 //	@Description: 初始化anisource，需要在程序启动时调用
-//	@param cache cache.Cache
 //	@param proxy string
 func Init(opts *Options) {
 	mikanInstance = nil
 	bangumiInstance = nil
 	themoviedbInstance = nil
-
-	TMDBFailSkip = opts.TMDBFailSkip
-	TMDBFailUseTitleSeason = opts.TMDBFailUseTitleSeason
-	TMDBFailUseFirstSeason = opts.TMDBFailUseFirstSeason
 	anidata.Init(opts.Options)
 }
 

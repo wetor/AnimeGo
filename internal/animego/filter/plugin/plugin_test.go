@@ -38,7 +38,7 @@ func TestPython_Filter(t *testing.T) {
 		Type:   "py",
 		File:   "filter.py",
 	})
-	result := p.Filter(items)
+	result := p.FilterAll(items)
 	assert.Equal(t, 4, len(result))
 	for _, r := range result {
 		fmt.Println(r)
@@ -65,7 +65,7 @@ func TestPython_Filter2(t *testing.T) {
 		Type:   "py",
 		File:   "test_re.py",
 	})
-	result := p.Filter(list)
+	result := p.FilterAll(list)
 	assert.Equal(t, 1, len(result))
 	assert.Equal(t, "1108011", result[0].Name)
 }
@@ -84,7 +84,7 @@ func TestPython_Filter3(t *testing.T) {
 		Type:   "py",
 		File:   "filter/pydemo.py",
 	})
-	result := p.Filter(items)
+	result := p.FilterAll(items)
 	assert.Equal(t, 9, len(result))
 	for _, r := range result {
 		fmt.Println(r.Name, r.NameParsed)
@@ -115,7 +115,7 @@ func TestPython_Filter4(t *testing.T) {
 		Type:   "py",
 		File:   "filter/default.py",
 	})
-	result := p.Filter(list)
+	result := p.FilterAll(list)
 	assert.Equal(t, 4, len(result))
 	for _, r := range result {
 		fmt.Println(r.Name, r.NameParsed)
@@ -145,7 +145,7 @@ func TestPython_Filter5(t *testing.T) {
 		Type:   "py",
 		File:   "filter/mikan_tool.py",
 	})
-	result := p.Filter(items)
+	result := p.FilterAll(items)
 	assert.Equal(t, 13, len(result))
 	for _, r := range result {
 		fmt.Println(r.Name, r.NameParsed)

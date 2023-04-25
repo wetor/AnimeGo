@@ -72,7 +72,7 @@ func pluginPython(entryFunc string, info *models.Plugin) map[string]any {
 
 func pluginFilter(items []*models.FeedItem, info *models.Plugin) []*models.FeedItem {
 	f := filterPlugin.NewFilterPlugin(info)
-	return f.Filter(items)
+	return f.FilterAll(items)
 }
 
 func pluginRename(anime *models.AnimeEntity, info *models.Plugin) []*models.RenameResult {
