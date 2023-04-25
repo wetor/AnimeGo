@@ -205,16 +205,25 @@ func (c *QBittorrent) Add(opt *models.ClientAddOptions) {
 	if !c.connected {
 		return
 	}
-	_, err := c.client.AddNewLink(context.Background(), &qbapi.AddNewLinkReq{
-		Url: opt.Urls,
-		Meta: &qbapi.AddTorrentMeta{
-			Savepath:         &opt.SavePath,
-			Category:         &opt.Category,
-			Tags:             opt.Tag,
-			SeedingTimeLimit: &opt.SeedingTime,
-			Rename:           &opt.Rename,
-		},
-	})
+	var err error
+	meta := &qbapi.AddTorrentMeta{
+		Savepath:         &opt.SavePath,
+		Category:         &opt.Category,
+		Tags:             opt.Tag,
+		SeedingTimeLimit: &opt.SeedingTime,
+		Rename:           &opt.Rename,
+	}
+	if len(opt.File) > 0 {
+		_, err = c.client.AddNewTorrent(context.Background(), &qbapi.AddNewTorrentReq{
+			File: []string{opt.File},
+		})
+	} else {
+		_, err = c.client.AddNewLink(context.Background(), &qbapi.AddNewLinkReq{
+			Url:  []string{opt.Url},
+			Meta: meta,
+		})
+	}
+
 	if c.checkError(err) {
 		return
 	}

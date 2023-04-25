@@ -3,7 +3,6 @@ package torrent
 import (
 	"bytes"
 	"io"
-	"os"
 	"path"
 	"strings"
 
@@ -89,7 +88,6 @@ func LoadMagnetUri(uri string) (*Torrent, error) {
 }
 
 func LoadUri(uri string) (t *Torrent, err error) {
-	os.TempDir()
 	if strings.HasPrefix(uri, TypeMagnet) {
 		t, err = LoadMagnetUri(uri)
 	} else if strings.HasPrefix(uri, "http") {

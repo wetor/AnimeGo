@@ -49,10 +49,7 @@ func Test_QBittorrent(t *testing.T) {
 func TestQBittorrent_Add(t *testing.T) {
 	t.Skip("跳过Qbittorrent测试")
 	qbt.Add(&models.ClientAddOptions{
-		Urls: []string{
-			"https://mikanani.me/Download/20220612/4407d51f30f6033513cbe56cae0120881b0a7406.torrent",
-			"https://mikanani.me/Download/20220611/56e13c0c4788b77782722ee46d3c6f27233f676b.torrent",
-		},
+		Url:         "https://mikanani.me/Download/20220612/4407d51f30f6033513cbe56cae0120881b0a7406.torrent",
 		SavePath:    "/tmp/test",
 		Category:    "test",
 		Tag:         "test_tag",

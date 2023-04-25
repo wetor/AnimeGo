@@ -132,7 +132,7 @@ func (m *Manager) download(anime *models.AnimeEntity) {
 	}
 	log.Infof("开始下载「%s」", name)
 	m.client.Add(&models.ClientAddOptions{
-		Urls:        []string{anime.Torrent.Url},
+		Url:         anime.Torrent.Url,
 		SavePath:    Conf.DownloadPath,
 		Category:    Conf.Category,
 		Tag:         utils.Tag(Conf.Tag, anime.AirDate, anime.Ep[0].Ep),

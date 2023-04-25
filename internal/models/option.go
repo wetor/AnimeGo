@@ -9,7 +9,8 @@ type ClientListOptions struct {
 }
 
 type ClientAddOptions struct {
-	Urls        []string
+	Url         string
+	File        string // optional torrent file
 	SavePath    string
 	Category    string
 	Tag         string
