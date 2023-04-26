@@ -4,8 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/wetor/AnimeGo/internal/animego/parser"
-	parserPlugin "github.com/wetor/AnimeGo/internal/animego/parser/plugin"
+	"github.com/wetor/AnimeGo/pkg/torrent"
 	"log"
 	"os"
 	"sync"
@@ -26,6 +25,8 @@ import (
 	feedPlugin "github.com/wetor/AnimeGo/internal/animego/feed/plugin"
 	"github.com/wetor/AnimeGo/internal/animego/filter"
 	"github.com/wetor/AnimeGo/internal/animego/manager"
+	"github.com/wetor/AnimeGo/internal/animego/parser"
+	parserPlugin "github.com/wetor/AnimeGo/internal/animego/parser/plugin"
 	"github.com/wetor/AnimeGo/internal/animego/renamer"
 	renamerPlugin "github.com/wetor/AnimeGo/internal/animego/renamer/plugin"
 	"github.com/wetor/AnimeGo/internal/api"
@@ -148,7 +149,10 @@ func Main() {
 		RetryWait: config.Advanced.Request.RetryWaitSecond,
 		Debug:     debug,
 	})
-
+	// 初始化torrent
+	torrent.Init(&torrent.Options{
+		TempPath: constant.TempPath,
+	})
 	// ===============================================================================================================
 	// 初始化插件 gpython
 	plugin.Init(&plugin.Options{
@@ -220,7 +224,6 @@ func Main() {
 			Tag:                    config.Tag,
 			AllowDuplicateDownload: config.Download.AllowDuplicateDownload,
 			SeedingTimeMinute:      config.Download.SeedingTimeMinute,
-			IgnoreSizeMaxKb:        config.Download.IgnoreSizeMaxKb,
 			Rename:                 config.Advanced.Download.Rename,
 		},
 		WG: &WG,

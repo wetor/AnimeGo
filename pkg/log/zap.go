@@ -1,6 +1,7 @@
 package log
 
 import (
+	"io"
 	"os"
 	"time"
 
@@ -11,6 +12,10 @@ import (
 
 const (
 	logTmFmt = "2006-01-02 15:04:05"
+)
+
+var (
+	lumberJackLogger io.WriteCloser
 )
 
 func NewLogger(file string, debug bool) *zap.Logger {
@@ -26,6 +31,10 @@ func NewLogger(file string, debug bool) *zap.Logger {
 	)
 	return zap.New(newCore, zap.AddCaller(), zap.AddCallerSkip(1))
 
+}
+
+func Close() error {
+	return lumberJackLogger.Close()
 }
 
 // GetEncoder 自定义的Encoder
@@ -49,10 +58,10 @@ func GetEncoder(levelEncoder zapcore.LevelEncoder) zapcore.Encoder {
 
 // GetWriteSyncer 自定义的WriteSyncer
 func GetWriteSyncer(file string) zapcore.WriteSyncer {
-	lumberJackLogger := &lumberjack.Logger{
+	lumberJackLogger = &lumberjack.Logger{
 		Filename:   file,
-		MaxSize:    8,
-		MaxBackups: 10,
+		MaxSize:    2,
+		MaxBackups: 14,
 		MaxAge:     14,
 		LocalTime:  true,
 	}

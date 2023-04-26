@@ -3,32 +3,21 @@ package bangumi_test
 import (
 	"fmt"
 	"os"
-	"path"
 	"sync"
 	"testing"
 
-	"github.com/brahma-adshonor/gohook"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/internal/animego/anidata/bangumi"
 	"github.com/wetor/AnimeGo/pkg/cache"
-	"github.com/wetor/AnimeGo/pkg/json"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/request"
 	"github.com/wetor/AnimeGo/pkg/utils"
+	"github.com/wetor/AnimeGo/test"
 )
 
-func HookGet(uri string, body interface{}) error {
-	log.Infof("Mock HTTP GET %s", uri)
-	id := path.Base(uri)
-	jsonData, err := os.ReadFile(path.Join("testdata", id+".json"))
-	if err != nil {
-		return err
-	}
-	_ = json.Unmarshal(jsonData, body)
-	return nil
-}
+const testdata = "bangumi"
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
@@ -40,14 +29,15 @@ func TestMain(m *testing.M) {
 	request.Init(&request.Options{
 		Debug: true,
 	})
-	_ = gohook.Hook(request.Get, HookGet, nil)
+	test.HookAll(testdata, nil)
+	defer test.UnHook()
 	mutex := sync.Mutex{}
 
 	db := cache.NewBolt()
 	db.Open("data/bolt.db")
 
 	bangumiCache := cache.NewBolt(true)
-	bangumiCache.Open("../../../../test/testdata/bolt_sub.bolt")
+	bangumiCache.Open(test.GetDataPath("", "bolt_sub.bolt"))
 	anidata.Init(&anidata.Options{
 		Cache:            db,
 		BangumiCache:     bangumiCache,
@@ -58,6 +48,7 @@ func TestMain(m *testing.M) {
 
 	db.Close()
 	bangumiCache.Close()
+	_ = log.Close()
 	_ = os.RemoveAll("data")
 	fmt.Println("end")
 }

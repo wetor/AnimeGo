@@ -3,10 +3,12 @@ package schedule_test
 import (
 	"context"
 	"fmt"
+	"os"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/wetor/AnimeGo/assets"
 	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin"
@@ -33,7 +35,7 @@ func TestMain(m *testing.M) {
 	})
 
 	plugin.Init(&plugin.Options{
-		Path:  "testdata",
+		Path:  assets.TestPluginPath(),
 		Debug: true,
 	})
 
@@ -45,6 +47,8 @@ func TestMain(m *testing.M) {
 		WG: &wg,
 	})
 	m.Run()
+	_ = log.Close()
+	_ = os.RemoveAll("data")
 	fmt.Println("end")
 }
 
@@ -77,7 +81,7 @@ func TestNewSchedule2(t *testing.T) {
 			Plugin: &models.Plugin{
 				Enable: true,
 				Type:   "python",
-				File:   "refresh.py",
+				File:   "schedule/refresh.py",
 				Vars: models.Object{
 					"__name__": "Vars_Test",
 				},

@@ -8,8 +8,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/brahma-adshonor/gohook"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/wetor/AnimeGo/assets"
 	"github.com/wetor/AnimeGo/internal/animego/manager"
 	"github.com/wetor/AnimeGo/internal/animego/renamer"
 	renamerPlugin "github.com/wetor/AnimeGo/internal/animego/renamer/plugin"
@@ -25,14 +27,15 @@ const (
 	DownloadPath = "data/download"
 	SavePath     = "data/save"
 	ContentFile  = "file.mp4"
+
+	HookTimeUnix = 100
 )
 
 var (
-	qbt        *ClientMock
-	qbtConnect = true
-	rename     *renamer.Manager
-	mgr        *manager.Manager
-	db         *cache.Bolt
+	qbt    *ClientMock
+	rename *renamer.Manager
+	mgr    *manager.Manager
+	db     *cache.Bolt
 )
 
 func TestMain(m *testing.M) {
@@ -45,7 +48,7 @@ func TestMain(m *testing.M) {
 		Debug: true,
 	})
 	plugin.Init(&plugin.Options{
-		Path:  "../../../assets/plugin",
+		Path:  assets.TestPluginPath(),
 		Debug: true,
 	})
 	qbt = &ClientMock{}
@@ -59,7 +62,6 @@ func TestMain(m *testing.M) {
 			Tag:                    "test",
 			AllowDuplicateDownload: false,
 			SeedingTimeMinute:      0,
-			IgnoreSizeMaxKb:        1,
 			Rename:                 "wait_move",
 		},
 		WG: &wg,
@@ -92,7 +94,8 @@ func TestMain(m *testing.M) {
 	mgr = manager.NewManager(qbt, db, rename)
 
 	m.Run()
-
+	db.Close()
+	_ = log.Close()
 	_ = os.RemoveAll("data")
 	fmt.Println("end")
 }
@@ -113,7 +116,7 @@ func download(name string, season int, ep []int) (file, fullname, hash string) {
 		})
 	}
 	fullname = anime.FullName()
-	qbt.AddName(fullname, hash, anime.FilePathSrc())
+	qbt.MockAddName(fullname, hash, anime.FilePathSrc())
 	mgr.Download(anime)
 	file = xpath.Join(SavePath, anime.DirName(), anime.FileName(0)+xpath.Ext(ContentFile))
 	return
@@ -124,7 +127,7 @@ func initTest() (*sync.WaitGroup, func()) {
 	renamer.WG = &wg
 	manager.WG = &wg
 	ctx, cancel := context.WithCancel(context.Background())
-	qbt.Init()
+	qbt.MockInit(nil)
 	qbt.Start(ctx)
 	rename.Start(ctx)
 	mgr.Start(ctx)
@@ -250,12 +253,12 @@ func TestManager_WaitClient(t *testing.T) {
 	go func() {
 		{
 			log.Info("Client离线")
-			qbtConnect = false
+			qbt.MockSetError(ErrorConnectedFailed, true)
 		}
 		time.Sleep(2 * time.Second)
 		{
 			log.Info("Client恢复")
-			qbtConnect = true
+			qbt.MockSetError(ErrorConnectedFailed, false)
 		}
 	}()
 	manager.Conf.Rename = "link_delete"
@@ -291,12 +294,12 @@ func TestManager_WaitClient_FullChan(t *testing.T) {
 	go func() {
 		{
 			log.Info("Client离线")
-			qbtConnect = false
+			qbt.MockSetError(ErrorConnectedFailed, true)
 		}
 		time.Sleep(5 * time.Second)
 		{
 			log.Info("Client恢复")
-			qbtConnect = true
+			qbt.MockSetError(ErrorConnectedFailed, false)
 		}
 	}()
 	manager.Conf.Rename = "move"
@@ -358,6 +361,58 @@ func TestManager_ReStart_NotDownloaded(t *testing.T) {
 		wg.Wait()
 	}
 
+	assert.FileExists(t, file1)
+	_ = os.Remove(file1)
+
+}
+
+func MockUnix1() int64 {
+	return HookTimeUnix
+}
+
+func MockUnix2() int64 {
+	return HookTimeUnix + manager.AddingExpireSecond
+}
+
+func TestManager_AddFailed(t *testing.T) {
+	var file1 string
+
+	wg, cancel := initTest()
+	go func() {
+		time.Sleep(10 * time.Second)
+		cancel()
+	}()
+	manager.Conf.Rename = "move"
+
+	log.Infof("Hook utils.Unix() = %v", HookTimeUnix)
+	_ = gohook.Hook(utils.Unix, MockUnix1, nil)
+	defer gohook.UnHook(utils.Unix)
+
+	qbt.MockSetError(ErrorAddFailed, true)
+	{
+		log.Info("下载 1, 添加失败")
+		file1, _, _ = download("动画1", 1, []int{1})
+
+	}
+
+	time.Sleep(1*time.Second + 300*time.Millisecond)
+
+	qbt.MockSetError(ErrorAddFailed, false)
+	{
+		log.Info("下载 1, 重复下载")
+		file1, _, _ = download("动画1", 1, []int{1})
+	}
+	time.Sleep(1*time.Second + 300*time.Millisecond)
+
+	log.Infof("Hook utils.Unix() = %v", HookTimeUnix+manager.AddingExpireSecond)
+	_ = gohook.Hook(utils.Unix, MockUnix2, nil)
+	time.Sleep(1*time.Second + 300*time.Millisecond)
+
+	{
+		log.Info("下载 1")
+		file1, _, _ = download("动画1", 1, []int{1})
+	}
+	wg.Wait()
 	assert.FileExists(t, file1)
 	_ = os.Remove(file1)
 

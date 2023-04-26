@@ -1,9 +1,10 @@
 package utils_test
 
 import (
-	"github.com/wetor/AnimeGo/internal/animego/parser/utils"
 	"reflect"
 	"testing"
+
+	"github.com/wetor/AnimeGo/internal/animego/parser/utils"
 )
 
 func TestParse(t *testing.T) {

@@ -3,39 +3,21 @@ package filter_test
 import (
 	"context"
 	"fmt"
-	"io"
 	"os"
-	"path"
 	"testing"
 
-	"github.com/brahma-adshonor/gohook"
-
+	"github.com/wetor/AnimeGo/assets"
 	"github.com/wetor/AnimeGo/internal/animego/filter"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/pkg/json"
 	"github.com/wetor/AnimeGo/pkg/log"
-	"github.com/wetor/AnimeGo/pkg/request"
 )
 
 var (
 	mgr *filter.Manager
 	ctx = context.Background()
 )
-
-func HookGetWriter(uri string, w io.Writer) error {
-	log.Infof("Mock HTTP GET %s", uri)
-	id := path.Base(uri)
-	jsonData, err := os.ReadFile(path.Join("testdata", id))
-	if err != nil {
-		return err
-	}
-	_, err = w.Write(jsonData)
-	if err != nil {
-		return err
-	}
-	return nil
-}
 
 type MockManager struct {
 }
@@ -78,10 +60,9 @@ func TestMain(m *testing.M) {
 		File:  "data/log.log",
 		Debug: true,
 	})
-	_ = gohook.Hook(request.GetWriter, HookGetWriter, nil)
 
 	plugin.Init(&plugin.Options{
-		Path:  "../../../assets/plugin",
+		Path:  assets.TestPluginPath(),
 		Debug: true,
 	})
 
@@ -92,6 +73,7 @@ func TestMain(m *testing.M) {
 	mgr = filter.NewManager(&MockManager{}, &MockParser{})
 	m.Run()
 
+	_ = log.Close()
 	_ = os.RemoveAll("data")
 	fmt.Println("end")
 }

@@ -2,33 +2,17 @@ package mikan_test
 
 import (
 	"fmt"
-	"io"
 	"os"
-	"path"
 	"testing"
-
-	"github.com/brahma-adshonor/gohook"
 
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/internal/animego/anidata/mikan"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/log"
-	"github.com/wetor/AnimeGo/pkg/request"
+	"github.com/wetor/AnimeGo/test"
 )
 
-func HookGetWriter(uri string, w io.Writer) error {
-	log.Infof("Mock HTTP GET %s", uri)
-	id := path.Base(uri)
-	jsonData, err := os.ReadFile(path.Join("testdata", id+".html"))
-	if err != nil {
-		return err
-	}
-	_, err = w.Write(jsonData)
-	if err != nil {
-		return err
-	}
-	return nil
-}
+const testdata = "mikan"
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
@@ -36,7 +20,8 @@ func TestMain(m *testing.M) {
 		File:  "data/test.log",
 		Debug: true,
 	})
-	_ = gohook.Hook(request.GetWriter, HookGetWriter, nil)
+	test.HookAll(testdata, nil)
+	defer test.UnHook()
 
 	db := cache.NewBolt()
 	db.Open("data/bolt.db")
@@ -45,6 +30,7 @@ func TestMain(m *testing.M) {
 	m.Run()
 
 	db.Close()
+	_ = log.Close()
 	_ = os.RemoveAll("data")
 	fmt.Println("end")
 }

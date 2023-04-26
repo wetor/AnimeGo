@@ -3,7 +3,13 @@ package plugin_test
 import (
 	"context"
 	"fmt"
-	"github.com/brahma-adshonor/gohook"
+	"net/url"
+	"os"
+	"sync"
+	"testing"
+	"time"
+
+	"github.com/wetor/AnimeGo/assets"
 	feedPlugin "github.com/wetor/AnimeGo/internal/animego/feed/plugin"
 	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/models"
@@ -11,16 +17,12 @@ import (
 	"github.com/wetor/AnimeGo/internal/plugin/python/lib"
 	"github.com/wetor/AnimeGo/internal/schedule"
 	"github.com/wetor/AnimeGo/pkg/log"
-	"github.com/wetor/AnimeGo/pkg/request"
 	"github.com/wetor/AnimeGo/pkg/utils"
+	"github.com/wetor/AnimeGo/test"
 	"github.com/wetor/AnimeGo/third_party/gpython"
-	"net/url"
-	"os"
-	"path"
-	"sync"
-	"testing"
-	"time"
 )
+
+const testdata = "feed"
 
 var s *schedule.Schedule
 
@@ -33,21 +35,6 @@ func (m *MockFilterManager) Update(ctx context.Context, items []*models.FeedItem
 	}
 }
 
-func GetString(uri string, args ...interface{}) (string, error) {
-	log.Infof("Mock HTTP GET %s, header %s", uri, args)
-	u, err := url.Parse(uri)
-	if err != nil {
-		return "", err
-	}
-	bgm_id := u.Query().Get("bangumiId")
-	sub_id := u.Query().Get("subgroupid")
-	jsonData, err := os.ReadFile(path.Join("testdata", bgm_id+"_"+sub_id+".xml"))
-	if err != nil {
-		return "", err
-	}
-	return string(jsonData), nil
-}
-
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
 	constant.CachePath = "data"
@@ -55,10 +42,19 @@ func TestMain(m *testing.M) {
 		File:  "data/log.log",
 		Debug: true,
 	})
-	_ = gohook.Hook(request.GetString, GetString, nil)
+	test.HookGetString(testdata, func(uri string) string {
+		u, err := url.Parse(uri)
+		if err != nil {
+			return ""
+		}
+		bgmId := u.Query().Get("bangumiId")
+		subId := u.Query().Get("subgroupid")
+		return bgmId + "_" + subId + ".xml"
+	})
+	defer test.UnHook()
 
 	plugin.Init(&plugin.Options{
-		Path:  "../../assets/plugin",
+		Path:  assets.TestPluginPath(),
 		Debug: true,
 	})
 
@@ -72,6 +68,8 @@ func TestMain(m *testing.M) {
 	})
 	m.Run()
 	wg.Done()
+	_ = log.Close()
+	_ = os.RemoveAll("data")
 	fmt.Println("end")
 }
 

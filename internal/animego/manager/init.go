@@ -16,7 +16,6 @@ type Downloader struct {
 	Tag                    string
 	AllowDuplicateDownload bool
 	SeedingTimeMinute      int
-	IgnoreSizeMaxKb        int
 	Rename                 string
 }
 

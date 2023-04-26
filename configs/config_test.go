@@ -9,7 +9,10 @@ import (
 
 	"github.com/wetor/AnimeGo/configs"
 	"github.com/wetor/AnimeGo/pkg/utils"
+	"github.com/wetor/AnimeGo/test"
 )
+
+const testdata = "config"
 
 func TestMain(m *testing.M) {
 	_ = utils.CreateMutiDir("data")
@@ -31,45 +34,46 @@ func EqualFile(t *testing.T, file1, file2 string) {
 
 func TestUpdateConfig_120(t *testing.T) {
 	configs.ConfigVersion = "1.2.0"
-	file, _ := os.ReadFile("testdata/animego_110.yaml")
+
+	file := test.GetData(testdata, "animego_110.yaml")
 	_ = os.WriteFile("data/animego.yaml", file, 0666)
 	configs.UpdateConfig("data/animego.yaml", false)
 
-	EqualFile(t, "data/animego.yaml", "testdata/animego_120.yaml")
+	EqualFile(t, "data/animego.yaml", test.GetDataPath(testdata, "animego_120.yaml"))
 }
 
 func TestUpdateConfig_130(t *testing.T) {
 	configs.ConfigVersion = "1.3.0"
-	file, _ := os.ReadFile("testdata/animego_120.yaml")
+	file := test.GetData(testdata, "animego_120.yaml")
 	_ = os.WriteFile("data/animego.yaml", file, 0666)
 	configs.UpdateConfig("data/animego.yaml", false)
 
-	EqualFile(t, "data/animego.yaml", "testdata/animego_130.yaml")
+	EqualFile(t, "data/animego.yaml", test.GetDataPath(testdata, "animego_130.yaml"))
 }
 
 func TestUpdateConfig_140(t *testing.T) {
 	configs.ConfigVersion = "1.4.0"
-	file, _ := os.ReadFile("testdata/animego_130.yaml")
+	file := test.GetData(testdata, "animego_130.yaml")
 	_ = os.WriteFile("data/animego.yaml", file, 0666)
 	configs.UpdateConfig("data/animego.yaml", false)
 
-	EqualFile(t, "data/animego.yaml", "testdata/animego_140.yaml")
+	EqualFile(t, "data/animego.yaml", test.GetDataPath(testdata, "animego_140.yaml"))
 }
 
 func TestUpdateConfig_141(t *testing.T) {
 	configs.ConfigVersion = "1.4.1"
-	file, _ := os.ReadFile("testdata/animego_140.yaml")
+	file := test.GetData(testdata, "animego_140.yaml")
 	_ = os.WriteFile("data/animego.yaml", file, 0666)
 	configs.UpdateConfig("data/animego.yaml", false)
 
-	EqualFile(t, "data/animego.yaml", "testdata/animego_141.yaml")
+	EqualFile(t, "data/animego.yaml", test.GetDataPath(testdata, "animego_141.yaml"))
 }
 
 func TestUpdateConfig_151(t *testing.T) {
 	configs.ConfigVersion = "1.5.0"
-	file, _ := os.ReadFile("testdata/animego_141.yaml")
+	file := test.GetData(testdata, "animego_141.yaml")
 	_ = os.WriteFile("data/animego.yaml", file, 0666)
 	configs.UpdateConfig("data/animego.yaml", false)
 
-	EqualFile(t, "data/animego.yaml", "testdata/animego_150.yaml")
+	EqualFile(t, "data/animego.yaml", test.GetDataPath(testdata, "animego_150.yaml"))
 }

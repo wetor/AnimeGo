@@ -6,7 +6,6 @@ import (
 	"os"
 	"regexp"
 	"sync"
-	"time"
 
 	"github.com/jinzhu/copier"
 
@@ -23,6 +22,7 @@ const (
 	DownloadChanDefaultCap = 10 // 下载通道默认容量
 	DownloadStateChanCap   = 5
 	NotFoundExpireHour     = 24
+	AddingExpireSecond     = 60 // 添加状态超时
 	Name2EntityBucket      = "name2entity"
 	Name2StatusBucket      = "name2status"
 	Hash2NameBucket        = "hash2name"
@@ -119,7 +119,7 @@ func (m *Manager) download(anime *models.AnimeEntity) {
 		if m.isDownloading(status) || m.fileExist(status.Path) == FileAllExist {
 			if status.Init {
 				if status.RenamedAll() {
-					log.Infof("发现已下载「%s」", status.Path)
+					log.Infof("发现已下载「%v」", status.Path)
 				} else {
 					log.Infof("发现正在下载「%s」", name)
 				}
@@ -143,36 +143,12 @@ func (m *Manager) download(anime *models.AnimeEntity) {
 	m.cache.Put(Name2EntityBucket, name, anime, 0)
 
 	status := &models.DownloadStatus{
-		Hash:  anime.Torrent.Hash,
-		State: downloader.StateAdding,
+		Hash:     anime.Torrent.Hash,
+		State:    downloader.StateAdding,
+		ExpireAt: utils.Unix() + AddingExpireSecond,
 	}
 	m.name2status[name] = status
 	m.cache.Put(Name2StatusBucket, name, status, 0)
-}
-
-func (m *Manager) GetContent(opt *models.ClientGetOptions) *models.TorrentContentItem {
-	cs := m.client.GetContent(opt)
-	if len(cs) == 0 {
-		return nil
-	}
-	maxSize := 0
-	index := -1
-	minSize := Conf.IgnoreSizeMaxKb * 1024 // 单位 B
-	for i, c := range cs {
-		if c.Size < minSize {
-			continue
-		}
-		if c.Size > maxSize {
-			maxSize = c.Size
-			index = i
-		}
-	}
-	if index < 0 {
-		return nil
-	}
-	// TODO: 支持多内容返回
-	// TODO: 支持外挂字幕
-	return cs[index]
 }
 
 // Start
@@ -292,7 +268,8 @@ func (m *Manager) updateDownloadItem(status *models.DownloadStatus, anime *model
 				}
 			}()
 			status.Downloaded = true
-			// 自动删除列表记录，否则无法重复下载
+
+			// 自动删除已完成的列表记录
 			m.client.Delete(&models.ClientDeleteOptions{
 				Hash:       []string{status.Hash},
 				DeleteFile: false,
@@ -379,10 +356,13 @@ func (m *Manager) UpdateList() {
 	updateStatusKeys := make([]any, 0, len(m.name2status))
 	updateStatusValues := make([]any, 0, len(m.name2status))
 
-	now := time.Now().Unix()
+	now := utils.Unix()
 	for name, status := range m.name2status {
-		// adding状态的为新加入下载项，跳过
+		// adding状态的为新加入下载项，检查超时
 		if status.State == downloader.StateAdding {
+			if status.Expire(now) {
+				deleteNames = append(deleteNames, name)
+			}
 			continue
 		}
 		// 文件是否存在
@@ -390,7 +370,7 @@ func (m *Manager) UpdateList() {
 		if !status.PathNull() && !fileExist {
 			// 文件不存在，设置缓存将在 NotFoundExpireHour 小时后过期
 			if status.ExpireAt == 0 {
-				status.ExpireAt = time.Now().Add(NotFoundExpireHour * time.Hour).Unix()
+				status.ExpireAt = utils.Unix() + NotFoundExpireHour*60*60
 				status.State = downloader.StateNotFound
 				updateStatusKeys = append(updateStatusKeys, name)
 				updateStatusValues = append(updateStatusValues, status)
@@ -412,7 +392,7 @@ func (m *Manager) UpdateList() {
 				} else if fileExist {
 					// 不在下载列表中，但文件存在
 					// 可能是在下载过程中，在下载器中被手动删除下载项，默认已下载完成
-					log.Warnf("存在可能未下载完成的项目「%s」，检查后选择是否删除", status.Path)
+					log.Warnf("存在可能未下载完成的项目「%v」，检查后选择是否删除", status.Path)
 					m.setDownloaded(status)
 				} else if status.Expire(now) {
 					// 不在下载列表，且文件不存在

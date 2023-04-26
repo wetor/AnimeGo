@@ -52,6 +52,7 @@ func TestMain(m *testing.M) {
 	m.Run()
 	db.Close()
 	db_sub.Close()
+	_ = log.Close()
 	_ = os.RemoveAll("data")
 	fmt.Println("end")
 }

@@ -1,7 +1,7 @@
 import log
 
 import sys
-sys.path.append("../../../../../assets/plugin/filter")
+sys.path.append("../../../assets/plugin/filter")
 from Auto_Bangumi.raw_parser import analyse
 
 

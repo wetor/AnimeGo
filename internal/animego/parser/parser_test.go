@@ -2,7 +2,13 @@ package parser_test
 
 import (
 	"fmt"
-	"github.com/brahma-adshonor/gohook"
+	"net/url"
+	"os"
+	"path"
+	"sync"
+	"testing"
+
+	"github.com/wetor/AnimeGo/assets"
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/internal/animego/anisource"
 	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
@@ -14,47 +20,10 @@ import (
 	"github.com/wetor/AnimeGo/pkg/json"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/request"
-	"io"
-	"net/url"
-	"os"
-	"path"
-	"sync"
-	"testing"
+	"github.com/wetor/AnimeGo/test"
 )
 
-func HookGetWriter(uri string, w io.Writer) error {
-	log.Infof("Mock HTTP GET %s", uri)
-	id := path.Base(uri)
-	jsonData, err := os.ReadFile(path.Join("testdata", id))
-	if err != nil {
-		return err
-	}
-	_, err = w.Write(jsonData)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func HookGet(uri string, body interface{}) error {
-	log.Infof("Mock HTTP GET %s", uri)
-	u, err := url.Parse(uri)
-	if err != nil {
-		return err
-	}
-	id := u.Query().Get("with_text_query")
-	if len(id) == 0 {
-		id = path.Base(u.Path)
-	}
-	p := path.Join("testdata", id)
-
-	jsonData, err := os.ReadFile(p)
-	if err != nil {
-		return err
-	}
-	_ = json.Unmarshal(jsonData, body)
-	return nil
-}
+const testdata = "parser"
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
@@ -63,11 +32,21 @@ func TestMain(m *testing.M) {
 		File:  "data/log.log",
 		Debug: true,
 	})
-	_ = gohook.Hook(request.GetWriter, HookGetWriter, nil)
-	_ = gohook.Hook(request.Get, HookGet, nil)
-
+	test.HookGetWriter(testdata, nil)
+	test.HookGet(testdata, func(uri string) string {
+		u, err := url.Parse(uri)
+		if err != nil {
+			return ""
+		}
+		id := u.Query().Get("with_text_query")
+		if len(id) == 0 {
+			id = path.Base(u.Path)
+		}
+		return id
+	})
+	defer test.UnHook()
 	plugin.Init(&plugin.Options{
-		Path:  "../../../assets/plugin",
+		Path:  assets.TestPluginPath(),
 		Debug: true,
 	})
 
@@ -89,7 +68,7 @@ func TestMain(m *testing.M) {
 		TMDBFailUseFirstSeason: true,
 	})
 	bangumiCache := cache.NewBolt(true)
-	bangumiCache.Open("../../../test/testdata/bolt_sub.bolt")
+	bangumiCache.Open(test.GetDataPath("", "bolt_sub.bolt"))
 	bangumiCache.Add("bangumi_sub")
 	mutex := sync.Mutex{}
 	anidata.Init(&anidata.Options{
@@ -102,8 +81,10 @@ func TestMain(m *testing.M) {
 	})
 	m.Run()
 
+	b.Close()
 	bangumiCache.Close()
-	//_ = os.RemoveAll("data")
+	_ = log.Close()
+	_ = os.RemoveAll("data")
 	fmt.Println("end")
 }
 

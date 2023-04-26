@@ -8,6 +8,8 @@ import (
 	"github.com/wetor/AnimeGo/pkg/utils"
 )
 
+const logSyncSecond = 30
+
 type Options struct {
 	File    string
 	Debug   bool
@@ -26,17 +28,14 @@ func Init(opts *Options) {
 		for {
 			select {
 			case <-opts.Context.Done():
-				Flush()
+				_ = log.Sync()
+				_ = log.Close()
 				log.Debugf("正常退出 logger")
 				return
 			default:
-				Flush()
-				utils.Sleep(30, opts.Context)
+				_ = log.Sync()
+				utils.Sleep(logSyncSecond, opts.Context)
 			}
 		}
 	}()
-}
-
-func Flush() {
-	_ = log.Sync()
 }

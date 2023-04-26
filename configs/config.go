@@ -66,6 +66,11 @@ func (c *Config) InitDir() {
 	if err != nil {
 		log.Fatalf("创建文件夹失败，%s", constant.LogPath)
 	}
+
+	err = utils.CreateMutiDir(constant.TempPath)
+	if err != nil {
+		log.Fatalf("创建文件夹失败，%s", constant.TempPath)
+	}
 }
 
 func (c *Config) Proxy() string {

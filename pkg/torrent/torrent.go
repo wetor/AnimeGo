@@ -3,6 +3,7 @@ package torrent
 import (
 	"bytes"
 	"io"
+	"os"
 	"path"
 	"strings"
 
@@ -47,6 +48,7 @@ func LoadTorrent(r io.Reader) (*Torrent, error) {
 	}
 
 	infoFiles := info.UpvertedFiles()
+	infoName := info.BestName()
 	files := make([]*File, 0, len(infoFiles))
 	for _, file := range infoFiles {
 		filePath := file.DisplayPath(&info)
@@ -54,6 +56,9 @@ func LoadTorrent(r io.Reader) (*Torrent, error) {
 			continue
 		}
 		dir, name := path.Split(filePath)
+		if len(infoFiles) > 1 {
+			dir = path.Join(infoName, dir)
+		}
 		files = append(files, &File{
 			Name:   name,
 			Dir:    dir,
@@ -64,7 +69,7 @@ func LoadTorrent(r io.Reader) (*Torrent, error) {
 	t := &Torrent{
 		Type:   TypeTorrent,
 		Hash:   m.HashInfoBytes().HexString(),
-		Name:   info.BestName(),
+		Name:   infoName,
 		Length: info.TotalLength(),
 		Files:  files,
 	}
@@ -90,14 +95,21 @@ func LoadMagnetUri(uri string) (*Torrent, error) {
 func LoadUri(uri string) (t *Torrent, err error) {
 	if strings.HasPrefix(uri, TypeMagnet) {
 		t, err = LoadMagnetUri(uri)
+		t.Url = uri
 	} else if strings.HasPrefix(uri, "http") {
 		w := bytes.NewBuffer(nil)
 		err = request.GetWriter(uri, w)
 		if err != nil {
 			return nil, err
 		}
-		t, err = LoadTorrent(w)
+		tw := bytes.NewBuffer(w.Bytes())
+		t, err = LoadTorrent(tw)
+		if err != nil {
+			return nil, err
+		}
+		file := path.Join(TempPath, t.Hash+".torrent")
+		err = os.WriteFile(file, w.Bytes(), 0666)
+		t.Url = file
 	}
-	t.Url = uri
 	return
 }

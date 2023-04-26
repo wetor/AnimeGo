@@ -2,11 +2,14 @@ package assets
 
 import (
 	"embed"
-	"github.com/wetor/AnimeGo/pkg/utils"
-	"github.com/wetor/AnimeGo/pkg/xpath"
 	"log"
 	"os"
+	"path"
+	"runtime"
 	"strings"
+
+	"github.com/wetor/AnimeGo/pkg/utils"
+	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
 const (
@@ -107,4 +110,11 @@ func WritePlugins(src, dst string, skip bool) {
 			}
 		}
 	}
+}
+
+func TestPluginPath() string {
+	_, currFile, _, _ := runtime.Caller(0)
+	dir := path.Dir(currFile)
+	pluginDir := path.Join(dir, "plugin")
+	return pluginDir
 }

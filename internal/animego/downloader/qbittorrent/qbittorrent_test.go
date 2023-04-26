@@ -3,6 +3,7 @@ package qbittorrent_test
 import (
 	"context"
 	"fmt"
+	"os"
 	"sync"
 	"testing"
 	"time"
@@ -31,6 +32,8 @@ func TestMain(m *testing.M) {
 		time.Sleep(time.Second)
 	}
 	m.Run()
+	_ = log.Close()
+	_ = os.RemoveAll("data")
 	fmt.Println("end")
 }
 

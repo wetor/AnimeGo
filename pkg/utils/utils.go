@@ -201,3 +201,7 @@ func Rename(src, dst string) error {
 	}
 	return nil
 }
+
+func Unix() int64 {
+	return time.Now().Unix()
+}

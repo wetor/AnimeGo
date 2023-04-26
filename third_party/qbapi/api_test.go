@@ -9,7 +9,6 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/wetor/AnimeGo/pkg/json"
-	"github.com/wetor/AnimeGo/pkg/log"
 )
 
 type cfg struct {
@@ -26,10 +25,6 @@ var testApi *QBAPI
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
-	log.Init(&log.Options{
-		File:  "data/test.log",
-		Debug: true,
-	})
 	//testCfg = getCfg()
 	//testApi = getAPI()
 	m.Run()

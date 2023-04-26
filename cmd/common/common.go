@@ -2,12 +2,12 @@ package common
 
 import (
 	"fmt"
-	"github.com/wetor/AnimeGo/configs"
-	"github.com/wetor/AnimeGo/internal/constant"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/wetor/AnimeGo/configs"
+	"github.com/wetor/AnimeGo/internal/constant"
 	pkgLog "github.com/wetor/AnimeGo/pkg/log"
 )
 

@@ -2,9 +2,11 @@ package plugin_test
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+
 	renamerPlugin "github.com/wetor/AnimeGo/internal/animego/renamer/plugin"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin"
@@ -22,6 +24,8 @@ func TestMain(m *testing.M) {
 		Debug: true,
 	})
 	m.Run()
+	_ = log.Close()
+	_ = os.RemoveAll("data")
 	fmt.Println("end")
 }
 
@@ -82,8 +86,8 @@ func TestRename_Rename(t *testing.T) {
 	}
 	p := renamerPlugin.NewRenamePlugin(&models.Plugin{
 		Enable: true,
-		Type:   "python",
-		File:   "rename.py",
+		Type:   "builtin",
+		File:   "builtin_rename.py",
 	})
 
 	for _, tt := range tests {

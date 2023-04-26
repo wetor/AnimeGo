@@ -103,8 +103,6 @@ advanced:
         allow_duplicate_download: false
         # 做种时间
         seeding_time_minute: 1
-        # 忽略小文件大小
-        ignore_size_max_kb: 1024
         # 重命名方式. 下载状态顺序为: 创建下载项->下载->下载完成->做种->做种完成
         # 可选值为: ['link', 'link_delete', 'move', 'wait_move']
         #   link: 使用硬链接方式，下载完成后触发。不影响做种

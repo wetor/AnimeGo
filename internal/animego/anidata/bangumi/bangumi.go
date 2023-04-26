@@ -2,6 +2,7 @@ package bangumi
 
 import (
 	"fmt"
+
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/pkg/errors"
 	"github.com/wetor/AnimeGo/pkg/log"

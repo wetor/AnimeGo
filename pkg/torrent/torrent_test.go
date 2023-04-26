@@ -17,6 +17,9 @@ func TestLoadMagnet(t *testing.T) {
 }
 
 func TestLoadTorrent(t *testing.T) {
+	torrent.Init(&torrent.Options{
+		TempPath: "data",
+	})
 
 	s, _ := os.Open("testdata/40b003ab90b1f7145abeec15e636b901e317a572.torrent")
 	ts, _ := torrent.LoadTorrent(s)
@@ -27,6 +30,22 @@ func TestLoadTorrent(t *testing.T) {
 	}
 
 	m, _ := os.Open("testdata/b7f570888e8967744b399361429ede46d1c0e484.torrent")
+	ts, _ = torrent.LoadTorrent(m)
+	_ = m.Close()
+	fmt.Println(ts)
+	for _, i := range ts.Files {
+		fmt.Println(i)
+	}
+
+	s, _ = os.Open("testdata/b3b30371841956fb94388b6075ca43d83f80c66c.torrent")
+	ts, _ = torrent.LoadTorrent(s)
+	_ = s.Close()
+	fmt.Println(ts)
+	for _, i := range ts.Files {
+		fmt.Println(i)
+	}
+
+	m, _ = os.Open("testdata/a1cc591ca5970be0ea032bfd3281f71645302dc2.torrent")
 	ts, _ = torrent.LoadTorrent(m)
 	_ = m.Close()
 	fmt.Println(ts)

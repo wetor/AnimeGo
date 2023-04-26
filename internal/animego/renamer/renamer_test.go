@@ -44,6 +44,7 @@ func TestMain(m *testing.M) {
 		Debug: true,
 	})
 	m.Run()
+	_ = log.Close()
 	_ = os.RemoveAll("data")
 	fmt.Println("end")
 }
@@ -64,7 +65,7 @@ func rename(r *renamer.Manager, state []chan models.TorrentState, mode string, a
 			fmt.Println(string(d))
 		},
 		CompleteCallback: func(result *models.RenameResult) {
-			fmt.Println("exit", anime.DirName())
+			fmt.Println("complete", anime.DirName())
 		},
 	})
 	dst := anime.FilePath()
@@ -99,8 +100,6 @@ func Rename1(r *renamer.Manager) ([]string, []chan models.TorrentState) {
 		},
 		MikanID: 681,
 	}
-	d, _ := json.Marshal(anime)
-	os.WriteFile("D:\\code\\AnimeGo\\assets\\plugin\\rename\\testdata.json", d, 0666)
 	state := makeChans(len(anime.Ep))
 	return rename(r, state, mode, anime), state
 }
@@ -144,12 +143,12 @@ func Rename3(r *renamer.Manager) ([]string, []chan models.TorrentState) {
 func TestRenamer_Start(t *testing.T) {
 	renamer.Init(&renamer.Options{
 		WG:                &wg,
-		UpdateDelaySecond: 3,
+		UpdateDelaySecond: 1,
 	})
 	p := renamerPlugin.NewRenamePlugin(&models.Plugin{
 		Enable: true,
-		Type:   "python",
-		File:   "rename.py",
+		Type:   "builtin",
+		File:   "builtin_rename.py",
 	})
 	r := renamer.NewManager(p)
 	f1, state1 := Rename1(r)
@@ -178,7 +177,7 @@ func TestRenamer_Start(t *testing.T) {
 	}()
 
 	go func() {
-		time.Sleep(20 * time.Second)
+		time.Sleep(7 * time.Second)
 		cancel()
 	}()
 	wg.Wait()

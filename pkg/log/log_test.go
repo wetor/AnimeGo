@@ -15,6 +15,7 @@ func TestMain(m *testing.M) {
 		Debug: true,
 	})
 	m.Run()
+	_ = log.Close()
 	_ = os.RemoveAll("data")
 	fmt.Println("end")
 }
@@ -22,4 +23,5 @@ func TestMain(m *testing.M) {
 func TestDebug(t *testing.T) {
 	log.Debugf("%s %s", "测试文本", "111")
 	log.Infof("222")
+	_ = log.Close()
 }

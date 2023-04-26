@@ -2,8 +2,10 @@ package public_test
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
+	"github.com/wetor/AnimeGo/assets"
 	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/internal/plugin/public"
 	"github.com/wetor/AnimeGo/pkg/json"
@@ -12,7 +14,7 @@ import (
 
 func TestParserName(t *testing.T) {
 	plugin.Init(&plugin.Options{
-		Path:  "../../../assets/plugin",
+		Path:  assets.TestPluginPath(),
 		Debug: true,
 	})
 	log.Init(&log.Options{
@@ -24,4 +26,6 @@ func TestParserName(t *testing.T) {
 	marshal, _ := json.Marshal(ep)
 
 	fmt.Println(string(marshal))
+	_ = log.Close()
+	_ = os.RemoveAll("data")
 }

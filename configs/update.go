@@ -2,9 +2,6 @@ package configs
 
 import (
 	"fmt"
-	"github.com/wetor/AnimeGo/assets"
-	"github.com/wetor/AnimeGo/configs/version/v_140"
-	"github.com/wetor/AnimeGo/configs/version/v_141"
 	"log"
 	"os"
 	"path"
@@ -14,9 +11,12 @@ import (
 	"github.com/jinzhu/copier"
 	"gopkg.in/yaml.v3"
 
+	"github.com/wetor/AnimeGo/assets"
 	"github.com/wetor/AnimeGo/configs/version/v_110"
 	"github.com/wetor/AnimeGo/configs/version/v_120"
 	"github.com/wetor/AnimeGo/configs/version/v_130"
+	"github.com/wetor/AnimeGo/configs/version/v_140"
+	"github.com/wetor/AnimeGo/configs/version/v_141"
 	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/pkg/utils"
 	"github.com/wetor/AnimeGo/pkg/xpath"
@@ -348,6 +348,7 @@ func update_141_150(file string) {
 	}
 	newConfig.Version = "1.5.0"
 
+	log.Println("[移除] 配置项(advanced.download.ignore_size_max_kb)")
 	log.Println("[新增] 配置项(plugin.parser)")
 	newConfig.Plugin.Parser = []PluginInfo{
 		{

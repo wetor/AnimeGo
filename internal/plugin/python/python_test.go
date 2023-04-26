@@ -2,35 +2,21 @@ package python_test
 
 import (
 	"fmt"
-	"github.com/brahma-adshonor/gohook"
-	mikanRss "github.com/wetor/AnimeGo/internal/animego/feed/rss"
-	"github.com/wetor/AnimeGo/pkg/request"
-	"io"
 	"os"
-	"path"
 	"testing"
 
+	"github.com/wetor/AnimeGo/assets"
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
+	mikanRss "github.com/wetor/AnimeGo/internal/animego/feed/rss"
 	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/log"
 	pkgPlugin "github.com/wetor/AnimeGo/pkg/plugin"
 	"github.com/wetor/AnimeGo/pkg/plugin/python"
+	"github.com/wetor/AnimeGo/test"
 )
 
-func HookGetWriter(uri string, w io.Writer) error {
-	log.Infof("Mock HTTP GET %s", uri)
-	id := path.Base(uri)
-	jsonData, err := os.ReadFile(path.Join("testdata", id+".html"))
-	if err != nil {
-		return err
-	}
-	_, err = w.Write(jsonData)
-	if err != nil {
-		return err
-	}
-	return nil
-}
+const testdata = "python"
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
@@ -38,30 +24,31 @@ func TestMain(m *testing.M) {
 		File:  "data/log.log",
 		Debug: true,
 	})
-	_ = gohook.Hook(request.GetWriter, HookGetWriter, nil)
+	test.HookGetWriter(testdata, nil)
+	defer test.UnHook()
 
 	db := cache.NewBolt()
 	db.Open("data/bolt.db")
 	bangumiCache := cache.NewBolt(true)
-	bangumiCache.Open("../../../test/testdata/bolt_sub.bolt")
+	bangumiCache.Open(test.GetDataPath("", "bolt_sub.bolt"))
 	anidata.Init(&anidata.Options{
 		Cache:        db,
 		BangumiCache: bangumiCache,
 	})
-
+	plugin.Init(&plugin.Options{
+		Path:  test.GetDataPath(testdata, ""),
+		Debug: true,
+	})
 	m.Run()
 
 	db.Close()
 	bangumiCache.Close()
+	_ = log.Close()
 	_ = os.RemoveAll("data")
 	fmt.Println("end")
 }
 
 func TestLib_log(t *testing.T) {
-	plugin.Init(&plugin.Options{
-		Path:  "testdata",
-		Debug: true,
-	})
 	p := &python.Python{}
 	p.Load(&pkgPlugin.LoadOptions{
 		File: "test_log.py",
@@ -80,10 +67,6 @@ func TestLib_log(t *testing.T) {
 }
 
 func TestPythonFunction(t *testing.T) {
-	plugin.Init(&plugin.Options{
-		Path:  "testdata",
-		Debug: true,
-	})
 	p := &python.Python{}
 	p.Load(&pkgPlugin.LoadOptions{
 		File: "test.py",
@@ -110,10 +93,6 @@ func TestPythonFunction(t *testing.T) {
 }
 
 func TestPythonVariable(t *testing.T) {
-	plugin.Init(&plugin.Options{
-		Path:  "testdata",
-		Debug: true,
-	})
 	p := &python.Python{}
 	p.Load(&pkgPlugin.LoadOptions{
 		File: "var.py",
@@ -148,10 +127,6 @@ func TestPythonVariable(t *testing.T) {
 }
 
 func TestPythonJson(t *testing.T) {
-	plugin.Init(&plugin.Options{
-		Path:  "testdata",
-		Debug: true,
-	})
 	p := &python.Python{}
 	p.Load(&pkgPlugin.LoadOptions{
 		File: "json.py",
@@ -186,10 +161,6 @@ language:
 }
 
 func TestPythonConfig(t *testing.T) {
-	plugin.Init(&plugin.Options{
-		Path:  "testdata",
-		Debug: true,
-	})
 	os.Setenv("ANIMEGO_VERSION", "0.6.8")
 	p := &python.Python{}
 	p.Load(&pkgPlugin.LoadOptions{
@@ -209,11 +180,6 @@ func TestPythonConfig(t *testing.T) {
 }
 
 func TestPythonParseMikan(t *testing.T) {
-	plugin.Init(&plugin.Options{
-		Path:  "testdata",
-		Debug: true,
-	})
-
 	p := &python.Python{}
 	p.Load(&pkgPlugin.LoadOptions{
 		File: "mikan.py",
@@ -230,7 +196,7 @@ func TestPythonParseMikan(t *testing.T) {
 
 func TestPythonMikanTool(t *testing.T) {
 	plugin.Init(&plugin.Options{
-		Path:  "../../../assets/plugin",
+		Path:  assets.TestPluginPath(),
 		Debug: true,
 	})
 	os.Setenv("ANIMEGO_VERSION", "0.6.8")

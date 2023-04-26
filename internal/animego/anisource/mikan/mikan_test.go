@@ -12,6 +12,7 @@ import (
 	"github.com/brahma-adshonor/gohook"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/wetor/AnimeGo/assets"
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/internal/animego/anisource"
 	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
@@ -23,16 +24,14 @@ import (
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/request"
 	"github.com/wetor/AnimeGo/pkg/utils"
+	"github.com/wetor/AnimeGo/test"
 )
 
 func HookGetWriter(uri string, w io.Writer) error {
 	log.Infof("Mock HTTP GET %s", uri)
 	id := path.Base(uri)
-	jsonData, err := os.ReadFile(path.Join("../../anidata/mikan/testdata", id+".html"))
-	if err != nil {
-		return err
-	}
-	_, err = w.Write(jsonData)
+	jsonData := test.GetData("mikan", id)
+	_, err := w.Write(jsonData)
 	if err != nil {
 		return err
 	}
@@ -49,9 +48,10 @@ func HookGet(uri string, body interface{}) error {
 	if len(id) == 0 {
 		id = path.Base(u.Path)
 	}
-	p := path.Join("../../anidata/themoviedb/testdata", id+".json")
+
+	p := test.GetDataPath("themoviedb", id)
 	if !utils.IsExist(p) {
-		p = path.Join("../../anidata/bangumi/testdata", id+".json")
+		p = test.GetDataPath("bangumi", id)
 	}
 
 	jsonData, err := os.ReadFile(p)
@@ -66,16 +66,17 @@ func TestMain(m *testing.M) {
 	fmt.Println("begin")
 	_ = utils.CreateMutiDir("data")
 	plugin.Init(&plugin.Options{
-		Path:  "../../../../assets/plugin",
+		Path:  assets.TestPluginPath(),
 		Debug: true,
 	})
 	log.Init(&log.Options{
 		File:  "data/log.log",
 		Debug: true,
 	})
+
 	_ = gohook.Hook(request.GetWriter, HookGetWriter, nil)
 	_ = gohook.Hook(request.Get, HookGet, nil)
-
+	defer test.UnHook()
 	b := cache.NewBolt()
 	b.Open("data/bolt.db")
 	anisource.Init(&anisource.Options{
@@ -89,7 +90,7 @@ func TestMain(m *testing.M) {
 		},
 	})
 	bangumiCache := cache.NewBolt(true)
-	bangumiCache.Open("../../../../test/testdata/bolt_sub.bolt")
+	bangumiCache.Open(test.GetDataPath("", "bolt_sub.bolt"))
 	bangumiCache.Add("bangumi_sub")
 	mutex := sync.Mutex{}
 	anidata.Init(&anidata.Options{
@@ -104,6 +105,7 @@ func TestMain(m *testing.M) {
 	m.Run()
 	b.Close()
 	bangumiCache.Close()
+	_ = log.Close()
 	_ = os.RemoveAll("data")
 	fmt.Println("end")
 }

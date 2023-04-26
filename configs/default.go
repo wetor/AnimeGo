@@ -117,7 +117,6 @@ func defaultAdvanced() {
 
 	defaultConfig.Advanced.Download.AllowDuplicateDownload = false
 	defaultConfig.Advanced.Download.SeedingTimeMinute = 0
-	defaultConfig.Advanced.Download.IgnoreSizeMaxKb = 1024
 	defaultConfig.Advanced.Download.Rename = "wait_move"
 
 	defaultConfig.Advanced.Feed.DelaySecond = 5

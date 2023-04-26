@@ -7,34 +7,17 @@ import (
 	"path"
 	"testing"
 
-	"github.com/brahma-adshonor/gohook"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/internal/animego/anidata/themoviedb"
 	"github.com/wetor/AnimeGo/pkg/cache"
-	"github.com/wetor/AnimeGo/pkg/json"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/request"
+	"github.com/wetor/AnimeGo/test"
 )
 
-func HookGet(uri string, body interface{}) error {
-	log.Infof("Mock HTTP GET %s", uri)
-	u, err := url.Parse(uri)
-	if err != nil {
-		return err
-	}
-	id := u.Query().Get("with_text_query")
-	if len(id) == 0 {
-		id = path.Base(u.Path)
-	}
-	jsonData, err := os.ReadFile(path.Join("testdata", id+".json"))
-	if err != nil {
-		return err
-	}
-	_ = json.Unmarshal(jsonData, body)
-	return nil
-}
+const testdata = "themoviedb"
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
@@ -48,10 +31,22 @@ func TestMain(m *testing.M) {
 	request.Init(&request.Options{
 		Debug: true,
 	})
-	_ = gohook.Hook(request.Get, HookGet, nil)
+	test.HookGet(testdata, func(uri string) string {
+		u, err := url.Parse(uri)
+		if err != nil {
+			return ""
+		}
+		id := u.Query().Get("with_text_query")
+		if len(id) == 0 {
+			id = path.Base(u.Path)
+		}
+		return id
+	})
+	defer test.UnHook()
 	m.Run()
 
 	db.Close()
+	_ = log.Close()
 	_ = os.RemoveAll("data")
 	fmt.Println("end")
 }

@@ -62,7 +62,6 @@ type Advanced struct {
 	Download struct {
 		AllowDuplicateDownload bool   `yaml:"allow_duplicate_download" json:"allow_duplicate_download" attr:"允许重复下载"`
 		SeedingTimeMinute      int    `yaml:"seeding_time_minute" json:"seeding_time_minute" attr:"做种时间"`
-		IgnoreSizeMaxKb        int    `yaml:"ignore_size_max_kb" json:"ignore_size_max_kb" attr:"忽略小文件大小"`
 		Rename                 string `yaml:"rename" json:"rename" attr:"重命名方式" comment_key:"rename_help"`
 	} `yaml:"download" json:"download" attr:"下载设置"`
 

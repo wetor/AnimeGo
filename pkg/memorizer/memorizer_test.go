@@ -2,13 +2,13 @@ package memorizer_test
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"testing"
 	"time"
 
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/json"
-	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/memorizer"
 )
 
@@ -24,11 +24,8 @@ type Type2 struct {
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
-	log.Init(&log.Options{
-		File:  "data/test.log",
-		Debug: true,
-	})
 	m.Run()
+	_ = os.RemoveAll("data")
 	fmt.Println("end")
 }
 
@@ -69,4 +66,5 @@ func TestMemorized(t *testing.T) {
 
 	dosomething(memorizer.NewParams("mikanID", 1001, "bangumiID", 3333).TTL(1), res)
 	fmt.Println(toString(res))
+	db.Close()
 }

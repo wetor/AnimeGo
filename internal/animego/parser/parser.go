@@ -2,6 +2,7 @@ package parser
 
 import (
 	"fmt"
+
 	"github.com/wetor/AnimeGo/internal/animego/parser/utils"
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/models"
@@ -25,7 +26,6 @@ func NewManager(parser api.ParserPlugin, anisource api.AniSource) *Manager {
 }
 
 func (m *Manager) Parse(opts *models.ParseOptions) (entity *models.AnimeEntity) {
-
 	// ------------------- 获取mikan信息（bangumi id） -------------------
 	entity = m.anisource.Parse(&models.AnimeParseOptions{
 		Url: opts.MikanUrl,
@@ -41,24 +41,25 @@ func (m *Manager) Parse(opts *models.ParseOptions) (entity *models.AnimeEntity) 
 		log.Warnf("解析torrent失败，结束此流程")
 		return
 	}
-	entity.Ep = make([]*models.AnimeEpEntity, len(torrentInfo.Files))
+	entity.Ep = make([]*models.AnimeEpEntity, 0, len(torrentInfo.Files))
 
 	entity.Torrent = &models.AnimeTorrent{
 		Hash: torrentInfo.Hash,
 		Url:  torrentInfo.Url,
 	}
 	title := opts.Title
-	for i, t := range torrentInfo.Files {
+	for _, t := range torrentInfo.Files {
+		// TODO: 筛选文件
 		ep := utils.ParseEp(t.Name)
 		if ep <= 0 {
 			log.Warnf("解析「%s」集数失败，跳过此文件", t.Name)
 			continue
 		}
 		title = t.Name
-		entity.Ep[i] = &models.AnimeEpEntity{
+		entity.Ep = append(entity.Ep, &models.AnimeEpEntity{
 			Ep:  ep,
 			Src: t.Path(),
-		}
+		})
 	}
 	// ------------------- 解析标题获取季度信息 -------------------
 	// 优先tmdb解析的season，如果为0则根据配置使用标题解析season

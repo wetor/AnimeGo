@@ -16,28 +16,41 @@ import (
 
 type RenameTask struct {
 	// 只读
-	Src              string // 原名
-	Dst              string
-	Mode             string
-	State            <-chan models.TorrentState
-	RenameCallback   models.RenameCallback   // 重命名完成后回调
-	CompleteCallback models.CompleteCallback // 完成重命名所有流程后回调
-	RenameResult     *models.RenameResult
+	Src            string // 原名
+	Dst            string
+	Mode           string
+	State          <-chan models.TorrentState
+	RenameCallback models.RenameCallback // 重命名完成后回调
+	RenameResult   *models.RenameResult
 
 	// 读写
 	Complete bool // 是否完成任务
 }
 
+type RenameTaskGroup struct {
+	Tasks            []*RenameTask
+	CompleteCallback models.CompleteCallback // 完成重命名所有流程后回调
+}
+
+func (r *RenameTaskGroup) Complete() bool {
+	for _, t := range r.Tasks {
+		if !t.Complete {
+			return false
+		}
+	}
+	return true
+}
+
 type Manager struct {
-	plugin api.RenamerPlugin
-	tasks  map[string]*RenameTask
+	plugin     api.RenamerPlugin
+	taskGroups map[string]*RenameTaskGroup
 	sync.Mutex
 }
 
 func NewManager(plugin api.RenamerPlugin) *Manager {
 	return &Manager{
-		plugin: plugin,
-		tasks:  make(map[string]*RenameTask),
+		plugin:     plugin,
+		taskGroups: make(map[string]*RenameTaskGroup),
 	}
 }
 
@@ -51,19 +64,16 @@ func (m *Manager) stateSeeding(task *RenameTask) (complete bool) {
 		err = utils.CreateLink(task.Src, task.Dst)
 		errors.NewAniErrorD(err).TryPanic()
 		complete = false
-		task.RenameCallback(task.RenameResult)
 	case "link":
 		log.Infof("[重命名] 链接「%s」->「%s」", task.Src, task.Dst)
 		err = utils.CreateLink(task.Src, task.Dst)
 		errors.NewAniErrorD(err).TryPanic()
 		complete = true
-		task.RenameCallback(task.RenameResult)
 	case "move":
 		log.Infof("[重命名] 移动「%s」->「%s」", task.Src, task.Dst)
 		err = utils.Rename(task.Src, task.Dst)
 		errors.NewAniErrorD(err).TryPanic()
 		complete = true
-		task.RenameCallback(task.RenameResult)
 	default:
 		errors.NewAniErrorf("不支持的重命名模式 %s", task.Mode).TryPanic()
 	}
@@ -78,7 +88,6 @@ func (m *Manager) stateComplete(task *RenameTask) (complete bool) {
 		err = utils.Rename(task.Src, task.Dst)
 		errors.NewAniErrorD(err).TryPanic()
 		complete = true
-		task.RenameCallback(task.RenameResult)
 	case "link_delete":
 		if !utils.IsExist(task.Dst) {
 			m.stateSeeding(task)
@@ -103,7 +112,11 @@ func (m *Manager) AddRenameTask(opt *models.RenameOptions) {
 
 	srcFiles := opt.Entity.FilePathSrc()
 	dstFiles := opt.Entity.FilePath()
-
+	name := opt.Entity.FullName()
+	m.taskGroups[name] = &RenameTaskGroup{
+		Tasks:            make([]*RenameTask, len(opt.Entity.Ep)),
+		CompleteCallback: opt.CompleteCallback,
+	}
 	for i := range opt.Entity.Ep {
 		dst := xpath.Join(opt.DstDir, dstFiles[i])
 		src := xpath.Join(opt.SrcDir, srcFiles[i])
@@ -119,15 +132,14 @@ func (m *Manager) AddRenameTask(opt *models.RenameOptions) {
 			}
 		}
 		result.Index = i
-		m.tasks[dstFiles[i]] = &RenameTask{
-			Src:              src,
-			Dst:              dst,
-			Mode:             opt.Mode,
-			State:            opt.State[i],
-			RenameCallback:   opt.RenameCallback,
-			CompleteCallback: opt.CompleteCallback,
-			RenameResult:     result,
-			Complete:         false,
+		m.taskGroups[name].Tasks[i] = &RenameTask{
+			Src:            src,
+			Dst:            dst,
+			Mode:           opt.Mode,
+			State:          opt.State[i],
+			RenameCallback: opt.RenameCallback,
+			RenameResult:   result,
+			Complete:       false,
 		}
 	}
 }
@@ -139,48 +151,55 @@ func (m *Manager) Update(ctx context.Context) {
 	defer m.Unlock()
 
 	var deleteKeys []string
-	for name, task := range m.tasks {
-		if task.Complete {
+
+	for name, taskGroup := range m.taskGroups {
+		if taskGroup.Complete() {
+			taskGroup.CompleteCallback(nil)
 			deleteKeys = append(deleteKeys, name)
 			continue
 		}
-		select {
-		case state := <-task.State:
-			go func(task *RenameTask) {
-				defer func() {
-					if task.Complete {
-						task.CompleteCallback(task.RenameResult)
-					}
-				}()
-				defer errors.HandleError(func(err error) {
-					log.Errorf("", err)
-				})
-				existSrc := utils.IsExist(task.Src)
-				existDst := utils.IsExist(task.Dst)
+		for _, task := range taskGroup.Tasks {
+			if task.Complete {
+				continue
+			}
+			select {
+			case state := <-task.State:
+				go func(task *RenameTask) {
+					defer func() {
+						if task.Complete {
+							task.RenameCallback(task.RenameResult)
+						}
+					}()
+					defer errors.HandleError(func(err error) {
+						log.Errorf("", err)
+					})
+					existSrc := utils.IsExist(task.Src)
+					existDst := utils.IsExist(task.Dst)
 
-				if !existSrc && !existDst {
-					errors.NewAniError("未找到文件：" + task.Src).TryPanic()
-				} else if !existSrc && existDst {
-					// 已经移动完成
-					log.Warnf("[跳过重命名] 可能已经移动完成「%s」->「%s」", task.Src, task.Dst)
-					if state == downloader.StateComplete {
+					if !existSrc && !existDst {
+						errors.NewAniError("未找到文件：" + task.Src).TryPanic()
+					} else if !existSrc && existDst {
+						// 已经移动完成
+						log.Warnf("[跳过重命名] 可能已经移动完成「%s」->「%s」", task.Src, task.Dst)
+						if state == downloader.StateComplete {
+							task.Complete = m.stateComplete(task)
+							return
+						}
+					}
+					if state == downloader.StateSeeding {
+						task.Complete = m.stateSeeding(task)
+					} else if state == downloader.StateComplete {
+						task.Complete = m.stateSeeding(task)
 						task.Complete = m.stateComplete(task)
-						return
 					}
-				}
-				if state == downloader.StateSeeding {
-					task.Complete = m.stateSeeding(task)
-				} else if state == downloader.StateComplete {
-					task.Complete = m.stateSeeding(task)
-					task.Complete = m.stateComplete(task)
-				}
-			}(task)
-		default:
-
+				}(task)
+			default:
+			}
 		}
 	}
+
 	for _, k := range deleteKeys {
-		delete(m.tasks, k)
+		delete(m.taskGroups, k)
 	}
 }
 
