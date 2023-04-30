@@ -67,7 +67,7 @@ plugin:
             __url__: ""
     # 解析器. 解析项目标题
     parser:
-        - enable: false
+        - enable: true
           type: builtin
           file: builtin_parser.py
     # 过滤器插件. 用来筛选符合条件的项目进行解析下载
@@ -79,7 +79,7 @@ plugin:
     schedule: []
     # 重命名. 下载完成后重命名规则
     rename:
-        - enable: false
+        - enable: true
           type: builtin
           file: builtin_rename.py
 # 高级设置

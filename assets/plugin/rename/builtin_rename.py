@@ -14,7 +14,7 @@ def rename(args):
         name = str(anime['id'])
 
     name = core.filename(name)
-    filepath = '%s/S%02d/E%d.%s' % (name, anime['season'], anime['ep'], ext)
+    filepath = '%s/S%02d/E%03d.%s' % (name, anime['season'], anime['ep'], ext)
     return {
         'error': None,
         'filepath': filepath,

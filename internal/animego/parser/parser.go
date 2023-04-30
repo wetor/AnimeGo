@@ -32,14 +32,14 @@ func (m *Manager) Parse(opts *models.ParseOptions) (entity *models.AnimeEntity) 
 	})
 	if entity == nil {
 		log.Warnf("结束此流程")
-		return
+		return nil
 	}
 	// ------------------- 获取并解析torrent信息 -------------------
 	torrentInfo, err := torrent.LoadUri(opts.TorrentUrl)
 	if err != nil {
 		log.Debugf("", err)
 		log.Warnf("解析torrent失败，结束此流程")
-		return
+		return nil
 	}
 	entity.Ep = make([]*models.AnimeEpEntity, 0, len(torrentInfo.Files))
 

@@ -313,7 +313,7 @@ func update_140_141(file string) {
 	log.Println("[新增] 配置项(plugin.rename)")
 	newConfig.Plugin.Rename = []v_141.PluginInfo{
 		{
-			Enable: false,
+			Enable: true,
 			Type:   "builtin",
 			File:   "builtin_rename.py",
 		},
@@ -352,7 +352,7 @@ func update_141_150(file string) {
 	log.Println("[新增] 配置项(plugin.parser)")
 	newConfig.Plugin.Parser = []PluginInfo{
 		{
-			Enable: false,
+			Enable: true,
 			Type:   "builtin",
 			File:   "builtin_parser.py",
 		},

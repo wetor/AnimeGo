@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"strings"
 	"sync"
 
 	"github.com/jinzhu/copier"
@@ -116,10 +117,10 @@ func (m *Manager) download(anime *models.AnimeEntity) {
 	name := anime.FullName()
 
 	if status, has := m.name2status[name]; has {
-		if m.isDownloading(status) || m.fileExist(status.Path) == FileAllExist {
+		if !m.isCompleted(status) || m.fileExist(Conf.SavePath, status.Path) == FileAllExist {
 			if status.Init {
-				if status.RenamedAll() {
-					log.Infof("发现已下载「%v」", status.Path)
+				if status.Renamed {
+					log.Infof("发现已下载「%v」", strings.Join(status.Path, ", "))
 				} else {
 					log.Infof("发现正在下载「%s」", name)
 				}
@@ -201,59 +202,59 @@ func (m *Manager) sleep(ctx context.Context) {
 	utils.Sleep(Conf.UpdateDelaySecond, ctx)
 }
 
-func (m *Manager) updateDownloadItem(status *models.DownloadStatus, anime *models.AnimeEntity, item *models.TorrentItem) {
-	status.State = downloader.StateMap(item.State)
+func (m *Manager) updateStatus(status *models.DownloadStatus, anime *models.AnimeEntity) {
+	if anime == nil {
+		return
+	}
 	name := anime.FullName()
 	if status.Path == nil || len(status.Path) == 0 {
-		status.Path = make(map[int]string)
-		for i := range anime.Ep {
-			status.Path[i] = ""
-		}
-	}
-	if status.Renamed == nil || len(status.Renamed) == 0 {
-		status.Renamed = make(map[int]bool)
-		for i := range anime.Ep {
-			status.Renamed[i] = false
-		}
+		status.Path = make([]string, len(anime.Ep))
 	}
 	if !status.Init {
-		m.name2chan[name] = make([]chan models.TorrentState, len(anime.Ep))
-		for i := range anime.Ep {
-			m.name2chan[name][i] = make(chan models.TorrentState, DownloadStateChanCap)
-		}
-		renameOpt := &models.RenameOptions{
-			Entity: anime,
-			SrcDir: Conf.DownloadPath,
-			DstDir: Conf.SavePath,
-			Mode:   Conf.Rename,
-			State:  m.name2chan[name],
-			RenameCallback: func(opts *models.RenameResult) {
-				status.Path[opts.Index] = opts.Filepath
-				status.Renamed[opts.Index] = true
-				status.Scraped = m.scrape(anime, opts.TVShowDir)
-			},
-			CompleteCallback: func(opts *models.RenameResult) {
-				if !status.Scraped {
-					status.Scraped = m.scrape(anime, opts.TVShowDir)
-				}
-			},
-		}
-		m.rename.AddRenameTask(renameOpt)
 		status.Seeded = false
 		status.Downloaded = false
-
 		status.Init = true
+	}
+
+	if !status.Renamed && len(anime.Ep) > 0 {
+		if !m.rename.HasRenameTask(name) {
+			m.name2chan[name] = make([]chan models.TorrentState, len(anime.Ep))
+			for i := range anime.Ep {
+				m.name2chan[name][i] = make(chan models.TorrentState, DownloadStateChanCap)
+			}
+			renameOpt := &models.RenameOptions{
+				Entity: anime,
+				SrcDir: Conf.DownloadPath,
+				DstDir: Conf.SavePath,
+				Mode:   Conf.Rename,
+				State:  m.name2chan[name],
+				RenameCallback: func(opts *models.RenameResult) {
+					status.Path[opts.Index] = opts.Filepath
+					status.Scraped = m.scrape(anime, opts.TVShowDir)
+				},
+				CompleteCallback: func(opts *models.RenameResult) {
+					if !status.Scraped {
+						status.Scraped = m.scrape(anime, opts.TVShowDir)
+					}
+					status.Renamed = true
+					delete(m.name2chan, name)
+					log.Infof("移动完成「%s」", name)
+				},
+			}
+			m.rename.AddRenameTask(renameOpt)
+		}
 	}
 
 	// 做种，或未下载完成，但State符合下载完成状态
 	if !status.Seeded {
-		if status.State == downloader.StateSeeding || status.State == downloader.StateComplete ||
-			(status.State == downloader.StateWaiting && item.Progress == 1) {
-			go func() {
-				for i := range anime.Ep {
-					m.name2chan[name][i] <- downloader.StateSeeding
-				}
-			}()
+		if status.State == downloader.StateSeeding || status.State == downloader.StateComplete {
+			if !status.Renamed {
+				go func() {
+					for i := range anime.Ep {
+						m.name2chan[name][i] <- downloader.StateSeeding
+					}
+				}()
+			}
 			status.Seeded = true
 		}
 	}
@@ -262,25 +263,15 @@ func (m *Manager) updateDownloadItem(status *models.DownloadStatus, anime *model
 	if !status.Downloaded {
 		// 完成下载
 		if status.State == downloader.StateComplete {
-			go func() {
-				for i := range anime.Ep {
-					m.name2chan[name][i] <- downloader.StateComplete
-				}
-			}()
+			if !status.Renamed {
+				go func() {
+					for i := range anime.Ep {
+						m.name2chan[name][i] <- downloader.StateComplete
+					}
+				}()
+			}
 			status.Downloaded = true
-
-			// 自动删除已完成的列表记录
-			m.client.Delete(&models.ClientDeleteOptions{
-				Hash:       []string{status.Hash},
-				DeleteFile: false,
-			})
 		}
-		log.Debugf("下载进度: %v, 名称: %v, qbt状态: %v, 状态: %v",
-			fmt.Sprintf("%.1f", item.Progress*100),
-			name,
-			item.State,
-			status.State,
-		)
 	}
 }
 
@@ -298,24 +289,24 @@ func (m *Manager) DeleteCache(fullname string) {
 	errors.NewAniErrorD(err).TryPanic()
 }
 
-func (m *Manager) isDownloading(status *models.DownloadStatus) bool {
-	return (!status.Init || !status.Seeded || !status.Downloaded || !status.RenamedAll() || !status.Scraped) &&
-		status.State != downloader.StateNotFound
+func (m *Manager) isCompleted(status *models.DownloadStatus) bool {
+	return (status.Init && status.Seeded && status.Downloaded && status.Renamed && status.Scraped) ||
+		(status.State == downloader.StateNotFound)
 }
 
 func (m *Manager) setDownloaded(status *models.DownloadStatus) {
 	status.Init = true
 	status.Seeded = true
 	status.Downloaded = true
-	status.Renamed = make(map[int]bool)
+	status.Renamed = true
 	status.Scraped = true
 	status.State = downloader.StateComplete
 }
 
-func (m *Manager) fileExist(path map[int]string) int {
+func (m *Manager) fileExist(dir string, path []string) int {
 	existNum := 0
 	for _, p := range path {
-		if len(p) != 0 && utils.IsExist(xpath.Join(Conf.SavePath, p)) {
+		if len(p) != 0 && utils.IsExist(xpath.Join(dir, p)) {
 			existNum++
 		}
 	}
@@ -366,48 +357,104 @@ func (m *Manager) UpdateList() {
 			continue
 		}
 		// 文件是否存在
-		fileExist := m.fileExist(status.Path) == FileAllExist
-		if !status.PathNull() && !fileExist {
-			// 文件不存在，设置缓存将在 NotFoundExpireHour 小时后过期
-			if status.ExpireAt == 0 {
-				status.ExpireAt = utils.Unix() + NotFoundExpireHour*60*60
-				status.State = downloader.StateNotFound
-				updateStatusKeys = append(updateStatusKeys, name)
-				updateStatusValues = append(updateStatusValues, status)
+		fileExist := m.fileExist(Conf.SavePath, status.Path) == FileAllExist
+		isCompleted := m.isCompleted(status)
+		item, hasItem := hash2item[status.Hash]
+		anime := &models.AnimeEntity{}
+		if !isCompleted {
+			err := m.cache.Get(Name2EntityBucket, name, anime)
+			if err != nil {
+				anime = nil
 			}
 		}
-		isDownloading := m.isDownloading(status)
-		if isDownloading || fileExist {
-			if isDownloading {
-				// 下载中
-				if item, has := hash2item[status.Hash]; has {
-					// 存在于下载列表
-					// 同步下载列表
-					status.ExpireAt = 0
-					anime := &models.AnimeEntity{}
-					err := m.cache.Get(Name2EntityBucket, name, anime)
-					if err == nil {
-						m.updateDownloadItem(status, anime, item)
+		// 在下载列表中
+		if hasItem {
+			status.ExpireAt = 0
+			status.State = downloader.StateMap(item.State)
+			// 未完成
+			if !isCompleted {
+				// 同步下载列表
+				m.updateStatus(status, anime)
+			}
+			// 完成
+			if isCompleted {
+				// 文件存在
+				if fileExist {
+					status.State = downloader.StateComplete
+					// 重命名完成
+					if status.Renamed {
+						// 删除已完成的列表记录
+						m.client.Delete(&models.ClientDeleteOptions{
+							Hash:       []string{status.Hash},
+							DeleteFile: false,
+						})
 					}
-				} else if fileExist {
-					// 不在下载列表中，但文件存在
-					// 可能是在下载过程中，在下载器中被手动删除下载项，默认已下载完成
-					log.Warnf("存在可能未下载完成的项目「%v」，检查后选择是否删除", status.Path)
-					m.setDownloaded(status)
-				} else if status.Expire(now) {
-					// 不在下载列表，且文件不存在
-					// 文件不存在，缓存已过期
-					deleteNames = append(deleteNames, name)
 				}
-			} else {
-				// 下载完成，文件存在
-				status.State = downloader.StateComplete
+				// 文件不存在
+				if !fileExist {
+					err := m.cache.Get(Name2EntityBucket, name, anime)
+					if err != nil {
+						anime = nil
+					}
+					// 原文件存在
+					if m.fileExist(Conf.DownloadPath, anime.FilePathSrc()) == FileAllExist {
+						status.Init = false
+						status.Renamed = false
+					}
+					// 同步下载列表
+					m.updateStatus(status, anime)
+				}
+			}
+			// 下载中，打印日志
+			if !status.Downloaded {
+				log.Debugf("下载进度: %v, 名称: %v, qbt状态: %v, 状态: %v",
+					fmt.Sprintf("%.1f", item.Progress*100),
+					name,
+					item.State,
+					status.State,
+				)
 			}
 			updateStatusKeys = append(updateStatusKeys, name)
 			updateStatusValues = append(updateStatusValues, status)
-		} else if status.Expire(now) {
-			// 文件不存在，缓存已过期
-			deleteNames = append(deleteNames, name)
+		}
+		// 不在下载列表中
+		if !hasItem {
+			// 文件存在
+			if fileExist {
+				// 未完成
+				if !isCompleted {
+					// 可能是在下载过程中，在下载器中被手动删除下载项，默认已下载完成
+					log.Warnf("存在可能未下载完成的项目「%v」，检查后选择是否删除", strings.Join(status.Path, ", "))
+				}
+				// 设置已下载完成
+				m.setDownloaded(status)
+				updateStatusKeys = append(updateStatusKeys, name)
+				updateStatusValues = append(updateStatusValues, status)
+			}
+			// 文件不存在
+			if !fileExist {
+				// 设置缓存将在 NotFoundExpireHour 小时后过期
+				if status.ExpireAt == 0 {
+					status.ExpireAt = utils.Unix() + NotFoundExpireHour*60*60
+					status.State = downloader.StateNotFound
+					updateStatusKeys = append(updateStatusKeys, name)
+					updateStatusValues = append(updateStatusValues, status)
+				}
+				// 未完成
+				if !isCompleted {
+					// 不在下载列表，文件不存在，未完成。可能是没有移动
+					// 同步下载列表
+					m.updateStatus(status, anime)
+					// 设置已下载完成
+					m.setDownloaded(status)
+					updateStatusKeys = append(updateStatusKeys, name)
+					updateStatusValues = append(updateStatusValues, status)
+				}
+				// 检查过期
+				if status.Expire(now) {
+					deleteNames = append(deleteNames, name)
+				}
+			}
 		}
 	}
 	// 一次性更新状态到缓存中

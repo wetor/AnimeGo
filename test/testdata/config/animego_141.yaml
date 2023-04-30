@@ -37,7 +37,7 @@ plugin:
           vars: {}
     schedule: []
     rename:
-        - enable: false
+        - enable: true
           type: builtin
           file: builtin_rename.py
           args: {}

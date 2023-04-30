@@ -1,6 +1,7 @@
 package manager_test
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
@@ -21,6 +22,7 @@ import (
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/utils"
 	"github.com/wetor/AnimeGo/pkg/xpath"
+	"github.com/wetor/AnimeGo/test"
 )
 
 const (
@@ -32,10 +34,12 @@ const (
 )
 
 var (
-	qbt    *ClientMock
-	rename *renamer.Manager
-	mgr    *manager.Manager
-	db     *cache.Bolt
+	qbt          *ClientMock
+	rename       *renamer.Manager
+	mgr          *manager.Manager
+	renamePlugin *renamerPlugin.Rename
+	db           *cache.Bolt
+	out          *bytes.Buffer
 )
 
 func TestMain(m *testing.M) {
@@ -43,9 +47,11 @@ func TestMain(m *testing.M) {
 	_ = os.RemoveAll("data")
 	_ = utils.CreateMutiDir(DownloadPath)
 	_ = utils.CreateMutiDir(SavePath)
+	out = bytes.NewBuffer(nil)
 	log.Init(&log.Options{
 		File:  "data/log.log",
 		Debug: true,
+		Out:   out,
 	})
 	plugin.Init(&plugin.Options{
 		Path:  assets.TestPluginPath(),
@@ -72,9 +78,9 @@ func TestMain(m *testing.M) {
 	db.Put("name2status", "test[第1季][第1集]", &models.DownloadStatus{
 		Hash:       "0000a4042b0bac2406b71023fdfe5e9054ebb832",
 		State:      "complete",
-		Path:       map[int]string{0: SavePath + "/test/test.mp4"},
+		Path:       []string{SavePath + "/test/test.mp4"},
 		Init:       true,
-		Renamed:    map[int]bool{0: true},
+		Renamed:    true,
 		Downloaded: true,
 		Scraped:    true,
 		Seeded:     true,
@@ -84,12 +90,12 @@ func TestMain(m *testing.M) {
 		WG:                &wg,
 		UpdateDelaySecond: 1,
 	})
-
-	rename = renamer.NewManager(renamerPlugin.NewRenamePlugin(&models.Plugin{
+	renamePlugin = renamerPlugin.NewRenamePlugin(&models.Plugin{
 		Enable: true,
 		Type:   "python",
 		File:   "rename/builtin_rename.py",
-	}))
+	})
+	rename = renamer.NewManager(renamePlugin)
 
 	mgr = manager.NewManager(qbt, db, rename)
 
@@ -100,7 +106,7 @@ func TestMain(m *testing.M) {
 	fmt.Println("end")
 }
 
-func download(name string, season int, ep []int) (file, fullname, hash string) {
+func download(name string, season int, ep []int) (files []string, fullname, hash string) {
 	hash = utils.MD5([]byte(fmt.Sprintf("%v%v%v", name, season, ep)))
 	anime := &models.AnimeEntity{
 		NameCN: name,
@@ -112,13 +118,24 @@ func download(name string, season int, ep []int) (file, fullname, hash string) {
 	anime.Ep = make([]*models.AnimeEpEntity, 0, len(ep))
 	for _, e := range ep {
 		anime.Ep = append(anime.Ep, &models.AnimeEpEntity{
-			Ep: e, Src: fmt.Sprintf("%s/src_%d.mp4", name, e),
+			Ep:  e,
+			Src: fmt.Sprintf("%s/src_%d.mp4", name, e),
 		})
 	}
 	fullname = anime.FullName()
 	qbt.MockAddName(fullname, hash, anime.FilePathSrc())
 	mgr.Download(anime)
-	file = xpath.Join(SavePath, anime.DirName(), anime.FileName(0)+xpath.Ext(ContentFile))
+	srcFiles := anime.FilePathSrc()
+	files = make([]string, len(anime.Ep))
+	log.ReInt(&log.Options{
+		Debug: false,
+	})
+	for i := range anime.Ep {
+		files[i] = xpath.Join(SavePath, renamePlugin.Rename(anime, i, srcFiles[i]).Filepath)
+	}
+	log.ReInt(&log.Options{
+		Debug: true,
+	})
 	return
 }
 
@@ -135,27 +152,43 @@ func initTest() (*sync.WaitGroup, func()) {
 }
 
 func TestManager_Success(t *testing.T) {
+	out.Reset()
 	wg, cancel := initTest()
 
-	var file1 string
+	var file1 []string
 	go func() {
-		time.Sleep(7 * time.Second)
+		time.Sleep(8 * time.Second)
 		cancel()
 	}()
-	manager.Conf.Rename = "move"
+	manager.Conf.Rename = "wait_move"
 	{
 		log.Info("下载 1")
 		file1, _, _ = download("动画1", 1, []int{1, 2, 3})
 	}
 	wg.Wait()
-	assert.FileExists(t, file1)
-	_ = os.Remove(file1)
+	for _, f := range file1 {
+		assert.FileExists(t, f)
+		_ = os.Remove(f)
+	}
+	fmt.Println(out.String())
+	test.LogBatchCompare(out,
+		"下载 1",
+		"接收到下载项",
+		"开始下载",
+		3, // plugin
+		3, // 下载进度
+		3, // 移动
+		3, // 写入元数据文件
+		"移动完成",
+		"正常退出",
+	)
 }
 
 func TestManager_Exist(t *testing.T) {
+	out.Reset()
 	wg, cancel := initTest()
 
-	var file1 string
+	var file1 []string
 	go func() {
 		time.Sleep(7 * time.Second)
 		cancel()
@@ -171,14 +204,34 @@ func TestManager_Exist(t *testing.T) {
 		file1, _, _ = download("动画1", 1, []int{1, 2, 4})
 	}
 	wg.Wait()
-	assert.FileExists(t, file1)
-	_ = os.Remove(file1)
+	for _, f := range file1 {
+		assert.FileExists(t, f)
+		_ = os.Remove(f)
+	}
+
+	fmt.Println(out.String())
+	test.LogBatchCompare(out,
+		"下载 1",
+		"下载 1",
+		"接收到下载项",
+		"开始下载",
+		"接收到下载项",
+		"取消下载",
+		3, // plugin
+		2, // 下载进度
+		3, // 移动
+		3, // 写入元数据文件
+		1, // 下载进度
+		"移动完成",
+		"正常退出",
+	)
 }
 
 func TestManager_DeleteFile_ReDownload(t *testing.T) {
+	out.Reset()
 	wg, cancel := initTest()
 
-	var file1 string
+	var file1 []string
 	go func() {
 		time.Sleep(13 * time.Second)
 		cancel()
@@ -194,8 +247,10 @@ func TestManager_DeleteFile_ReDownload(t *testing.T) {
 		time.Sleep(6*time.Second + 300*time.Millisecond)
 		{
 			log.Info("删除 1 文件")
-			_ = os.Remove(file1)
-			assert.NoFileExists(t, file1)
+			for _, f := range file1 {
+				_ = os.Remove(f)
+				assert.NoFileExists(t, f)
+			}
 		}
 		time.Sleep(500 * time.Millisecond)
 		{
@@ -204,14 +259,41 @@ func TestManager_DeleteFile_ReDownload(t *testing.T) {
 		}
 	}()
 	wg.Wait()
-	assert.FileExists(t, file1)
-	_ = os.Remove(file1)
+	for _, f := range file1 {
+		assert.FileExists(t, f)
+		_ = os.Remove(f)
+	}
+
+	fmt.Println(out.String())
+	test.LogBatchCompare(out,
+		"下载 1",
+		"接收到下载项",
+		"开始下载",
+		1, // plugin
+		2, // 下载进度
+		1, // 移动
+		1, // 写入元数据文件
+		1, // 下载进度
+		"移动完成",
+		"删除 1",
+		"下载 1",
+		"接收到下载项",
+		"开始下载",
+		1, // plugin
+		2, // 下载进度
+		1, // 移动
+		1, // 写入元数据文件
+		1, // 下载进度
+		"移动完成",
+		"正常退出",
+	)
 }
 
 func TestManager_DeleteCache_ReDownload(t *testing.T) {
+	out.Reset()
 	wg, cancel := initTest()
 
-	var file1 string
+	var file1 []string
 	var name1 string
 	go func() {
 		time.Sleep(13 * time.Second)
@@ -229,7 +311,9 @@ func TestManager_DeleteCache_ReDownload(t *testing.T) {
 		{
 			log.Info("删除 1 缓存")
 			mgr.DeleteCache(name1)
-			assert.FileExists(t, file1)
+			for _, f := range file1 {
+				assert.FileExists(t, f)
+			}
 		}
 		time.Sleep(500 * time.Millisecond)
 		{
@@ -238,14 +322,41 @@ func TestManager_DeleteCache_ReDownload(t *testing.T) {
 		}
 	}()
 	wg.Wait()
-	assert.FileExists(t, file1)
-	_ = os.Remove(file1)
+	for _, f := range file1 {
+		assert.FileExists(t, f)
+		_ = os.Remove(f)
+	}
+
+	fmt.Println(out.String())
+	test.LogBatchCompare(out,
+		"下载 1",
+		"接收到下载项",
+		"开始下载",
+		1, // plugin
+		2, // 下载进度
+		1, // 移动
+		1, // 写入元数据文件
+		1, // 下载进度
+		"移动完成",
+		"删除 1",
+		"下载 1",
+		"接收到下载项",
+		"开始下载",
+		1, // plugin
+		2, // 下载进度
+		1, // 移动
+		1, // 写入元数据文件
+		1, // 下载进度
+		"移动完成",
+		"正常退出",
+	)
 }
 
 func TestManager_WaitClient(t *testing.T) {
+	out.Reset()
 	wg, cancel := initTest()
 
-	var file1, file2 string
+	var file1, file2 []string
 	go func() {
 		time.Sleep(10 * time.Second)
 		cancel()
@@ -255,7 +366,7 @@ func TestManager_WaitClient(t *testing.T) {
 			log.Info("Client离线")
 			qbt.MockSetError(ErrorConnectedFailed, true)
 		}
-		time.Sleep(2 * time.Second)
+		time.Sleep(2*time.Second + 300*time.Millisecond)
 		{
 			log.Info("Client恢复")
 			qbt.MockSetError(ErrorConnectedFailed, false)
@@ -277,13 +388,43 @@ func TestManager_WaitClient(t *testing.T) {
 	}()
 
 	wg.Wait()
-	assert.FileExists(t, file1)
-	assert.FileExists(t, file2)
-	_ = os.Remove(file1)
-	_ = os.Remove(file2)
+	for _, f := range file1 {
+		assert.FileExists(t, f)
+		_ = os.Remove(f)
+	}
+	for _, f := range file2 {
+		assert.FileExists(t, f)
+		_ = os.Remove(f)
+	}
+
+	fmt.Println(out.String())
+	test.LogBatchCompare(out,
+		"Client离线",
+		"下载 1",
+		"等待连接到下载器。已接收到1个下载项",
+		"下载 2",
+		"等待连接到下载器。已接收到2个下载项",
+		"Client恢复",
+		"接收到下载项",
+		"开始下载",
+		"接收到下载项",
+		"开始下载",
+		1, // plugin
+		1, // 下载进度
+		1, // plugin
+		3, // 下载进度
+		2, // 移动
+		2, // 下载进度
+		4, // 移动
+		2, // 写入元数据文件
+		"移动完成",
+		"移动完成",
+		"正常退出",
+	)
 }
 
 func TestManager_WaitClient_FullChan(t *testing.T) {
+	out.Reset()
 	wg, cancel := initTest()
 
 	var file []string
@@ -309,16 +450,16 @@ func TestManager_WaitClient_FullChan(t *testing.T) {
 			for i := 1; i <= manager.DownloadChanDefaultCap; i++ {
 				log.Infof("下载 %d", i)
 				f, _, _ := download("动画1", 1, []int{i})
-				file = append(file, f)
+				file = append(file, f...)
 			}
 		}
 		{
 			log.Info("下载 2")
 			f, _, _ := download("动画2", 1, []int{1})
-			file = append(file, f)
+			file = append(file, f...)
 			log.Info("下载 3")
 			f, _, _ = download("动画3", 1, []int{1})
-			file = append(file, f)
+			file = append(file, f...)
 		}
 	}()
 
@@ -327,10 +468,28 @@ func TestManager_WaitClient_FullChan(t *testing.T) {
 		assert.FileExists(t, f)
 		_ = os.Remove(f)
 	}
+
+	fmt.Println(out.String())
+	test.LogBatchCompare(out,
+		"Client离线",
+		12, // 下载
+		"等待连接到下载器。已接收到10个下载项",
+		"等待连接到下载器。已接收到10个下载项",
+		"Client恢复",
+		26,
+		24, // plugin
+		12, // 下载进度
+		12, // 移动
+		12, // 写入元数据文件
+		12, // 下载进度
+		12, // 移动完成
+		"正常退出",
+	)
 }
 
 func TestManager_ReStart_NotDownloaded(t *testing.T) {
-	var file1 string
+	out.Reset()
+	var file1 []string
 	{
 		wg, cancel := initTest()
 		go func() {
@@ -344,7 +503,9 @@ func TestManager_ReStart_NotDownloaded(t *testing.T) {
 
 		}
 		wg.Wait()
-		assert.FileExists(t, file1)
+		for _, f := range file1 {
+			assert.FileExists(t, f)
+		}
 	}
 	time.Sleep(1 * time.Second)
 	{
@@ -361,9 +522,32 @@ func TestManager_ReStart_NotDownloaded(t *testing.T) {
 		wg.Wait()
 	}
 
-	assert.FileExists(t, file1)
-	_ = os.Remove(file1)
+	for _, f := range file1 {
+		assert.FileExists(t, f)
+		_ = os.Remove(f)
+	}
 
+	fmt.Println(out.String())
+	test.LogBatchCompare(out,
+		"下载 1",
+		"接收到下载项",
+		"开始下载",
+		1,
+		2,
+		1, // 移动
+		1,
+		1,
+		"正常退出",
+		"正常退出",
+		"重启",
+		"下载 1",
+		"移动完成",
+		"存在可能未下载完成的项目",
+		"接收到下载项",
+		"发现已下载",
+		"取消下载，不允许重复",
+		"正常退出",
+	)
 }
 
 func MockUnix1() int64 {
@@ -375,7 +559,8 @@ func MockUnix2() int64 {
 }
 
 func TestManager_AddFailed(t *testing.T) {
-	var file1 string
+	out.Reset()
+	var file1 []string
 
 	wg, cancel := initTest()
 	go func() {
@@ -392,7 +577,6 @@ func TestManager_AddFailed(t *testing.T) {
 	{
 		log.Info("下载 1, 添加失败")
 		file1, _, _ = download("动画1", 1, []int{1})
-
 	}
 
 	time.Sleep(1*time.Second + 300*time.Millisecond)
@@ -413,7 +597,30 @@ func TestManager_AddFailed(t *testing.T) {
 		file1, _, _ = download("动画1", 1, []int{1})
 	}
 	wg.Wait()
-	assert.FileExists(t, file1)
-	_ = os.Remove(file1)
+	for _, f := range file1 {
+		assert.FileExists(t, f)
+		_ = os.Remove(f)
+	}
+	fmt.Println(out.String())
 
+	test.LogBatchCompare(out,
+		"Hook",
+		"下载 1, 添加失败",
+		"接收到下载项",
+		"开始下载",
+		"下载 1, 重复下载",
+		"接收到下载项",
+		"取消下载，不允许重复",
+		"Hook",
+		"下载 1",
+		"接收到下载项",
+		"开始下载",
+		1,
+		2,
+		1, // 移动
+		1,
+		1,
+		"移动完成",
+		"正常退出",
+	)
 }

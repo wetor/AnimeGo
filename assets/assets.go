@@ -91,9 +91,10 @@ func WritePlugins(src, dst string, skip bool) {
 			continue
 		}
 		if strings.HasPrefix(file.Name(), BuiltinPrefix) {
-			continue
+			dstPath = xpath.Join(dst, strings.TrimPrefix(file.Name(), BuiltinPrefix+"_"))
 		}
 		fileContent, err := Plugin.ReadFile(srcPath)
+
 		if err != nil {
 			panic(err)
 		}

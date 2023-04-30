@@ -18,16 +18,23 @@ var (
 	lumberJackLogger io.WriteCloser
 )
 
-func NewLogger(file string, debug bool) *zap.Logger {
+func NewLogger(file string, debug bool, out io.Writer) *zap.Logger {
 	level := zapcore.DebugLevel
 	if !debug {
 		level = zapcore.InfoLevel
 	}
 	// 文件日志: 不显示Debug级别日志
 	// 控制台日志: 彩色显示
+	var consoleConf zapcore.Core
+
+	if out != nil {
+		consoleConf = zapcore.NewCore(GetEncoder(cEncodeLevel), zapcore.AddSync(out), level)
+	} else {
+		consoleConf = zapcore.NewCore(GetEncoder(zapcore.CapitalColorLevelEncoder), zapcore.Lock(os.Stdout), level)
+	}
 	newCore := zapcore.NewTee(
-		zapcore.NewCore(GetEncoder(cEncodeLevel), GetWriteSyncer(file), zapcore.InfoLevel),            // 写入文件
-		zapcore.NewCore(GetEncoder(zapcore.CapitalColorLevelEncoder), zapcore.Lock(os.Stdout), level), // 写入控制台
+		zapcore.NewCore(GetEncoder(cEncodeLevel), GetWriteSyncer(file), zapcore.InfoLevel), // 写入文件
+		consoleConf, // 写入控制台
 	)
 	return zap.New(newCore, zap.AddCaller(), zap.AddCallerSkip(1))
 

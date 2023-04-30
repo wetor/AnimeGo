@@ -106,21 +106,22 @@ func (m *Manager) stateComplete(task *RenameTask) (complete bool) {
 	return
 }
 
+func (m *Manager) HasRenameTask(name string) bool {
+	_, ok := m.taskGroups[name]
+	return ok
+}
+
 func (m *Manager) AddRenameTask(opt *models.RenameOptions) {
 	m.Lock()
 	defer m.Unlock()
-
+	name := opt.Entity.FullName()
 	srcFiles := opt.Entity.FilePathSrc()
 	dstFiles := opt.Entity.FilePath()
-	name := opt.Entity.FullName()
 	m.taskGroups[name] = &RenameTaskGroup{
 		Tasks:            make([]*RenameTask, len(opt.Entity.Ep)),
 		CompleteCallback: opt.CompleteCallback,
 	}
 	for i := range opt.Entity.Ep {
-		dst := xpath.Join(opt.DstDir, dstFiles[i])
-		src := xpath.Join(opt.SrcDir, srcFiles[i])
-
 		var result *models.RenameResult
 		if m.plugin != nil {
 			result = m.plugin.Rename(opt.Entity, i, srcFiles[i])
@@ -131,6 +132,8 @@ func (m *Manager) AddRenameTask(opt *models.RenameOptions) {
 				TVShowDir: opt.Entity.DirName(),
 			}
 		}
+		src := xpath.Join(opt.SrcDir, srcFiles[i])
+		dst := xpath.Join(opt.DstDir, result.Filepath)
 		result.Index = i
 		m.taskGroups[name].Tasks[i] = &RenameTask{
 			Src:            src,

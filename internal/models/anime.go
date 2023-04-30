@@ -95,7 +95,7 @@ func (b *AnimeEntity) FullName() string {
 }
 
 func (b *AnimeEntity) FileName(index int) string {
-	return xpath.Join(fmt.Sprintf("S%02d", b.Season), fmt.Sprintf("E%d", b.Ep[index].Ep))
+	return xpath.Join(fmt.Sprintf("S%02d", b.Season), fmt.Sprintf("E%03d", b.Ep[index].Ep))
 }
 
 func (b *AnimeEntity) DirName() string {

@@ -81,7 +81,7 @@ func TestRename_Rename(t *testing.T) {
 				},
 				index: 0,
 			},
-			want: &models.RenameResult{Index: 0, Filepath: "18692/S02/E1.mp4", TVShowDir: "18692"},
+			want: &models.RenameResult{Index: 0, Filepath: "18692/S02/E001.mp4", TVShowDir: "18692"},
 		},
 	}
 	p := renamerPlugin.NewRenamePlugin(&models.Plugin{
