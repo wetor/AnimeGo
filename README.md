@@ -44,8 +44,8 @@
 - `setting.download_path`: 下载器下载保存位置。临时位置，移动后将会删除
 - `setting.save_path`: 重命名后移动到位置。此时将会改名
 - `plugin.feed`中的`builtin_mikan_rss.py`插件 : 可选，内置自动订阅插件
-  - `vars.__url__`: 订阅地址，如Mikan的rss订阅地址
-  - `vars.__cron__`: 订阅时间，Cron格式，参考[Feed订阅插件帮助](assets/plugin/feed/README.md)
+  - `vars.__url`: 订阅地址，如Mikan的rss订阅地址
+  - `vars.__cron`: 订阅时间，Cron格式，参考[Feed订阅插件帮助](assets/plugin/feed/README.md)
 - 其余配置项根据需求修改
 
 ### 3 启动程序
@@ -92,6 +92,17 @@
   - [ ] ...
 
 ## 开发日志
+
+## v0.9.0
+- **配置文件版本号为`1.5.0`**
+- 支持多内容torrent解析下载
+  - 优化下载管理器流程
+  - 预解析torrent文件
+- 单测改造
+  - testdata统一路径
+  - 更好的单测覆盖
+- 新增parser插件
+- 使用go1.20
 
 ### v0.8.4
 - 修改订阅流程

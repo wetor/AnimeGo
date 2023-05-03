@@ -357,6 +357,21 @@ func update_141_150(file string) {
 			File:   "builtin_parser.py",
 		},
 	}
+	for i, p := range newConfig.Plugin.Feed {
+		fmt.Println(p)
+		for key, val := range p.Vars {
+			oldKey := key
+			key = strings.TrimPrefix(key, "__")
+			key = strings.TrimSuffix(key, "__")
+			if key != oldKey {
+				p.Vars[key] = val
+				delete(p.Vars, oldKey)
+			}
+		}
+		newConfig.Plugin.Feed[i] = p
+	}
+	log.Println("[清理] 清理缓存(data/cache/bolt.db)")
+	_ = os.Remove(xpath.Join(oldConfig.DataPath, "cache", "bolt.db"))
 	content, err := encodeConfig(newConfig)
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)

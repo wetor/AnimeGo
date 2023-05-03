@@ -2,6 +2,7 @@ package schedule
 
 import (
 	"context"
+	"strings"
 	"sync"
 
 	"github.com/robfig/cron/v3"
@@ -63,6 +64,19 @@ func (s *Schedule) Add(opts *AddTaskOptions) {
 	}
 	if opts.Vars == nil {
 		opts.Vars = make(models.Object)
+	}
+	for key, val := range opts.Vars {
+		oldKey := key
+		if !strings.HasPrefix(key, "__") {
+			key = "__" + key
+		}
+		if !strings.HasSuffix(key, "__") {
+			key = key + "__"
+		}
+		if key != oldKey {
+			opts.Vars[key] = val
+			delete(opts.Vars, oldKey)
+		}
 	}
 	t := &TaskInfo{
 		Name: opts.Name,

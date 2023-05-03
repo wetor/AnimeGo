@@ -94,7 +94,7 @@ func TestNewSchedule2(t *testing.T) {
 			"Args_Test1": "测试",
 		},
 		Vars: models.Object{
-			"__name__": "outer_Vars_Test",
+			"name":     "outer_Vars_Test",
 			"__cron__": "*/3 * * * * ?",
 		},
 	})

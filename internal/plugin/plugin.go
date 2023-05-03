@@ -72,6 +72,19 @@ func LoadPlugin(opts *LoadPluginOptions) (p api.Plugin) {
 			break
 		}
 	}
+	for key, val := range opts.Vars {
+		oldKey := key
+		if !strings.HasPrefix(key, "__") {
+			key = "__" + key
+		}
+		if !strings.HasSuffix(key, "__") {
+			key = key + "__"
+		}
+		if key != oldKey {
+			opts.Vars[key] = val
+			delete(opts.Vars, oldKey)
+		}
+	}
 	p.Load(&plugin.LoadOptions{
 		File:       opts.File,
 		Code:       code,

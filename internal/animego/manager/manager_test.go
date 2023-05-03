@@ -496,6 +496,7 @@ func TestManager_ReStart_NotDownloaded(t *testing.T) {
 			time.Sleep(5 * time.Second)
 			cancel()
 		}()
+		time.Sleep(300 * time.Millisecond)
 		manager.Conf.Rename = "move"
 		{
 			log.Info("下载 1")
@@ -515,6 +516,7 @@ func TestManager_ReStart_NotDownloaded(t *testing.T) {
 			time.Sleep(3 * time.Second)
 			cancel()
 		}()
+		time.Sleep(300 * time.Millisecond)
 		{
 			log.Info("下载 1")
 			file1, _, _ = download("动画1", 1, []int{1})
@@ -540,9 +542,8 @@ func TestManager_ReStart_NotDownloaded(t *testing.T) {
 		"正常退出",
 		"正常退出",
 		"重启",
+		2,
 		"下载 1",
-		"移动完成",
-		"存在可能未下载完成的项目",
 		"接收到下载项",
 		"发现已下载",
 		"取消下载，不允许重复",

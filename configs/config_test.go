@@ -69,7 +69,7 @@ func TestUpdateConfig_141(t *testing.T) {
 	EqualFile(t, "data/animego.yaml", test.GetDataPath(testdata, "animego_141.yaml"))
 }
 
-func TestUpdateConfig_151(t *testing.T) {
+func TestUpdateConfig_150(t *testing.T) {
 	configs.ConfigVersion = "1.5.0"
 	file := test.GetData(testdata, "animego_141.yaml")
 	_ = os.WriteFile("data/animego.yaml", file, 0666)

@@ -56,7 +56,8 @@ func defaultPluginComment() {
   type: 插件类型，目前仅支持 'python'(py) 和 'builtin' 插件类型。builtin为内置插件
   file: 插件文件，相对于 'data/plugin' 文件夹的路径，或内置插件名
   args: [可空]插件额外参数，字典类型，会覆盖同名参数
-  vars: [可空]插件全局变量，字典类型，会覆盖插件脚本中同名变量，具体变量和作用参考订阅插件文档`
+  vars: [可空]插件全局变量，字典类型，如果变量名前缀或后缀不是'__'将会自动补充，即在插件中变量名前后缀始终为'__'，
+    会覆盖插件脚本中同名变量，具体变量和作用参考订阅插件文档`
 }
 
 func defaultPlugin() {
@@ -66,8 +67,8 @@ func defaultPlugin() {
 			Type:   "builtin",
 			File:   "builtin_mikan_rss.py",
 			Vars: map[string]any{
-				"__url__":  "",
-				"__cron__": "0 0/20 * * * ?",
+				"url":  "",
+				"cron": "0 0/20 * * * ?",
 			},
 		},
 	}

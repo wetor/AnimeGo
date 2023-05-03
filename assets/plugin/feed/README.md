@@ -9,31 +9,31 @@
    file: builtin_mikan_rss.py
    args: {}
    vars:
-     __cron__: 0 0/20 * * * ?
-     __name__: Example
-     __url__: https://example.com/
+     cron: 0 0/20 * * * ?
+     name: Example
+     url: https://example.com/
 ``` 
 对于内置的自动订阅插件，其中`type`和`file`为固定写法  
 启用自定订阅`enable`设置为`true`  
-设置`__cron__`设置定时(cron表达式)，设置`__url__`设置订阅地址  
+设置`cron`设置定时(cron表达式)，设置`url`设置订阅地址  
 
 ## 插件设置
 
-### \_\_name\_\_
-全局变量`__name__`，str类型，可选  
+### name
+全局变量`name`，str类型，可选  
 定时任务的名称，方便日志中区分
 
-### \_\_url\_\_
-全局变量`__url__`，str类型，必要  
+### url
+全局变量`url`，str类型，必要  
 订阅地址，AnimeGo将会使用GET方式请求此地址，将结果转为str类型，传递给入口函数。  
 其中`args['data']`为请求响应的body  
 
-### \_\_header\_\_
-全局变量`__header__`，dict类型，可选  
+### header
+全局变量`header`，dict类型，可选  
 请求订阅地址时所携带的header请求头，其中`user-agent`默认为AnimeGo信息，无法设置
 
-### \_\_cron\_\_
-全局变量`__cron__`，str类型，必要  
+### cron
+全局变量`cron`，str类型，必要  
 订阅的定时规则，执行完毕后，将会把返回值传递给启用的**过滤器**([过滤器文档](../filter/README.md))，之后进行下载    
 支持 [秒] [分] [小时] [日] [月] [周] 六项的Cron表达式    
 [Cron表达式文档（维基百科，推荐）](https://zh.wikipedia.org/wiki/Cron)  
@@ -53,7 +53,7 @@ args = {
     "data": "..."
 }
 ```
-其中`args['data']`为`__url__`的请求结果，str类型  
+其中`args['data']`为`url`的请求结果，str类型  
 如果为mikan订阅地址，则可以使用`core.parse_mikan_rss(args['data'])`解析  
 也可以选择自行解析  
 

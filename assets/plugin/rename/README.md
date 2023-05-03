@@ -4,8 +4,8 @@
 
 ## 插件设置
 
-### \_\_write_tvshow\_\_
-全局变量`__write_tvshow__`，bool类型，可选，默认`True`  
+### write_tvshow
+全局变量`write_tvshow`，bool类型，可选，默认`True`  
 是否写入Jellyfin的`tvshow.nfo`文件  
 启用后将会写入返回值中`tvshow_dir`所设置路径。如未返回`tvshow_dir`，将写入目标文件路径`filepath`的**上上**层目录
 
@@ -42,7 +42,7 @@ args = {
 #### 返回值
 `error`: 必要，错误信息，为None则没有错误  
 `filepath`: 必要，重命名后的文件路径。最终将会保存到`save_path/{filepath}`    
-`tvshow_dir`: 可选，全局变量`__write_tvshow__`开启后，将会把`tvshow.nfo`文件写到此文件夹中。如为空或文件夹不存在，将会使用`filepath`的**上上**层目录      
+`tvshow_dir`: 可选，全局变量`write_tvshow`开启后，将会把`tvshow.nfo`文件写到此文件夹中。如为空或文件夹不存在，将会使用`filepath`的**上上**层目录      
 
 ```python
 def rename(args):
