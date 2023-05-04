@@ -28,3 +28,7 @@ func ParseEp(name string) (ep int) {
 	}
 	return ep
 }
+
+func ParseSp(name string) (isSp bool, ep int) {
+	return false, 0
+}

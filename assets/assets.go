@@ -4,7 +4,6 @@ import (
 	"embed"
 	"log"
 	"os"
-	"path"
 	"runtime"
 	"strings"
 
@@ -115,7 +114,7 @@ func WritePlugins(src, dst string, skip bool) {
 
 func TestPluginPath() string {
 	_, currFile, _, _ := runtime.Caller(0)
-	dir := path.Dir(currFile)
-	pluginDir := path.Join(dir, "plugin")
+	dir := xpath.Dir(currFile)
+	pluginDir := xpath.Join(dir, "plugin")
 	return pluginDir
 }

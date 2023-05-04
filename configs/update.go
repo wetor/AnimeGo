@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path"
 	"strings"
 	"time"
 
@@ -166,7 +165,7 @@ func update_110_120(file string) {
 		for i, filename := range oldConfig.Filter.JavaScript {
 			newConfig.Filter.Plugin[i] = v_120.PluginInfo{
 				Enable: true,
-				Type:   path.Ext(filename)[1:],
+				Type:   xpath.Ext(filename)[1:],
 				File:   strings.TrimPrefix(filename, "plugin/"),
 			}
 		}

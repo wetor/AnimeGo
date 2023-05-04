@@ -3,7 +3,6 @@ package manager_test
 import (
 	"context"
 	"os"
-	"path"
 	"sync"
 
 	"github.com/wetor/AnimeGo/internal/models"
@@ -88,7 +87,7 @@ func (m *ClientMock) MockAddName(name, hash string, src []string) {
 	m.name2hash[name] = hash
 	m.hash2name[hash] = name
 
-	err := utils.CreateMutiDir(xpath.Join(DownloadPath, path.Dir(src[0])))
+	err := utils.CreateMutiDir(xpath.Join(DownloadPath, xpath.Dir(src[0])))
 	if err != nil {
 		panic(err)
 	}

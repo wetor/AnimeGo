@@ -2,11 +2,13 @@ package test
 
 import (
 	"encoding/json"
+	"io"
+
 	"github.com/brahma-adshonor/gohook"
+
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/request"
-	"io"
-	"path"
+	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
 const (
@@ -43,7 +45,7 @@ func UnHook() {
 func HookGetWriter(testdataDir string, filenameFunc func(string) string) {
 	testdata[GetWriter] = testdataDir
 	if filenameFunc == nil {
-		filenameFunc = path.Base
+		filenameFunc = xpath.Base
 	}
 	filename[GetWriter] = filenameFunc
 	err := gohook.Hook(request.GetWriter, getWriter, nil)
@@ -55,7 +57,7 @@ func HookGetWriter(testdataDir string, filenameFunc func(string) string) {
 func HookGet(testdataDir string, filenameFunc func(string) string) {
 	testdata[Get] = testdataDir
 	if filenameFunc == nil {
-		filenameFunc = path.Base
+		filenameFunc = xpath.Base
 	}
 	filename[Get] = filenameFunc
 	err := gohook.Hook(request.Get, get, nil)
@@ -67,7 +69,7 @@ func HookGet(testdataDir string, filenameFunc func(string) string) {
 func HookGetString(testdataDir string, filenameFunc func(string) string) {
 	testdata[GetString] = testdataDir
 	if filenameFunc == nil {
-		filenameFunc = path.Base
+		filenameFunc = xpath.Base
 	}
 	filename[GetString] = filenameFunc
 	err := gohook.Hook(request.GetString, getString, nil)

@@ -1,9 +1,13 @@
 package torrent
 
-import "os"
+import (
+	"os"
+
+	"github.com/wetor/AnimeGo/pkg/xpath"
+)
 
 var (
-	TempPath = os.TempDir()
+	TempPath = xpath.P(os.TempDir())
 )
 
 type Options struct {

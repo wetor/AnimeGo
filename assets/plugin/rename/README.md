@@ -27,21 +27,22 @@ args = {
         "name_cn": "想要成为影之实力者！", 
         "season": 1, 
         "ep": 19, 
-        "eps: 20, 
+        "ep_type": 1,
+        "eps": 20, 
         "air_date": "2022-10-05"
     },
     "filename": "[LoliHouse] Kage no Jitsuryokusha ni Naritakute! - 19 [WebRip 1080p HEVC-10bit AAC][简繁内封字幕].mp4",
-    "default_filepath": "想要成为影之实力者！/S01/E19.mp4"
+    "filepath": "想要成为影之实力者！/S01/E19.mp4"
 }
 ```
 其中  
 `anime`: 动画信息  
-`filename`: 下载默认文件名  
-`default_filepath`: 默认的保存文件名，可直接返回
+`anime.ep_type`: 剧集类型。0: 无法解析, 1: 正常剧集, 2: SP。剧集类型为0时，`anime.ep`值为0  
+`filename`: 下载默认文件名（原文件名），不包含路径  
 
 #### 返回值
 `error`: 必要，错误信息，为None则没有错误  
-`filepath`: 必要，重命名后的文件路径。最终将会保存到`save_path/{filepath}`    
+`filepath`: 必要，重命名后的目标文件路径。最终将会保存到`{save_path}/{filepath}`    
 `tvshow_dir`: 可选，全局变量`write_tvshow`开启后，将会把`tvshow.nfo`文件写到此文件夹中。如为空或文件夹不存在，将会使用`filepath`的**上上**层目录      
 
 ```python

@@ -2,9 +2,10 @@ package parser_test
 
 import (
 	"fmt"
+	"github.com/stretchr/testify/assert"
+	"github.com/wetor/AnimeGo/pkg/torrent"
 	"net/url"
 	"os"
-	"path"
 	"sync"
 	"testing"
 
@@ -17,9 +18,9 @@ import (
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/pkg/cache"
-	"github.com/wetor/AnimeGo/pkg/json"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/request"
+	"github.com/wetor/AnimeGo/pkg/xpath"
 	"github.com/wetor/AnimeGo/test"
 )
 
@@ -32,6 +33,9 @@ func TestMain(m *testing.M) {
 		File:  "data/log.log",
 		Debug: true,
 	})
+	torrent.Init(&torrent.Options{
+		TempPath: "data",
+	})
 	test.HookGetWriter(testdata, nil)
 	test.HookGet(testdata, func(uri string) string {
 		u, err := url.Parse(uri)
@@ -40,7 +44,7 @@ func TestMain(m *testing.M) {
 		}
 		id := u.Query().Get("with_text_query")
 		if len(id) == 0 {
-			id = path.Base(u.Path)
+			id = xpath.Base(u.Path)
 		}
 		return id
 	})
@@ -88,19 +92,59 @@ func TestMain(m *testing.M) {
 	fmt.Println("end")
 }
 
-func TestParse(t *testing.T) {
+func TestManager_Parse(t *testing.T) {
+	type args struct {
+		opts *models.ParseOptions
+	}
+	tests := []struct {
+		name       string
+		args       args
+		wantEntity *models.AnimeEntity
+	}{
+		// TODO: Add test cases.
+		{
+			name: "1",
+			args: args{
+				opts: &models.ParseOptions{
+					Title:      "[猎户不鸽压制] 万事屋斋藤先生转生异世界 / 斋藤先生无所不能 Benriya Saitou-san, Isekai ni Iku [01-12] [合集] [WebRip 1080p] [繁中内嵌] [H265 AAC] [2023年1月番] [4.8 GB]",
+					TorrentUrl: "https://mikanani.me/Download/20230328/061af0fb9d93214b33179b040517cf9d858c2ffd.torrent",
+					MikanUrl:   "https://mikanani.me/Home/Episode/061af0fb9d93214b33179b040517cf9d858c2ffd",
+				},
+			},
+			wantEntity: &models.AnimeEntity{ID: 366165, ThemoviedbID: 155942, MikanID: 2922, Name: "便利屋斎藤さん、異世界に行く", NameCN: "万事屋斋藤、到异世界", Season: 1, Eps: 12, AirDate: "2023-01-08",
+				Ep: []*models.AnimeEpEntity{
+					{Type: models.AnimeEpNormal, Ep: 1, Src: "[orion origin] Benriya Saitou-san, Isekai ni Iku [01-12] [WebRip] [1080p] [H265 AAC] [CHT]/[orion origin] Benriya Saitou-san, Isekai ni Iku [01] [1080p] [H265 AAC] [CHT].mp4"},
+					{Type: models.AnimeEpNormal, Ep: 2, Src: "[orion origin] Benriya Saitou-san, Isekai ni Iku [01-12] [WebRip] [1080p] [H265 AAC] [CHT]/[orion origin] Benriya Saitou-san, Isekai ni Iku [02] [1080p] [H265 AAC] [CHT].mp4"},
+					{Type: models.AnimeEpNormal, Ep: 3, Src: "[orion origin] Benriya Saitou-san, Isekai ni Iku [01-12] [WebRip] [1080p] [H265 AAC] [CHT]/[orion origin] Benriya Saitou-san, Isekai ni Iku [03] [1080p] [H265 AAC] [CHT].mp4"},
+					{Type: models.AnimeEpNormal, Ep: 4, Src: "[orion origin] Benriya Saitou-san, Isekai ni Iku [01-12] [WebRip] [1080p] [H265 AAC] [CHT]/[orion origin] Benriya Saitou-san, Isekai ni Iku [04] [1080p] [H265 AAC] [CHT].mp4"},
+					{Type: models.AnimeEpNormal, Ep: 5, Src: "[orion origin] Benriya Saitou-san, Isekai ni Iku [01-12] [WebRip] [1080p] [H265 AAC] [CHT]/[orion origin] Benriya Saitou-san, Isekai ni Iku [05] [1080p] [H265 AAC] [CHT].mp4"},
+					{Type: models.AnimeEpNormal, Ep: 6, Src: "[orion origin] Benriya Saitou-san, Isekai ni Iku [01-12] [WebRip] [1080p] [H265 AAC] [CHT]/[orion origin] Benriya Saitou-san, Isekai ni Iku [06] [1080p] [H265 AAC] [CHT].mp4"},
+					{Type: models.AnimeEpNormal, Ep: 7, Src: "[orion origin] Benriya Saitou-san, Isekai ni Iku [01-12] [WebRip] [1080p] [H265 AAC] [CHT]/[orion origin] Benriya Saitou-san, Isekai ni Iku [07] [1080p] [H265 AAC] [CHT].mp4"},
+					{Type: models.AnimeEpNormal, Ep: 8, Src: "[orion origin] Benriya Saitou-san, Isekai ni Iku [01-12] [WebRip] [1080p] [H265 AAC] [CHT]/[orion origin] Benriya Saitou-san, Isekai ni Iku [08] [1080p] [H265 AAC] [CHT].mp4"},
+					{Type: models.AnimeEpNormal, Ep: 9, Src: "[orion origin] Benriya Saitou-san, Isekai ni Iku [01-12] [WebRip] [1080p] [H265 AAC] [CHT]/[orion origin] Benriya Saitou-san, Isekai ni Iku [09] [1080p] [H265 AAC] [CHT].mp4"},
+					{Type: models.AnimeEpNormal, Ep: 10, Src: "[orion origin] Benriya Saitou-san, Isekai ni Iku [01-12] [WebRip] [1080p] [H265 AAC] [CHT]/[orion origin] Benriya Saitou-san, Isekai ni Iku [10] [1080p] [H265 AAC] [CHT].mp4"},
+					{Type: models.AnimeEpNormal, Ep: 11, Src: "[orion origin] Benriya Saitou-san, Isekai ni Iku [01-12] [WebRip] [1080p] [H265 AAC] [CHT]/[orion origin] Benriya Saitou-san, Isekai ni Iku [11] [1080p] [H265 AAC] [CHT].mp4"},
+					{Type: models.AnimeEpNormal, Ep: 12, Src: "[orion origin] Benriya Saitou-san, Isekai ni Iku [01-12] [WebRip] [1080p] [H265 AAC] [CHT]/[orion origin] Benriya Saitou-san, Isekai ni Iku [12] [END] [1080p] [H265 AAC] [CHT].mp4"},
+				},
+				Torrent: &models.AnimeTorrent{
+					Hash: "ac5d8d6fcc4d83cb18f18c209b66afd8e1edba86",
+					Url:  "data/ac5d8d6fcc4d83cb18f18c209b66afd8e1edba86.torrent",
+				},
+			},
+		},
+	}
+
 	p := parserPlugin.NewParserPlugin(&models.Plugin{
 		Enable: true,
 		Type:   "builtin",
 		File:   "builtin_parser.py",
 	}, true)
-	mgr := parser.NewManager(p, mikan.Mikan{})
-	e := mgr.Parse(&models.ParseOptions{
-		Title:      "[猎户不鸽压制] 万事屋斋藤先生转生异世界 / 斋藤先生无所不能 Benriya Saitou-san, Isekai ni Iku [01-12] [合集] [WebRip 1080p] [繁中内嵌] [H265 AAC] [2023年1月番] [4.8 GB]",
-		TorrentUrl: "https://mikanani.me/Download/20230328/061af0fb9d93214b33179b040517cf9d858c2ffd.torrent",
-		MikanUrl:   "https://mikanani.me/Home/Episode/061af0fb9d93214b33179b040517cf9d858c2ffd",
-	})
-	d, _ := json.Marshal(e)
-	fmt.Println(string(d))
+	m := parser.NewManager(p, mikan.Mikan{})
 
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotEntity := m.Parse(tt.args.opts)
+			assert.Equalf(t, tt.wantEntity, gotEntity, "Parse(%v)", tt.args.opts)
+		})
+	}
 }

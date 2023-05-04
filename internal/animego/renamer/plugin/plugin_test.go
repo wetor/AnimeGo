@@ -48,7 +48,7 @@ func TestRename_Rename(t *testing.T) {
 					NameCN: "动画1",
 					Season: 1,
 					Ep: []*models.AnimeEpEntity{
-						{Ep: 712, Src: "src_712.mp4"},
+						{Ep: 712, Src: "src_712.mp4", Type: models.AnimeEpNormal},
 					},
 				},
 				index: 0,
@@ -63,7 +63,7 @@ func TestRename_Rename(t *testing.T) {
 					NameCN: "动画1",
 					Season: 1,
 					Ep: []*models.AnimeEpEntity{
-						{Ep: 712, Src: "src_712.mp4"},
+						{Ep: 712, Src: "src_712.mp4", Type: models.AnimeEpNormal},
 					},
 				},
 				index: 0,
@@ -76,12 +76,12 @@ func TestRename_Rename(t *testing.T) {
 					ID:     18692,
 					Season: 2,
 					Ep: []*models.AnimeEpEntity{
-						{Ep: 1, Src: "src_1.mp4"},
+						{Ep: 0, Src: "src_1.mp4", Type: models.AnimeEpUnknown},
 					},
 				},
 				index: 0,
 			},
-			want: &models.RenameResult{Index: 0, Filepath: "18692/S02/E001.mp4", TVShowDir: "18692"},
+			want: &models.RenameResult{Index: 0, Filepath: "18692/S02/src_1.mp4", TVShowDir: "18692"},
 		},
 	}
 	p := renamerPlugin.NewRenamePlugin(&models.Plugin{

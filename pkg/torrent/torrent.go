@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"io"
 	"os"
-	"path"
 	"strings"
 
 	"github.com/anacrolix/torrent/metainfo"
 	"github.com/wetor/AnimeGo/pkg/request"
+	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
 const (
@@ -25,7 +25,7 @@ type File struct {
 }
 
 func (f File) Path() string {
-	return path.Join(f.Dir, f.Name)
+	return xpath.Join(f.Dir, f.Name)
 }
 
 type Torrent struct {
@@ -55,9 +55,9 @@ func LoadTorrent(r io.Reader) (*Torrent, error) {
 		if strings.HasPrefix(filePath, PaddingFilePrefix) {
 			continue
 		}
-		dir, name := path.Split(filePath)
+		dir, name := xpath.Split(filePath)
 		if len(infoFiles) > 1 {
-			dir = path.Join(infoName, dir)
+			dir = xpath.Join(infoName, dir)
 		}
 		files = append(files, &File{
 			Name:   name,
@@ -107,7 +107,7 @@ func LoadUri(uri string) (t *Torrent, err error) {
 		if err != nil {
 			return nil, err
 		}
-		file := path.Join(TempPath, t.Hash+".torrent")
+		file := xpath.Join(TempPath, t.Hash+".torrent")
 		err = os.WriteFile(file, w.Bytes(), 0666)
 		t.Url = file
 	}
