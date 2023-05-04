@@ -52,6 +52,8 @@ func ToObject(goVal any) py.Object {
 		pyObj = py.None
 	case bool:
 		pyObj = py.NewBool(val)
+	case int8:
+		pyObj = py.Int(val)
 	case int:
 		pyObj = py.Int(val)
 	case int32:

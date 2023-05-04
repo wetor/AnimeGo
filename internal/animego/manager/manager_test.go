@@ -118,8 +118,9 @@ func download(name string, season int, ep []int) (files []string, fullname, hash
 	anime.Ep = make([]*models.AnimeEpEntity, 0, len(ep))
 	for _, e := range ep {
 		anime.Ep = append(anime.Ep, &models.AnimeEpEntity{
-			Ep:  e,
-			Src: fmt.Sprintf("%s/src_%d.mp4", name, e),
+			Type: models.AnimeEpNormal,
+			Ep:   e,
+			Src:  fmt.Sprintf("%s/src_%d.mp4", name, e),
 		})
 	}
 	fullname = anime.FullName()

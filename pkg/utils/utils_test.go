@@ -2,11 +2,10 @@ package utils_test
 
 import (
 	"fmt"
-	"reflect"
-	"testing"
-
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/pkg/utils"
+	"reflect"
+	"testing"
 )
 
 func TestSettings_Tag(t *testing.T) {

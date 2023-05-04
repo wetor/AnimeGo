@@ -5,18 +5,15 @@ __write_tvshow__ = True
 
 def rename(args):
     anime = args['anime']
+    dir = core.filename(anime['name_cn'])
     ext = args['filename'].split(".")[-1]
-    if anime['name_cn'] != '':
-        name = anime['name_cn']
-    elif anime['name'] != '':
-        name = anime['name']
+    if anime['ep_type'] == 0:
+        # 无法解析ep时，使用原名保存
+        filepath = '%s/S%02d/%s' % (dir, anime['season'], args['filename'])
     else:
-        name = str(anime['id'])
-
-    name = core.filename(name)
-    filepath = '%s/S%02d/E%03d.%s' % (name, anime['season'], anime['ep'], ext)
+        filepath = '%s/S%02d/E%03d.%s' % (dir, anime['season'], anime['ep'], ext)
     return {
         'error': None,
         'filepath': filepath,
-        'tvshow_dir': name
+        'tvshow_dir': dir
     }

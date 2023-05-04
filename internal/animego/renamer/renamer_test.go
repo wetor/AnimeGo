@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"path"
 	"sync"
 	"testing"
 	"time"
@@ -52,7 +51,7 @@ func TestMain(m *testing.M) {
 func rename(r *renamer.Manager, state []chan models.TorrentState, mode string, anime *models.AnimeEntity) []string {
 	srcs := anime.FilePathSrc()
 	for _, s := range srcs {
-		_ = os.WriteFile(path.Join(DownloadPath, s), []byte{}, os.ModePerm)
+		_ = os.WriteFile(xpath.Join(DownloadPath, s), []byte{}, os.ModePerm)
 	}
 	r.AddRenameTask(&models.RenameOptions{
 		Entity: anime,
@@ -94,9 +93,9 @@ func Rename1(r *renamer.Manager) ([]string, []chan models.TorrentState) {
 		Eps:     0,
 		Season:  1,
 		Ep: []*models.AnimeEpEntity{
-			{Ep: 712, Src: "src_712.mp4"},
-			{Ep: 713, Src: "src_713.mp4"},
-			{Ep: 714, Src: "src_714.mp4"},
+			{Type: models.AnimeEpNormal, Ep: 712, Src: "src_712.mp4"},
+			{Type: models.AnimeEpNormal, Ep: 713, Src: "src_713.mp4"},
+			{Type: models.AnimeEpNormal, Ep: 714, Src: "src_714.mp4"},
 		},
 		MikanID: 681,
 	}
@@ -114,7 +113,7 @@ func Rename2(r *renamer.Manager) ([]string, []chan models.TorrentState) {
 		Eps:     0,
 		Season:  1,
 		Ep: []*models.AnimeEpEntity{
-			{Ep: 1026, Src: "src_1026.mp4"},
+			{Type: models.AnimeEpNormal, Ep: 1026, Src: "src_1026.mp4"},
 		},
 		MikanID: 228,
 	}
@@ -132,7 +131,7 @@ func Rename3(r *renamer.Manager) ([]string, []chan models.TorrentState) {
 		Eps:     0,
 		Season:  1,
 		Ep: []*models.AnimeEpEntity{
-			{Ep: 996, Src: "src_996.mp4"},
+			{Type: models.AnimeEpNormal, Ep: 996, Src: "src_996.mp4"},
 		},
 		MikanID: 228,
 	}

@@ -2,11 +2,7 @@ package models
 
 import (
 	"fmt"
-	"sort"
 	"strconv"
-	"strings"
-
-	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
 // AnimeEntity 动画信息结构体
@@ -31,11 +27,17 @@ type AnimeEntity struct {
 	Torrent      *AnimeTorrent    `json:"torrent"`
 }
 
+const (
+	AnimeEpUnknown int8 = iota
+	AnimeEpNormal
+	AnimeEpSpecial
+)
+
 type AnimeEpEntity struct {
-	Type    int    `json:"type"` // ep类型。0:正常剧集，1:SP
-	Ep      int    `json:"ep"`
-	Src     string `json:"src"`
-	AirDate string `json:"air_date"`
+	Type    int8   `json:"type"`     // ep类型。0:未知，1:正常剧集，2:SP
+	Ep      int    `json:"ep"`       // 集数，Type=0时，不使用此参数
+	Src     string `json:"src"`      // 原文件名
+	AirDate string `json:"air_date"` // 首映日期
 }
 
 type AnimeTorrent struct {
@@ -43,89 +45,39 @@ type AnimeTorrent struct {
 	Url  string `json:"url"`
 }
 
-func (b *AnimeEntity) Default() {
-	if len(b.NameCN) == 0 {
-		b.NameCN = b.Name
+func (a *AnimeEntity) Default() {
+	if len(a.NameCN) == 0 {
+		a.NameCN = a.Name
 	}
-	if len(b.NameCN) == 0 {
-		b.NameCN = strconv.Itoa(b.ID)
+	if len(a.NameCN) == 0 {
+		a.NameCN = strconv.Itoa(a.ID)
 	}
 }
 
-// getIntervals 将整数序列转换为区间形式
-func (b *AnimeEntity) getIntervals() string {
-	// 初始化区间的起始值和结束值
-	start, end := b.Ep[0].Ep, b.Ep[0].Ep
-	// 初始化区间的字符串表示
-	var intervalSlice []string
-	for i := 1; i < len(b.Ep); i++ {
-		num := b.Ep[i].Ep
-		// 如果当前数与上一个数相差1，表示当前数与上一个数在同一个区间内
-		if num-b.Ep[i-1].Ep == 1 {
-			end = num // 更新区间的结束值
-		} else {
-			// 否则，表示当前数与上一个数不在同一个区间内，需要将上一个区间输出，并重新开始一个新的区间
-			if start == end {
-				intervalSlice = append(intervalSlice, strconv.Itoa(start))
-			} else {
-				intervalSlice = append(intervalSlice, fmt.Sprintf("%d-%d", start, end))
-			}
-			start, end = num, num // 更新区间的起始值和结束值
-		}
+func (a *AnimeEntity) FullName() string {
+	if len(a.Ep) == 1 {
+		return fmt.Sprintf("%s[第%d季][第%d集]", a.NameCN, a.Season, a.Ep[0].Ep)
 	}
-	// 将最后一个区间输出
-	if start == end {
-		intervalSlice = append(intervalSlice, strconv.Itoa(start))
-	} else {
-		intervalSlice = append(intervalSlice, fmt.Sprintf("%d-%d", start, end))
-	}
-	// 对区间切片进行排序
-	sort.Strings(intervalSlice)
-	// 将排序后的区间切片合并成字符串
-	intervals := strings.Join(intervalSlice, ",")
-	return intervals
-}
-
-func (b *AnimeEntity) FullName() string {
-	if len(b.Ep) == 1 {
-		return fmt.Sprintf("%s[第%d季][第%d集]", b.NameCN, b.Season, b.Ep[0].Ep)
-	}
-	return fmt.Sprintf("%s[第%d季][%s集]", b.NameCN, b.Season, b.getIntervals())
+	return fmt.Sprintf("%s[第%d季][%s集]", a.NameCN, a.Season, ToIntervals(a.Ep))
 
 }
 
-func (b *AnimeEntity) FileName(index int) string {
-	return xpath.Join(fmt.Sprintf("S%02d", b.Season), fmt.Sprintf("E%03d", b.Ep[index].Ep))
+func (a *AnimeEntity) FileName(index int) string {
+	return AnimeToFileName(a, index)
 }
 
-func (b *AnimeEntity) DirName() string {
-	return Filename(b.NameCN)
+func (a *AnimeEntity) DirName() string {
+	return FileName(a.NameCN)
 }
 
-func (b *AnimeEntity) FilePath() []string {
-	filePath := make([]string, 0, len(b.Ep))
-	for i, ep := range b.Ep {
-		filePath = append(filePath, xpath.Join(b.DirName(), b.FileName(i)+xpath.Ext(ep.Src)))
-	}
-	return filePath
+func (a *AnimeEntity) FilePath() []string {
+	return AnimeToFilePath(a)
 }
 
-func (b *AnimeEntity) FilePathSrc() []string {
-	filePath := make([]string, 0, len(b.Ep))
-	for _, ep := range b.Ep {
-		filePath = append(filePath, ep.Src)
-	}
-	return filePath
+func (a *AnimeEntity) FilePathSrc() []string {
+	return AnimeToFilePathSrc(a)
 }
 
-func (b *AnimeEntity) Meta() string {
-	nfoTemplate := "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>\n<tvshow>\n"
-	if b.ThemoviedbID != 0 {
-		nfoTemplate += "  <tmdbid>{tmdbid}</tmdbid>\n"
-	}
-	nfoTemplate += "  <bangumiid>{bangumiid}</bangumiid>\n</tvshow>"
-	return Format(nfoTemplate, map[string]any{
-		"tmdbid":    b.ThemoviedbID,
-		"bangumiid": b.ID,
-	})
+func (a *AnimeEntity) Meta() string {
+	return ToMetaData(a.ThemoviedbID, a.ID)
 }

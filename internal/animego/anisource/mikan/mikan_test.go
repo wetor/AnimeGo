@@ -5,7 +5,6 @@ import (
 	"io"
 	"net/url"
 	"os"
-	"path"
 	"sync"
 	"testing"
 
@@ -24,12 +23,13 @@ import (
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/request"
 	"github.com/wetor/AnimeGo/pkg/utils"
+	"github.com/wetor/AnimeGo/pkg/xpath"
 	"github.com/wetor/AnimeGo/test"
 )
 
 func HookGetWriter(uri string, w io.Writer) error {
 	log.Infof("Mock HTTP GET %s", uri)
-	id := path.Base(uri)
+	id := xpath.Base(uri)
 	jsonData := test.GetData("mikan", id)
 	_, err := w.Write(jsonData)
 	if err != nil {
@@ -46,7 +46,7 @@ func HookGet(uri string, body interface{}) error {
 	}
 	id := u.Query().Get("with_text_query")
 	if len(id) == 0 {
-		id = path.Base(u.Path)
+		id = xpath.Base(u.Path)
 	}
 
 	p := test.GetDataPath("themoviedb", id)

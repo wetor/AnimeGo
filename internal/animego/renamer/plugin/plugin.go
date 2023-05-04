@@ -46,6 +46,7 @@ func (p *Rename) Rename(anime *models.AnimeEntity, index int, filename string) *
 	})
 
 	obj := utils.StructToMap(anime)
+	obj["ep_type"] = anime.Ep[index].Type
 	obj["ep"] = anime.Ep[index].Ep
 	result := pluginInstance.Run(FuncRename, map[string]any{
 		"anime":    obj,

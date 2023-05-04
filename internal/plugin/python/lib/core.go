@@ -139,7 +139,7 @@ func filename(self py.Object, arg py.Object) (py.Object, error) {
 	var file string
 	var err error
 	try.This(func() {
-		file = models.Filename(string(arg.(py.String)))
+		file = models.FileName(string(arg.(py.String)))
 	}).Catch(func(e try.E) {
 		err = e.(error)
 	})

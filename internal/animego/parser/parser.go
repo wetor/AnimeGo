@@ -50,16 +50,22 @@ func (m *Manager) Parse(opts *models.ParseOptions) (entity *models.AnimeEntity) 
 	title := opts.Title
 	for _, t := range torrentInfo.Files {
 		// TODO: 筛选文件
-		ep := utils.ParseEp(t.Name)
-		if ep <= 0 {
-			log.Warnf("解析「%s」集数失败，跳过此文件", t.Name)
-			continue
+		epEntity := &models.AnimeEpEntity{
+			Src: t.Path(),
+		}
+		if isSp, sp := utils.ParseSp(t.Name); isSp {
+			epEntity.Type = models.AnimeEpSpecial
+			epEntity.Ep = sp
+		} else if ep := utils.ParseEp(t.Name); ep > 0 {
+			epEntity.Type = models.AnimeEpNormal
+			epEntity.Ep = ep
+		} else {
+			epEntity.Type = models.AnimeEpUnknown
+			log.Warnf("解析「%s」集数失败，不进行重命名", t.Name)
+			// continue
 		}
 		title = t.Name
-		entity.Ep = append(entity.Ep, &models.AnimeEpEntity{
-			Ep:  ep,
-			Src: t.Path(),
-		})
+		entity.Ep = append(entity.Ep, epEntity)
 	}
 	// ------------------- 解析标题获取季度信息 -------------------
 	// 优先tmdb解析的season，如果为0则根据配置使用标题解析season

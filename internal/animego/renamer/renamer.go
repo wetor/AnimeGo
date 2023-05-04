@@ -124,7 +124,7 @@ func (m *Manager) AddRenameTask(opt *models.RenameOptions) {
 	for i := range opt.Entity.Ep {
 		var result *models.RenameResult
 		if m.plugin != nil {
-			result = m.plugin.Rename(opt.Entity, i, srcFiles[i])
+			result = m.plugin.Rename(opt.Entity, i, xpath.Base(srcFiles[i]))
 		}
 		if result == nil {
 			result = &models.RenameResult{

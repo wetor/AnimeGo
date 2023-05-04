@@ -58,6 +58,12 @@ func TestMikan_ParseCache(t *testing.T) {
 			wantMikanID:   2775,
 			wantBangumiID: 371546,
 		},
+		{
+			name:          "海贼王",
+			args:          args{url: "https://mikanani.me/Home/Episode/18b60d48a72c603b421468aade7fdd0868ff2f2f"},
+			wantMikanID:   228,
+			wantBangumiID: 975,
+		},
 	}
 	m := &mikan.Mikan{}
 	for _, tt := range tests {
