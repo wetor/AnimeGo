@@ -56,7 +56,6 @@ func (m Mikan) Parse(opts *models.AnimeParseOptions) (anime *models.AnimeEntity)
 	})
 	if err != nil {
 		log.Debugf("", err)
-		return nil
 	}
 	anime = &models.AnimeEntity{
 		ID:           entity.ID,
