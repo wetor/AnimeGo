@@ -1,119 +1,4 @@
 definitions:
-  configs.Config:
-    properties:
-      cache:
-        properties:
-          bangumi_cache_hour:
-            type: integer
-          mikan_cache_hour:
-            type: integer
-          themoviedb_cache_hour:
-            type: integer
-        type: object
-      category:
-        type: string
-      client:
-        properties:
-          check_time_second:
-            type: integer
-          connect_timeout_second:
-            type: integer
-          retry_connect_num:
-            type: integer
-        type: object
-      data_path:
-        type: string
-      default:
-        properties:
-          tmdb_fail_skip:
-            type: boolean
-          tmdb_fail_use_first_season:
-            type: boolean
-          tmdb_fail_use_title_season:
-            type: boolean
-        type: object
-      download:
-        properties:
-          allow_duplicate_download:
-            type: boolean
-          ignore_size_max_kb:
-            type: integer
-          rename:
-            type: string
-          seeding_time_minute:
-            type: integer
-        type: object
-      download_path:
-        type: string
-      feed:
-        properties:
-          delay_second:
-            type: integer
-          multi_goroutine:
-            properties:
-              enable:
-                type: boolean
-              goroutine_max:
-                type: integer
-            type: object
-          update_delay_minute:
-            type: integer
-        type: object
-      filter:
-        properties:
-          javascript:
-            items:
-              type: string
-            type: array
-        type: object
-      key:
-        properties:
-          themoviedb:
-            type: string
-        type: object
-      path:
-        properties:
-          db_file:
-            type: string
-          log_file:
-            type: string
-          temp_path:
-            type: string
-        type: object
-      proxy:
-        properties:
-          enable:
-            type: boolean
-          url:
-            type: string
-        type: object
-      request:
-        properties:
-          retry_num:
-            type: integer
-          retry_wait_second:
-            type: integer
-          timeout_second:
-            type: integer
-        type: object
-      save_path:
-        type: string
-      tag:
-        type: string
-      update_delay_second:
-        type: integer
-      version:
-        type: string
-      webapi:
-        properties:
-          access_key:
-            type: string
-          host:
-            type: string
-          port:
-            type: integer
-        type: object
-    type: object
   models.BoltGetResponse:
     properties:
       bucket:
@@ -137,20 +22,6 @@ definitions:
         type: string
     type: object
   models.ConfigPutRequest:
-    properties:
-      backup:
-        default: true
-        description: Backup 备份原配置文件
-        type: boolean
-      config:
-        $ref: '#/definitions/configs.Config'
-      key:
-        default: all
-        description: |-
-          Key 用路径方式更新指定yaml key内容
-            [暂不支持] 如 setting/save_path, advanced/download/queue_max_num
-            all 更新所有配置项，json格式
-        type: string
     type: object
   models.PluginConfigUploadRequest:
     properties:
@@ -418,8 +289,8 @@ paths:
       description: |-
         将当前插件的配置发送给AnimeGo并保存
         插件名为不包含 'plugin' 的路径
-        插件名可以忽略'.js'后缀；插件名也可以使用上层文件夹名，会自动寻找文件夹内部的 'main.js' 或 'plugin.js'
-        如传入 'test'，会依次尝试寻找 'plugin/test/main.js', 'plugin/test/plugin.js', 'plugin/test.js'
+        插件名可以忽略'.py'后缀；插件名也可以使用上层文件夹名，会自动加载文件夹内部的 'main.py'
+        如设置为 'plugin/test'，会依次尝试加载 'plugin/test/main.py', 'plugin/test.py'
       parameters:
       - description: 插件信息，data为base64编码后的json文本
         in: body
@@ -512,6 +383,21 @@ paths:
       summary: SHA256计算
       tags:
       - web
+  /websocket/log:
+    get:
+      description: 监听日志接口
+      produces:
+      - application/json
+      responses:
+        "101":
+          description: Switching Protocols
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: WebSocket日志监听接口
+      tags:
+      - websocket
 securityDefinitions:
   ApiKeyAuth:
     in: header

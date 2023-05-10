@@ -2,6 +2,7 @@ package logger
 
 import (
 	"context"
+	"io"
 	"sync"
 
 	"github.com/wetor/AnimeGo/pkg/log"
@@ -15,12 +16,14 @@ type Options struct {
 	Debug   bool
 	Context context.Context
 	WG      *sync.WaitGroup
+	Out     io.Writer
 }
 
 func Init(opts *Options) {
 	log.Init(&log.Options{
 		File:  opts.File,
 		Debug: opts.Debug,
+		Out:   opts.Out,
 	})
 	opts.WG.Add(1)
 	go func() {

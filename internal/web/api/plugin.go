@@ -28,9 +28,9 @@ import (
 //	@Failure 300 {object} webModels.Response
 //	@Security ApiKeyAuth
 //	@Router /api/rss [post]
-func Rss(c *gin.Context) {
+func (a *Api) Rss(c *gin.Context) {
 	var request webModels.SelectEpRequest
-	if !checkRequest(c, &request) {
+	if !a.checkRequest(c, &request) {
 		return
 	}
 	reqRss := rss.NewRss(&rss.Options{Url: request.Rss.Url})
@@ -49,7 +49,7 @@ func Rss(c *gin.Context) {
 		}
 		items = selectItems
 	}
-	go FilterManager.Update(Ctx, items)
+	go a.filterManager.Update(a.ctx, items)
 	c.JSON(webModels.Succ(fmt.Sprintf("开始处理%d个下载项", len(items))))
 }
 
@@ -68,9 +68,9 @@ func Rss(c *gin.Context) {
 //	@Failure 300 {object} webModels.Response
 //	@Security ApiKeyAuth
 //	@Router /api/plugin/config [post]
-func PluginConfigPost(c *gin.Context) {
+func (a *Api) PluginConfigPost(c *gin.Context) {
 	var request webModels.PluginConfigUploadRequest
-	if !checkRequest(c, &request) {
+	if !a.checkRequest(c, &request) {
 		return
 	}
 	file, err := request.FindFile()
@@ -116,9 +116,9 @@ func PluginConfigPost(c *gin.Context) {
 //	@Failure 300 {object} webModels.Response
 //	@Security ApiKeyAuth
 //	@Router /api/plugin/config [get]
-func PluginConfigGet(c *gin.Context) {
+func (a *Api) PluginConfigGet(c *gin.Context) {
 	var request webModels.PluginConfigDownloadRequest
-	if !checkRequest(c, &request) {
+	if !a.checkRequest(c, &request) {
 		return
 	}
 	file, err := request.FindFile()

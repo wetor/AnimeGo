@@ -4,7 +4,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"github.com/wetor/AnimeGo/pkg/torrent"
 	"log"
 	"os"
 	"sync"
@@ -37,9 +36,11 @@ import (
 	"github.com/wetor/AnimeGo/internal/schedule/task"
 	"github.com/wetor/AnimeGo/internal/web"
 	webapi "github.com/wetor/AnimeGo/internal/web/api"
+	"github.com/wetor/AnimeGo/internal/web/websocket"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	pkgLog "github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/request"
+	"github.com/wetor/AnimeGo/pkg/torrent"
 	"github.com/wetor/AnimeGo/pkg/utils"
 	"github.com/wetor/AnimeGo/pkg/xpath"
 )
@@ -133,11 +134,13 @@ func Main() {
 
 	// ===============================================================================================================
 	// 初始化日志
+	out, notify := logger.NewLogNotify()
 	logger.Init(&logger.Options{
 		File:    constant.LogFile,
 		Debug:   debug,
 		Context: ctx,
 		WG:      &WG,
+		Out:     out,
 	})
 
 	// 初始化request
@@ -283,7 +286,7 @@ func Main() {
 	if webapiEnable {
 		// 初始化Web API
 		web.Init(&web.Options{
-			Options: &webapi.Options{
+			ApiOptions: &webapi.Options{
 				Ctx:                           ctx,
 				AccessKey:                     config.WebApi.AccessKey,
 				Cache:                         bolt,
@@ -292,6 +295,10 @@ func Main() {
 				BangumiCacheLock:              &BangumiCacheMutex,
 				FilterManager:                 filterSrv,
 				DownloaderManagerCacheDeleter: managerSrv,
+			},
+			WebSocketOptions: &websocket.Options{
+				WG:     &WG,
+				Notify: notify,
 			},
 			Host:  config.WebApi.Host,
 			Port:  config.WebApi.Port,

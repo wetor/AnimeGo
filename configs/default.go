@@ -153,7 +153,7 @@ func DefaultConfig() *Config {
 	return defaultConfig
 }
 
-func Config2Bytes(config *Config) []byte {
+func Config2Bytes(config *Config) ([]byte, error) {
 	defaultAll()
 	yaml := encoder.NewEncoder(config,
 		encoder.WithComments(encoder.CommentsOnHead),
@@ -161,9 +161,9 @@ func Config2Bytes(config *Config) []byte {
 	)
 	content, err := yaml.Encode()
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return content
+	return content, nil
 }
 
 func DefaultDoc() []byte {
@@ -180,8 +180,12 @@ func DefaultDoc() []byte {
 }
 
 func DefaultFile(filename string) error {
+	data, err := Config2Bytes(defaultConfig)
+	if err != nil {
+		return err
+	}
 	// 所有者可读可写，其他用户只读
-	err := os.WriteFile(filename, Config2Bytes(defaultConfig), 0644)
+	err = os.WriteFile(filename, data, 0644)
 	if err != nil {
 		return err
 	}

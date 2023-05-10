@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket Log Viewer</title>
+</head>
+
+<body>
+<div id="logs"></div>
+
+<script>
+    const ws = new WebSocket("ws://localhost:7991/websocket/log?access_key=10464d5c99713773e5c0480e628927198ce5b92d0754a411cb602ad56cefeff7");
+    const logsDiv = document.getElementById("logs");
+
+    ws.onopen = function () {
+        console.log("WebSocket connection established.");
+    };
+
+    ws.onclose = function () {
+        console.log("WebSocket connection closed.");
+    };
+
+    ws.onmessage = function (event) {
+        const logMessage = event.data;
+        const logItem = document.createElement("p");
+        logItem.textContent = logMessage;
+        logsDiv.appendChild(logItem);
+    };
+</script>
+</body>
+
+</html>
