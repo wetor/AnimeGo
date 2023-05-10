@@ -47,17 +47,19 @@ type ConfigGetRequest struct {
 	//   default 获取默认值配置项，json格式
 	//   comment 获取所有配置项的注释文本，json格式
 	//   raw 获取所有配置项，yaml文件内容，base64编码
-	Key string `json:"key" form:"key" default:"all"`
+	Key string `json:"key" form:"key" default:"raw"`
 }
 
 type ConfigPutRequest struct {
 	// Key 用路径方式更新指定yaml key内容
 	//   [暂不支持] 如 setting/save_path, advanced/download/queue_max_num
 	//   all 更新所有配置项，json格式
-	Key string `json:"key" form:"key" default:"all"`
+	//   raw 更新整个配置文件，base64编码
+	Key string `json:"key" form:"key" default:"raw"`
 	// Backup 备份原配置文件
-	Backup *bool           `json:"backup" form:"backup" default:"true"`
-	Config *configs.Config `json:"config"`
+	Backup    *bool           `json:"backup" form:"backup" default:"true"`
+	Config    *configs.Config `json:"config"`
+	ConfigRaw *string         `json:"config_raw"`
 }
 
 type BoltRequest struct {
