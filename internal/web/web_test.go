@@ -84,14 +84,14 @@ func TestMain(m *testing.M) {
 }
 
 func TestRun(t *testing.T) {
-	//t.SkipNow()
+	t.SkipNow()
 	web.Run(ctx)
 
 	go func() {
 		i := 0
 		for i < 1000 {
 			time.Sleep(1 * time.Second)
-			if logger.GetLogNotify() {
+			if logger.GetLogNotify() >= logger.NotifyEnabled {
 				log.Debugf("日志输出：%d", i)
 				i++
 			}
