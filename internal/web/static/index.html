@@ -3,6 +3,10 @@
 
 <head>
     <meta charset="UTF-8">
+    <button id="pause">Pause</button>
+    <button id="resume">Resume</button>
+    <button id="terminate">Terminate</button>
+    <button id="start">Start</button>
     <title>WebSocket Log Viewer</title>
 </head>
 
@@ -10,23 +14,51 @@
 <div id="logs"></div>
 
 <script>
-    const ws = new WebSocket("ws://localhost:7991/websocket/log?access_key=10464d5c99713773e5c0480e628927198ce5b92d0754a411cb602ad56cefeff7");
+    const url = "ws://localhost:7991/websocket/log?access_key=10464d5c99713773e5c0480e628927198ce5b92d0754a411cb602ad56cefeff7"
     const logsDiv = document.getElementById("logs");
+    let ws
 
-    ws.onopen = function () {
-        console.log("WebSocket connection established.");
-    };
+    function connect(){
+        ws = new WebSocket(url);
 
-    ws.onclose = function () {
-        console.log("WebSocket connection closed.");
-    };
+        ws.onopen = function () {
+            console.log("WebSocket connection established.");
+        };
 
-    ws.onmessage = function (event) {
-        const logMessage = event.data;
-        const logItem = document.createElement("p");
-        logItem.textContent = logMessage;
-        logsDiv.appendChild(logItem);
-    };
+        ws.onclose = function () {
+            console.log("WebSocket connection closed.");
+        };
+
+        ws.onmessage = function (event) {
+            console.log(event)
+            const messages = event.data.split("\n\n");
+            const header = JSON.parse(messages[0])
+            console.log(header)
+            if (header.type === 'log'){
+                for (let i = 1; i <= header.count; i++) {
+                    const logItem = document.createElement("p");
+                    logItem.textContent = messages[i];
+                    logsDiv.appendChild(logItem);
+                }
+            }
+        };
+        // 当按钮被点击时发送消息
+        document.getElementById('pause').addEventListener('click', (event) => {
+            ws.send('{"action":"pause"}');
+        });
+        document.getElementById('resume').addEventListener('click', (event) => {
+            ws.send('{"action":"resume"}');
+        });
+        document.getElementById('terminate').addEventListener('click', (event) => {
+            ws.send('{"action":"terminate"}');
+            ws.close()
+        });
+    }
+    document.getElementById('start').addEventListener('click', (event) => {
+        connect()
+    });
+
+
 </script>
 </body>
 

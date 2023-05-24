@@ -6,7 +6,13 @@ import (
 	"os"
 )
 
-var enableNotify = false
+const (
+	NotifyDisabled = iota
+	NotifyEnabled
+	NotifyPaused
+)
+
+var notifyStatus = NotifyDisabled
 
 type LogNotify struct {
 	notify chan []byte
@@ -14,7 +20,7 @@ type LogNotify struct {
 
 func (w *LogNotify) Write(p []byte) (n int, err error) {
 	n, err = os.Stdout.Write(p)
-	if enableNotify && err == nil {
+	if notifyStatus >= NotifyEnabled && err == nil {
 		b := bytes.Clone(p)
 		go func(data []byte) {
 			w.notify <- data
@@ -30,10 +36,18 @@ func NewLogNotify() (io.Writer, chan []byte) {
 	}, notify
 }
 
-func SetLogNotify(enable bool) {
-	enableNotify = enable
+func DisableLogNotify() {
+	notifyStatus = NotifyDisabled
 }
 
-func GetLogNotify() bool {
-	return enableNotify
+func EnableLogNotify() {
+	notifyStatus = NotifyEnabled
+}
+
+func PauseLogNotify() {
+	notifyStatus = NotifyPaused
+}
+
+func GetLogNotify() int {
+	return notifyStatus
 }

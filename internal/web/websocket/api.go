@@ -23,11 +23,11 @@ func (w *WebSocket) Log(c *gin.Context) {
 	}
 	w.wsHandler(c.Writer, c.Request,
 		func() {
-			logger.SetLogNotify(true)
+			logger.EnableLogNotify()
 		},
 		func() {
 			if len(w.wsConns) == 0 {
-				logger.SetLogNotify(false)
+				logger.DisableLogNotify()
 			}
 		})
 }

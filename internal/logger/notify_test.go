@@ -11,7 +11,7 @@ import (
 
 func TestNewLogNotify(t *testing.T) {
 	out, notify := logger.NewLogNotify()
-	logger.SetLogNotify(true)
+	logger.EnableLogNotify()
 	log.Init(&log.Options{
 		File:  "data/log.log",
 		Debug: true,
