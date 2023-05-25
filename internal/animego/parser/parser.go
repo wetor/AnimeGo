@@ -1,12 +1,9 @@
 package parser
 
 import (
-	"fmt"
-
 	"github.com/wetor/AnimeGo/internal/animego/parser/utils"
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/pkg/json"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/torrent"
 )
@@ -84,8 +81,6 @@ func (m *Manager) Parse(opts *models.ParseOptions) (entity *models.AnimeEntity) 
 		if parsed == nil {
 			entity.Season = m.defaultSeason(0)
 		} else {
-			d, _ := json.Marshal(parsed)
-			fmt.Println(string(d))
 			entity.Season = m.defaultSeason(parsed.Season)
 		}
 		// 没有设置默认季度，且解析失败，结束流程

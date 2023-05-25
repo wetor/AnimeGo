@@ -2,12 +2,12 @@ package parser_test
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
-	"github.com/wetor/AnimeGo/pkg/torrent"
 	"net/url"
 	"os"
 	"sync"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	"github.com/wetor/AnimeGo/assets"
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
@@ -20,6 +20,7 @@ import (
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/request"
+	"github.com/wetor/AnimeGo/pkg/torrent"
 	"github.com/wetor/AnimeGo/pkg/xpath"
 	"github.com/wetor/AnimeGo/test"
 )
@@ -28,7 +29,7 @@ const testdata = "parser"
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
-	_ = os.RemoveAll("data")
+	_ = os.MkdirAll("data", os.ModePerm)
 	log.Init(&log.Options{
 		File:  "data/log.log",
 		Debug: true,
@@ -107,8 +108,8 @@ func TestManager_Parse(t *testing.T) {
 			args: args{
 				opts: &models.ParseOptions{
 					Title:      "[猎户不鸽压制] 万事屋斋藤先生转生异世界 / 斋藤先生无所不能 Benriya Saitou-san, Isekai ni Iku [01-12] [合集] [WebRip 1080p] [繁中内嵌] [H265 AAC] [2023年1月番] [4.8 GB]",
-					TorrentUrl: "https://mikanani.me/Download/20230328/061af0fb9d93214b33179b040517cf9d858c2ffd.torrent",
-					MikanUrl:   "https://mikanani.me/Home/Episode/061af0fb9d93214b33179b040517cf9d858c2ffd",
+					TorrentUrl: "https://mikanani.me/Download/20230328/ac5d8d6fcc4d83cb18f18c209b66afd8e1edba86.torrent",
+					MikanUrl:   "https://mikanani.me/Home/Episode/ac5d8d6fcc4d83cb18f18c209b66afd8e1edba86",
 				},
 			},
 			wantEntity: &models.AnimeEntity{ID: 366165, ThemoviedbID: 155942, MikanID: 2922, Name: "便利屋斎藤さん、異世界に行く", NameCN: "万事屋斋藤、到异世界", Season: 1, Eps: 12, AirDate: "2023-01-08",
@@ -129,6 +130,25 @@ func TestManager_Parse(t *testing.T) {
 				Torrent: &models.AnimeTorrent{
 					Hash: "ac5d8d6fcc4d83cb18f18c209b66afd8e1edba86",
 					Url:  "data/ac5d8d6fcc4d83cb18f18c209b66afd8e1edba86.torrent",
+				},
+			},
+		},
+		{
+			name: "2",
+			args: args{
+				opts: &models.ParseOptions{
+					Title:      "【SW字幕组】[宠物小精灵 / 宝可梦 地平线 莉可与罗伊的旅途][01-02][简日双语字幕][2023.04.14][1080P][AVC][MP4][CHS_JP] [875.7MB]",
+					TorrentUrl: "https://mikanani.me/Download/20230427/51ecf2415af99521d07595178685587e16edd926.torrent",
+					MikanUrl:   "https://mikanani.me/Home/Episode/51ecf2415af99521d07595178685587e16edd926",
+				},
+			},
+			wantEntity: &models.AnimeEntity{ID: 411247, ThemoviedbID: 220150, MikanID: 3015, Name: "ポケットモンスター", NameCN: "宝可梦 地平线", Season: 1, Eps: 22, AirDate: "2023-04-14",
+				Ep: []*models.AnimeEpEntity{
+					{Type: models.AnimeEpUnknown, Ep: 0, Src: "[SWSUB][Pokemon Horizons][01-02][CHS_JP][AVC][1080P].mp4"},
+				},
+				Torrent: &models.AnimeTorrent{
+					Hash: "51ecf2415af99521d07595178685587e16edd926",
+					Url:  "data/51ecf2415af99521d07595178685587e16edd926.torrent",
 				},
 			},
 		},
