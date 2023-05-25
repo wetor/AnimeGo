@@ -95,7 +95,7 @@ func Rename1(r *renamer.Manager) ([]string, []chan models.TorrentState) {
 		Ep: []*models.AnimeEpEntity{
 			{Type: models.AnimeEpNormal, Ep: 712, Src: "src_712.mp4"},
 			{Type: models.AnimeEpNormal, Ep: 713, Src: "src_713.mp4"},
-			{Type: models.AnimeEpNormal, Ep: 714, Src: "src_714.mp4"},
+			{Type: models.AnimeEpUnknown, Ep: 0, Src: "src_714.mp4"},
 		},
 		MikanID: 681,
 	}
@@ -131,7 +131,7 @@ func Rename3(r *renamer.Manager) ([]string, []chan models.TorrentState) {
 		Eps:     0,
 		Season:  1,
 		Ep: []*models.AnimeEpEntity{
-			{Type: models.AnimeEpNormal, Ep: 996, Src: "src_996.mp4"},
+			{Type: models.AnimeEpUnknown, Ep: 0, Src: "src_996.mp4"},
 		},
 		MikanID: 228,
 	}

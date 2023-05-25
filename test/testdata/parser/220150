@@ -1,0 +1,180 @@
+{
+  "adult": false,
+  "backdrop_path": "/ce3tNNbhj1Com0VxD2PUXAQ9RgL.jpg",
+  "created_by": [],
+  "episode_run_time": [
+    25
+  ],
+  "first_air_date": "2023-04-14",
+  "genres": [
+    {
+      "id": 16,
+      "name": "Animation"
+    },
+    {
+      "id": 10759,
+      "name": "Action & Adventure"
+    },
+    {
+      "id": 10762,
+      "name": "Kids"
+    }
+  ],
+  "homepage": "https://www.tv-tokyo.co.jp/anime/pocketmonster2023/",
+  "id": 220150,
+  "in_production": true,
+  "languages": [
+    "ja"
+  ],
+  "last_air_date": "2023-05-19",
+  "last_episode_to_air": {
+    "id": 4423537,
+    "name": "Special Training! It's Captain Pikachu",
+    "overview": "",
+    "vote_average": 0.0,
+    "vote_count": 0,
+    "air_date": "2023-05-19",
+    "episode_number": 7,
+    "production_code": "",
+    "runtime": null,
+    "season_number": 1,
+    "show_id": 220150,
+    "still_path": "/vH369Xd1mLuvjP9L0kPJGZRy6Ei.jpg"
+  },
+  "name": "Pokémon Horizons: The Series",
+  "next_episode_to_air": {
+    "id": 4423546,
+    "name": "The Mystery of the Unopening Door",
+    "overview": "",
+    "vote_average": 0.0,
+    "vote_count": 0,
+    "air_date": "2023-05-26",
+    "episode_number": 8,
+    "production_code": "",
+    "runtime": null,
+    "season_number": 1,
+    "show_id": 220150,
+    "still_path": null
+  },
+  "networks": [
+    {
+      "id": 98,
+      "logo_path": "/1oTje9uOhRcuLSAc8ERn0cnG51i.png",
+      "name": "TV Tokyo",
+      "origin_country": "JP"
+    },
+    {
+      "id": 252,
+      "logo_path": "/zFZ5KCuvx7K0vP9XgGcidfXjuUd.png",
+      "name": "TV Aichi",
+      "origin_country": "JP"
+    },
+    {
+      "id": 822,
+      "logo_path": "/fGdBR7lxjrXsBlwZF7B1UNpG5ff.png",
+      "name": "TVQ",
+      "origin_country": "JP"
+    },
+    {
+      "id": 824,
+      "logo_path": "/6foQmoPac7WCDnDuDbuCZklmDuA.png",
+      "name": "TV Osaka",
+      "origin_country": "JP"
+    },
+    {
+      "id": 938,
+      "logo_path": "/f12LLqBVFnDVIY8HidhWEitI77c.png",
+      "name": "TVh",
+      "origin_country": "JP"
+    },
+    {
+      "id": 1175,
+      "logo_path": "/wi1TlXf4tnnnEA5m3DkbH1X7iC9.png",
+      "name": "GBS",
+      "origin_country": "JP"
+    },
+    {
+      "id": 2064,
+      "logo_path": "/qi4L1ffRabF5LJqVimCaaUYpeSj.png",
+      "name": "TSC",
+      "origin_country": "JP"
+    },
+    {
+      "id": 3962,
+      "logo_path": "/9M08u5EOibJxZCWPG2kasrLrKAR.png",
+      "name": "Nara Television",
+      "origin_country": "JP"
+    }
+  ],
+  "number_of_episodes": 10,
+  "number_of_seasons": 1,
+  "origin_country": [
+    "JP"
+  ],
+  "original_language": "ja",
+  "original_name": "ポケットモンスター",
+  "overview": "Follow Liko and Roy as they unravel the mysteries that surround them and encounter Friede, Captain Pikachu, Amethio, and others during their exciting adventures!",
+  "popularity": 70.357,
+  "poster_path": "/mrnSYkqY2sPkf5XOQTMHcdCTLyI.jpg",
+  "production_companies": [
+    {
+      "id": 5372,
+      "logo_path": "/tPtJc2rCOTHEzJQPStT6m3dI0eK.png",
+      "name": "OLM",
+      "origin_country": "JP"
+    },
+    {
+      "id": 12655,
+      "logo_path": "/dfGqf2NoMVPrDywDL90D5HAhBlW.png",
+      "name": "Shogakukan-Shueisha Productions",
+      "origin_country": "JP"
+    },
+    {
+      "id": 3034,
+      "logo_path": "/kGRavMqgyx4p2X4C96bjRCj50oI.png",
+      "name": "TV Tokyo",
+      "origin_country": "JP"
+    },
+    {
+      "id": 84461,
+      "logo_path": "/c5rCgOHtg8vSfRumU84w6VZBt8U.png",
+      "name": "HALF H・P STUDIO",
+      "origin_country": "JP"
+    },
+    {
+      "id": 170300,
+      "logo_path": "/icYBQLIZ8FtV6gB6o4N4ihSd77q.png",
+      "name": "TV Tokyo Medianet",
+      "origin_country": "JP"
+    }
+  ],
+  "production_countries": [
+    {
+      "iso_3166_1": "JP",
+      "name": "Japan"
+    }
+  ],
+  "seasons": [
+    {
+      "air_date": "2023-04-14",
+      "episode_count": 10,
+      "id": 328311,
+      "name": "Season 1",
+      "overview": "",
+      "poster_path": "/pyIBy2TYGPukk5ACMICYhLzYIhF.jpg",
+      "season_number": 1
+    }
+  ],
+  "spoken_languages": [
+    {
+      "english_name": "Japanese",
+      "iso_639_1": "ja",
+      "name": "日本語"
+    }
+  ],
+  "status": "Returning Series",
+  "tagline": "",
+  "type": "Scripted",
+  "vote_average": 9.0,
+  "vote_count": 2
+}

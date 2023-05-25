@@ -43,7 +43,8 @@ func Md5Str(str string) string {
 
 func AnimeToFileName(a *AnimeEntity, index int) string {
 	if a.Ep[index].Type == AnimeEpUnknown {
-		return xpath.Join(fmt.Sprintf("S%02d", a.Season), xpath.Base(a.Ep[index].Src))
+		file := strings.TrimSuffix(xpath.Base(a.Ep[index].Src), xpath.Ext(a.Ep[index].Src))
+		return xpath.Join(fmt.Sprintf("S%02d", a.Season), file)
 	}
 	return xpath.Join(fmt.Sprintf("S%02d", a.Season), fmt.Sprintf("E%03d", a.Ep[index].Ep))
 }
