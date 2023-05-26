@@ -53,6 +53,12 @@ type Setting struct {
 type Advanced struct {
 	UpdateDelaySecond int `yaml:"update_delay_second" json:"update_delay_second" attr:"更新状态等待时间" comment_key:"update_delay_second_help"`
 
+	Redirect struct {
+		Mikan      string `yaml:"mikan" json:"mikan" attr:"默认mikanani.me"`
+		Bangumi    string `yaml:"bangumi" json:"bangumi" attr:"默认api.bgm.tv"`
+		Themoviedb string `yaml:"themoviedb" json:"themoviedb" attr:"默认api.themoviedb.org"`
+	} `yaml:"redirect" json:"redirect" attr:"域名重定向"`
+
 	Request struct {
 		TimeoutSecond   int `yaml:"timeout_second" json:"timeout_second" attr:"请求超时时间"`
 		RetryNum        int `yaml:"retry_num" json:"retry_num" attr:"额外重试次数"`

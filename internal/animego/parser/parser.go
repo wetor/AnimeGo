@@ -39,7 +39,7 @@ func (m *Manager) Parse(opts *models.ParseOptions) (entity *models.AnimeEntity) 
 		return nil
 	}
 	entity.Ep = make([]*models.AnimeEpEntity, 0, len(torrentInfo.Files))
-
+	entity.Flag = models.AnimeFlagNone
 	entity.Torrent = &models.AnimeTorrent{
 		Hash: torrentInfo.Hash,
 		Url:  torrentInfo.Url,
@@ -58,6 +58,7 @@ func (m *Manager) Parse(opts *models.ParseOptions) (entity *models.AnimeEntity) 
 			epEntity.Ep = ep
 		} else {
 			epEntity.Type = models.AnimeEpUnknown
+			entity.Flag |= models.AnimeFlagEpParseFailed
 			log.Warnf("解析「%s」集数失败，不进行重命名", t.Name)
 			// continue
 		}

@@ -12,6 +12,10 @@ var (
 	CacheTime        map[string]int64
 	BangumiCache     api.CacheGetter
 	BangumiCacheLock *sync.Mutex
+
+	RedirectMikan      string
+	RedirectBangumi    string
+	RedirectThemoviedb string
 )
 
 type Options struct {
@@ -19,6 +23,10 @@ type Options struct {
 	CacheTime        map[string]int64
 	BangumiCache     api.CacheGetter
 	BangumiCacheLock *sync.Mutex
+
+	RedirectMikan      string
+	RedirectBangumi    string
+	RedirectThemoviedb string
 }
 
 func Init(opts *Options) {
@@ -26,4 +34,8 @@ func Init(opts *Options) {
 	CacheTime = opts.CacheTime
 	BangumiCache = opts.BangumiCache
 	BangumiCacheLock = opts.BangumiCacheLock
+
+	RedirectMikan = opts.RedirectMikan
+	RedirectBangumi = opts.RedirectBangumi
+	RedirectThemoviedb = opts.RedirectThemoviedb
 }
