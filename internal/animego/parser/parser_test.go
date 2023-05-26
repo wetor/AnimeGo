@@ -143,6 +143,7 @@ func TestManager_Parse(t *testing.T) {
 				},
 			},
 			wantEntity: &models.AnimeEntity{ID: 411247, ThemoviedbID: 220150, MikanID: 3015, Name: "ポケットモンスター", NameCN: "宝可梦 地平线", Season: 1, Eps: 22, AirDate: "2023-04-14",
+				Flag: models.AnimeFlagEpParseFailed,
 				Ep: []*models.AnimeEpEntity{
 					{Type: models.AnimeEpUnknown, Ep: 0, Src: "[SWSUB][Pokemon Horizons][01-02][CHS_JP][AVC][1080P].mp4"},
 				},

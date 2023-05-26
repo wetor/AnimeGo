@@ -5,6 +5,12 @@ import (
 	"strconv"
 )
 
+const (
+	AnimeFlagNone          = 0
+	AnimeFlagEpParseFailed = 1 << (iota - 1)
+	AnimeFlagSeasonParseFailed
+)
+
 // AnimeEntity 动画信息结构体
 //
 //	必须要有的值
@@ -24,6 +30,7 @@ type AnimeEntity struct {
 	Eps          int              `json:"eps"`           // [暂时无用] 总集数，从bgm获取
 	AirDate      string           `json:"air_date"`      // 最初播放日期，从bgm获取
 	Ep           []*AnimeEpEntity `json:"ep"`
+	Flag         int              `json:"flag"`
 	Torrent      *AnimeTorrent    `json:"torrent"`
 }
 
@@ -55,6 +62,9 @@ func (a *AnimeEntity) Default() {
 }
 
 func (a *AnimeEntity) FullName() string {
+	if a.Flag&AnimeFlagEpParseFailed > 0 {
+		return fmt.Sprintf("%s[第%d季][第-集][%s]", a.NameCN, a.Season, a.Torrent.Hash)
+	}
 	if len(a.Ep) == 1 {
 		return fmt.Sprintf("%s[第%d季][第%d集]", a.NameCN, a.Season, a.Ep[0].Ep)
 	}

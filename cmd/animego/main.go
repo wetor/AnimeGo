@@ -192,8 +192,11 @@ func Main() {
 				anidataBangumi.Bucket:    int64(config.Advanced.Cache.BangumiCacheHour * 60 * 60),
 				anidataThemoviedb.Bucket: int64(config.Advanced.Cache.ThemoviedbCacheHour * 60 * 60),
 			},
-			BangumiCache:     bangumiCache,
-			BangumiCacheLock: &BangumiCacheMutex,
+			BangumiCache:       bangumiCache,
+			BangumiCacheLock:   &BangumiCacheMutex,
+			RedirectMikan:      config.Advanced.Redirect.Mikan,
+			RedirectBangumi:    config.Advanced.Redirect.Bangumi,
+			RedirectThemoviedb: config.Advanced.Redirect.Themoviedb,
 		},
 	})
 

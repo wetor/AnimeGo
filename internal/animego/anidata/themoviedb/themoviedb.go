@@ -8,7 +8,12 @@ import (
 )
 
 var (
-	Host                    = "https://api.themoviedb.org"
+	Host = func() string {
+		if len(anidata.RedirectThemoviedb) > 0 {
+			return anidata.RedirectThemoviedb
+		}
+		return "https://api.themoviedb.org"
+	}
 	Bucket                  = "themoviedb"
 	MatchSeasonDays         = 90
 	MinSimilar      float64 = 0.75

@@ -16,10 +16,15 @@ const (
 )
 
 var (
-	Host    = "https://api.bgm.tv"
+	Host = func() string {
+		if len(anidata.RedirectBangumi) > 0 {
+			return anidata.RedirectBangumi
+		}
+		return "https://api.bgm.tv"
+	}
 	Bucket  = "bangumi"
 	infoApi = func(id int) string {
-		return fmt.Sprintf("%s/v0/subjects/%d", Host, id)
+		return fmt.Sprintf("%s/v0/subjects/%d", Host(), id)
 	}
 )
 

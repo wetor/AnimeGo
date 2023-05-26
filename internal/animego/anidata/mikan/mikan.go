@@ -24,7 +24,12 @@ const (
 )
 
 var (
-	Host   = "https://mikanani.me"
+	Host = func() string {
+		if len(anidata.RedirectMikan) > 0 {
+			return anidata.RedirectMikan
+		}
+		return "https://mikanani.me"
+	}
 	Bucket = "mikan"
 )
 
@@ -154,7 +159,7 @@ func (m Mikan) parseMikanInfo(mikanUrl string) (mikan *MikanInfo) {
 //	@param mikanID int
 //	@return bangumiID int
 func (m Mikan) parseMikanBangumiID(mikanID int) (bangumiID int) {
-	url_ := fmt.Sprintf("%s/Home/bangumi/%d", Host, mikanID)
+	url_ := fmt.Sprintf("%s/Home/bangumi/%d", Host(), mikanID)
 	doc := m.loadHtml(url_)
 
 	bangumiUrl := htmlquery.FindOne(doc, BangumiUrlXPath)

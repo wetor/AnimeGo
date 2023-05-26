@@ -6,7 +6,7 @@ import (
 )
 
 var idApi = func(key string, query string) string {
-	url_, _ := url.Parse(Host + "/3/discover/tv")
+	url_, _ := url.Parse(Host() + "/3/discover/tv")
 	q := url_.Query()
 	q.Set("api_key", key)
 	q.Set("sort_by", "first_air_date.desc")
@@ -18,5 +18,5 @@ var idApi = func(key string, query string) string {
 }
 
 var infoApi = func(key string, id int) string {
-	return fmt.Sprintf("%s/3/tv/%d?api_key=%s", Host, id, key)
+	return fmt.Sprintf("%s/3/tv/%d?api_key=%s", Host(), id, key)
 }
