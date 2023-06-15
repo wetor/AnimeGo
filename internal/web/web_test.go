@@ -22,7 +22,8 @@ import (
 
 type MockFilter struct{}
 
-func (m *MockFilter) Update(ctx context.Context, items []*models.FeedItem) {}
+func (m *MockFilter) Update(ctx context.Context, items []*models.FeedItem, a *models.AnimeParseOverride, b bool) {
+}
 
 type MockManager struct{}
 

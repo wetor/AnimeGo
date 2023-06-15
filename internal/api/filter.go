@@ -11,5 +11,5 @@ type FilterPlugin interface {
 }
 
 type FilterManager interface {
-	Update(ctx context.Context, items []*models.FeedItem)
+	Update(ctx context.Context, items []*models.FeedItem, parseOverride *models.AnimeParseOverride, skipFilter bool)
 }

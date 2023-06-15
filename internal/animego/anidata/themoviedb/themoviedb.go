@@ -2,6 +2,7 @@ package themoviedb
 
 import (
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
+	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/pkg/errors"
 	mem "github.com/wetor/AnimeGo/pkg/memorizer"
 	"github.com/wetor/AnimeGo/pkg/request"
@@ -44,34 +45,43 @@ func (t *Themoviedb) RegisterCache() {
 	})
 }
 
-func (t Themoviedb) ParseCache(name, airDate string) (entity *Entity, seasonInfo *SeasonInfo) {
+func (t *Themoviedb) Search(name string) int {
+	entity := t.parseThemoviedbID(name)
+	return entity.ID
+}
+
+func (t *Themoviedb) SearchCache(name string) int {
 	if !t.cacheInit {
 		t.RegisterCache()
 	}
 	results := mem.NewResults("entity", &Entity{})
-
 	err := t.cacheParseThemoviedbID(mem.NewParams("name", name).
 		TTL(anidata.CacheTime[Bucket]), results)
 	errors.NewAniErrorD(err).TryPanic()
+	entity := results.Get("entity").(*Entity)
+	return entity.ID
+}
 
-	entity = results.Get("entity").(*Entity)
+func (t *Themoviedb) Get(id int, filters any) any {
+	airDate := filters.(string)
+	seasonInfo := t.parseAnimeSeason(id, airDate)
+	return seasonInfo
+}
 
-	results = mem.NewResults("seasonInfo", &SeasonInfo{})
-	err = t.cacheParseAnimeSeason(mem.NewParams("tmdbID", entity.ID, "airDate", airDate).
+func (t *Themoviedb) GetCache(id int, filters any) any {
+	if !t.cacheInit {
+		t.RegisterCache()
+	}
+	airDate := filters.(string)
+	results := mem.NewResults("seasonInfo", &SeasonInfo{})
+	err := t.cacheParseAnimeSeason(mem.NewParams("tmdbID", id, "airDate", airDate).
 		TTL(anidata.CacheTime[Bucket]), results)
 	errors.NewAniErrorD(err).TryPanic()
-
-	seasonInfo = results.Get("seasonInfo").(*SeasonInfo)
-	return
+	seasonInfo := results.Get("seasonInfo").(*SeasonInfo)
+	return seasonInfo
 }
 
-func (t Themoviedb) Parse(name, airDate string) (entity *Entity, seasonInfo *SeasonInfo) {
-	entity = t.parseThemoviedbID(name)
-	seasonInfo = t.parseAnimeSeason(entity.ID, airDate)
-	return
-}
-
-func (t Themoviedb) parseThemoviedbID(name string) (entity *Entity) {
+func (t *Themoviedb) parseThemoviedbID(name string) (entity *Entity) {
 	resp := FindResponse{}
 	result := RemoveNameSuffix(name, func(innerName string) any {
 		err := request.Get(idApi(t.Key, innerName), &resp)
@@ -111,7 +121,7 @@ func (t Themoviedb) parseThemoviedbID(name string) (entity *Entity) {
 	return result.(*Entity)
 }
 
-func (t Themoviedb) parseAnimeSeason(tmdbID int, airDate string) (seasonInfo *SeasonInfo) {
+func (t *Themoviedb) parseAnimeSeason(tmdbID int, airDate string) (seasonInfo *SeasonInfo) {
 	resp := InfoResponse{}
 	err := request.Get(infoApi(t.Key, tmdbID), &resp)
 	errors.NewAniErrorD(err).TryPanic()
@@ -136,3 +146,6 @@ func (t Themoviedb) parseAnimeSeason(tmdbID int, airDate string) (seasonInfo *Se
 	seasonInfo.EpName = ""
 	return seasonInfo
 }
+
+// Check interface is satisfied
+var _ api.AniDataSearchGet = &Themoviedb{}

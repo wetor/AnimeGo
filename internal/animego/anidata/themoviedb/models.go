@@ -1,10 +1,16 @@
 package themoviedb
 
+type Options struct {
+	name    string
+	airDate string
+}
+
 type Entity struct {
 	ID      int    `json:"id"`             // tmdb ID
 	NameCN  string `json:"name"`           // 中文名
 	Name    string `json:"original_name"`  // 原名
 	AirDate string `json:"first_air_date"` // 番剧第一季开播时间
+	*SeasonInfo
 }
 
 type FindResponse struct {

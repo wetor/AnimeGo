@@ -68,12 +68,12 @@ func TestMikan_ParseCache(t *testing.T) {
 	m := &mikan.Mikan{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotMikanID, gotBangumiID := m.ParseCache(tt.args.url)
-			if gotMikanID != tt.wantMikanID {
-				t.Errorf("ParseCache() gotMikanID = %v, want %v", gotMikanID, tt.wantMikanID)
+			gotEntity := m.ParseCache(tt.args.url).(*mikan.Entity)
+			if gotEntity.MikanID != tt.wantMikanID {
+				t.Errorf("ParseCache() gotMikanID = %v, want %v", gotEntity.MikanID, tt.wantMikanID)
 			}
-			if gotBangumiID != tt.wantBangumiID {
-				t.Errorf("ParseCache() gotBangumiID = %v, want %v", gotBangumiID, tt.wantBangumiID)
+			if gotEntity.BangumiID != tt.wantBangumiID {
+				t.Errorf("ParseCache() gotBangumiID = %v, want %v", gotEntity.BangumiID, tt.wantBangumiID)
 			}
 		})
 	}

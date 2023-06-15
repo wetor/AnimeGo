@@ -2,6 +2,7 @@ package mikan
 
 import (
 	"github.com/wetor/AnimeGo/internal/animego/anidata/bangumi"
+	"github.com/wetor/AnimeGo/internal/animego/anidata/mikan"
 	"github.com/wetor/AnimeGo/internal/animego/anidata/themoviedb"
 	"github.com/wetor/AnimeGo/internal/animego/anisource"
 	"github.com/wetor/AnimeGo/internal/models"
@@ -15,52 +16,74 @@ type Mikan struct {
 
 func (m Mikan) Parse(opts *models.AnimeParseOptions) (anime *models.AnimeEntity) {
 	var err error
-	var mikanID, bangumiID, season int
+	var season int
+	var mikanEntity = &mikan.Entity{}
 	var entity = &bangumi.Entity{}
 	var tmdbEntity = &themoviedb.Entity{}
 	var tmdbSeason = &themoviedb.SeasonInfo{}
 
 	// ------------------- 获取bangumiID -------------------
-	log.Debugf("步骤1，解析Mikan，%s", opts.Url)
-	try.This(func() {
-		mikanID, bangumiID = anisource.Mikan().ParseCache(opts.Url)
-	}).Catch(func(e try.E) {
-		err = e.(error)
-	})
-	if err != nil {
-		log.Warnf("解析Mikan获取bangumi id失败")
-		log.Debugf("", err)
-		return nil
+	if opts.AnimeParseOverride == nil || !opts.OverrideMikan() {
+		log.Debugf("步骤1，解析Mikan，%s", opts.MikanUrl)
+		try.This(func() {
+			mikanEntity = anisource.Mikan().ParseCache(opts.MikanUrl).(*mikan.Entity)
+		}).Catch(func(e try.E) {
+			err = e.(error)
+		})
+		if err != nil {
+			log.Warnf("解析Mikan获取bangumi id失败")
+			log.Debugf("", err)
+			return nil
+		}
+	} else {
+		mikanEntity.MikanID = opts.AnimeParseOverride.MikanID
+		mikanEntity.BangumiID = opts.AnimeParseOverride.BangumiID
 	}
-
 	// ------------------- 获取bangumi信息 -------------------
-	log.Debugf("步骤2，解析Bangumi，%d", bangumiID)
-	try.This(func() {
-		entity = anisource.Bangumi().ParseCache(bangumiID)
-	}).Catch(func(e try.E) {
-		err = e.(error)
-	})
-	if err != nil {
-		log.Warnf("解析bangumi获取番剧信息失败失败")
-		log.Debugf("", err)
-		return nil
+	if opts.AnimeParseOverride == nil || !opts.OverrideBangumi() {
+		log.Debugf("步骤2，解析Bangumi，%d", mikanEntity.BangumiID)
+		try.This(func() {
+			entity = anisource.Bangumi().GetCache(mikanEntity.BangumiID, nil).(*bangumi.Entity)
+		}).Catch(func(e try.E) {
+			err = e.(error)
+		})
+		if err != nil {
+			log.Warnf("解析bangumi获取番剧信息失败")
+			log.Debugf("", err)
+			return nil
+		}
+	} else {
+		entity.Name = opts.AnimeParseOverride.Name
+		entity.NameCN = opts.AnimeParseOverride.NameCN
+		entity.AirDate = opts.AnimeParseOverride.AirDate
+		entity.Eps = opts.AnimeParseOverride.Eps
 	}
 
 	// ------------------- 获取tmdb信息(季度信息) -------------------
-	log.Debugf("步骤3，解析Themoviedb，%s, %s", entity.Name, entity.AirDate)
-	try.This(func() {
-		tmdbEntity, tmdbSeason = anisource.Themoviedb(m.ThemoviedbKey).ParseCache(entity.Name, entity.AirDate)
-		season = tmdbSeason.Season
-	}).Catch(func(e try.E) {
-		err = e.(error)
-	})
-	if err != nil {
-		log.Debugf("", err)
+	if opts.AnimeParseOverride == nil || !opts.OverrideThemoviedb() {
+		log.Debugf("步骤3，解析Themoviedb，%s, %s", entity.Name, entity.AirDate)
+		try.This(func() {
+			t := anisource.Themoviedb(m.ThemoviedbKey)
+			id := t.SearchCache(entity.Name)
+			tmdbEntity.ID = id
+			tmdbSeason = t.GetCache(id, entity.AirDate).(*themoviedb.SeasonInfo)
+			season = tmdbSeason.Season
+		}).Catch(func(e try.E) {
+			err = e.(error)
+		})
+		if err != nil {
+			log.Warnf("解析Themoviedb获取番剧季度信息失败")
+			log.Debugf("", err)
+		}
+	} else {
+		tmdbEntity.ID = opts.AnimeParseOverride.ThemoviedbID
+		season = opts.AnimeParseOverride.Season
 	}
+
 	anime = &models.AnimeEntity{
-		ID:           entity.ID,
+		ID:           mikanEntity.BangumiID,
 		ThemoviedbID: tmdbEntity.ID,
-		MikanID:      mikanID,
+		MikanID:      mikanEntity.MikanID,
 		Name:         entity.Name,
 		NameCN:       entity.NameCN,
 		Season:       season,
@@ -68,6 +91,6 @@ func (m Mikan) Parse(opts *models.AnimeParseOptions) (anime *models.AnimeEntity)
 		AirDate:      entity.AirDate,
 	}
 	anime.Default()
-	log.Infof("获取「%s」信息成功！原名「%s」", anime.NameCN, anime.Name)
+	log.Infof("获取「%s」信息成功！", anime.NameCN)
 	return anime
 }

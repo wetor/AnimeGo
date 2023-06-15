@@ -30,6 +30,7 @@ func Run(ctx context.Context) {
 		})) // 错误处理中间件
 		InitSwagger(r)
 		InitRouter(r)
+		InitStatic(r)
 
 		WS.Start(ctx)
 		s := &http.Server{

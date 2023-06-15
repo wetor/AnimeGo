@@ -2,11 +2,9 @@
 def filter_all(argv):
     result = []
     for i, item in enumerate(argv['items']):
-        result.append({
-            'index': i
-        })
+        result.append(i)
 
     return {
-        'data': result,
+        'index': result,
         'error': None,
     }

@@ -11,6 +11,7 @@ import (
 	"golang.org/x/net/html"
 
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
+	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/pkg/errors"
 	mem "github.com/wetor/AnimeGo/pkg/memorizer"
 	"github.com/wetor/AnimeGo/pkg/request"
@@ -57,13 +58,31 @@ func (m *Mikan) RegisterCache() {
 	})
 }
 
-func (m Mikan) ParseCache(url string) (mikanID int, bangumiID int) {
-	mikanID = m.CacheParseMikanInfo(url).ID
-	bangumiID = m.CacheParseMikanBangumiID(mikanID)
-	return
+func (m *Mikan) ParseCache(url any) (entity any) {
+	mikanID := m.CacheParseMikanInfo(url.(string)).ID
+	bangumiID := m.cacheParseMikanBangumiID(mikanID)
+	return &Entity{
+		MikanID:   mikanID,
+		BangumiID: bangumiID,
+	}
 }
 
-func (m Mikan) CacheParseMikanInfo(url string) (mikanInfo *MikanInfo) {
+// Parse
+//
+//	@Description: 通过mikan剧集的url，解析两次网页，分别获取到mikanID和bangumiID
+//	@receiver Mikan
+//	@param url string mikan剧集的url
+//	@return mikanID int
+//	@return bangumiID int
+func (m *Mikan) Parse(url any) (entity any) {
+	mikan := m.parseMikanInfo(url.(string))
+	bangumiID := m.parseMikanBangumiID(mikan.ID)
+	return &Entity{
+		MikanID:   mikan.ID,
+		BangumiID: bangumiID,
+	}
+}
+func (m *Mikan) CacheParseMikanInfo(url string) (mikanInfo *MikanInfo) {
 	if !m.cacheInit {
 		m.RegisterCache()
 	}
@@ -75,7 +94,7 @@ func (m Mikan) CacheParseMikanInfo(url string) (mikanInfo *MikanInfo) {
 	return
 }
 
-func (m Mikan) CacheParseMikanBangumiID(mikanID int) (bangumiID int) {
+func (m *Mikan) cacheParseMikanBangumiID(mikanID int) (bangumiID int) {
 	if !m.cacheInit {
 		m.RegisterCache()
 	}
@@ -87,21 +106,7 @@ func (m Mikan) CacheParseMikanBangumiID(mikanID int) (bangumiID int) {
 	return
 }
 
-// Parse
-//
-//	@Description: 通过mikan剧集的url，解析两次网页，分别获取到mikanID和bangumiID
-//	@receiver Mikan
-//	@param url string mikan剧集的url
-//	@return mikanID int
-//	@return bangumiID int
-func (m Mikan) Parse(url string) (mikanID int, bangumiID int) {
-	mikan := m.parseMikanInfo(url)
-	mikanID = mikan.ID
-	bangumiID = m.parseMikanBangumiID(mikan.ID)
-	return
-}
-
-func (m Mikan) loadHtml(url string) *html.Node {
+func (m *Mikan) loadHtml(url string) *html.Node {
 	buf := bytes.NewBuffer(nil)
 	err := request.GetWriter(url, buf)
 	errors.NewAniErrorD(err).TryPanic()
@@ -115,9 +120,9 @@ func (m Mikan) loadHtml(url string) *html.Node {
 //
 //	@Description: 解析网页取出mikan的id、group等信息
 //	@receiver Mikan
-//	@param mikanUrl string
+//	@param *MikanUrl string
 //	@return mikan *MikanInfo
-func (m Mikan) parseMikanInfo(mikanUrl string) (mikan *MikanInfo) {
+func (m *Mikan) parseMikanInfo(mikanUrl string) (mikan *MikanInfo) {
 	doc := m.loadHtml(mikanUrl)
 
 	miaknLink := htmlquery.FindOne(doc, IdXPath)
@@ -156,9 +161,9 @@ func (m Mikan) parseMikanInfo(mikanUrl string) (mikan *MikanInfo) {
 //
 //	@Description: 解析网页取出bangumiID
 //	@receiver Mikan
-//	@param mikanID int
+//	@param *MikanID int
 //	@return bangumiID int
-func (m Mikan) parseMikanBangumiID(mikanID int) (bangumiID int) {
+func (m *Mikan) parseMikanBangumiID(mikanID int) (bangumiID int) {
 	url_ := fmt.Sprintf("%s/Home/bangumi/%d", Host(), mikanID)
 	doc := m.loadHtml(url_)
 
@@ -171,3 +176,6 @@ func (m Mikan) parseMikanBangumiID(mikanID int) (bangumiID int) {
 
 	return bangumiID
 }
+
+// Check interface is satisfied
+var _ api.AniDataParse = &Mikan{}

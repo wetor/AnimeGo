@@ -86,13 +86,13 @@ func (a *Api) checkRequest(c *gin.Context, data any) bool {
 
 // Ping godoc
 //
-//	@Summary Ping
-//	@Description Pong
-//	@Tags web
-//	@Accept  json
-//	@Produce  json
-//	@Success 200 {object} webModels.Response
-//	@Router /ping [get]
+//	@Summary		Ping
+//	@Description	Pong
+//	@Tags			web
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	webModels.Response
+//	@Router			/ping [get]
 func (a *Api) Ping(c *gin.Context) {
 	c.JSON(webModels.Succ("pong", gin.H{
 		"version": os.Getenv("ANIMEGO_VERSION"),
@@ -102,14 +102,14 @@ func (a *Api) Ping(c *gin.Context) {
 
 // SHA256 godoc
 //
-//	@Summary SHA256计算
-//	@Description SHA256计算
-//	@Tags web
-//	@Accept  json
-//	@Produce  json
-//	@Param access_key query string true "原文本"
-//	@Success 200 {object} webModels.Response{data=string}
-//	@Router /sha256 [get]
+//	@Summary		SHA256计算
+//	@Description	SHA256计算
+//	@Tags			web
+//	@Accept			json
+//	@Produce		json
+//	@Param			access_key	query		string	true	"原文本"
+//	@Success		200			{object}	webModels.Response{data=string}
+//	@Router			/sha256 [get]
 func (a *Api) SHA256(c *gin.Context) {
 	c.JSON(webModels.Succ("Access-Key", utils.Sha256(c.Query("access_key"))))
 }

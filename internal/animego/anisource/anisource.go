@@ -7,13 +7,14 @@ import (
 	"github.com/wetor/AnimeGo/internal/animego/anidata/bangumi"
 	"github.com/wetor/AnimeGo/internal/animego/anidata/mikan"
 	"github.com/wetor/AnimeGo/internal/animego/anidata/themoviedb"
+	"github.com/wetor/AnimeGo/internal/api"
 )
 
 // 单例模式
 var (
-	mikanInstance      *mikan.Mikan
-	bangumiInstance    *bangumi.Bangumi
-	themoviedbInstance *themoviedb.Themoviedb
+	mikanInstance      api.AniDataParse
+	bangumiInstance    api.AniDataGet
+	themoviedbInstance api.AniDataSearchGet
 )
 
 type Options struct {
@@ -31,21 +32,21 @@ func Init(opts *Options) {
 	anidata.Init(opts.Options)
 }
 
-func Mikan() *mikan.Mikan {
+func Mikan() api.AniDataParse {
 	if mikanInstance == nil {
 		mikanInstance = &mikan.Mikan{}
 	}
 	return mikanInstance
 }
 
-func Bangumi() *bangumi.Bangumi {
+func Bangumi() api.AniDataGet {
 	if bangumiInstance == nil {
 		bangumiInstance = &bangumi.Bangumi{}
 	}
 	return bangumiInstance
 }
 
-func Themoviedb(key string) *themoviedb.Themoviedb {
+func Themoviedb(key string) api.AniDataSearchGet {
 	if themoviedbInstance == nil {
 		themoviedbInstance = &themoviedb.Themoviedb{
 			Key: key,

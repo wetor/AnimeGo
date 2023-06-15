@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
+	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/pkg/errors"
 	"github.com/wetor/AnimeGo/pkg/log"
 	mem "github.com/wetor/AnimeGo/pkg/memorizer"
@@ -45,7 +46,7 @@ func (b *Bangumi) RegisterCache() {
 	})
 }
 
-func (b Bangumi) ParseCache(bangumiID int) (entity *Entity) {
+func (b *Bangumi) GetCache(bangumiID int, filters any) (entity any) {
 	if !b.cacheInit {
 		b.RegisterCache()
 	}
@@ -66,14 +67,14 @@ func (b Bangumi) ParseCache(bangumiID int) (entity *Entity) {
 	return entity
 }
 
-// Parse
+// Get
 //
 //	@Description: 通过bangumiID和指定ep集数，获取番剧信息和剧集信息
 //	@receiver Bangumi
 //	@param bangumiID int
 //	@param ep int
 //	@return entity *Entity
-func (b Bangumi) Parse(bangumiID int) (entity *Entity) {
+func (b *Bangumi) Get(bangumiID int, filters any) (entity any) {
 	entity = b.parseAnimeInfo(bangumiID)
 	return entity
 }
@@ -84,7 +85,7 @@ func (b Bangumi) Parse(bangumiID int) (entity *Entity) {
 //	@receiver Bangumi
 //	@param bangumiID int
 //	@return entity *Entity
-func (b Bangumi) parseAnimeInfo(bangumiID int) (entity *Entity) {
+func (b *Bangumi) parseAnimeInfo(bangumiID int) (entity *Entity) {
 	uri := infoApi(bangumiID)
 	resp := res.SubjectV0{}
 
@@ -107,10 +108,13 @@ func (b Bangumi) parseAnimeInfo(bangumiID int) (entity *Entity) {
 	return entity
 }
 
-func (b Bangumi) loadAnimeInfo(bangumiID int) (entity *Entity, err error) {
+func (b *Bangumi) loadAnimeInfo(bangumiID int) (entity *Entity, err error) {
 	entity = &Entity{}
 	anidata.BangumiCacheLock.Lock()
 	err = anidata.BangumiCache.Get(SubjectBucket, bangumiID, entity)
 	anidata.BangumiCacheLock.Unlock()
 	return entity, err
 }
+
+// Check interface is satisfied
+var _ api.AniDataGet = &Bangumi{}

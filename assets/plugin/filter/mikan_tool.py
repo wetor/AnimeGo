@@ -121,10 +121,7 @@ def filter_all(args):
             log.debug('==============Allend==============')
             if isPush0 and isPush1 and isPush2 and isPush3 and isPush4:
                 log.infof('| push index: %v', index)
-                result.append({
-                    'index': index,
-                    'parsed': parsed,
-                })
+                result.append(index)
                 log.infof('| pushed index count: %v', len(result))
             else:
                 log.infof('| drop index: %v, %v', index, item.name)
@@ -139,6 +136,6 @@ def filter_all(args):
             log.debugf('%v %v', item.name, e)
 
     return {
-        'data': result,
+        'index': result,
         'error': None
     }

@@ -540,10 +540,11 @@ func TestManager_ReStart_NotDownloaded(t *testing.T) {
 		1, // 移动
 		1,
 		1,
+		1,
 		"正常退出",
 		"正常退出",
 		"重启",
-		2,
+		1,
 		"下载 1",
 		"接收到下载项",
 		"发现已下载",

@@ -110,7 +110,7 @@ func parseMikan(self py.Object, arg py.Object) (py.Object, error) {
 	var info *mikan.MikanInfo
 	var err error
 	try.This(func() {
-		info = anisource.Mikan().CacheParseMikanInfo(string(arg.(py.String)))
+		info = anisource.Mikan().(*mikan.Mikan).CacheParseMikanInfo(string(arg.(py.String)))
 	}).Catch(func(e try.E) {
 		err = e.(error)
 	})

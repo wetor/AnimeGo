@@ -29,7 +29,7 @@ var s *schedule.Schedule
 type MockFilterManager struct {
 }
 
-func (m *MockFilterManager) Update(ctx context.Context, items []*models.FeedItem) {
+func (m *MockFilterManager) Update(ctx context.Context, items []*models.FeedItem, a *models.AnimeParseOverride, b bool) {
 	for _, item := range items {
 		fmt.Println(item)
 	}

@@ -125,7 +125,7 @@ func TestMikan_Parse(t *testing.T) {
 			name: "海贼王",
 			args: args{
 				opts: &models.AnimeParseOptions{
-					Url: "https://mikanani.me/Home/Episode/18b60d48a72c603b421468aade7fdd0868ff2f2f",
+					MikanUrl: "https://mikanani.me/Home/Episode/18b60d48a72c603b421468aade7fdd0868ff2f2f",
 				},
 				name: "OPFans枫雪动漫][ONE PIECE 海贼王][第1029话][1080p][周日版][MP4][简体] [299.5MB]",
 			},
@@ -135,7 +135,7 @@ func TestMikan_Parse(t *testing.T) {
 			name: "欢迎来到实力至上主义的教室 第二季",
 			args: args{
 				opts: &models.AnimeParseOptions{
-					Url: "https://mikanani.me/Home/Episode/8849c25e05d6e2623b5333bc78d3a489a9b1cc59",
+					MikanUrl: "https://mikanani.me/Home/Episode/8849c25e05d6e2623b5333bc78d3a489a9b1cc59",
 				},
 				name: "[ANi] Classroom of the Elite S2 - 欢迎来到实力至上主义的教室 第二季 - 07 [1080P][Baha][WEB-DL][AAC AVC][CHT][MP4] [254.26 MB]",
 			},
@@ -145,7 +145,7 @@ func TestMikan_Parse(t *testing.T) {
 			name: "想要成为影之实力者",
 			args: args{
 				opts: &models.AnimeParseOptions{
-					Url: "https://mikanani.me/Home/Episode/dcc28079dfda415cdcdf46159aad0fa94f1a2f11",
+					MikanUrl: "https://mikanani.me/Home/Episode/dcc28079dfda415cdcdf46159aad0fa94f1a2f11",
 				},
 				name: "[LoliHouse] 想要成为影之实力者 / 我想成为影之强者 / Kage no Jitsuryokusha ni Naritakute! - 19 [WebRip 1080p HEVC-10bit AAC][简繁内封字幕]",
 			},

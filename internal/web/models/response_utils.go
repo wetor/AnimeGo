@@ -1,7 +1,7 @@
-// @Title		web.go
-// @Description	HTTP响应体结构化
-// @Author		zxysilent
-// @Update		zxysilent
+//	@Title			web.go
+//	@Description	HTTP响应体结构化
+//	@Author			zxysilent
+//	@Update			zxysilent
 
 package models
 

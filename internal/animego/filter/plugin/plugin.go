@@ -6,7 +6,6 @@ import (
 	"github.com/wetor/AnimeGo/pkg/errors"
 	"github.com/wetor/AnimeGo/pkg/log"
 	pkgPlugin "github.com/wetor/AnimeGo/pkg/plugin"
-	"github.com/wetor/AnimeGo/pkg/utils"
 )
 
 const (
@@ -37,7 +36,7 @@ func (p *Filter) FilterAll(items []*models.FeedItem) (resultItems []*models.Feed
 			{
 				Name:         FuncFilterAll,
 				ParamsSchema: []string{"items"},
-				ResultSchema: []string{"error", "data,optional", "index,optional"},
+				ResultSchema: []string{"error", "index"},
 				DefaultArgs:  p.plugin.Args,
 			},
 		},
@@ -54,30 +53,10 @@ func (p *Filter) FilterAll(items []*models.FeedItem) (resultItems []*models.Feed
 		log.Warnf("[Plugin] %s插件(%s)执行错误: %v", p.plugin.Type, p.plugin.File, result["error"])
 	}
 
-	if _, has := result["data"]; has {
-		resultItems = filterData(items, result["data"].([]any))
-	} else if _, has := result["index"]; has {
+	if _, has := result["index"]; has {
 		resultItems = filterIndex(items, result["index"].([]any))
 	}
 	return
-}
-
-func filterData(items []*models.FeedItem, data []any) []*models.FeedItem {
-	itemResult := make([]*models.FeedItem, len(data))
-	for i, val := range data {
-		obj := val.(map[string]any)
-		index := int(obj["index"].(int64))
-		if index < 0 || index >= len(items) {
-			continue
-		}
-		if _, has := obj["parsed"]; has {
-			parsed := &models.TitleParsed{}
-			utils.MapToStruct(obj["parsed"].(map[string]any), parsed)
-			items[index].NameParsed = parsed
-		}
-		itemResult[i] = items[index]
-	}
-	return itemResult
 }
 
 func filterIndex(items []*models.FeedItem, indexList []any) []*models.FeedItem {

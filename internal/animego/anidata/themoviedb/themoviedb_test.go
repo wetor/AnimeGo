@@ -103,8 +103,9 @@ func TestThemoviedb_ParseCache(t1 *testing.T) {
 	t := &themoviedb.Themoviedb{}
 	for _, tt := range tests {
 		t1.Run(tt.name, func(t1 *testing.T) {
-			gotEntity, gotSeasonInfo := t.ParseCache(tt.args.name, tt.args.airDate)
-			assert.Equalf(t1, tt.wantEntity, gotEntity, "ParseCache(%v, %v)", tt.args.name, tt.args.airDate)
+			id := t.SearchCache(tt.args.name)
+			gotSeasonInfo := t.GetCache(id, tt.args.airDate)
+			assert.Equalf(t1, tt.wantEntity.ID, id, "ParseCache(%v, %v)", tt.args.name, tt.args.airDate)
 			assert.Equalf(t1, tt.wantSeasonInfo, gotSeasonInfo, "ParseCache(%v, %v)", tt.args.name, tt.args.airDate)
 		})
 	}

@@ -35,27 +35,30 @@ func (m *Manager) Add(pluginInfo *models.Plugin) {
 	m.filters = append(m.filters, p)
 }
 
-func (m *Manager) Update(ctx context.Context, items []*models.FeedItem) {
+func (m *Manager) Update(ctx context.Context, items []*models.FeedItem,
+	parseOverride *models.AnimeParseOverride, skipFilter bool) {
 	ReInitWG.Add(1)
 	defer ReInitWG.Done()
 	// 筛选
 	if len(items) == 0 {
 		return
 	}
-
-	for _, f := range m.filters {
-		items = f.FilterAll(items)
+	if !skipFilter {
+		for _, f := range m.filters {
+			items = f.FilterAll(items)
+		}
 	}
 
 	for _, item := range items {
 		log.Infof("获取「%s」信息开始...", item.Name)
 		anime := m.parser.Parse(&models.ParseOptions{
-			Title:      item.Name,
-			TorrentUrl: item.Download,
-			MikanUrl:   item.Url,
+			Title:              item.Name,
+			TorrentUrl:         item.Download,
+			MikanUrl:           item.Url,
+			AnimeParseOverride: parseOverride,
 		})
 		if anime != nil {
-			log.Debugf("发送 %s 下载项:「%s」", item.DownloadType, anime.FullName())
+			log.Debugf("发送下载项:「%s」", anime.FullName())
 			// 发送需要下载的信息
 			m.manager.Download(anime)
 		}

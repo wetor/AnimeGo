@@ -15,16 +15,16 @@ import (
 
 // ConfigGet godoc
 //
-//	@Summary 获取设置
-//	@Description 获取AnimeGo的配置文件内容
-//	@Tags config
-//	@Accept  json
-//	@Produce  json
-//	@Param type query webModels.ConfigGetRequest true "获取配置文件"
-//	@Success 200 {object} webModels.Response
-//	@Failure 300 {object} webModels.Response
-//	@Security ApiKeyAuth
-//	@Router /api/config [get]
+//	@Summary		获取设置
+//	@Description	获取AnimeGo的配置文件内容
+//	@Tags			config
+//	@Accept			json
+//	@Produce		json
+//	@Param			type	query		webModels.ConfigGetRequest	true	"获取配置文件"
+//	@Success		200		{object}	webModels.Response
+//	@Failure		300		{object}	webModels.Response
+//	@Security		ApiKeyAuth
+//	@Router			/api/config [get]
 func (a *Api) ConfigGet(c *gin.Context) {
 	var request webModels.ConfigGetRequest
 	if !a.checkRequest(c, &request) {
@@ -61,16 +61,16 @@ func (a *Api) ConfigGet(c *gin.Context) {
 
 // ConfigPut godoc
 //
-//	@Summary 更新设置
-//	@Description 更新AnimeGo的配置文件内容
-//	@Tags config
-//	@Accept  json
-//	@Produce  json
-//	@Param type body webModels.ConfigPutRequest true "更新配置文件"
-//	@Success 200 {object} webModels.Response
-//	@Failure 300 {object} webModels.Response
-//	@Security ApiKeyAuth
-//	@Router /api/config [put]
+//	@Summary		更新设置
+//	@Description	更新AnimeGo的配置文件内容
+//	@Tags			config
+//	@Accept			json
+//	@Produce		json
+//	@Param			type	body		webModels.ConfigPutRequest	true	"更新配置文件"
+//	@Success		200		{object}	webModels.Response
+//	@Failure		300		{object}	webModels.Response
+//	@Security		ApiKeyAuth
+//	@Router			/api/config [put]
 func (a *Api) ConfigPut(c *gin.Context) {
 	var request webModels.ConfigPutRequest
 	if !a.checkRequest(c, &request) {

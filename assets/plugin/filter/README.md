@@ -23,61 +23,14 @@ args = {
 }
 ```
 #### 返回值
-返回值为dict类型，返回筛选后的结果。  
-结构分为两种：  
-1.  只返回筛选后入参的索引
-    ```python
-    def filter_all(args):
-        # ...
-        return {
-            "index": [0, 1, 4],
-            "error": None
-        }
-    ```
+返回值为dict类型，返回筛选后的结果。 
 
-2.  返回筛选后入参的索引的同时，携带`item.name`标题解析结果  
-    标题`item.name`解析可以使用 [Auto_Bangumi.raw_parser.py](Auto_Bangumi/raw_parser.py) 中提供的`analyse`方法。  
-    也可以自行解析，其中`parsed`字段中的`episode`字段为**必要**项，其余字段均**不必要**。
-    ```python
-    from Auto_Bangumi.raw_parser import analyse
-    parsed = analyse("[猎户不鸽压制] 万事屋斋藤先生转生异世界 / 斋藤先生无所不能 Benriya Saitou-san, Isekai ni Iku [03] [1080p] [繁中内嵌] [2023年1月番]")
-    # parsed = {
-    #     "episode": 3,
-    #     "group": "猎户不鸽压制",
-    #     "resolution": "1080p",
-    #     "season": 1,
-    #     "season_raw": "",
-    #     "source": "",
-    #     "sub": "繁中内嵌",
-    #     "title_en": "斋藤先生无所不能 Benriya Saitou-san, Isekai ni Iku",
-    #     "title_jp": "",
-    #     "title_zh": "万事屋斋藤先生转生异世界"
-    # }
-    ```
-    返回结构如下：
-    ```python
-    def filter_all(args):
+```python
+def filter_all(args):
     # ...
-        return {
-            "data": [
-                {
-                    "index": 0,
-                    "parsed": {
-                        "episode": 3,
-                        "group": "猎户不鸽压制",
-                        "resolution": "1080p",
-                        "season": 1,
-                        "season_raw": "",
-                        "source": "",
-                        "sub": "繁中内嵌",
-                        "title_en": "斋藤先生无所不能 Benriya Saitou-san, Isekai ni Iku",
-                        "title_jp": "",
-                        "title_zh": "万事屋斋藤先生转生异世界"
-                    }
-                },
-                {...},
-            ]
-            "error": None
-        }
-    ```
-    
+    return {
+        "index": [0, 1, 4],
+        "error": None
+    }
+```
+

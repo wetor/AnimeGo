@@ -94,7 +94,7 @@ func TestPython_Filter3(t *testing.T) {
 	result := p.FilterAll(items)
 	assert.Equal(t, 9, len(result))
 	for _, r := range result {
-		fmt.Println(r.Name, r.NameParsed)
+		fmt.Println(r.Name)
 	}
 }
 
@@ -125,7 +125,7 @@ func TestPython_Filter4(t *testing.T) {
 	result := p.FilterAll(list)
 	assert.Equal(t, 4, len(result))
 	for _, r := range result {
-		fmt.Println(r.Name, r.NameParsed)
+		fmt.Println(r.Name)
 	}
 }
 
@@ -155,7 +155,7 @@ func TestPython_Filter5(t *testing.T) {
 	result := p.FilterAll(items)
 	assert.Equal(t, 13, len(result))
 	for _, r := range result {
-		fmt.Println(r.Name, r.NameParsed)
+		fmt.Println(r.Name)
 	}
 	bangumiCache.Close()
 	db.Close()

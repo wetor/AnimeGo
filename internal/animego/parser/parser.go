@@ -25,7 +25,8 @@ func NewManager(parser api.ParserPlugin, anisource api.AniSource) *Manager {
 func (m *Manager) Parse(opts *models.ParseOptions) (entity *models.AnimeEntity) {
 	// ------------------- 获取mikan信息（bangumi id） -------------------
 	entity = m.anisource.Parse(&models.AnimeParseOptions{
-		Url: opts.MikanUrl,
+		MikanUrl:           opts.MikanUrl,
+		AnimeParseOverride: opts.AnimeParseOverride,
 	})
 	if entity == nil {
 		log.Warnf("结束此流程")

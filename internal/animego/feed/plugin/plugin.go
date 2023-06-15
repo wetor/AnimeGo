@@ -23,7 +23,7 @@ func AddFeedTasks(s *schedule.Schedule, plugins []models.Plugin, filterManager a
 			Task: task.NewFeedTask(&task.FeedOptions{
 				Plugin: &p,
 				Callback: func(items []*models.FeedItem) {
-					filterManager.Update(ctx, items)
+					filterManager.Update(ctx, items, nil, false)
 				},
 			}),
 		})
