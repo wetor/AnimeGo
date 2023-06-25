@@ -4,16 +4,16 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/robfig/cron/v3"
 
 	"github.com/wetor/AnimeGo/internal/api"
+	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin"
-	"github.com/wetor/AnimeGo/pkg/errors"
 	"github.com/wetor/AnimeGo/pkg/log"
 	pkgPlugin "github.com/wetor/AnimeGo/pkg/plugin"
 	"github.com/wetor/AnimeGo/pkg/request"
-	"github.com/wetor/AnimeGo/pkg/try"
 	"github.com/wetor/AnimeGo/pkg/utils"
 )
 
@@ -21,16 +21,16 @@ type FeedTask struct {
 	parser   *cron.Parser
 	plugin   api.Plugin
 	args     models.Object
-	callback func([]*models.FeedItem)
+	callback func([]*models.FeedItem) error
 }
 
 type FeedOptions struct {
 	*models.Plugin
-	Callback func([]*models.FeedItem)
+	Callback func([]*models.FeedItem) error
 }
 
-func NewFeedTask(opts *FeedOptions) *FeedTask {
-	p := plugin.LoadPlugin(&plugin.LoadPluginOptions{
+func NewFeedTask(opts *FeedOptions) (*FeedTask, error) {
+	p, err := plugin.LoadPlugin(&plugin.LoadPluginOptions{
 		Plugin:    opts.Plugin,
 		EntryFunc: FuncParse,
 		FuncSchema: []*pkgPlugin.FuncSchemaOptions{
@@ -57,16 +57,22 @@ func NewFeedTask(opts *FeedOptions) *FeedTask {
 			},
 		},
 	})
+	if err != nil {
+		return nil, err
+	}
 	return &FeedTask{
 		parser:   &SecondParser,
 		plugin:   p,
 		args:     opts.Args,
 		callback: opts.Callback,
-	}
+	}, nil
 }
 
 func (t *FeedTask) Name() string {
-	name := t.plugin.Get(VarName)
+	name, err := t.plugin.Get(VarName)
+	if err != nil {
+		log.Warnf("%s", err)
+	}
 	if name == nil {
 		name = "Feed"
 	}
@@ -74,25 +80,41 @@ func (t *FeedTask) Name() string {
 }
 
 func (t *FeedTask) Cron() string {
-	return t.plugin.Get(VarCron).(string)
+	cronStr, err := t.plugin.Get(VarCron)
+	if err != nil {
+		log.Warnf("%s", err)
+	}
+	return cronStr.(string)
 }
 
 func (t *FeedTask) SetVars(vars models.Object) {
 	for k, v := range vars {
-		t.plugin.Set(k, v)
+		err := t.plugin.Set(k, v)
+		if err != nil {
+			log.Warnf("%s", err)
+		}
 	}
 }
 
 func (t *FeedTask) NextTime() time.Time {
 	next, err := t.parser.Parse(t.Cron())
-	errors.NewAniErrorD(err).TryPanic()
+	if err != nil {
+		log.DebugErr(err)
+	}
 	return next.Next(time.Now())
 }
 
-func (t *FeedTask) Run(args models.Object) {
-	url := t.plugin.Get(VarUrl).(string)
+func (t *FeedTask) Run(args models.Object) (err error) {
+	urlStr, err := t.plugin.Get(VarUrl)
+	if err != nil {
+		return err
+	}
+	url := urlStr.(string)
 	header := make(map[string]string)
-	varHeader := t.plugin.Get(VarHeader)
+	varHeader, err := t.plugin.Get(VarHeader)
+	if err != nil {
+		return err
+	}
 	if varHeader != nil {
 		for k, v := range varHeader.(map[string]any) {
 			header[k] = v.(string)
@@ -101,26 +123,28 @@ func (t *FeedTask) Run(args models.Object) {
 	data, err := request.GetString(url, header)
 	if err != nil {
 		log.Warnf("[Plugin] %s插件(%s)执行错误: 请求 %s 失败", t.plugin.Type(), FuncParse, url)
-		log.Debugf("", err)
+		log.DebugErr(err)
 	}
 	args["data"] = data
-	result := t.plugin.Run(FuncParse, args)
-	if result["error"] != nil {
-		log.Debugf("", errors.NewAniErrorD(result["error"]))
-		log.Warnf("[Plugin] %s插件(%s)执行错误: %v", t.plugin.Type(), t.Name(), result["error"])
+	result, err := t.plugin.Run(FuncParse, args)
+	if err != nil {
+		return err
 	}
-
-	try.This(func() {
-		itemsAny := result["items"].([]any)
-		items := make([]*models.FeedItem, len(itemsAny))
-		for i, item := range itemsAny {
-			items[i] = &models.FeedItem{}
-			utils.MapToStruct(item.(map[string]any), items[i])
+	if result["error"] != nil {
+		err = errors.WithStack(&exceptions.ErrScheduleRun{Name: t.Name(), Message: result["error"]})
+		log.DebugErr(err)
+		log.Warnf("[Plugin] %s插件(%s)执行错误: %v", t.plugin.Type(), t.Name(), result["error"])
+		return err
+	}
+	itemsAny := result["items"].([]any)
+	items := make([]*models.FeedItem, len(itemsAny))
+	for i, item := range itemsAny {
+		items[i] = &models.FeedItem{}
+		err = utils.MapToStruct(item.(map[string]any), items[i])
+		if err != nil {
+			log.DebugErr(err)
+			return errors.WithStack(&exceptions.ErrPlugin{Type: t.plugin.Type(), File: t.Name(), Message: "类型转换错误"})
 		}
-		t.callback(items)
-	}).Catch(func(err try.E) {
-		log.Warnf("[Plugin] %s插件(%s)执行错误: %v", t.plugin.Type(), t.Name(), err)
-		log.Debugf("", err)
-	})
-
+	}
+	return t.callback(items)
 }

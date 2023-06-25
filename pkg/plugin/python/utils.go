@@ -3,19 +3,21 @@ package python
 import (
 	"reflect"
 
-	"github.com/go-python/gpython/py"
+	"github.com/pkg/errors"
 
-	"github.com/wetor/AnimeGo/pkg/errors"
+	"github.com/go-python/gpython/py"
+	"github.com/wetor/AnimeGo/pkg/exceptions"
+	"github.com/wetor/AnimeGo/pkg/log"
 )
 
-func StructToObject(src any) py.Object {
+func StructToObject(src any) (py.Object, error) {
 	tempSrcValue := reflect.ValueOf(src)
 	var srcValue reflect.Value
 
 	// *struct to struct
 	if tempSrcValue.Type().Kind() == reflect.Pointer {
 		if tempSrcValue.IsNil() {
-			return nil
+			return py.None, nil
 		}
 		srcValue = tempSrcValue.Elem()
 	} else {
@@ -37,15 +39,23 @@ func StructToObject(src any) py.Object {
 		case reflect.Struct:
 			fallthrough
 		case reflect.Pointer:
-			dst[keyName] = StructToObject(value)
+			obj, err := StructToObject(value)
+			if err != nil {
+				return nil, err
+			}
+			dst[keyName] = obj
 		default:
-			dst[keyName] = ToObject(value)
+			obj, err := ToObject(value)
+			if err != nil {
+				return nil, err
+			}
+			dst[keyName] = obj
 		}
 	}
-	return dst
+	return dst, nil
 }
 
-func ToObject(goVal any) py.Object {
+func ToObject(goVal any) (py.Object, error) {
 	var pyObj py.Object
 	switch val := goVal.(type) {
 	case nil:
@@ -69,7 +79,11 @@ func ToObject(goVal any) py.Object {
 	case map[string]any:
 		pyValDict := py.NewStringDictSized(len(val))
 		for key, value := range val {
-			pyValDict[key] = ToObject(value)
+			obj, err := ToObject(value)
+			if err != nil {
+				return nil, err
+			}
+			pyValDict[key] = obj
 		}
 		pyObj = pyValDict
 	default:
@@ -81,21 +95,31 @@ func ToObject(goVal any) py.Object {
 			l := refVal.Len()
 			pyValList := py.NewListWithCapacity(l)
 			for i := 0; i < l; i++ {
-				pyValList.Append(ToObject(refVal.Index(i).Interface()))
+				obj, err := ToObject(refVal.Index(i).Interface())
+				if err != nil {
+					return nil, err
+				}
+				pyValList.Append(obj)
 			}
 			pyObj = pyValList
 		case reflect.Struct:
 			fallthrough
 		case reflect.Pointer:
-			pyObj = StructToObject(goVal)
+			obj, err := StructToObject(goVal)
+			if err != nil {
+				return nil, err
+			}
+			pyObj = obj
 		default:
-			errors.NewAniErrorf("不支持的类型: %v ", reflect.ValueOf(goVal).Type()).TryPanic()
+			err := errors.WithStack(exceptions.ErrPluginTypeNotSupported{Type: reflect.ValueOf(goVal).Type()})
+			log.DebugErr(err)
+			return nil, err
 		}
 	}
-	return pyObj
+	return pyObj, nil
 }
 
-func ToValue(pyObj py.Object) any {
+func ToValue(pyObj py.Object) (any, error) {
 	var goVal any
 	switch val := pyObj.(type) {
 	case nil:
@@ -113,25 +137,43 @@ func ToValue(pyObj py.Object) any {
 	case py.StringDict:
 		objValDict := make(map[string]any, len(val))
 		for key, value := range val {
-			objValDict[key] = ToValue(value)
+			obj, err := ToValue(value)
+			if err != nil {
+				return nil, err
+			}
+			objValDict[key] = obj
 		}
 		goVal = objValDict
 	case py.Tuple:
 		objValList := make([]any, len(val))
 		for i := 0; i < len(val); i++ {
-			objValList[i] = ToValue(val[i])
+			obj, err := ToValue(val[i])
+			if err != nil {
+				return nil, err
+			}
+			objValList[i] = obj
 		}
 		goVal = objValList
 	case *py.List:
 		objValList := make([]any, val.Len())
 		for i := 0; i < val.Len(); i++ {
-			objValList[i] = ToValue(val.Items[i])
+			obj, err := ToValue(val.Items[i])
+			if err != nil {
+				return nil, err
+			}
+			objValList[i] = obj
 		}
 		goVal = objValList
 	case *py.Type:
-		goVal = ToValue(val.Dict)
+		obj, err := ToValue(val.Dict)
+		if err != nil {
+			return nil, err
+		}
+		goVal = obj
 	default:
-		errors.NewAniErrorf("不支持的类型: %v ", reflect.ValueOf(pyObj).Type()).TryPanic()
+		err := errors.WithStack(exceptions.ErrPluginTypeNotSupported{Type: reflect.ValueOf(pyObj).Type()})
+		log.DebugErr(err)
+		return nil, err
 	}
-	return goVal
+	return goVal, nil
 }

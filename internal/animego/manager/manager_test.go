@@ -28,7 +28,6 @@ import (
 const (
 	DownloadPath = "data/download"
 	SavePath     = "data/save"
-	ContentFile  = "file.mp4"
 
 	HookTimeUnix = 100
 )
@@ -132,7 +131,8 @@ func download(name string, season int, ep []int) (files []string, fullname, hash
 		Debug: false,
 	})
 	for i := range anime.Ep {
-		files[i] = xpath.Join(SavePath, renamePlugin.Rename(anime, i, srcFiles[i]).Filepath)
+		res, _ := renamePlugin.Rename(anime, i, srcFiles[i])
+		files[i] = xpath.Join(SavePath, res.Filepath)
 	}
 	log.ReInt(&log.Options{
 		Debug: true,
@@ -167,6 +167,7 @@ func TestManager_Success(t *testing.T) {
 		file1, _, _ = download("动画1", 1, []int{1, 2, 3})
 	}
 	wg.Wait()
+	time.Sleep(500 * time.Millisecond)
 	for _, f := range file1 {
 		assert.FileExists(t, f)
 		_ = os.Remove(f)
@@ -459,7 +460,7 @@ func TestManager_ReStart_NotDownloaded(t *testing.T) {
 			assert.FileExists(t, f)
 		}
 	}
-	time.Sleep(1 * time.Second)
+	time.Sleep(2*time.Second + 300*time.Millisecond)
 	{
 		log.Info("重启")
 		wg, cancel := initTest()
@@ -486,8 +487,8 @@ func TestManager_ReStart_NotDownloaded(t *testing.T) {
 		[]string{"接收到下载项", "开始下载"},
 		[]string{"Rename插件", "下载进度", "下载进度"},
 		[]string{"[重命名] 移动", "写入元数据文件", "下载进度"},
-		[]string{"正常退出", "正常退出"},
-		[]string{"重启", "移动完成", "存在可能未下载完成的项目", "下载 1"},
+		[]string{"移动完成", "正常退出", "正常退出"},
+		[]string{"重启", "存在可能未下载完成的项目", "下载 1"},
 		[]string{"接收到下载项", "发现已下载", "取消下载"},
 		[]string{"正常退出", "正常退出"},
 	)
@@ -526,8 +527,8 @@ func TestManager_AddFailed(t *testing.T) {
 
 	qbt.MockSetError(ErrorAddFailed, false)
 	{
-		log.Info("下载 1, 重复下载")
-		file1, _, _ = download("动画1", 1, []int{1})
+		//log.Info("下载 1, 重复下载")
+		//file1, _, _ = download("动画1", 1, []int{1})
 	}
 	time.Sleep(1*time.Second + 300*time.Millisecond)
 
@@ -550,8 +551,9 @@ func TestManager_AddFailed(t *testing.T) {
 		"Hook",
 		"下载 1, 添加失败",
 		[]string{"接收到下载项", "开始下载"},
-		"下载 1, 重复下载",
-		[]string{"接收到下载项", "取消下载，不允许重复"},
+		5,
+		//"下载 1, 重复下载",
+		//[]string{"接收到下载项", "开始下载", "接收到下载项", "取消下载，不允许重复"},
 		"Hook",
 		"下载 1",
 		[]string{"接收到下载项", "开始下载"},

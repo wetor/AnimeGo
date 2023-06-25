@@ -51,7 +51,7 @@ func TestMain(m *testing.M) {
 	fmt.Println("end")
 }
 
-func TestThemoviedb_ParseCache(t1 *testing.T) {
+func TestThemoviedb_ParseCache(t *testing.T) {
 	type args struct {
 		name    string
 		airDate string
@@ -100,11 +100,13 @@ func TestThemoviedb_ParseCache(t1 *testing.T) {
 			wantSeasonInfo: &themoviedb.SeasonInfo{Season: 3, AirDate: "2022-10-08", EpID: 306624, EpName: "", Ep: 0, Eps: 21},
 		},
 	}
-	t := &themoviedb.Themoviedb{}
+	tmdb := &themoviedb.Themoviedb{}
 	for _, tt := range tests {
-		t1.Run(tt.name, func(t1 *testing.T) {
-			id := t.SearchCache(tt.args.name)
-			gotSeasonInfo := t.GetCache(id, tt.args.airDate)
+		t.Run(tt.name, func(t1 *testing.T) {
+			id, err := tmdb.SearchCache(tt.args.name)
+			assert.NoError(t, err)
+			gotSeasonInfo, err := tmdb.GetCache(id, tt.args.airDate)
+			assert.NoError(t, err)
 			assert.Equalf(t1, tt.wantEntity.ID, id, "ParseCache(%v, %v)", tt.args.name, tt.args.airDate)
 			assert.Equalf(t1, tt.wantSeasonInfo, gotSeasonInfo, "ParseCache(%v, %v)", tt.args.name, tt.args.airDate)
 		})

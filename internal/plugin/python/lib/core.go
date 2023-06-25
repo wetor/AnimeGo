@@ -2,6 +2,7 @@ package lib
 
 import (
 	"github.com/go-python/gpython/py"
+	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
 
 	"github.com/wetor/AnimeGo/internal/animego/anidata/mikan"
@@ -10,7 +11,6 @@ import (
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/pkg/json"
 	"github.com/wetor/AnimeGo/pkg/plugin/python"
-	"github.com/wetor/AnimeGo/pkg/try"
 )
 
 func InitAnimeGo() {
@@ -72,7 +72,7 @@ func loads(self py.Object, args py.Tuple) (py.Object, error) {
 	if err != nil {
 		return nil, err
 	}
-	return python.ToObject(result), nil
+	return python.ToObject(result)
 }
 
 func dumps(self py.Object, args py.Tuple) (py.Object, error) {
@@ -88,9 +88,11 @@ func dumps(self py.Object, args py.Tuple) (py.Object, error) {
 		encodng = string(args[1].(py.String))
 	}
 
-	object := python.ToValue(obj)
+	object, err := python.ToValue(obj)
+	if err != nil {
+		return nil, err
+	}
 	var result []byte
-	var err error
 
 	switch encodng {
 	case "json":
@@ -103,48 +105,28 @@ func dumps(self py.Object, args py.Tuple) (py.Object, error) {
 	if err != nil {
 		return nil, err
 	}
-	return python.ToObject(string(result)), nil
+	return python.ToObject(string(result))
 }
 
 func parseMikan(self py.Object, arg py.Object) (py.Object, error) {
 	var info *mikan.MikanInfo
 	var err error
-	try.This(func() {
-		info = anisource.Mikan().(*mikan.Mikan).CacheParseMikanInfo(string(arg.(py.String)))
-	}).Catch(func(e try.E) {
-		err = e.(error)
-	})
+	info, err = anisource.Mikan().(*mikan.Mikan).CacheParseMikanInfo(string(arg.(py.String)))
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "解析mikan失败")
 	}
-
-	return python.ToObject(info), nil
+	return python.ToObject(info)
 }
 
 func parseMikanRss(self py.Object, arg py.Object) (py.Object, error) {
-	var items []*models.FeedItem
-	var err error
-	try.This(func() {
-		items = rss.NewRss(&rss.Options{Raw: string(arg.(py.String))}).Parse()
-	}).Catch(func(e try.E) {
-		err = e.(error)
-	})
+	items, err := rss.NewRss(&rss.Options{Raw: string(arg.(py.String))}).Parse()
 	if err != nil {
 		return nil, err
 	}
-	return python.ToObject(items), nil
+	return python.ToObject(items)
 }
 
 func filename(self py.Object, arg py.Object) (py.Object, error) {
-	var file string
-	var err error
-	try.This(func() {
-		file = models.FileName(string(arg.(py.String)))
-	}).Catch(func(e try.E) {
-		err = e.(error)
-	})
-	if err != nil {
-		return nil, err
-	}
-	return python.ToObject(file), nil
+	file := models.FileName(string(arg.(py.String)))
+	return python.ToObject(file)
 }

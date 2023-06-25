@@ -1,18 +1,18 @@
 package api
 
 type AniDataParse interface {
-	Parse(options any) any
-	ParseCache(options any) any
+	Parse(options any) (any, error)
+	ParseCache(options any) (any, error)
 }
 
 type AniDataSearch interface {
-	Search(name string) int
-	SearchCache(name string) int
+	Search(name string) (int, error)
+	SearchCache(name string) (int, error)
 }
 
 type AniDataGet interface {
-	Get(id int, filters any) any
-	GetCache(id int, filters any) any
+	Get(id int, filters any) (any, error)
+	GetCache(id int, filters any) (any, error)
 }
 
 type AniDataParseSearch interface {
@@ -31,7 +31,5 @@ type AniDataSearchGet interface {
 }
 
 type AniData interface {
-	AniDataParse
-	AniDataSearch
-	AniDataGet
+	IName
 }

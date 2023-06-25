@@ -1,8 +1,11 @@
 package parser
 
 import (
+	"github.com/pkg/errors"
+
 	"github.com/wetor/AnimeGo/internal/animego/parser/utils"
 	"github.com/wetor/AnimeGo/internal/api"
+	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/torrent"
@@ -22,22 +25,19 @@ func NewManager(parser api.ParserPlugin, anisource api.AniSource) *Manager {
 	}
 }
 
-func (m *Manager) Parse(opts *models.ParseOptions) (entity *models.AnimeEntity) {
+func (m *Manager) Parse(opts *models.ParseOptions) (entity *models.AnimeEntity, err error) {
 	// ------------------- 获取mikan信息（bangumi id） -------------------
-	entity = m.anisource.Parse(&models.AnimeParseOptions{
+	entity, err = m.anisource.Parse(&models.AnimeParseOptions{
 		MikanUrl:           opts.MikanUrl,
 		AnimeParseOverride: opts.AnimeParseOverride,
 	})
-	if entity == nil {
-		log.Warnf("结束此流程")
-		return nil
+	if err != nil {
+		return nil, errors.Wrap(err, "解析anisource失败，结束此流程")
 	}
 	// ------------------- 获取并解析torrent信息 -------------------
 	torrentInfo, err := torrent.LoadUri(opts.TorrentUrl)
 	if err != nil {
-		log.Debugf("", err)
-		log.Warnf("解析torrent失败，结束此流程")
-		return nil
+		return nil, errors.Wrap(err, "解析torrent失败，结束此流程")
 	}
 	entity.Ep = make([]*models.AnimeEpEntity, 0, len(torrentInfo.Files))
 	entity.Flag = models.AnimeFlagNone
@@ -72,12 +72,14 @@ func (m *Manager) Parse(opts *models.ParseOptions) (entity *models.AnimeEntity) 
 		var parsed *models.TitleParsed
 		// 从后向前解析种子内视频文件
 		for i := len(torrentInfo.Files) - 1; i >= 0; i-- {
-			parsed = m.parser.Parse(title)
-			if parsed.Season > 0 && len(parsed.SeasonRaw) > 0 {
-				// 解析成功，跳出循环
-				break
-			} else {
-				parsed = nil
+			parsed, err = m.parser.Parse(title)
+			if err == nil {
+				if parsed.Season > 0 && len(parsed.SeasonRaw) > 0 {
+					// 解析成功，跳出循环
+					break
+				} else {
+					parsed = nil
+				}
 			}
 		}
 		if parsed == nil {
@@ -87,10 +89,12 @@ func (m *Manager) Parse(opts *models.ParseOptions) (entity *models.AnimeEntity) 
 		}
 		// 没有设置默认季度，且解析失败，结束流程
 		if entity.Season <= 0 {
-			return nil
+			err = errors.WithStack(&exceptions.ErrParseFailed{})
+			log.DebugErr(err)
+			return nil, err
 		}
 	}
-	return entity
+	return entity, nil
 }
 
 func (m *Manager) defaultSeason(season int) (result int) {

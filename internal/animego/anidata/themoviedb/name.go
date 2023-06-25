@@ -3,7 +3,9 @@ package themoviedb
 import (
 	"regexp"
 
-	"github.com/wetor/AnimeGo/pkg/errors"
+	"github.com/pkg/errors"
+
+	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/pkg/log"
 )
 
@@ -19,20 +21,22 @@ var NameRegxStep = []*regexp.Regexp{
 }
 
 // RemoveNameSuffix
-//  @Description: 删除番剧名的一些后缀，使得themoviedb能够正常搜索到
-//  @param name string 番剧名
-//  @param fun Action 执行操作。
-// 					返回obj, nil表示成功；
-//					返回nil, nil进行下一步；步骤执行完则返回nil, err
-//					返回nil, err则直接结束；
-//  @return any fun返回的obj
 //
-func RemoveNameSuffix(name string, fun func(string) any) any {
-	currStep := 0
-	for ; currStep < len(NameRegxStep)+1; currStep++ {
-		result := fun(name)
+//	 @Description: 删除番剧名的一些后缀，使得themoviedb能够正常搜索到
+//	 @param name string 番剧名
+//	 @param fun Action 执行操作。
+//						返回obj, nil表示成功；
+//						返回nil, nil进行下一步；步骤执行完则返回nil, err
+//						返回nil, err则直接结束；
+//	 @return any fun返回的obj
+func RemoveNameSuffix(name string, fun func(string) (any, error)) (any, error) {
+	for currStep := 0; currStep < len(NameRegxStep)+1; currStep++ {
+		result, err := fun(name)
+		if err != nil {
+			return nil, err
+		}
 		if result != nil {
-			return result
+			return result, nil
 		}
 		if currStep < len(NameRegxStep) {
 			has := NameRegxStep[currStep].MatchString(name)
@@ -45,17 +49,16 @@ func RemoveNameSuffix(name string, fun func(string) any) any {
 			}
 		}
 	}
-	errors.NewAniError("解析番剧名失败").TryPanic()
-	return nil
+	return nil, errors.WithStack(&exceptions.ErrThemoviedbSearchName{})
 }
 
 // SimilarText
-//  @Description: 字符串相似度计算
-//  @param first string
-//  @param second string
-//  @param percent *float64
-//  @return int
 //
+//	@Description: 字符串相似度计算
+//	@param first string
+//	@param second string
+//	@param percent *float64
+//	@return int
 func SimilarText(first, second string) (percent float64) {
 	var similarText func(string, string, int, int) int
 	similarText = func(str1, str2 string, len1, len2 int) int {

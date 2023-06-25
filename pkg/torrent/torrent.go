@@ -8,7 +8,10 @@ import (
 	"strings"
 
 	"github.com/anacrolix/torrent/metainfo"
+	"github.com/pkg/errors"
 
+	"github.com/wetor/AnimeGo/pkg/exceptions"
+	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/request"
 	"github.com/wetor/AnimeGo/pkg/utils"
 	"github.com/wetor/AnimeGo/pkg/xpath"
@@ -51,11 +54,13 @@ type Torrent struct {
 func LoadTorrent(r io.Reader) (*Torrent, error) {
 	m, err := metainfo.Load(r)
 	if err != nil {
-		return nil, err
+		log.DebugErr(err)
+		return nil, errors.WithStack(&exceptions.ErrTorrentLoad{Message: "加载metainfo"})
 	}
 	info, err := m.UnmarshalInfo()
 	if err != nil {
-		return nil, err
+		log.DebugErr(err)
+		return nil, errors.WithStack(&exceptions.ErrTorrentLoad{Message: "加载bencode info"})
 	}
 
 	infoFiles := info.UpvertedFiles()
@@ -90,7 +95,8 @@ func LoadTorrent(r io.Reader) (*Torrent, error) {
 func LoadMagnetUri(uri string) (*Torrent, error) {
 	m, err := metainfo.ParseMagnetUri(uri)
 	if err != nil {
-		return nil, err
+		log.DebugErr(err)
+		return nil, errors.WithStack(&exceptions.ErrTorrentLoad{Message: "加载Magnet metainfo"})
 	}
 	t := &Torrent{
 		Type:   TypeTorrent,
@@ -110,25 +116,40 @@ func LoadUri(uri string) (t *Torrent, err error) {
 	if len(hash) == 40 && utils.IsExist(file) {
 		f, err := os.Open(file)
 		if err != nil {
-			return nil, err
+			log.DebugErr(err)
+			log.Debugf("载入缓存文件失败")
+			// 重新加载
+			goto load
 		}
 		t, err = LoadTorrent(f)
-		_ = f.Close()
 		if err != nil {
-			return nil, err
+			log.Debugf("%s", err)
+			// 重新加载
+			goto load
+		}
+		err = f.Close()
+		if err != nil {
+			log.DebugErr(err)
+			log.Debugf("关闭缓存文件失败")
+			// 继续执行
 		}
 		t.Url = file
 		return t, nil
 	}
-
+load:
 	if uriType == TypeMagnet {
 		t, err = LoadMagnetUri(uri)
+		if err != nil {
+			log.Debugf("%s", err)
+			// 继续执行
+		}
 		t.Url = uri
 	} else if strings.HasPrefix(uri, "http") {
 		w := bytes.NewBuffer(nil)
 		err = request.GetWriter(uri, w)
 		if err != nil {
-			return nil, err
+			log.DebugErr(err)
+			return nil, errors.WithStack(&exceptions.ErrRequest{Name: uri})
 		}
 		tw := bytes.NewBuffer(w.Bytes())
 		t, err = LoadTorrent(tw)
@@ -137,9 +158,13 @@ func LoadUri(uri string) (t *Torrent, err error) {
 		}
 		file = xpath.Join(TempPath, t.Hash+".torrent")
 		err = os.WriteFile(file, w.Bytes(), 0666)
+		if err != nil {
+			log.DebugErr(err)
+			// 继续执行
+		}
 		t.Url = file
 	}
-	return
+	return t, nil
 }
 
 func tryParseHash(uri string) (string, string) {

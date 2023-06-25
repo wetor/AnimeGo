@@ -4,7 +4,8 @@ package rss
 
 import (
 	"bytes"
-	"io"
+	"github.com/pkg/errors"
+	"github.com/wetor/AnimeGo/internal/exceptions"
 	"os"
 	"regexp"
 	"strconv"
@@ -41,43 +42,35 @@ func NewRss(opts *Options) *Rss {
 //	@Description: 解析rss
 //	@receiver *Rss
 //	@return items []*models.FeedItem
-func (f *Rss) Parse() (items []*models.FeedItem) {
-	if len(f.url) == 0 && len(f.file) == 0 && len(f.raw) == 0 {
-		return nil
-	}
+func (f *Rss) Parse() (items []*models.FeedItem, err error) {
 	data := bytes.NewBuffer(nil)
 
 	log.Infof("获取Rss数据开始...")
 	if len(f.file) != 0 {
-		file, err := os.Open(f.file)
+		file, err := os.ReadFile(f.file)
 		if err != nil {
-			log.Debugf("", err)
-			log.Warnf("打开Rss文件失败")
+			log.DebugErr(err)
+			return nil, errors.WithStack(&exceptions.ErrFeed{Message: "打开Rss文件失败"})
 		}
-		_, err = io.Copy(data, file)
-		if err != nil {
-			log.Debugf("", err)
-			return nil
-		}
-		_ = file.Close()
+		data.Write(file)
 	} else if len(f.raw) != 0 {
 		data.WriteString(f.raw)
-	} else {
+	} else if len(f.url) != 0 {
 		err := request.GetWriter(f.url, data)
 		if err != nil {
-			log.Debugf("", err)
-			log.Warnf("请求Rss失败")
-			return nil
+			log.DebugErr(err)
+			return nil, errors.WithStack(&exceptions.ErrFeed{Message: "请求Rss失败"})
 		}
+	} else {
+		return nil, err
 	}
 	log.Infof("获取Rss数据成功！")
 
 	fp := gofeed.NewParser()
 	feeds, err := fp.Parse(data)
 	if err != nil {
-		log.Debugf("", err)
-		log.Warnf("解析ss失败")
-		return nil
+		log.DebugErr(err)
+		return nil, errors.WithStack(&exceptions.ErrFeed{Message: "解析Rss失败"})
 	}
 
 	regx := regexp.MustCompile(`<pubDate>(.*?)T`)
@@ -93,16 +86,14 @@ func (f *Rss) Parse() (items []*models.FeedItem) {
 		}
 
 		if len(item.Enclosures) == 0 {
-			log.Warnf("Torrent Enclosures错误，%s，跳过", item.Title)
+			log.Debugf("解析Rss项目 %s 详细信息失败，忽略", item.Title)
 			continue
 		}
 
 		length, err = strconv.ParseInt(item.Enclosures[0].Length, 10, 64)
 		if err != nil {
-			log.Debugf("", err)
-		}
-		if length == 0 {
-			log.Warnf("Torrent Length错误")
+			log.DebugErr(errors.Wrapf(err, "解析Rss项目 %s 下载大小失败，默认0", item.Title))
+			length = 0
 		}
 
 		items[i] = &models.FeedItem{
@@ -114,6 +105,5 @@ func (f *Rss) Parse() (items []*models.FeedItem) {
 			Length:   length,
 		}
 	}
-	return items
-
+	return items, nil
 }

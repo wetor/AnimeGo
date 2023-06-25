@@ -5,12 +5,14 @@ import (
 	"time"
 
 	"github.com/jinzhu/copier"
+	"github.com/pkg/errors"
+	"github.com/wetor/AnimeGo/internal/exceptions"
 
 	"github.com/wetor/AnimeGo/internal/animego/downloader"
 	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/pkg/errors"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/utils"
+	"github.com/wetor/AnimeGo/pkg/xerrors"
 	"github.com/wetor/AnimeGo/third_party/qbapi"
 )
 
@@ -19,6 +21,7 @@ const (
 )
 
 type QBittorrent struct {
+	name        string
 	option      []qbapi.Option
 	connectFunc func() bool
 	retryChan   chan int
@@ -30,6 +33,7 @@ type QBittorrent struct {
 
 func NewQBittorrent(url, username, password string) *QBittorrent {
 	qbt := &QBittorrent{
+		name:      "QBittorrent",
 		retryChan: make(chan int, 1),
 		retryNum:  0,
 	}
@@ -68,12 +72,12 @@ func (c *QBittorrent) Start(ctx context.Context) {
 		var err error
 		c.client, err = qbapi.NewAPI(c.option...)
 		if err != nil {
-			log.Debugf("", errors.NewAniErrorD(err))
+			log.DebugErr(xerrors.NewAniErrorD(err))
 			log.Warnf("初始化QBittorrent客户端第%d次，失败", c.retryNum)
 			return false
 		}
 		if err = c.client.Login(ctx); err != nil {
-			log.Debugf("", errors.NewAniErrorD(err))
+			log.DebugErr(xerrors.NewAniErrorD(err))
 			log.Warnf("连接QBittorrent第%d次，失败", c.retryNum)
 			return false
 		}
@@ -86,7 +90,7 @@ func (c *QBittorrent) Start(ctx context.Context) {
 		for {
 			exit := false
 			func() {
-				defer errors.HandleError(func(err error) {
+				defer xerrors.HandleError(func(err error) {
 					log.Errorf("", err)
 				})
 				select {
@@ -121,7 +125,7 @@ func (c *QBittorrent) Start(ctx context.Context) {
 		for {
 			exit := false
 			func() {
-				defer errors.HandleError(func(err error) {
+				defer xerrors.HandleError(func(err error) {
 					log.Errorf("", err)
 				})
 				select {
@@ -163,20 +167,20 @@ func (c *QBittorrent) checkError(err error) bool {
 		return false
 	}
 	if qerror, ok := err.(*qbapi.QError); ok && qerror.Code() == -10004 {
-		log.Debugf("", errors.NewAniErrorSkipf(2, "请求失败，等待客户端响应").SetData(err))
+		log.DebugErr(xerrors.NewAniErrorSkipf(2, "请求失败，等待客户端响应").SetData(err))
 		c.retryNum = 1
 		c.connected = false
 		c.retryChan <- ChanRetryConnect
 	} else {
-		log.Debugf("", errors.NewAniErrorSkipf(2, "").SetData(err))
+		log.DebugErr(xerrors.NewAniErrorSkipf(2, "").SetData(err))
 		log.Warnf("请求QBittorrent接口失败")
 	}
 	return true
 }
 
-func (c *QBittorrent) List(opt *models.ClientListOptions) []*models.TorrentItem {
+func (c *QBittorrent) List(opt *models.ClientListOptions) ([]*models.TorrentItem, error) {
 	if !c.connected {
-		return nil
+		return nil, errors.WithStack(&exceptions.ErrDownloaderNoConnected{Client: c.name})
 	}
 	req := &qbapi.GetTorrentListReq{}
 	if len(opt.Status) != 0 {
@@ -190,20 +194,22 @@ func (c *QBittorrent) List(opt *models.ClientListOptions) []*models.TorrentItem 
 	}
 
 	listResp, err := c.client.GetTorrentList(context.Background(), req)
-	if c.checkError(err) {
-		return nil
+	if err != nil {
+		log.DebugErr(err)
+		return nil, errors.WithStack(&exceptions.ErrDownloader{Client: c.name, Message: "获取列表失败"})
 	}
 	retn := make([]*models.TorrentItem, len(listResp.Items))
 	err = copier.Copy(&retn, &listResp.Items)
-	if c.checkError(err) {
-		return nil
+	if err != nil {
+		log.DebugErr(err)
+		return nil, errors.WithStack(&exceptions.ErrDownloader{Client: c.name, Message: "类型转换失败"})
 	}
-	return retn
+	return retn, nil
 }
 
-func (c *QBittorrent) Add(opt *models.ClientAddOptions) {
+func (c *QBittorrent) Add(opt *models.ClientAddOptions) error {
 	if !c.connected {
-		return
+		return errors.WithStack(&exceptions.ErrDownloaderNoConnected{Client: c.name})
 	}
 	var err error
 	meta := &qbapi.AddTorrentMeta{
@@ -223,61 +229,24 @@ func (c *QBittorrent) Add(opt *models.ClientAddOptions) {
 			Meta: meta,
 		})
 	}
-
-	if c.checkError(err) {
-		return
+	if err != nil {
+		log.DebugErr(err)
+		return errors.WithStack(&exceptions.ErrDownloader{Client: c.name, Message: "添加下载项失败"})
 	}
+	return nil
 }
 
-func (c *QBittorrent) Delete(opt *models.ClientDeleteOptions) {
+func (c *QBittorrent) Delete(opt *models.ClientDeleteOptions) error {
 	if !c.connected {
-		return
+		return errors.WithStack(&exceptions.ErrDownloaderNoConnected{Client: c.name})
 	}
 	_, err := c.client.DeleteTorrents(context.Background(), &qbapi.DeleteTorrentsReq{
 		IsDeleteFile: opt.DeleteFile,
 		Hash:         opt.Hash,
 	})
-	if c.checkError(err) {
-		return
+	if err != nil {
+		log.DebugErr(err)
+		return errors.WithStack(&exceptions.ErrDownloader{Client: c.name, Message: "删除下载项失败"})
 	}
-}
-
-func (c *QBittorrent) Get(opt *models.ClientGetOptions) *models.TorrentItem {
-	if !c.connected {
-		return nil
-	}
-	req := &qbapi.GetTorrentListReq{
-		Hashes: &opt.Hash,
-	}
-	listResp, err := c.client.GetTorrentList(context.Background(), req)
-	if c.checkError(err) || len(listResp.Items) == 0 {
-		return nil
-	}
-	retn := &models.TorrentItem{}
-	err = copier.Copy(retn, listResp.Items[0])
-	if c.checkError(err) {
-		return nil
-	}
-	return retn
-}
-
-func (c *QBittorrent) GetContent(opt *models.ClientGetOptions) []*models.TorrentContentItem {
-	if !c.connected {
-		return nil
-	}
-	contents, err := c.client.GetTorrentContents(context.Background(), &qbapi.GetTorrentContentsReq{
-		Hash: opt.Hash,
-	})
-	if c.checkError(err) {
-		return nil
-	}
-	if opt.Item == nil {
-		opt.Item = c.Get(opt)
-	}
-	retn := make([]*models.TorrentContentItem, len(contents.Contents))
-	err = copier.Copy(&retn, &contents.Contents)
-	if c.checkError(err) {
-		return nil
-	}
-	return retn
+	return nil
 }

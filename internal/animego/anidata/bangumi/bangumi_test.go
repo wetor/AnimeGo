@@ -81,7 +81,8 @@ func TestBangumi_Parse(t *testing.T) {
 	b := &bangumi.Bangumi{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotEntity := b.Get(tt.args.bangumiID, nil)
+			gotEntity, err := b.Get(tt.args.bangumiID, nil)
+			assert.NoError(t, err)
 			assert.Equalf(t, tt.wantEntity, gotEntity, "Get(%v)", tt.args.bangumiID)
 		})
 	}
@@ -122,7 +123,8 @@ func TestBangumi_ParseCache(t *testing.T) {
 	b := &bangumi.Bangumi{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotEntity := b.GetCache(tt.args.bangumiID, nil).(*bangumi.Entity)
+			gotEntity, err := b.GetCache(tt.args.bangumiID, nil)
+			assert.NoError(t, err)
 			assert.Equalf(t, tt.wantEntity, gotEntity, "GetCache(%v)", tt.args.bangumiID)
 		})
 	}

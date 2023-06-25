@@ -74,6 +74,10 @@ func Debugf(template string, args ...interface{}) {
 	GetLogger().Debugf(template, args...)
 }
 
+func DebugErr(err error) {
+	GetLogger().Debugf("%+v", err)
+}
+
 func Errorf(template string, args ...interface{}) {
 	GetLogger().Errorf(template, args...)
 }

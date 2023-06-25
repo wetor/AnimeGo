@@ -5,12 +5,15 @@ import (
 	"os"
 	"sync"
 
+	"github.com/pkg/errors"
+
 	"github.com/wetor/AnimeGo/internal/animego/downloader"
 	"github.com/wetor/AnimeGo/internal/api"
+	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/pkg/errors"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/utils"
+	"github.com/wetor/AnimeGo/pkg/xerrors"
 	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
@@ -54,56 +57,72 @@ func NewManager(plugin api.RenamerPlugin) *Manager {
 	}
 }
 
-func (m *Manager) stateSeeding(task *RenameTask) (complete bool) {
-	var err error
+func (m *Manager) stateSeeding(task *RenameTask) (complete bool, err error) {
 	switch task.Mode {
 	case "wait_move":
 		complete = false
 	case "link_delete":
 		log.Infof("[重命名] 链接「%s」->「%s」", task.Src, task.Dst)
 		err = utils.CreateLink(task.Src, task.Dst)
-		errors.NewAniErrorD(err).TryPanic()
+		if err != nil {
+			log.DebugErr(err)
+			return false, errors.WithStack(exceptions.ErrRenameStep{Src: task.Src, Step: "链接", Message: "创建文件链接失败"})
+		}
 		complete = false
 	case "link":
 		log.Infof("[重命名] 链接「%s」->「%s」", task.Src, task.Dst)
 		err = utils.CreateLink(task.Src, task.Dst)
-		errors.NewAniErrorD(err).TryPanic()
+		if err != nil {
+			log.DebugErr(err)
+			return false, errors.WithStack(exceptions.ErrRenameStep{Src: task.Src, Step: "链接", Message: "创建文件链接失败"})
+		}
 		complete = true
 	case "move":
 		log.Infof("[重命名] 移动「%s」->「%s」", task.Src, task.Dst)
 		err = utils.Rename(task.Src, task.Dst)
-		errors.NewAniErrorD(err).TryPanic()
+		if err != nil {
+			log.DebugErr(err)
+			return false, errors.WithStack(exceptions.ErrRenameStep{Src: task.Src, Step: "移动", Message: "重命名文件失败"})
+		}
 		complete = true
 	default:
-		errors.NewAniErrorf("不支持的重命名模式 %s", task.Mode).TryPanic()
+		return false, errors.WithStack(exceptions.ErrRename{Src: task.Src, Message: "不支持的重命名模式 " + task.Mode})
 	}
-	return
+	return complete, nil
 }
 
-func (m *Manager) stateComplete(task *RenameTask) (complete bool) {
-	var err error
+func (m *Manager) stateComplete(task *RenameTask) (complete bool, err error) {
 	switch task.Mode {
 	case "wait_move":
 		log.Infof("[重命名] 移动「%s」->「%s」", task.Src, task.Dst)
 		err = utils.Rename(task.Src, task.Dst)
-		errors.NewAniErrorD(err).TryPanic()
+		if err != nil {
+			log.DebugErr(err)
+			return false, errors.WithStack(exceptions.ErrRenameStep{Src: task.Src, Step: "移动", Message: "重命名文件失败"})
+		}
 		complete = true
 	case "link_delete":
 		if !utils.IsExist(task.Dst) {
-			m.stateSeeding(task)
+			complete, err = m.stateSeeding(task)
+			if err != nil {
+				return false, err
+			}
 		}
 		log.Infof("[重命名] 删除「%s」", task.Src)
 		err = os.Remove(task.Src)
-		errors.NewAniErrorD(err).TryPanic()
+		if err != nil {
+			log.DebugErr(err)
+			return false, errors.WithStack(exceptions.ErrRenameStep{Src: task.Src, Step: "删除", Message: "删除文件失败"})
+		}
 		complete = true
 	case "link":
 		complete = true
 	case "move":
 		complete = true
 	default:
-		errors.NewAniErrorf("不支持的重命名模式 %s", task.Mode).TryPanic()
+		return false, errors.WithStack(exceptions.ErrRename{Src: task.Src, Message: "不支持的重命名模式 " + task.Mode})
 	}
-	return
+	return complete, nil
 }
 
 func (m *Manager) HasRenameTask(name string) bool {
@@ -111,7 +130,7 @@ func (m *Manager) HasRenameTask(name string) bool {
 	return ok
 }
 
-func (m *Manager) AddRenameTask(opt *models.RenameOptions) {
+func (m *Manager) AddRenameTask(opt *models.RenameOptions) (err error) {
 	m.Lock()
 	defer m.Unlock()
 	name := opt.Entity.FullName()
@@ -124,7 +143,10 @@ func (m *Manager) AddRenameTask(opt *models.RenameOptions) {
 	for i := range opt.Entity.Ep {
 		var result *models.RenameResult
 		if m.plugin != nil {
-			result = m.plugin.Rename(opt.Entity, i, xpath.Base(srcFiles[i]))
+			result, err = m.plugin.Rename(opt.Entity, i, xpath.Base(srcFiles[i]))
+			if err != nil {
+				return err
+			}
 		}
 		if result == nil {
 			result = &models.RenameResult{
@@ -145,6 +167,7 @@ func (m *Manager) AddRenameTask(opt *models.RenameOptions) {
 			Complete:       false,
 		}
 	}
+	return nil
 }
 
 func (m *Manager) Update(ctx context.Context) {
@@ -168,32 +191,38 @@ func (m *Manager) Update(ctx context.Context) {
 			select {
 			case state := <-task.State:
 				go func(task *RenameTask) {
+					var err error
 					defer func() {
+						if err != nil {
+							// 不会结束流程
+							log.DebugErr(err)
+						}
 						if task.Complete {
 							task.RenameCallback(task.RenameResult)
 						}
 					}()
-					defer errors.HandleError(func(err error) {
-						log.Errorf("", err)
-					})
 					existSrc := utils.IsExist(task.Src)
 					existDst := utils.IsExist(task.Dst)
 
 					if !existSrc && !existDst {
-						errors.NewAniError("未找到文件：" + task.Src).TryPanic()
+						err = errors.WithStack(&exceptions.ErrRename{Src: task.Src, Message: "未找到文件"})
+						return
 					} else if !existSrc && existDst {
 						// 已经移动完成
 						log.Warnf("[跳过重命名] 可能已经移动完成「%s」->「%s」", task.Src, task.Dst)
 						if state == downloader.StateComplete {
-							task.Complete = m.stateComplete(task)
+							task.Complete, err = m.stateComplete(task)
 							return
 						}
 					}
 					if state == downloader.StateSeeding {
-						task.Complete = m.stateSeeding(task)
+						task.Complete, err = m.stateSeeding(task)
 					} else if state == downloader.StateComplete {
-						task.Complete = m.stateSeeding(task)
-						task.Complete = m.stateComplete(task)
+						task.Complete, err = m.stateSeeding(task)
+						if err != nil {
+							return
+						}
+						task.Complete, err = m.stateComplete(task)
 					}
 				}(task)
 			default:
@@ -218,7 +247,7 @@ func (m *Manager) Start(ctx context.Context) {
 		for {
 			exit := false
 			func() {
-				defer errors.HandleError(func(err error) {
+				defer xerrors.HandleError(func(err error) {
 					log.Errorf("", err)
 					m.sleep(ctx)
 				})

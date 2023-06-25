@@ -5,6 +5,8 @@ import (
 	"os"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/internal/animego/anidata/mikan"
 	"github.com/wetor/AnimeGo/pkg/cache"
@@ -68,7 +70,9 @@ func TestMikan_ParseCache(t *testing.T) {
 	m := &mikan.Mikan{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotEntity := m.ParseCache(tt.args.url).(*mikan.Entity)
+			got, err := m.ParseCache(tt.args.url)
+			assert.NoError(t, err)
+			gotEntity := got.(*mikan.Entity)
 			if gotEntity.MikanID != tt.wantMikanID {
 				t.Errorf("ParseCache() gotMikanID = %v, want %v", gotEntity.MikanID, tt.wantMikanID)
 			}

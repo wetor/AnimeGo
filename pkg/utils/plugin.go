@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"github.com/wetor/AnimeGo/pkg/errors"
+	"github.com/wetor/AnimeGo/pkg/xerrors"
 	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
@@ -19,18 +19,18 @@ func FindScript(file, ext string) string {
 		if IsExist(xpath.Join(file, "main"+ext)) {
 			return xpath.Join(file, "main"+ext)
 		} else {
-			errors.NewAniErrorf("文件夹中找不到 'main%s' 插件", ext).TryPanic()
+			xerrors.NewAniErrorf("文件夹中找不到 'main%s' 插件", ext).TryPanic()
 		}
 	} else if !IsExist(file) {
 		// 文件不存在，尝试增加 ext 扩展名
 		if IsExist(file + ext) {
 			return file + ext
 		} else {
-			errors.NewAniError("插件不存在").TryPanic()
+			xerrors.NewAniError("插件不存在").TryPanic()
 		}
 	} else if xpath.Ext(file) != ext {
 		// 文件存在，判断扩展名是否为 ext
-		errors.NewAniError("插件扩展名错误").TryPanic()
+		xerrors.NewAniError("插件扩展名错误").TryPanic()
 	}
 	return file
 }

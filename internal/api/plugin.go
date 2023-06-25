@@ -5,21 +5,21 @@ import (
 )
 
 type Plugin interface {
-	Type() string
+	IType
 	PluginLoader
 	PluginRunner
 	PluginVariable
 }
 
 type PluginLoader interface {
-	Load(opts *plugin.LoadOptions)
+	Load(opts *plugin.LoadOptions) error
 }
 
 type PluginRunner interface {
-	Run(function string, args map[string]any) map[string]any
+	Run(function string, args map[string]any) (map[string]any, error)
 }
 
 type PluginVariable interface {
-	Get(varName string) any
-	Set(varName string, val any)
+	Get(varName string) (any, error)
+	Set(varName string, val any) error
 }

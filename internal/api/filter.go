@@ -7,9 +7,11 @@ import (
 )
 
 type FilterPlugin interface {
-	FilterAll([]*models.FeedItem) []*models.FeedItem
+	FilterAll([]*models.FeedItem) ([]*models.FeedItem, error)
 }
 
 type FilterManager interface {
-	Update(ctx context.Context, items []*models.FeedItem, parseOverride *models.AnimeParseOverride, skipFilter bool)
+	Update(ctx context.Context, items []*models.FeedItem,
+		parseOverride *models.AnimeParseOverride,
+		skipFilter bool, skipDelay bool) error
 }

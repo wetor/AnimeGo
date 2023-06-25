@@ -9,8 +9,8 @@ import (
 
 	"github.com/wetor/AnimeGo/configs"
 	webModels "github.com/wetor/AnimeGo/internal/web/models"
-	"github.com/wetor/AnimeGo/pkg/errors"
 	"github.com/wetor/AnimeGo/pkg/log"
+	"github.com/wetor/AnimeGo/pkg/xerrors"
 )
 
 // ConfigGet godoc
@@ -38,8 +38,8 @@ func (a *Api) ConfigGet(c *gin.Context) {
 		data := make(map[string]interface{})
 		err := jsoniter.Unmarshal(configs.DefaultDoc(), &data)
 		if err != nil {
-			err = errors.NewAniErrorD(err)
-			log.Debugf("", err)
+			err = xerrors.NewAniErrorD(err)
+			log.DebugErr(err)
 			c.JSON(webModels.Fail("配置项说明格式化错误"))
 			return
 		}
@@ -47,8 +47,8 @@ func (a *Api) ConfigGet(c *gin.Context) {
 	} else if request.Key == "raw" {
 		data, err := os.ReadFile(configs.ConfigFile)
 		if err != nil {
-			err = errors.NewAniErrorD(err)
-			log.Debugf("", err)
+			err = xerrors.NewAniErrorD(err)
+			log.DebugErr(err)
 			c.JSON(webModels.Fail("打开文件 " + configs.ConfigFile + " 失败"))
 			return
 		}
@@ -88,8 +88,8 @@ func (a *Api) ConfigPut(c *gin.Context) {
 			return
 		}
 		if err != nil {
-			err = errors.NewAniErrorD(err)
-			log.Debugf("", err)
+			err = xerrors.NewAniErrorD(err)
+			log.DebugErr(err)
 			c.JSON(webModels.Fail("参数格式错误"))
 			return
 		}
@@ -97,16 +97,16 @@ func (a *Api) ConfigPut(c *gin.Context) {
 		if *request.Backup {
 			err = configs.BackupConfig(configs.ConfigFile, "")
 			if err != nil {
-				err = errors.NewAniErrorD(err)
-				log.Debugf("", err)
+				err = xerrors.NewAniErrorD(err)
+				log.DebugErr(err)
 				c.JSON(webModels.Fail("备份文件 " + configs.ConfigFile + " 失败"))
 				return
 			}
 		}
 		err = os.WriteFile(configs.ConfigFile, data, 0644)
 		if err != nil {
-			err = errors.NewAniErrorD(err)
-			log.Debugf("", err)
+			err = xerrors.NewAniErrorD(err)
+			log.DebugErr(err)
 			c.JSON(webModels.Fail("写到文件 " + configs.ConfigFile + " 失败"))
 			return
 		}

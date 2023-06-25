@@ -9,13 +9,15 @@ import (
 	"sync"
 
 	"github.com/jinzhu/copier"
+	"github.com/pkg/errors"
+	"github.com/wetor/AnimeGo/pkg/exceptions"
 
 	"github.com/wetor/AnimeGo/internal/animego/downloader"
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/pkg/errors"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/utils"
+	"github.com/wetor/AnimeGo/pkg/xerrors"
 	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
@@ -45,6 +47,9 @@ type Manager struct {
 	name2status  map[string]*models.DownloadStatus // 同时存在于db和内存中
 
 	sleepUpdateCount int // UpdateList 休眠倒计数，当不存在正在下载、做种以及下载完成的项目时，在 SleepUpdateMaxCount 后停止更新
+
+	errs     []error
+	errMutex sync.Mutex
 	sync.Mutex
 }
 
@@ -63,6 +68,7 @@ func NewManager(client api.Downloader, cache api.Cacher, rename api.Renamer) *Ma
 		name2chan:        make(map[string][]chan models.TorrentState),
 		name2status:      make(map[string]*models.DownloadStatus),
 		sleepUpdateCount: SleepUpdateMaxCount,
+		errs:             make([]error, 0),
 	}
 	m.downloadChan = make(chan any, DownloadChanDefaultCap)
 
@@ -74,6 +80,12 @@ func NewManager(client api.Downloader, cache api.Cacher, rename api.Renamer) *Ma
 
 	m.UpdateList()
 	return m
+}
+
+func (m *Manager) addError(err error) {
+	m.errMutex.Lock()
+	m.errs = append(m.errs, err)
+	m.errMutex.Unlock()
 }
 
 func (m *Manager) loadCache() {
@@ -93,10 +105,13 @@ func (m *Manager) loadCache() {
 }
 
 func (m *Manager) Delete(hash []string) {
-	m.client.Delete(&models.ClientDeleteOptions{
+	err := m.client.Delete(&models.ClientDeleteOptions{
 		Hash:       hash,
 		DeleteFile: true,
 	})
+	if err != nil {
+		m.addError(err)
+	}
 }
 
 // Download
@@ -132,7 +147,7 @@ func (m *Manager) download(anime *models.AnimeEntity) {
 		}
 	}
 	log.Infof("开始下载「%s」", name)
-	m.client.Add(&models.ClientAddOptions{
+	err := m.client.Add(&models.ClientAddOptions{
 		Url:         anime.Torrent.Url,
 		SavePath:    Conf.DownloadPath,
 		Category:    Conf.Category,
@@ -140,6 +155,10 @@ func (m *Manager) download(anime *models.AnimeEntity) {
 		SeedingTime: Conf.SeedingTimeMinute,
 		Rename:      name,
 	})
+	if err != nil {
+		m.addError(err)
+		return
+	}
 	m.cache.Put(Hash2NameBucket, anime.Torrent.Hash, name, 0)
 	m.cache.Put(Name2EntityBucket, name, anime, 0)
 
@@ -165,10 +184,23 @@ func (m *Manager) Start(ctx context.Context) {
 		for {
 			exit := false
 			func() {
-				defer errors.HandleError(func(err error) {
+				defer xerrors.HandleError(func(err error) {
 					log.Errorf("", err)
 					m.sleep(ctx)
 				})
+				defer func() {
+					m.errMutex.Lock()
+					defer m.errMutex.Unlock()
+					for _, err := range m.errs {
+						if e, ok := err.(api.StackTracer); ok {
+							st := e.StackTrace()
+							log.Errorf("%s%+v", err, st[0:2])
+						} else {
+							log.Errorf("%+v", err)
+						}
+					}
+					m.errs = make([]error, 0)
+				}()
 				select {
 				case <-ctx.Done():
 					log.Debugf("正常退出 manager downloader")
@@ -241,7 +273,11 @@ func (m *Manager) updateStatus(status *models.DownloadStatus, anime *models.Anim
 					log.Infof("移动完成「%s」", name)
 				},
 			}
-			m.rename.AddRenameTask(renameOpt)
+			err := m.rename.AddRenameTask(renameOpt)
+			if err != nil {
+				m.addError(err)
+				return
+			}
 		}
 	}
 
@@ -284,9 +320,13 @@ func (m *Manager) DeleteCache(fullname string) {
 	}()
 	delete(m.name2status, fullname)
 	err := m.cache.Delete(Name2StatusBucket, fullname)
-	errors.NewAniErrorD(err).TryPanic()
+	if err != nil {
+		m.addError(err)
+	}
 	err = m.cache.Delete(Name2EntityBucket, fullname)
-	errors.NewAniErrorD(err).TryPanic()
+	if err != nil {
+		m.addError(err)
+	}
 }
 
 func (m *Manager) isCompleted(status *models.DownloadStatus) bool {
@@ -326,9 +366,13 @@ func (m *Manager) UpdateList() {
 	defer m.Unlock()
 
 	// 获取客户端下载列表
-	items := m.client.List(&models.ClientListOptions{
+	items, err := m.client.List(&models.ClientListOptions{
 		Category: Conf.Category,
 	})
+	if err != nil {
+		m.addError(err)
+		return
+	}
 	hash2item := make(map[string]*models.TorrentItem)
 	for _, item := range items {
 		hash2item[item.Hash] = item
@@ -384,10 +428,14 @@ func (m *Manager) UpdateList() {
 					// 重命名完成
 					if status.Renamed {
 						// 删除已完成的列表记录
-						m.client.Delete(&models.ClientDeleteOptions{
+						err = m.client.Delete(&models.ClientDeleteOptions{
 							Hash:       []string{status.Hash},
 							DeleteFile: false,
 						})
+						if err != nil {
+							m.addError(err)
+							return
+						}
 					}
 				}
 				// 文件不存在
@@ -506,15 +554,17 @@ func (m *Manager) scrape(bangumi *models.AnimeEntity, dir string) bool {
 	if !utils.IsExist(nfo) {
 		err := os.WriteFile(nfo, []byte(bangumi.Meta()), os.ModePerm)
 		if err != nil {
-			log.Debugf("", errors.NewAniErrorD(err))
-			log.Warnf("写入tvshow.nfo元文件失败")
+			err = errors.WithStack(&exceptions.ErrManager{Message: "写入tvshow.nfo元文件失败"})
+			log.Warnf("%s", err)
+			m.addError(err)
 			return false
 		}
 	}
 	data, err := os.ReadFile(nfo)
 	if err != nil {
-		log.Debugf("", errors.NewAniErrorD(err))
-		log.Warnf("打开已存在的tvshow.nfo元文件失败")
+		err = errors.WithStack(&exceptions.ErrManager{Message: "打开tvshow.nfo元文件失败"})
+		log.Warnf("%s", err)
+		m.addError(err)
 		return false
 	}
 	TmdbRegx := regexp.MustCompile(`<tmdbid>\d+</tmdbid>`)
@@ -526,8 +576,9 @@ func (m *Manager) scrape(bangumi *models.AnimeEntity, dir string) bool {
 
 	err = os.WriteFile(nfo, []byte(xmlStr), os.ModePerm)
 	if err != nil {
-		log.Debugf("", errors.NewAniErrorD(err))
-		log.Warnf("写入修改的tvshow.nfo元文件失败")
+		err = errors.WithStack(&exceptions.ErrManager{Message: "编辑tvshow.nfo元文件失败"})
+		log.Warnf("%s", err)
+		m.addError(err)
 		return false
 	}
 	return true

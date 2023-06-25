@@ -155,9 +155,10 @@ func TestMikan_Parse(t *testing.T) {
 	m := mikan.Mikan{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			p := public.ParserName(tt.args.name)
+			p, _ := public.ParserName(tt.args.name)
 			assert.NotEmpty(t, p)
-			gotAnime := m.Parse(tt.args.opts)
+			gotAnime, err := m.Parse(tt.args.opts)
+			assert.NoError(t, err)
 			gotAnime.Ep = []*models.AnimeEpEntity{{Ep: p.Ep}}
 			assert.Equalf(t, tt.wantAnime, gotAnime, "Parse(%v)", tt.args.opts)
 		})

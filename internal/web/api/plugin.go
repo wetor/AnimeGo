@@ -11,8 +11,8 @@ import (
 	"github.com/wetor/AnimeGo/internal/animego/feed/rss"
 	"github.com/wetor/AnimeGo/internal/models"
 	webModels "github.com/wetor/AnimeGo/internal/web/models"
-	"github.com/wetor/AnimeGo/pkg/errors"
 	"github.com/wetor/AnimeGo/pkg/log"
+	"github.com/wetor/AnimeGo/pkg/xerrors"
 	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
@@ -35,7 +35,11 @@ func (a *Api) Rss(c *gin.Context) {
 	}
 	reqRss := rss.NewRss(&rss.Options{Url: request.Rss.Url})
 
-	items := reqRss.Parse()
+	items, err := reqRss.Parse()
+	if err != nil {
+		c.JSON(webModels.Fail(err.Error()))
+		return
+	}
 	if request.IsSelectEp {
 		set := make(map[string]bool)
 		for _, item := range request.EpLinks {
@@ -49,7 +53,11 @@ func (a *Api) Rss(c *gin.Context) {
 		}
 		items = selectItems
 	}
-	go a.filterManager.Update(a.ctx, items, nil, false)
+	err = a.filterManager.Update(a.ctx, items, nil, false, true)
+	if err != nil {
+		c.JSON(webModels.Fail(err.Error()))
+		return
+	}
 	c.JSON(webModels.Succ(fmt.Sprintf("开始处理%d个下载项", len(items))))
 }
 
@@ -75,15 +83,15 @@ func (a *Api) PluginConfigPost(c *gin.Context) {
 	}
 	file, err := request.FindFile()
 	if err != nil {
-		log.Debugf("", err)
+		log.DebugErr(err)
 		c.JSON(webModels.Fail(err.Error()))
 		return
 	}
 
 	data, err := base64.StdEncoding.DecodeString(request.Data)
 	if err != nil {
-		err = errors.NewAniErrorD(err)
-		log.Debugf("", err)
+		err = xerrors.NewAniErrorD(err)
+		log.DebugErr(err)
 		c.JSON(webModels.Fail(err.Error()))
 		return
 	}
@@ -91,8 +99,8 @@ func (a *Api) PluginConfigPost(c *gin.Context) {
 	filename := strings.TrimSuffix(file, xpath.Ext(file)) + ".json"
 	err = os.WriteFile(filename, data, 0666)
 	if err != nil {
-		err = errors.NewAniErrorD(err)
-		log.Debugf("", err)
+		err = xerrors.NewAniErrorD(err)
+		log.DebugErr(err)
 		c.JSON(webModels.Fail(err.Error()))
 		return
 	}
@@ -123,7 +131,7 @@ func (a *Api) PluginConfigGet(c *gin.Context) {
 	}
 	file, err := request.FindFile()
 	if err != nil {
-		log.Debugf("", err)
+		log.DebugErr(err)
 		c.JSON(webModels.Fail(err.Error()))
 		return
 	}
@@ -131,8 +139,8 @@ func (a *Api) PluginConfigGet(c *gin.Context) {
 
 	data, err := os.ReadFile(filename)
 	if err != nil {
-		err = errors.NewAniErrorD(err)
-		log.Debugf("", err)
+		err = xerrors.NewAniErrorD(err)
+		log.DebugErr(err)
 		c.JSON(webModels.Fail("打开文件 " + filename + " 失败"))
 		return
 	}

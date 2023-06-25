@@ -5,5 +5,5 @@ import (
 )
 
 type Feed interface {
-	Parse() []*models.FeedItem
+	Parse() ([]*models.FeedItem, error)
 }

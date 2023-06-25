@@ -30,7 +30,7 @@ func (m *MockManager) Download(anime any) {
 type MockParser struct {
 }
 
-func (m *MockParser) Parse(opt *models.ParseOptions) *models.AnimeEntity {
+func (m *MockParser) Parse(opt *models.ParseOptions) (*models.AnimeEntity, error) {
 	return &models.AnimeEntity{
 		ID:           975,
 		ThemoviedbID: 37854,
@@ -50,7 +50,7 @@ func (m *MockParser) Parse(opt *models.ParseOptions) *models.AnimeEntity {
 				Src: "src_110.mp4",
 			},
 		},
-	}
+	}, nil
 }
 
 func TestMain(m *testing.M) {
@@ -96,5 +96,5 @@ func TestManager_Update(t *testing.T) {
 			Download: "https://mikanani.me/Download/20230328/1069f01462c90b1065f4fc5576529422451a90a9.torrent",
 		},
 	}
-	mgr.Update(ctx, items, nil, false)
+	mgr.Update(ctx, items, nil, false, true)
 }

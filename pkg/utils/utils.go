@@ -60,15 +60,13 @@ func Sleep(second int, ctx context.Context) bool {
 	return false
 }
 
-func MapToStruct(src map[string]any, dst any) {
+func MapToStruct(src map[string]any, dst any) error {
 	data, err := json.Marshal(src)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	err = json.Unmarshal(data, dst)
-	if err != nil {
-		panic(err)
-	}
+	return err
 }
 
 func StructToMap(src any) (dst map[string]any) {

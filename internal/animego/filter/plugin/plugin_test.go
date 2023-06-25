@@ -38,14 +38,14 @@ func TestMain(m *testing.M) {
 
 func TestPython_Filter(t *testing.T) {
 	rss := mikanRss.NewRss(&mikanRss.Options{File: test.GetDataPath(testdata, "Mikan.xml")})
-	items := rss.Parse()
+	items, _ := rss.Parse()
 	fmt.Println(len(items))
 	p := filterPlugin.NewFilterPlugin(&models.Plugin{
 		Enable: true,
 		Type:   "py",
 		File:   "filter.py",
 	})
-	result := p.FilterAll(items)
+	result, _ := p.FilterAll(items)
 	assert.Equal(t, 4, len(result))
 	for _, r := range result {
 		fmt.Println(r)
@@ -72,7 +72,7 @@ func TestPython_Filter2(t *testing.T) {
 		Type:   "py",
 		File:   "test_re.py",
 	})
-	result := p.FilterAll(list)
+	result, _ := p.FilterAll(list)
 	assert.Equal(t, 1, len(result))
 	assert.Equal(t, "1108011", result[0].Name)
 }
@@ -83,7 +83,7 @@ func TestPython_Filter3(t *testing.T) {
 		Debug: true,
 	})
 	rss := mikanRss.NewRss(&mikanRss.Options{File: test.GetDataPath(testdata, "Mikan.xml")})
-	items := rss.Parse()
+	items, _ := rss.Parse()
 	fmt.Println(len(items))
 	fmt.Println("===========")
 	p := filterPlugin.NewFilterPlugin(&models.Plugin{
@@ -91,7 +91,7 @@ func TestPython_Filter3(t *testing.T) {
 		Type:   "py",
 		File:   "filter/pydemo.py",
 	})
-	result := p.FilterAll(items)
+	result, _ := p.FilterAll(items)
 	assert.Equal(t, 9, len(result))
 	for _, r := range result {
 		fmt.Println(r.Name)
@@ -122,7 +122,7 @@ func TestPython_Filter4(t *testing.T) {
 		Type:   "py",
 		File:   "filter/default.py",
 	})
-	result := p.FilterAll(list)
+	result, _ := p.FilterAll(list)
 	assert.Equal(t, 4, len(result))
 	for _, r := range result {
 		fmt.Println(r.Name)
@@ -144,7 +144,7 @@ func TestPython_Filter5(t *testing.T) {
 		Debug: true,
 	})
 	rss := mikanRss.NewRss(&mikanRss.Options{File: test.GetDataPath(testdata, "Mikan.xml")})
-	items := rss.Parse()
+	items, _ := rss.Parse()
 	fmt.Println(len(items))
 	fmt.Println("===========")
 	p := filterPlugin.NewFilterPlugin(&models.Plugin{
@@ -152,7 +152,7 @@ func TestPython_Filter5(t *testing.T) {
 		Type:   "py",
 		File:   "filter/mikan_tool.py",
 	})
-	result := p.FilterAll(items)
+	result, _ := p.FilterAll(items)
 	assert.Equal(t, 13, len(result))
 	for _, r := range result {
 		fmt.Println(r.Name)

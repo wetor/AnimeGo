@@ -94,7 +94,8 @@ func TestRename_Rename(t *testing.T) {
 		filename := tt.args.anime.FilePathSrc()
 		t.Run(tt.name, func(t *testing.T) {
 			tt.args.anime.Default()
-			assert.Equalf(t, tt.want, p.Rename(tt.args.anime, tt.args.index, filename[tt.args.index]), "Rename(%v, %v)", tt.args.anime, filename)
+			result, _ := p.Rename(tt.args.anime, tt.args.index, filename[tt.args.index])
+			assert.Equalf(t, tt.want, result, "Rename(%v, %v)", tt.args.anime, filename)
 		})
 	}
 }

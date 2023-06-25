@@ -115,6 +115,7 @@ func InitDefaultAssets(dataPath string, skip bool) {
 }
 
 func Main() {
+	var err error
 	configFile = xpath.Abs(configFile)
 	// 初始化默认配置、升级配置
 	InitDefaultConfig()
@@ -272,7 +273,7 @@ func Main() {
 		WG: &WG,
 	})
 	// 添加定时任务
-	scheduleSrv.Add(&schedule.AddTaskOptions{
+	err = scheduleSrv.Add(&schedule.AddTaskOptions{
 		Name:     "bangumi",
 		StartRun: true,
 		Task: task.NewBangumiTask(&task.BangumiOptions{
@@ -280,8 +281,17 @@ func Main() {
 			CacheMutex: &BangumiCacheMutex,
 		}),
 	})
-	schedule.AddScheduleTasks(scheduleSrv, configs.ConvertPluginInfo(config.Plugin.Schedule))
-	feedPlugin.AddFeedTasks(scheduleSrv, configs.ConvertPluginInfo(config.Plugin.Feed), filterSrv, ctx)
+	if err != nil {
+		panic(err)
+	}
+	err = schedule.AddScheduleTasks(scheduleSrv, configs.ConvertPluginInfo(config.Plugin.Schedule))
+	if err != nil {
+		panic(err)
+	}
+	err = feedPlugin.AddFeedTasks(scheduleSrv, configs.ConvertPluginInfo(config.Plugin.Feed), filterSrv, ctx)
+	if err != nil {
+		panic(err)
+	}
 	// 启动化定时任务
 	scheduleSrv.Start(ctx)
 

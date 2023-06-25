@@ -11,9 +11,9 @@ import (
 	"github.com/wetor/AnimeGo/configs"
 	"github.com/wetor/AnimeGo/internal/api"
 	webModels "github.com/wetor/AnimeGo/internal/web/models"
-	"github.com/wetor/AnimeGo/pkg/errors"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/utils"
+	"github.com/wetor/AnimeGo/pkg/xerrors"
 )
 
 type Options struct {
@@ -59,17 +59,17 @@ func NewApi(opts *Options) *Api {
 //	Return bool
 func (a *Api) checkRequest(c *gin.Context, data any) bool {
 	if err := c.ShouldBind(data); err != nil {
-		log.Warnf("参数错误，err: %s", errors.NewAniErrorD(err))
+		log.Warnf("参数错误，err: %s", xerrors.NewAniErrorD(err))
 		c.JSON(webModels.Fail("参数错误"))
 		return false
 	}
 	if err := c.ShouldBindQuery(data); err != nil {
-		log.Warnf("Query参数错误，err: %s", errors.NewAniErrorD(err))
+		log.Warnf("Query参数错误，err: %s", xerrors.NewAniErrorD(err))
 		c.JSON(webModels.Fail("Query参数错误"))
 		return false
 	}
 	if err := c.ShouldBindUri(data); err != nil {
-		log.Warnf("Uri参数错误，err: %s", errors.NewAniErrorD(err))
+		log.Warnf("Uri参数错误，err: %s", xerrors.NewAniErrorD(err))
 		c.JSON(webModels.Fail("Uri参数错误"))
 		return false
 	}
@@ -77,7 +77,7 @@ func (a *Api) checkRequest(c *gin.Context, data any) bool {
 	key, has := c.Get("access_key")
 	localKey := utils.Sha256(a.accessKey)
 	if has && key != localKey {
-		log.Warnf("", errors.NewAniError("Access key错误！"))
+		log.Warnf("", xerrors.NewAniError("Access key错误！"))
 		c.JSON(webModels.Fail("Access key错误"))
 		return false
 	}

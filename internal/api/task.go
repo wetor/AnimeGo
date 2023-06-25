@@ -1,14 +1,15 @@
 package api
 
 import (
-	"github.com/wetor/AnimeGo/internal/models"
 	"time"
+
+	"github.com/wetor/AnimeGo/internal/models"
 )
 
 type Task interface {
 	Cron() string
 	NextTime() time.Time
 	Name() string
-	Run(args models.Object)
+	Run(args models.Object) error
 	SetVars(vars models.Object)
 }

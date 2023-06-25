@@ -36,32 +36,41 @@ func (m *Manager) Add(pluginInfo *models.Plugin) {
 }
 
 func (m *Manager) Update(ctx context.Context, items []*models.FeedItem,
-	parseOverride *models.AnimeParseOverride, skipFilter bool) {
+	parseOverride *models.AnimeParseOverride, skipFilter, skipDelay bool) (err error) {
 	ReInitWG.Add(1)
 	defer ReInitWG.Done()
 	// 筛选
 	if len(items) == 0 {
-		return
+		return nil
 	}
 	if !skipFilter {
 		for _, f := range m.filters {
-			items = f.FilterAll(items)
+			filterResult, err := f.FilterAll(items)
+			if err != nil {
+				return err
+			}
+			items = filterResult
 		}
 	}
 
 	for _, item := range items {
 		log.Infof("获取「%s」信息开始...", item.Name)
-		anime := m.parser.Parse(&models.ParseOptions{
+		anime, err := m.parser.Parse(&models.ParseOptions{
 			Title:              item.Name,
 			TorrentUrl:         item.Download,
 			MikanUrl:           item.Url,
 			AnimeParseOverride: parseOverride,
 		})
-		if anime != nil {
+		if err != nil {
+			log.Warnf("%s", err)
+		} else {
 			log.Debugf("发送下载项:「%s」", anime.FullName())
 			// 发送需要下载的信息
 			m.manager.Download(anime)
 		}
-		utils.Sleep(DelaySecond, ctx)
+		if !skipDelay {
+			utils.Sleep(DelaySecond, ctx)
+		}
 	}
+	return nil
 }

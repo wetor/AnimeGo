@@ -60,7 +60,7 @@ func TestLib_log(t *testing.T) {
 			},
 		},
 	})
-	result := p.Run("main", map[string]any{
+	result, _ := p.Run("main", map[string]any{
 		"title": "【悠哈璃羽字幕社】 [明日同学的水手服_Akebi-chan no Sailor-fuku] [01-12] [x264 1080p][CHT]",
 	})
 	fmt.Println(result)
@@ -82,7 +82,7 @@ func TestPythonFunction(t *testing.T) {
 			},
 		},
 	})
-	result := p.Run("main", map[string]any{
+	result, _ := p.Run("main", map[string]any{
 		"params": []int{1, 2, 3},
 	})
 	fmt.Println(result)
@@ -119,7 +119,7 @@ func TestPythonVariable(t *testing.T) {
 	fmt.Println(p.Get("Name"))
 	fmt.Println(p.Get("Cron"))
 	p.Set("Name", "update_test")
-	result := p.Run("main", map[string]any{
+	result, _ := p.Run("main", map[string]any{
 		"params": []int{1, 2, 3},
 	})
 	fmt.Println(result)
@@ -137,7 +137,7 @@ func TestPythonJson(t *testing.T) {
 			},
 		},
 	})
-	result := p.Run("main", map[string]any{
+	result, _ := p.Run("main", map[string]any{
 		"json": `{"a":1,"b":2,"c":3,"d":4,"e":5}`,
 		"yaml": `id: 1
 uuid: 3d877494-e7d4-48e3-aa7a-164373a7920d
@@ -173,7 +173,7 @@ func TestPythonConfig(t *testing.T) {
 		},
 	})
 
-	result := p.Run("test", map[string]any{
+	result, _ := p.Run("test", map[string]any{
 		"test": true,
 	})
 	fmt.Println(result)
@@ -202,7 +202,7 @@ func TestPythonMikanTool(t *testing.T) {
 	os.Setenv("ANIMEGO_VERSION", "0.6.8")
 
 	rss := mikanRss.NewRss(&mikanRss.Options{File: "testdata/Mikan.xml"})
-	items := rss.Parse()
+	items, _ := rss.Parse()
 	fmt.Println(len(items))
 	fmt.Println("===========")
 
@@ -217,7 +217,7 @@ func TestPythonMikanTool(t *testing.T) {
 		},
 	})
 
-	result := p.Run("filter_all", map[string]any{
+	result, _ := p.Run("filter_all", map[string]any{
 		"items": items,
 	})
 	fmt.Println(result["data"])

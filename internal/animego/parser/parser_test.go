@@ -104,7 +104,7 @@ func TestManager_Parse(t *testing.T) {
 	}{
 		// TODO: Add test cases.
 		{
-			name: "1",
+			name: "万事屋斋藤先生转生异世界",
 			args: args{
 				opts: &models.ParseOptions{
 					Title:      "[猎户不鸽压制] 万事屋斋藤先生转生异世界 / 斋藤先生无所不能 Benriya Saitou-san, Isekai ni Iku [01-12] [合集] [WebRip 1080p] [繁中内嵌] [H265 AAC] [2023年1月番] [4.8 GB]",
@@ -134,7 +134,7 @@ func TestManager_Parse(t *testing.T) {
 			},
 		},
 		{
-			name: "2",
+			name: "宝可梦 地平线",
 			args: args{
 				opts: &models.ParseOptions{
 					Title:      "【SW字幕组】[宠物小精灵 / 宝可梦 地平线 莉可与罗伊的旅途][01-02][简日双语字幕][2023.04.14][1080P][AVC][MP4][CHS_JP] [875.7MB]",
@@ -164,7 +164,8 @@ func TestManager_Parse(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotEntity := m.Parse(tt.args.opts)
+			gotEntity, err := m.Parse(tt.args.opts)
+			assert.NoError(t, err)
 			assert.Equalf(t, tt.wantEntity, gotEntity, "Parse(%v)", tt.args.opts)
 		})
 	}
