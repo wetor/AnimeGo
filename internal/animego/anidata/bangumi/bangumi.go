@@ -124,7 +124,7 @@ func (a *Bangumi) loadAnimeInfo(bangumiID int) (entity *Entity, err error) {
 	defer anidata.BangumiCacheLock.Unlock()
 	err = anidata.BangumiCache.Get(SubjectBucket, bangumiID, entity)
 	if err != nil {
-		log.DebugErr(err)
+		// log.DebugErr(err)
 		return nil, err
 	}
 	return entity, nil

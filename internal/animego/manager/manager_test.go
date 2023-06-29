@@ -460,7 +460,7 @@ func TestManager_ReStart_NotDownloaded(t *testing.T) {
 			assert.FileExists(t, f)
 		}
 	}
-	time.Sleep(2*time.Second + 300*time.Millisecond)
+	time.Sleep(1*time.Second + 300*time.Millisecond)
 	{
 		log.Info("重启")
 		wg, cancel := initTest()
@@ -487,8 +487,7 @@ func TestManager_ReStart_NotDownloaded(t *testing.T) {
 		[]string{"接收到下载项", "开始下载"},
 		[]string{"Rename插件", "下载进度", "下载进度"},
 		[]string{"[重命名] 移动", "写入元数据文件", "下载进度"},
-		[]string{"移动完成", "正常退出", "正常退出"},
-		[]string{"重启", "存在可能未下载完成的项目", "下载 1"},
+		[]string{"移动完成", "正常退出", "正常退出", "重启", "存在可能未下载完成的项目", "下载 1"},
 		[]string{"接收到下载项", "发现已下载", "取消下载"},
 		[]string{"正常退出", "正常退出"},
 	)
@@ -551,7 +550,7 @@ func TestManager_AddFailed(t *testing.T) {
 		"Hook",
 		"下载 1, 添加失败",
 		[]string{"接收到下载项", "开始下载"},
-		5,
+		"add_failed",
 		//"下载 1, 重复下载",
 		//[]string{"接收到下载项", "开始下载", "接收到下载项", "取消下载，不允许重复"},
 		"Hook",

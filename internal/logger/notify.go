@@ -22,15 +22,13 @@ func (w *LogNotify) Write(p []byte) (n int, err error) {
 	n, err = os.Stdout.Write(p)
 	if notifyStatus >= NotifyEnabled && err == nil {
 		b := bytes.Clone(p)
-		go func(data []byte) {
-			w.notify <- data
-		}(b)
+		w.notify <- b
 	}
 	return
 }
 
 func NewLogNotify() (io.Writer, chan []byte) {
-	notify := make(chan []byte)
+	notify := make(chan []byte, 30)
 	return &LogNotify{
 		notify: notify,
 	}, notify

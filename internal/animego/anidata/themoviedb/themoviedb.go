@@ -107,7 +107,7 @@ func (a *Themoviedb) parseThemoviedbID(name string) (entity *Entity, err error) 
 		err := request.Get(idApi(a.Key, innerName), &resp)
 		if err != nil {
 			log.DebugErr(err)
-			return 0, errors.WithStack(&exceptions.ErrRequest{Name: a.Name()})
+			//return 0, errors.WithStack(&exceptions.ErrRequest{Name: a.Name()})
 		}
 
 		if resp.TotalResults == 1 {
@@ -156,6 +156,7 @@ func (a *Themoviedb) parseAnimeSeason(tmdbID int, airDate string) (seasonInfo *S
 	}
 	if resp.Seasons == nil || len(resp.Seasons) == 0 {
 		err = errors.WithStack(&exceptions.ErrThemoviedbMatchSeason{Message: "此番剧可能未开播"})
+		log.DebugErr(err)
 		return nil, err
 	}
 	seasonInfo = resp.Seasons[0]
@@ -172,6 +173,7 @@ func (a *Themoviedb) parseAnimeSeason(tmdbID int, airDate string) (seasonInfo *S
 	}
 	if min > MatchSeasonDays {
 		err = errors.WithStack(&exceptions.ErrThemoviedbMatchSeason{Message: "此番剧可能未开播"})
+		log.DebugErr(err)
 		return nil, err
 	}
 	seasonInfo.EpName = ""

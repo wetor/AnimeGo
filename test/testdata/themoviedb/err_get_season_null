@@ -1,0 +1,13 @@
+{
+  "page": 1,
+  "results": [
+    {
+      "first_air_date": "1999-10-20",
+      "id": 114514,
+      "name": "err_get_season_null",
+      "original_name": "err_get_season_null"
+    }
+  ],
+  "total_pages": 1,
+  "total_results": 1
+}

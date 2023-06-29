@@ -35,7 +35,7 @@ func EqualFile(t *testing.T, file1, file2 string) {
 func TestUpdateConfig_120(t *testing.T) {
 	configs.ConfigVersion = "1.2.0"
 
-	file := test.GetData(testdata, "animego_110.yaml")
+	file, _ := test.GetData(testdata, "animego_110.yaml")
 	_ = os.WriteFile("data/animego.yaml", file, 0666)
 	configs.UpdateConfig("data/animego.yaml", false)
 
@@ -44,7 +44,7 @@ func TestUpdateConfig_120(t *testing.T) {
 
 func TestUpdateConfig_130(t *testing.T) {
 	configs.ConfigVersion = "1.3.0"
-	file := test.GetData(testdata, "animego_120.yaml")
+	file, _ := test.GetData(testdata, "animego_120.yaml")
 	_ = os.WriteFile("data/animego.yaml", file, 0666)
 	configs.UpdateConfig("data/animego.yaml", false)
 
@@ -53,7 +53,7 @@ func TestUpdateConfig_130(t *testing.T) {
 
 func TestUpdateConfig_140(t *testing.T) {
 	configs.ConfigVersion = "1.4.0"
-	file := test.GetData(testdata, "animego_130.yaml")
+	file, _ := test.GetData(testdata, "animego_130.yaml")
 	_ = os.WriteFile("data/animego.yaml", file, 0666)
 	configs.UpdateConfig("data/animego.yaml", false)
 
@@ -62,7 +62,7 @@ func TestUpdateConfig_140(t *testing.T) {
 
 func TestUpdateConfig_141(t *testing.T) {
 	configs.ConfigVersion = "1.4.1"
-	file := test.GetData(testdata, "animego_140.yaml")
+	file, _ := test.GetData(testdata, "animego_140.yaml")
 	_ = os.WriteFile("data/animego.yaml", file, 0666)
 	configs.UpdateConfig("data/animego.yaml", false)
 
@@ -71,7 +71,7 @@ func TestUpdateConfig_141(t *testing.T) {
 
 func TestUpdateConfig_150(t *testing.T) {
 	configs.ConfigVersion = "1.5.0"
-	file := test.GetData(testdata, "animego_141.yaml")
+	file, _ := test.GetData(testdata, "animego_141.yaml")
 	_ = os.WriteFile("data/animego.yaml", file, 0666)
 	configs.UpdateConfig("data/animego.yaml", false)
 
@@ -80,7 +80,7 @@ func TestUpdateConfig_150(t *testing.T) {
 
 func TestUpdateConfig_151(t *testing.T) {
 	configs.ConfigVersion = "1.5.1"
-	file := test.GetData(testdata, "animego_150.yaml")
+	file, _ := test.GetData(testdata, "animego_150.yaml")
 	_ = os.WriteFile("data/animego.yaml", file, 0666)
 	configs.UpdateConfig("data/animego.yaml", false)
 

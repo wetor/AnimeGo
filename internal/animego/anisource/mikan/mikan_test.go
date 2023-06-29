@@ -2,14 +2,13 @@ package mikan_test
 
 import (
 	"fmt"
+	"github.com/brahma-adshonor/gohook"
+	"github.com/stretchr/testify/assert"
 	"io"
 	"net/url"
 	"os"
 	"sync"
 	"testing"
-
-	"github.com/brahma-adshonor/gohook"
-	"github.com/stretchr/testify/assert"
 
 	"github.com/wetor/AnimeGo/assets"
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
@@ -30,8 +29,11 @@ import (
 func HookGetWriter(uri string, w io.Writer) error {
 	log.Infof("Mock HTTP GET %s", uri)
 	id := xpath.Base(uri)
-	jsonData := test.GetData("mikan", id)
-	_, err := w.Write(jsonData)
+	jsonData, err := test.GetData("mikan", id)
+	if err != nil {
+		return err
+	}
+	_, err = w.Write(jsonData)
 	if err != nil {
 		return err
 	}
@@ -77,6 +79,9 @@ func TestMain(m *testing.M) {
 	_ = gohook.Hook(request.GetWriter, HookGetWriter, nil)
 	_ = gohook.Hook(request.Get, HookGet, nil)
 	defer test.UnHook()
+	//Hook()
+	//defer UnHook()
+
 	b := cache.NewBolt()
 	b.Open("data/bolt.db")
 	anisource.Init(&anisource.Options{
@@ -155,8 +160,8 @@ func TestMikan_Parse(t *testing.T) {
 	m := mikan.Mikan{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			p, _ := public.ParserName(tt.args.name)
-			assert.NotEmpty(t, p)
+			p, err := public.ParserName(tt.args.name)
+			assert.NoError(t, err)
 			gotAnime, err := m.Parse(tt.args.opts)
 			assert.NoError(t, err)
 			gotAnime.Ep = []*models.AnimeEpEntity{{Ep: p.Ep}}

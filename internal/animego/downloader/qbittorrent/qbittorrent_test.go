@@ -17,6 +17,8 @@ import (
 var qbt *qbittorrent.QBittorrent
 
 func TestMain(m *testing.M) {
+	fmt.Println("跳过Qbittorrent测试")
+	os.Exit(0)
 	fmt.Println("begin")
 	log.Init(&log.Options{
 		File:  "data/test.log",

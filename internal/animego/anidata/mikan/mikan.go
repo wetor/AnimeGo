@@ -103,6 +103,7 @@ func (a *Mikan) Parse(url any) (entity any, err error) {
 		BangumiID: bangumiID,
 	}, nil
 }
+
 func (a *Mikan) CacheParseMikanInfo(url string) (mikanInfo *MikanInfo, err error) {
 	if !a.cacheInit {
 		a.RegisterCache()

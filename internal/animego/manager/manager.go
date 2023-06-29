@@ -192,12 +192,7 @@ func (m *Manager) Start(ctx context.Context) {
 					m.errMutex.Lock()
 					defer m.errMutex.Unlock()
 					for _, err := range m.errs {
-						if e, ok := err.(api.StackTracer); ok {
-							st := e.StackTrace()
-							log.Errorf("%s%+v", err, st[0:2])
-						} else {
-							log.Errorf("%+v", err)
-						}
+						log.Errorf("%s", err)
 					}
 					m.errs = make([]error, 0)
 				}()
@@ -555,7 +550,7 @@ func (m *Manager) scrape(bangumi *models.AnimeEntity, dir string) bool {
 		err := os.WriteFile(nfo, []byte(bangumi.Meta()), os.ModePerm)
 		if err != nil {
 			err = errors.WithStack(&exceptions.ErrManager{Message: "写入tvshow.nfo元文件失败"})
-			log.Warnf("%s", err)
+			log.DebugErr(err)
 			m.addError(err)
 			return false
 		}
@@ -563,7 +558,7 @@ func (m *Manager) scrape(bangumi *models.AnimeEntity, dir string) bool {
 	data, err := os.ReadFile(nfo)
 	if err != nil {
 		err = errors.WithStack(&exceptions.ErrManager{Message: "打开tvshow.nfo元文件失败"})
-		log.Warnf("%s", err)
+		log.DebugErr(err)
 		m.addError(err)
 		return false
 	}
@@ -577,7 +572,7 @@ func (m *Manager) scrape(bangumi *models.AnimeEntity, dir string) bool {
 	err = os.WriteFile(nfo, []byte(xmlStr), os.ModePerm)
 	if err != nil {
 		err = errors.WithStack(&exceptions.ErrManager{Message: "编辑tvshow.nfo元文件失败"})
-		log.Warnf("%s", err)
+		log.DebugErr(err)
 		m.addError(err)
 		return false
 	}

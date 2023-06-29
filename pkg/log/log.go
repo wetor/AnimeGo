@@ -5,8 +5,10 @@ import (
 	"os"
 	"sync"
 
-	"github.com/wetor/AnimeGo/pkg/xpath"
+	"github.com/pkg/errors"
 	"go.uber.org/zap"
+
+	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
 var (
@@ -16,6 +18,10 @@ var (
 	debug      = false
 	out        io.Writer
 )
+
+type StackTracer interface {
+	StackTrace() errors.StackTrace
+}
 
 type Options struct {
 	File  string
@@ -75,7 +81,12 @@ func Debugf(template string, args ...interface{}) {
 }
 
 func DebugErr(err error) {
-	GetLogger().Debugf("%+v", err)
+	if e, ok := err.(StackTracer); ok {
+		st := e.StackTrace()
+		GetLogger().Debugf("%s%+v", err, st[0:2])
+	} else {
+		GetLogger().Debugf("%+v", err)
+	}
 }
 
 func Errorf(template string, args ...interface{}) {

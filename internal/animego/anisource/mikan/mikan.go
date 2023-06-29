@@ -23,10 +23,10 @@ func (m Mikan) Parse(opts *models.AnimeParseOptions) (anime *models.AnimeEntity,
 	if opts.AnimeParseOverride == nil || !opts.OverrideMikan() {
 		log.Debugf("步骤1，解析Mikan，%s", opts.MikanUrl)
 		entity, err := anisource.Mikan().ParseCache(opts.MikanUrl)
-		mikanEntity = entity.(*mikan.Entity)
 		if err != nil {
 			return nil, err
 		}
+		mikanEntity = entity.(*mikan.Entity)
 	} else {
 		mikanEntity.MikanID = opts.AnimeParseOverride.MikanID
 		mikanEntity.BangumiID = opts.AnimeParseOverride.BangumiID
@@ -35,10 +35,10 @@ func (m Mikan) Parse(opts *models.AnimeParseOptions) (anime *models.AnimeEntity,
 	if opts.AnimeParseOverride == nil || !opts.OverrideBangumi() {
 		log.Debugf("步骤2，解析Bangumi，%d", mikanEntity.BangumiID)
 		entity, err := anisource.Bangumi().GetCache(mikanEntity.BangumiID, nil)
-		bgmEntity = entity.(*bangumi.Entity)
 		if err != nil {
 			return nil, err
 		}
+		bgmEntity = entity.(*bangumi.Entity)
 	} else {
 		bgmEntity.Name = opts.AnimeParseOverride.Name
 		bgmEntity.NameCN = opts.AnimeParseOverride.NameCN
@@ -57,7 +57,6 @@ func (m Mikan) Parse(opts *models.AnimeParseOptions) (anime *models.AnimeEntity,
 		tmdbID = id
 		entity, err := t.GetCache(id, bgmEntity.AirDate)
 		if err != nil {
-			log.DebugErr(err)
 			log.Warnf("解析Themoviedb获取番剧季度信息失败")
 		} else {
 			season = entity.(*themoviedb.SeasonInfo).Season
