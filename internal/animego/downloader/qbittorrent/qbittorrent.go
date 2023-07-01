@@ -18,30 +18,46 @@ const (
 	ChanRetryConnect = 1 // 重连消息
 )
 
+type Options struct {
+	Url          string
+	Username     string
+	Password     string
+	DownloadPath string
+}
+
 type QBittorrent struct {
 	option      []qbapi.Option
 	connectFunc func() bool
 	retryChan   chan int
 	retryNum    int // 重试次数
 
+	config    *models.ClientConfig
 	connected bool
 	client    *qbapi.QBAPI
 }
 
-func NewQBittorrent(url, username, password string) *QBittorrent {
+func NewQBittorrent(opts *Options) *QBittorrent {
 	qbt := &QBittorrent{
 		retryChan: make(chan int, 1),
 		retryNum:  0,
 	}
 	qbt.option = make([]qbapi.Option, 0, 3)
 
-	qbt.option = append(qbt.option, qbapi.WithAuth(username, password))
-	qbt.option = append(qbt.option, qbapi.WithHost(url))
+	qbt.option = append(qbt.option, qbapi.WithAuth(opts.Username, opts.Password))
+	qbt.option = append(qbt.option, qbapi.WithHost(opts.Url))
 	qbt.option = append(qbt.option, qbapi.WithTimeout(time.Duration(downloader.ConnectTimeoutSecond)*time.Second))
 	qbt.retryNum = 1
 	qbt.connected = false
+	qbt.config = &models.ClientConfig{
+		ApiUrl:       opts.Url,
+		DownloadPath: opts.DownloadPath,
+	}
 	qbt.retryChan <- ChanRetryConnect
 	return qbt
+}
+
+func (c *QBittorrent) Config() *models.ClientConfig {
+	return c.config
 }
 
 func (c *QBittorrent) Connected() bool {

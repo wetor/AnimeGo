@@ -179,7 +179,12 @@ func Main() {
 		WG:                   &WG,
 	})
 	qbtConf := config.Setting.Client.QBittorrent
-	qbittorrentSrv := qbittorrent.NewQBittorrent(qbtConf.Url, qbtConf.Username, qbtConf.Password)
+	qbittorrentSrv := qbittorrent.NewQBittorrent(&qbittorrent.Options{
+		Url:          qbtConf.Url,
+		Username:     qbtConf.Username,
+		Password:     qbtConf.Password,
+		DownloadPath: qbtConf.DownloadPath,
+	})
 	qbittorrentSrv.Start(ctx)
 
 	// ===============================================================================================================

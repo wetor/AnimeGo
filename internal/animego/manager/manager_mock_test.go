@@ -99,6 +99,10 @@ func (m *ClientMock) MockAddName(name, hash string, src []string) {
 	}
 }
 
+func (m *ClientMock) Config() *models.ClientConfig {
+	return nil
+}
+
 func (m *ClientMock) Connected() bool {
 	if m.MockGetError(ErrorConnectedFailed) {
 		return false
