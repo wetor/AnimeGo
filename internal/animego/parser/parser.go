@@ -42,7 +42,11 @@ func (m *Manager) Parse(opts *models.ParseOptions) (entity *models.AnimeEntity) 
 	entity.Flag = models.AnimeFlagNone
 	entity.Torrent = &models.AnimeTorrent{
 		Hash: torrentInfo.Hash,
-		Url:  torrentInfo.Url,
+	}
+	if torrentInfo.Type == torrent.TypeFile {
+		entity.Torrent.File = torrentInfo.Url
+	} else {
+		entity.Torrent.Url = torrentInfo.Url
 	}
 	title := opts.Title
 	for _, t := range torrentInfo.Files {

@@ -50,6 +50,7 @@ type AnimeEpEntity struct {
 type AnimeTorrent struct {
 	Hash string `json:"hash"`
 	Url  string `json:"url"`
+	File string `json:"file"`
 }
 
 func (a *AnimeEntity) Default() {

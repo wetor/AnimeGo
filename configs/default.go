@@ -40,7 +40,7 @@ func defaultSetting() {
 	defaultConfig.Setting.Category = "AnimeGo"
 	defaultConfig.Setting.Tag = "{year}年{quarter}月新番"
 
-	defaultConfig.Setting.WebApi.Host = "localhost"
+	defaultConfig.Setting.WebApi.Host = "0.0.0.0"
 	defaultConfig.Setting.WebApi.Port = 7991
 	defaultConfig.Setting.WebApi.AccessKey = "animego123"
 

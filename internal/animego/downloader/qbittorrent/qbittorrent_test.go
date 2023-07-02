@@ -26,7 +26,13 @@ func TestMain(m *testing.M) {
 	downloader.Init(&downloader.Options{
 		WG: &wg,
 	})
-	qbt = qbittorrent.NewQBittorrent("http://127.0.0.1:8080", "admin", "adminadmin")
+
+	qbt = qbittorrent.NewQBittorrent(&qbittorrent.Options{
+		Url:          "http://127.0.0.1:8080",
+		Username:     "admin",
+		Password:     "adminadmin",
+		DownloadPath: "/tmp/test",
+	})
 	qbt.Start(context.Background())
 	for i := 0; i < 5 && !qbt.Connected(); i++ {
 		time.Sleep(time.Second)

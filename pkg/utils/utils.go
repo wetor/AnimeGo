@@ -205,3 +205,12 @@ func Rename(src, dst string) error {
 func Unix() int64 {
 	return time.Now().Unix()
 }
+
+func String2Bool(str string) bool {
+	switch strings.ToLower(str) {
+	case "true", "1":
+		return true
+	default:
+		return false
+	}
+}

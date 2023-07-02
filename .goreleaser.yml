@@ -56,6 +56,29 @@ builds:
       - arm64
     ldflags:
       - -s -w -X "github.com/wetor/AnimeGo/cmd/common.version={{.Tag}}" -X "github.com/wetor/AnimeGo/cmd/common.buildTime={{.Date}}"
+
+dockers:
+  -
+    id: AnimeGo-Docker
+    goos: linux
+    goarch: amd64
+    ids:
+      - AnimeGo
+    dockerfile: Dockerfile
+    use: buildx
+    image_templates:
+      - "wetor/animego:latest"
+      - "wetor/animego:{{ .Tag }}"
+      - "ghcr.io/wetor/animego:latest"
+      - "ghcr.io/wetor/animego:{{ .Tag }}"
+    build_flag_templates:
+      - "--pull"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+      - "--platform=linux/amd64"
+
 archives:
   - name_template: >-
       {{- .Binary }}_

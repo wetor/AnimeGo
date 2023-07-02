@@ -20,6 +20,7 @@ const (
 	TypeUnknown = "unknown"
 	TypeTorrent = "torrent"
 	TypeMagnet  = "magnet"
+	TypeFile    = "file"
 )
 
 var (
@@ -117,6 +118,7 @@ func LoadUri(uri string) (t *Torrent, err error) {
 		if err != nil {
 			return nil, err
 		}
+		t.Type = TypeFile
 		t.Url = file
 		return t, nil
 	}
@@ -137,6 +139,7 @@ func LoadUri(uri string) (t *Torrent, err error) {
 		}
 		file = xpath.Join(TempPath, t.Hash+".torrent")
 		err = os.WriteFile(file, w.Bytes(), 0666)
+		t.Type = TypeFile
 		t.Url = file
 	}
 	return

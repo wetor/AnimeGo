@@ -232,6 +232,7 @@ func (c *QBittorrent) Add(opt *models.ClientAddOptions) {
 	if len(opt.File) > 0 {
 		_, err = c.client.AddNewTorrent(context.Background(), &qbapi.AddNewTorrentReq{
 			File: []string{opt.File},
+			Meta: meta,
 		})
 	} else {
 		_, err = c.client.AddNewLink(context.Background(), &qbapi.AddNewLinkReq{
