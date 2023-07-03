@@ -76,7 +76,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestNewSchedule3_feed(t *testing.T) {
-	feedPlugin.AddFeedTasks(s, []models.Plugin{
+	_ = feedPlugin.AddFeedTasks(s, []models.Plugin{
 		{
 			Enable: true,
 			Type:   "builtin",

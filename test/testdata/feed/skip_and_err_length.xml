@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0">
+    <channel>
+        <title>Mikan Project - 我的番组</title>
+        <link>http://mikanani.me/RSS/MyBangumi?token=ky5DTt%2FMyAjCH2oKEN81FQ%3D%3D</link>
+        <description>Mikan Project - 我的番组</description>
+        <item>
+            <title>[猎户不鸽压制] 万事屋斋藤先生转生异世界 / 斋藤先生无所不能 Benriya Saitou-san, Isekai ni Iku [03] [1080p] [繁中内嵌] [2023年1月番]
+            </title>
+        </item>
+        <item>
+            <link>https://mikanani.me/Home/Episode/2076477d6a119fae9ad882ecc5fd697c1afaee75</link>
+            <title>万事屋斋藤先生转生异世界</title>
+            <torrent xmlns="https://mikanani.me/0.1/">
+                <link>https://mikanani.me/Home/Episode/2076477d6a119fae9ad882ecc5fd697c1afaee75</link>
+                <contentLength>409573792</contentLength>
+                <pubDate>2023-01-23T23:25:26.98889</pubDate>
+            </torrent>
+            <enclosure type="application/x-bittorrent" length="aaa"
+                       url="https://mikanani.me/Download/20230123/2076477d6a119fae9ad882ecc5fd697c1afaee75.torrent"/>
+        </item>
+    </channel>
+</rss>

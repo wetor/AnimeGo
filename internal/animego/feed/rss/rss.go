@@ -59,10 +59,10 @@ func (f *Rss) Parse() (items []*models.FeedItem, err error) {
 		err := request.GetWriter(f.url, data)
 		if err != nil {
 			log.DebugErr(err)
-			return nil, errors.WithStack(&exceptions.ErrFeed{Message: "请求Rss失败"})
+			return nil, errors.WithStack(&exceptions.ErrRequest{Name: "Rss"})
 		}
 	} else {
-		return nil, err
+		return nil, errors.WithStack(&exceptions.ErrFeed{Message: "Rss为空"})
 	}
 	log.Infof("获取Rss数据成功！")
 
@@ -74,36 +74,31 @@ func (f *Rss) Parse() (items []*models.FeedItem, err error) {
 	}
 
 	regx := regexp.MustCompile(`<pubDate>(.*?)T`)
-	var date string
-	var length int64
-	items = make([]*models.FeedItem, len(feeds.Items))
-	for i, item := range feeds.Items {
-		strs := regx.FindStringSubmatch(item.Custom["torrent"])
-		if len(strs) < 2 {
-			date = ""
-		} else {
-			date = strs[1]
-		}
-
+	items = make([]*models.FeedItem, 0, len(feeds.Items))
+	for _, item := range feeds.Items {
 		if len(item.Enclosures) == 0 {
-			log.Debugf("解析Rss项目 %s 详细信息失败，忽略", item.Title)
+			log.Debugf("解析Rss项目「%s」详细信息失败，跳过", item.Title)
 			continue
 		}
 
-		length, err = strconv.ParseInt(item.Enclosures[0].Length, 10, 64)
+		length, err := strconv.ParseInt(item.Enclosures[0].Length, 10, 64)
 		if err != nil {
-			log.DebugErr(errors.Wrapf(err, "解析Rss项目 %s 下载大小失败，默认0", item.Title))
-			length = 0
+			log.Debugf("解析Rss项目「%s」下载大小失败，默认0", item.Title)
 		}
 
-		items[i] = &models.FeedItem{
+		var date string
+		dateMatch := regx.FindStringSubmatch(item.Custom["torrent"])
+		if len(dateMatch) >= 2 {
+			date = dateMatch[1]
+		}
+		items = append(items, &models.FeedItem{
 			Url:      item.Link,
 			Name:     item.Title,
 			Date:     date,
 			Type:     item.Enclosures[0].Type,
 			Download: item.Enclosures[0].URL,
 			Length:   length,
-		}
+		})
 	}
 	return items, nil
 }

@@ -96,5 +96,5 @@ func TestManager_Update(t *testing.T) {
 			Download: "https://mikanani.me/Download/20230328/1069f01462c90b1065f4fc5576529422451a90a9.torrent",
 		},
 	}
-	mgr.Update(ctx, items, nil, false, true)
+	_ = mgr.Update(ctx, items, nil, false, true)
 }

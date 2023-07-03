@@ -12,9 +12,9 @@ import (
 
 // 单例模式
 var (
-	mikanInstance      api.AniDataParse
-	bangumiInstance    api.AniDataGet
-	themoviedbInstance api.AniDataSearchGet
+	MikanInstance      api.AniDataParse
+	BangumiInstance    api.AniDataGet
+	ThemoviedbInstance api.AniDataSearchGet
 )
 
 type Options struct {
@@ -26,31 +26,31 @@ type Options struct {
 //	@Description: 初始化anisource，需要在程序启动时调用
 //	@param proxy string
 func Init(opts *Options) {
-	mikanInstance = nil
-	bangumiInstance = nil
-	themoviedbInstance = nil
+	MikanInstance = nil
+	BangumiInstance = nil
+	ThemoviedbInstance = nil
 	anidata.Init(opts.Options)
 }
 
 func Mikan() api.AniDataParse {
-	if mikanInstance == nil {
-		mikanInstance = &mikan.Mikan{}
+	if MikanInstance == nil {
+		MikanInstance = &mikan.Mikan{}
 	}
-	return mikanInstance
+	return MikanInstance
 }
 
 func Bangumi() api.AniDataGet {
-	if bangumiInstance == nil {
-		bangumiInstance = &bangumi.Bangumi{}
+	if BangumiInstance == nil {
+		BangumiInstance = &bangumi.Bangumi{}
 	}
-	return bangumiInstance
+	return BangumiInstance
 }
 
 func Themoviedb(key string) api.AniDataSearchGet {
-	if themoviedbInstance == nil {
-		themoviedbInstance = &themoviedb.Themoviedb{
+	if ThemoviedbInstance == nil {
+		ThemoviedbInstance = &themoviedb.Themoviedb{
 			Key: key,
 		}
 	}
-	return themoviedbInstance
+	return ThemoviedbInstance
 }
