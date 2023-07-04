@@ -2,7 +2,6 @@ package parser
 
 import (
 	"github.com/pkg/errors"
-
 	"github.com/wetor/AnimeGo/internal/animego/parser/utils"
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/exceptions"

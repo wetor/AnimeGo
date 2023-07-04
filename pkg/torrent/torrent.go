@@ -137,14 +137,15 @@ func LoadUri(uri string) (t *Torrent, err error) {
 		return t, nil
 	}
 load:
-	if uriType == TypeMagnet {
+	switch uriType {
+	case TypeMagnet:
 		t, err = LoadMagnetUri(uri)
 		if err != nil {
 			log.Debugf("%s", err)
 			// 继续执行
 		}
 		t.Url = uri
-	} else if strings.HasPrefix(uri, "http") {
+	case TypeTorrent:
 		w := bytes.NewBuffer(nil)
 		err = request.GetWriter(uri, w)
 		if err != nil {
@@ -163,6 +164,8 @@ load:
 			// 继续执行
 		}
 		t.Url = file
+	default:
+		return nil, errors.WithStack(&exceptions.ErrTorrentUrl{Url: uri})
 	}
 	return t, nil
 }

@@ -53,7 +53,7 @@ func (a *Api) Rss(c *gin.Context) {
 		}
 		items = selectItems
 	}
-	err = a.filterManager.Update(a.ctx, items, nil, false, true)
+	err = a.filterManager.Update(a.ctx, items, false, true)
 	if err != nil {
 		c.JSON(webModels.Fail(err.Error()))
 		return

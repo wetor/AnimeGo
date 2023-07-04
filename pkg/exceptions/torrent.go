@@ -36,10 +36,9 @@ func (e ErrTorrentHash) Error() string {
 }
 
 type ErrTorrentUrl struct {
-	Url     string
-	Message string
+	Url string
 }
 
 func (e ErrTorrentUrl) Error() string {
-	return fmt.Sprintf("%s: %s", e.Message, e.Url)
+	return fmt.Sprintf("无法识别Torrent Url: %s", e.Url)
 }

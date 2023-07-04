@@ -18,7 +18,7 @@ func AddFeedTasks(s *schedule.Schedule, plugins []models.Plugin, filterManager a
 		t, err := task.NewFeedTask(&task.FeedOptions{
 			Plugin: &p,
 			Callback: func(items []*models.FeedItem) error {
-				return filterManager.Update(ctx, items, nil, false, false)
+				return filterManager.Update(ctx, items, false, false)
 			},
 		})
 		if err != nil {
