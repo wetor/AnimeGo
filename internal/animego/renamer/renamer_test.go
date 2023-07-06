@@ -48,17 +48,16 @@ func TestMain(m *testing.M) {
 	fmt.Println("end")
 }
 
-func rename(r *renamer.Manager, state []chan models.TorrentState, mode string, anime *models.AnimeEntity) []string {
+func rename(r *renamer.Manager, mode string, anime *models.AnimeEntity) ([]string, string) {
 	srcs := anime.FilePathSrc()
 	for _, s := range srcs {
 		_ = os.WriteFile(xpath.Join(DownloadPath, s), []byte{}, os.ModePerm)
 	}
-	r.AddRenameTask(&models.RenameOptions{
+	_ = r.AddRenameTask(&models.RenameOptions{
 		Entity: anime,
 		SrcDir: DownloadPath,
 		DstDir: SavePath,
 		Mode:   mode,
-		State:  state,
 		RenameCallback: func(result *models.RenameResult) {
 			d, _ := json.Marshal(result)
 			fmt.Println(string(d))
@@ -72,18 +71,10 @@ func rename(r *renamer.Manager, state []chan models.TorrentState, mode string, a
 	for i := range result {
 		result[i] = xpath.Join(SavePath, dst[i])
 	}
-	return result
+	return result, anime.FullName()
 }
 
-func makeChans(size int) []chan models.TorrentState {
-	state := make([]chan models.TorrentState, size)
-	for i := range state {
-		state[i] = make(chan models.TorrentState)
-	}
-	return state
-}
-
-func Rename1(r *renamer.Manager) ([]string, []chan models.TorrentState) {
+func Rename1(r *renamer.Manager) ([]string, string) {
 	mode := "link_delete"
 	anime := &models.AnimeEntity{
 		ID:      18692,
@@ -99,11 +90,10 @@ func Rename1(r *renamer.Manager) ([]string, []chan models.TorrentState) {
 		},
 		MikanID: 681,
 	}
-	state := makeChans(len(anime.Ep))
-	return rename(r, state, mode, anime), state
+	return rename(r, mode, anime)
 }
 
-func Rename2(r *renamer.Manager) ([]string, []chan models.TorrentState) {
+func Rename2(r *renamer.Manager) ([]string, string) {
 	mode := "wait_move"
 	anime := &models.AnimeEntity{
 		ID:      18692,
@@ -117,11 +107,10 @@ func Rename2(r *renamer.Manager) ([]string, []chan models.TorrentState) {
 		},
 		MikanID: 228,
 	}
-	state := makeChans(len(anime.Ep))
-	return rename(r, state, mode, anime), state
+	return rename(r, mode, anime)
 }
 
-func Rename3(r *renamer.Manager) ([]string, []chan models.TorrentState) {
+func Rename3(r *renamer.Manager) ([]string, string) {
 	mode := "move"
 	anime := &models.AnimeEntity{
 		ID:      18692,
@@ -135,8 +124,7 @@ func Rename3(r *renamer.Manager) ([]string, []chan models.TorrentState) {
 		},
 		MikanID: 228,
 	}
-	state := makeChans(len(anime.Ep))
-	return rename(r, state, mode, anime), state
+	return rename(r, mode, anime)
 }
 
 func TestRenamer_Start(t *testing.T) {
@@ -150,28 +138,28 @@ func TestRenamer_Start(t *testing.T) {
 		File:   "builtin_rename.py",
 	})
 	r := renamer.NewManager(p)
-	f1, state1 := Rename1(r)
-	f2, state2 := Rename2(r)
-	f3, state3 := Rename3(r)
+	f1, name1 := Rename1(r)
+	f2, name2 := Rename2(r)
+	f3, name3 := Rename3(r)
 
 	r.Start(ctx)
 	time.Sleep(500 * time.Millisecond)
 	go func() {
-		for i := range state1 {
-			state1[i] <- downloader.StateSeeding
-			state1[i] <- downloader.StateComplete
+		for i := range f1 {
+			_ = r.SetDownloadState(name1, i, downloader.StateSeeding)
+			_ = r.SetDownloadState(name1, i, downloader.StateComplete)
 		}
 	}()
 	go func() {
-		for i := range state2 {
-			state2[i] <- downloader.StateSeeding
-			state2[i] <- downloader.StateComplete
+		for i := range f2 {
+			_ = r.SetDownloadState(name2, i, downloader.StateSeeding)
+			_ = r.SetDownloadState(name2, i, downloader.StateComplete)
 		}
 	}()
 	go func() {
-		for i := range state3 {
-			state3[i] <- downloader.StateSeeding
-			state3[i] <- downloader.StateComplete
+		for i := range f3 {
+			_ = r.SetDownloadState(name3, i, downloader.StateSeeding)
+			_ = r.SetDownloadState(name3, i, downloader.StateComplete)
 		}
 	}()
 

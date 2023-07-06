@@ -19,7 +19,6 @@ type RenameOptions struct {
 	SrcDir           string // 原名
 	DstDir           string // 目标名
 	Mode             string
-	State            []chan TorrentState
 	RenameCallback   RenameCallback   // 重命名完成后回调
 	CompleteCallback CompleteCallback // 完成重命名所有流程后回调
 }

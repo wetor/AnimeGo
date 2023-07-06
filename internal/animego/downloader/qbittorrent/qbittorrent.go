@@ -6,9 +6,9 @@ import (
 
 	"github.com/jinzhu/copier"
 	"github.com/pkg/errors"
-	"github.com/wetor/AnimeGo/internal/exceptions"
 
 	"github.com/wetor/AnimeGo/internal/animego/downloader"
+	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/utils"
@@ -90,8 +90,8 @@ func (c *QBittorrent) Start(ctx context.Context) {
 		for {
 			exit := false
 			func() {
-				defer xerrors.HandleError(func(err error) {
-					log.Errorf("", err)
+				defer utils.HandleError(func(err error) {
+					log.Errorf("%+v", err)
 				})
 				select {
 				case <-ctx.Done():
@@ -125,8 +125,8 @@ func (c *QBittorrent) Start(ctx context.Context) {
 		for {
 			exit := false
 			func() {
-				defer xerrors.HandleError(func(err error) {
-					log.Errorf("", err)
+				defer utils.HandleError(func(err error) {
+					log.Errorf("%+v", err)
 				})
 				select {
 				case <-ctx.Done():

@@ -13,6 +13,7 @@ import (
 	"github.com/wetor/AnimeGo/internal/logger"
 	"github.com/wetor/AnimeGo/pkg/json"
 	"github.com/wetor/AnimeGo/pkg/log"
+	"github.com/wetor/AnimeGo/pkg/utils"
 	"github.com/wetor/AnimeGo/pkg/xerrors"
 )
 
@@ -44,8 +45,8 @@ func (w *WebSocket) Start(ctx context.Context) {
 		for {
 			exit := false
 			func() {
-				defer xerrors.HandleError(func(err error) {
-					log.Errorf("", err)
+				defer utils.HandleError(func(err error) {
+					log.Errorf("%+v", err)
 				})
 				select {
 				case <-ctx.Done():

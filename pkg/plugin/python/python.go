@@ -9,11 +9,11 @@ import (
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
 
+	"github.com/wetor/AnimeGo/pkg/exceptions"
 	"github.com/wetor/AnimeGo/pkg/json"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/plugin"
 	"github.com/wetor/AnimeGo/pkg/utils"
-	"github.com/wetor/AnimeGo/pkg/xerrors"
 	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
@@ -125,8 +125,9 @@ func (p *Python) endExecute() (err error) {
 	for name, variable := range p.variables {
 		_, has := p.module.Globals[name]
 		if !has && !variable.Nullable {
-			log.Warnf("未找到全局变量 %s", name)
-			xerrors.NewAniErrorf("未找到全局变量 %s", name).TryPanic()
+			err = errors.WithStack(exceptions.ErrPlugin{Type: p.Type(), File: p.file, Message: "未找到全局变量: " + name})
+			log.DebugErr(err)
+			return err
 		}
 	}
 	err = p.Set("__debug__", plugin.Debug)

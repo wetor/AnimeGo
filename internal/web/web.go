@@ -28,7 +28,12 @@ func Run(ctx context.Context) {
 				c.JSON(models.ErrSvr(recovered.(string)))
 			}
 		})) // 错误处理中间件
-		InitSwagger(r)
+		if Debug {
+			gin.SetMode(gin.DebugMode)
+			InitSwagger(r)
+		} else {
+			gin.SetMode(gin.ReleaseMode)
+		}
 		InitRouter(r)
 		InitStatic(r)
 

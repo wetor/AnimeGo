@@ -200,6 +200,20 @@ func Rename(src, dst string) error {
 	return nil
 }
 
+func Remove(dst string) error {
+	return os.Remove(dst)
+}
+
 func Unix() int64 {
 	return time.Now().Unix()
+}
+
+func HandleError(fn func(error)) {
+	if err := recover(); err != nil {
+		if e, ok := err.(error); ok {
+			fn(e)
+		} else {
+			panic(err)
+		}
+	}
 }

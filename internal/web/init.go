@@ -3,15 +3,15 @@ package web
 import (
 	"sync"
 
-	"github.com/gin-gonic/gin"
 	"github.com/wetor/AnimeGo/internal/web/api"
 	"github.com/wetor/AnimeGo/internal/web/websocket"
 )
 
 var (
-	Host string
-	Port int
-	WG   *sync.WaitGroup
+	Debug bool
+	Host  string
+	Port  int
+	WG    *sync.WaitGroup
 
 	API *api.Api
 	WS  *websocket.WebSocket
@@ -29,11 +29,7 @@ type Options struct {
 }
 
 func Init(opts *Options) {
-	if opts.Debug {
-		gin.SetMode(gin.DebugMode)
-	} else {
-		gin.SetMode(gin.ReleaseMode)
-	}
+	Debug = opts.Debug
 	Host = opts.Host
 	Port = opts.Port
 	WG = opts.WG
