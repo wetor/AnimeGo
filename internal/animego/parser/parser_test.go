@@ -129,7 +129,7 @@ func TestManager_Parse(t *testing.T) {
 				},
 				Torrent: &models.AnimeTorrent{
 					Hash: "ac5d8d6fcc4d83cb18f18c209b66afd8e1edba86",
-					Url:  "data/ac5d8d6fcc4d83cb18f18c209b66afd8e1edba86.torrent",
+					File: "data/ac5d8d6fcc4d83cb18f18c209b66afd8e1edba86.torrent",
 				},
 			},
 		},
@@ -149,7 +149,7 @@ func TestManager_Parse(t *testing.T) {
 				},
 				Torrent: &models.AnimeTorrent{
 					Hash: "51ecf2415af99521d07595178685587e16edd926",
-					Url:  "data/51ecf2415af99521d07595178685587e16edd926.torrent",
+					File: "data/51ecf2415af99521d07595178685587e16edd926.torrent",
 				},
 			},
 		},
