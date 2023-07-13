@@ -17,6 +17,7 @@ import (
 	"github.com/wetor/AnimeGo/configs/version/v_140"
 	"github.com/wetor/AnimeGo/configs/version/v_141"
 	"github.com/wetor/AnimeGo/configs/version/v_150"
+	"github.com/wetor/AnimeGo/configs/version/v_151"
 	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/pkg/utils"
 	"github.com/wetor/AnimeGo/pkg/xpath"
@@ -42,6 +43,7 @@ var (
 		"1.4.1",
 		"1.5.0",
 		"1.5.1",
+		"1.5.2",
 	}
 	ConfigVersion = versions[len(versions)-1] // 当前配置文件版本
 
@@ -79,6 +81,11 @@ var (
 			Name:       versions[6],
 			Desc:       "新增域名重定向设置",
 			UpdateFunc: update_150_151,
+		},
+		{
+			Name:       versions[7],
+			Desc:       "新增下载器独立下载路径设置",
+			UpdateFunc: update_151_152,
 		},
 	}
 )
@@ -401,7 +408,7 @@ func update_150_151(file string) {
 		log.Fatal("配置文件加载错误：", err)
 	}
 
-	newConfig := DefaultConfig()
+	newConfig := &v_151.Config{}
 	err = copier.Copy(newConfig, oldConfig)
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
@@ -411,6 +418,40 @@ func update_150_151(file string) {
 	log.Println("[新增] 配置项(advanced.redirect.mikan)")
 	log.Println("[新增] 配置项(advanced.redirect.bangumi)")
 	log.Println("[新增] 配置项(advanced.redirect.themoviedb)")
+
+	content, err := encodeConfig(newConfig)
+	if err != nil {
+		log.Fatal("配置文件升级失败：", err)
+	}
+	err = os.WriteFile(file, content, 0644)
+	if err != nil {
+		log.Fatal("配置文件升级失败：", err)
+	}
+	// 强制写入
+	assets.WritePlugins(assets.Dir, xpath.Join(newConfig.DataPath, assets.Dir), false)
+
+}
+
+func update_151_152(file string) {
+	data, err := os.ReadFile(file)
+	if err != nil {
+		log.Fatal("配置文件加载错误：", err)
+	}
+	oldConfig := &v_151.Config{}
+	err = yaml.Unmarshal(data, oldConfig)
+	if err != nil {
+		log.Fatal("配置文件加载错误：", err)
+	}
+
+	newConfig := DefaultConfig()
+	err = copier.Copy(newConfig, oldConfig)
+	if err != nil {
+		log.Fatal("配置文件升级失败：", err)
+	}
+	newConfig.Version = "1.5.2"
+
+	log.Println("[新增] 配置项(setting.client.qbittorrent.download_path)")
+	newConfig.Setting.Client.QBittorrent.DownloadPath = oldConfig.Setting.DownloadPath
 
 	content, err := encodeConfig(newConfig)
 	if err != nil {

@@ -208,6 +208,15 @@ func Unix() int64 {
 	return time.Now().Unix()
 }
 
+func String2Bool(str string) bool {
+	switch strings.ToLower(str) {
+	case "true", "1":
+		return true
+	default:
+		return false
+	}
+}
+
 func HandleError(fn func(error)) {
 	if err := recover(); err != nil {
 		if e, ok := err.(error); ok {

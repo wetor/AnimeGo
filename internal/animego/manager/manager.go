@@ -145,7 +145,8 @@ func (m *Manager) download(anime *models.AnimeEntity) {
 	log.Infof("开始下载「%s」", name)
 	err := m.client.Add(&models.ClientAddOptions{
 		Url:         anime.Torrent.Url,
-		SavePath:    Conf.DownloadPath,
+		File:        anime.Torrent.File,
+		SavePath:    m.client.Config().DownloadPath,
 		Category:    Conf.Category,
 		Tag:         utils.Tag(Conf.Tag, anime.AirDate, anime.Ep[0].Ep),
 		SeedingTime: Conf.SeedingTimeMinute,

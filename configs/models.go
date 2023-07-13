@@ -26,27 +26,28 @@ type Plugin struct {
 type Setting struct {
 	Client struct {
 		QBittorrent struct {
-			Url      string `yaml:"url" json:"url" attr:"地址"`
-			Username string `yaml:"username" json:"username" attr:"用户名"`
-			Password string `yaml:"password" json:"password" attr:"密码"`
+			Url          string `yaml:"url" json:"url" attr:"地址" comment:"环境变量ANIMEGO_QBT_URL"`
+			Username     string `yaml:"username" json:"username" attr:"用户名" comment:"环境变量ANIMEGO_QBT_USERNAME"`
+			Password     string `yaml:"password" json:"password" attr:"密码" comment:"环境变量ANIMEGO_QBT_PASSWORD"`
+			DownloadPath string `yaml:"download_path" json:"download_path" attr:"下载文件夹" comment:"环境变量ANIMEGO_QBT_DOWNLOAD_PATH"`
 		} `yaml:"qbittorrent" json:"qbittorrent" attr:"qBittorrent客户端"`
 	} `yaml:"client" json:"client" attr:"下载客户端设置"`
-	DownloadPath string `yaml:"download_path" json:"download_path" attr:"下载文件夹" comment:"下载器的下载文件夹"`
-	SavePath     string `yaml:"save_path" json:"save_path" attr:"保存文件夹" comment:"下载完成后，重命名并移动到的文件夹"`
-	DataPath     string `yaml:"data_path" json:"data_path" attr:"数据文件夹" comment:"用于保存数据库、插件等数据"`
-	Category     string `yaml:"category" json:"category" attr:"分类名" comment:"仅qBittorrent有效"`
-	Tag          string `yaml:"tag" json:"tag" attr:"标签表达式" comment_key:"tag_help"`
+	DownloadPath string `yaml:"download_path" json:"download_path" attr:"下载文件夹" comment:"环境变量ANIMEGO_DOWNLOAD_PATH. 下载器的下载文件夹"`
+	SavePath     string `yaml:"save_path" json:"save_path" attr:"保存文件夹" comment:"环境变量ANIMEGO_SAVE_PATH. 下载完成后，重命名并移动到的文件夹"`
+	DataPath     string `yaml:"data_path" json:"data_path" attr:"数据文件夹" comment:"环境变量ANIMEGO_DATA_PATH. 用于保存数据库、插件等数据"`
+	Category     string `yaml:"category" json:"category" attr:"分类名" comment:"环境变量ANIMEGO_CATEGORY. 仅qBittorrent有效"`
+	Tag          string `yaml:"tag" json:"tag" attr:"标签表达式" comment:"环境变量ANIMEGO_TAG" comment_key:"tag_help"`
 	WebApi       struct {
-		AccessKey string `yaml:"access_key" json:"access_key" attr:"请求秘钥" comment:"为空则不需要验证"`
-		Host      string `yaml:"host" json:"host" attr:"域名"`
-		Port      int    `yaml:"port" json:"port" attr:"端口"`
+		AccessKey string `yaml:"access_key" json:"access_key" attr:"请求秘钥" comment:"环境变量ANIMEGO_WEB_ACCESS_KEY. 为空则不需要验证"`
+		Host      string `yaml:"host" json:"host" attr:"域名" comment:"环境变量ANIMEGO_WEB_HOST"`
+		Port      int    `yaml:"port" json:"port" attr:"端口" comment:"环境变量ANIMEGO_WEB_PORT"`
 	} `yaml:"webapi" json:"webapi" attr:"WebApi设置"`
 	Proxy struct {
-		Enable bool   `yaml:"enable" json:"enable" attr:"启用"`
-		Url    string `yaml:"url" json:"url" attr:"代理链接"`
+		Enable bool   `yaml:"enable" json:"enable" attr:"启用" comment:"环境变量ANIMEGO_PROXY_URL不为空则启用，否则禁用"`
+		Url    string `yaml:"url" json:"url" attr:"代理链接" comment:"环境变量ANIMEGO_PROXY_URL"`
 	} `yaml:"proxy" json:"proxy" attr:"代理设置" comment:"开启后AnimeGo所有的网络请求都会使用代理"`
 	Key struct {
-		Themoviedb string `yaml:"themoviedb" json:"themoviedb" attr:"TheMovieDB的APIkey" comment_key:"themoviedb_key"`
+		Themoviedb string `yaml:"themoviedb" json:"themoviedb" attr:"TheMovieDB的APIkey" comment:"环境变量ANIMEGO_THEMOVIEDB_KEY" comment_key:"themoviedb_key"`
 	} `yaml:"key" json:"key" attr:"秘钥设置"`
 }
 
@@ -92,4 +93,25 @@ type Advanced struct {
 		BangumiCacheHour    int `yaml:"bangumi_cache_hour" json:"bangumi_cache_hour" attr:"Bangumi缓存时间" comment:"默认3*24小时(3天)。主要为bangumi-id与详细信息的映射"`
 		ThemoviedbCacheHour int `yaml:"themoviedb_cache_hour" json:"themoviedb_cache_hour" attr:"Themoviedb缓存时间" comment:"默认14*24小时(14天)。主要为tmdb-id与季度信息的映射"`
 	} `yaml:"cache" json:"cache" attr:"缓存设置"`
+}
+
+type Environment struct {
+	QbtUrl          *string `env:"QBT_URL" val:"Setting.Client.QBittorrent.Url"`
+	QbtUsername     *string `env:"QBT_USERNAME" val:"Setting.Client.QBittorrent.Username"`
+	QbtPassword     *string `env:"QBT_PASSWORD" val:"Setting.Client.QBittorrent.Password"`
+	QbtDownloadPath *string `env:"QBT_DOWNLOAD_PATH" val:"Setting.Client.QBittorrent.DownloadPath"`
+
+	DownloadPath *string `env:"DOWNLOAD_PATH" val:"Setting.DownloadPath"`
+	SavePath     *string `env:"SAVE_PATH" val:"Setting.SavePath"`
+	DataPath     *string `env:"DATA_PATH" val:"Setting.DataPath"`
+	Category     *string `env:"CATEGORY" val:"Setting.Category"`
+	Tag          *string `env:"TAG" val:"Setting.Tag"`
+
+	WebAccessKey *string `env:"WEB_ACCESS_KEY" val:"Setting.WebApi.AccessKey"`
+	WebHost      *string `env:"WEB_HOST" val:"Setting.WebApi.Host"`
+	WebPort      *int    `env:"WEB_PORT" val:"Setting.WebApi.Port"`
+
+	ProxyUrl *string `env:"PROXY_URL" val:"Setting.Proxy.Url"`
+
+	ThemoviedbKey *string `env:"THEMOVIEDB_KEY" val:"Setting.Key.Themoviedb"`
 }

@@ -6,7 +6,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
 	"github.com/wetor/AnimeGo/configs"
 	"github.com/wetor/AnimeGo/pkg/utils"
 	"github.com/wetor/AnimeGo/test"
@@ -85,4 +84,29 @@ func TestUpdateConfig_151(t *testing.T) {
 	configs.UpdateConfig("data/animego.yaml", false)
 
 	EqualFile(t, "data/animego.yaml", test.GetDataPath(testdata, "animego_151.yaml"))
+}
+
+func TestUpdateConfig_152(t *testing.T) {
+	configs.ConfigVersion = "1.5.2"
+	file, _ := test.GetData(testdata, "animego_151.yaml")
+	_ = os.WriteFile("data/animego.yaml", file, 0666)
+	configs.UpdateConfig("data/animego.yaml", false)
+
+	EqualFile(t, "data/animego.yaml", test.GetDataPath(testdata, "animego_152.yaml"))
+}
+
+func TestInitEnvConfig(t *testing.T) {
+	_ = os.Setenv("ANIMEGO_QBT_URL", "http://127.0.0.1:18080")
+	_ = os.Setenv("ANIMEGO_QBT_DOWNLOAD_PATH", "7766/download")
+	_ = os.Setenv("ANIMEGO_DOWNLOAD_PATH", "aw8da/test/download")
+	_ = os.Setenv("ANIMEGO_WEB_PORT", "10086")
+	f := test.GetDataPath(testdata, "animego_152.yaml")
+	configs.InitEnvConfig(f, "data/animego.yaml")
+
+	conf := configs.Load("data/animego.yaml")
+
+	assert.Equal(t, conf.Setting.Client.QBittorrent.Url, "http://127.0.0.1:18080")
+	assert.Equal(t, conf.Setting.Client.QBittorrent.DownloadPath, "7766/download")
+	assert.Equal(t, conf.Setting.DownloadPath, "aw8da/test/download")
+	assert.Equal(t, conf.Setting.WebApi.Port, 10086)
 }

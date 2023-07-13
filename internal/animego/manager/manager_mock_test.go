@@ -100,6 +100,12 @@ func (m *ClientMock) MockAddName(name, hash string, src []string) {
 	}
 }
 
+func (m *ClientMock) Config() *models.ClientConfig {
+	return &models.ClientConfig{
+		DownloadPath: DownloadPath,
+	}
+}
+
 func (m *ClientMock) Connected() bool {
 	if m.MockGetError(ErrorConnectedFailed) {
 		return false

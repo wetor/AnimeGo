@@ -6,6 +6,7 @@ require (
 	github.com/anacrolix/torrent v1.49.0
 	github.com/antchfx/htmlquery v1.2.6
 	github.com/brahma-adshonor/gohook v1.1.9
+	github.com/caarlos0/env/v9 v9.0.0
 	github.com/gin-gonic/gin v1.9.0
 	github.com/go-python/gpython v0.1.1-0.20230608094744-7102b79c9ede
 	github.com/gorilla/websocket v1.5.0
@@ -13,6 +14,7 @@ require (
 	github.com/json-iterator/go v1.1.12
 	github.com/mmcdole/gofeed v1.1.3
 	github.com/parnurzeal/gorequest v0.2.16
+	github.com/pkg/errors v0.9.1
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/stretchr/testify v1.8.1
 	github.com/swaggo/files v1.0.1
@@ -59,7 +61,6 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.6 // indirect
-	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/smartystreets/goconvey v1.7.2 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect

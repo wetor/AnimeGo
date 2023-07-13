@@ -47,3 +47,8 @@ type TorrentItem struct {
 	// UploadedSession int    `json:"uploaded_session"`
 	// Upspeed         int    `json:"upspeed"`
 }
+
+type ClientConfig struct {
+	ApiUrl       string `json:"api_url"`
+	DownloadPath string `json:"download_path"`
+}

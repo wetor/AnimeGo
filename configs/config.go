@@ -13,7 +13,7 @@ import (
 
 var ConfigFile = "./data/animego.yaml"
 
-func Init(file string) *Config {
+func Load(file string) *Config {
 	if len(file) == 0 {
 		file = xpath.Abs(ConfigFile)
 	}
@@ -29,13 +29,6 @@ func Init(file string) *Config {
 	if err != nil {
 		log.Fatal("配置文件加载错误：", err)
 	}
-
-	// 路径设置转绝对路径
-	conf.DataPath = xpath.Abs(conf.DataPath)
-
-	conf.DownloadPath = xpath.Abs(conf.DownloadPath)
-
-	conf.SavePath = xpath.Abs(conf.SavePath)
 
 	return conf
 }
@@ -71,6 +64,11 @@ func (c *Config) InitDir() {
 	if err != nil {
 		log.Fatalf("创建文件夹失败，%s", constant.TempPath)
 	}
+
+	// 路径设置转绝对路径
+	c.Setting.DataPath = xpath.Abs(c.Setting.DataPath)
+	c.Setting.DownloadPath = xpath.Abs(c.Setting.DownloadPath)
+	c.Setting.SavePath = xpath.Abs(c.Setting.SavePath)
 }
 
 func (c *Config) Proxy() string {

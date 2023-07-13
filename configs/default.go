@@ -31,15 +31,16 @@ func defaultSetting() {
 	defaultConfig.Setting.Client.QBittorrent.Url = "http://localhost:8080"
 	defaultConfig.Setting.Client.QBittorrent.Username = "admin"
 	defaultConfig.Setting.Client.QBittorrent.Password = "adminadmin"
+	defaultConfig.Setting.Client.QBittorrent.DownloadPath = "./download/incomplete"
 
 	defaultConfig.Setting.DataPath = "./data"
 	defaultConfig.Setting.SavePath = "./download/anime"
-	defaultConfig.Setting.DownloadPath = "./download/incomplete"
+	defaultConfig.Setting.DownloadPath = defaultConfig.Setting.Client.QBittorrent.DownloadPath
 
 	defaultConfig.Setting.Category = "AnimeGo"
 	defaultConfig.Setting.Tag = "{year}年{quarter}月新番"
 
-	defaultConfig.Setting.WebApi.Host = "localhost"
+	defaultConfig.Setting.WebApi.Host = "0.0.0.0"
 	defaultConfig.Setting.WebApi.Port = 7991
 	defaultConfig.Setting.WebApi.AccessKey = "animego123"
 

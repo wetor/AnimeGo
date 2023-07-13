@@ -96,6 +96,7 @@ func (e *Encoder) Marshal() (*yaml.Node, error) {
 }
 
 // Encode converts value to yaml.
+//
 //nolint:gocyclo
 func (e *Encoder) Encode() ([]byte, error) {
 	if e.options.CommentsFlag == CommentsDisabled {
@@ -273,13 +274,20 @@ func toYamlNode(in interface{}, options *Options) (*yaml.Node, error) {
 
 			tag := t.Field(i).Tag.Get("yaml")
 			comment, has := t.Field(i).Tag.Lookup("comment")
-			if options.CommentsMap != nil && !has {
-				commentKey, has := t.Field(i).Tag.Lookup("comment_key")
+			if options.CommentsMap != nil {
+				commentKey, hasKey := t.Field(i).Tag.Lookup("comment_key")
 				// default use yaml
-				if !has {
+				if !hasKey {
 					commentKey = tag
 				}
-				comment = options.CommentsMap[commentKey]
+				if commentVal, hasVal := options.CommentsMap[commentKey]; hasVal {
+					if has {
+						comment += ". "
+					} else {
+						comment = ""
+					}
+					comment += commentVal
+				}
 			}
 			attr := t.Field(i).Tag.Get("attr")
 

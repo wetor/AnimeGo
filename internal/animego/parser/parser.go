@@ -2,6 +2,7 @@ package parser
 
 import (
 	"github.com/pkg/errors"
+
 	"github.com/wetor/AnimeGo/internal/animego/parser/utils"
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/exceptions"
@@ -42,9 +43,12 @@ func (m *Manager) Parse(opts *models.ParseOptions) (entity *models.AnimeEntity, 
 	entity.Flag = models.AnimeFlagNone
 	entity.Torrent = &models.AnimeTorrent{
 		Hash: torrentInfo.Hash,
-		Url:  torrentInfo.Url,
 	}
-	title := opts.Title
+	if torrentInfo.Type == torrent.TypeFile {
+		entity.Torrent.File = torrentInfo.Url
+	} else {
+		entity.Torrent.Url = torrentInfo.Url
+	}
 	for _, t := range torrentInfo.Files {
 		// TODO: 筛选文件
 		epEntity := &models.AnimeEpEntity{
@@ -62,15 +66,15 @@ func (m *Manager) Parse(opts *models.ParseOptions) (entity *models.AnimeEntity, 
 			log.Warnf("解析「%s」集数失败，不进行重命名", t.Name)
 			// continue
 		}
-		title = t.Name
 		entity.Ep = append(entity.Ep, epEntity)
 	}
 	// ------------------- 解析标题获取季度信息 -------------------
 	// 优先tmdb解析的season，如果为0则根据配置使用标题解析season
 	if entity.Season == 0 {
 		var parsed *models.TitleParsed
-		// 从后向前解析种子内视频文件
-		for i := len(torrentInfo.Files) - 1; i >= 0; i-- {
+		// 从后向前解析种子内视频文件，首先解析的是Title
+		title := opts.Title
+		for i := len(torrentInfo.Files); i >= 0; {
 			parsed, err = m.parser.Parse(title)
 			if err == nil {
 				if parsed.Season > 0 && len(parsed.SeasonRaw) > 0 {
@@ -79,6 +83,10 @@ func (m *Manager) Parse(opts *models.ParseOptions) (entity *models.AnimeEntity, 
 				} else {
 					parsed = nil
 				}
+			}
+			i--
+			if i >= 0 {
+				title = torrentInfo.Files[i].Name
 			}
 		}
 		if parsed == nil {

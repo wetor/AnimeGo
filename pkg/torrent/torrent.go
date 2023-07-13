@@ -23,6 +23,7 @@ const (
 	TypeUnknown = "unknown"
 	TypeTorrent = "torrent"
 	TypeMagnet  = "magnet"
+	TypeFile    = "file"
 )
 
 var (
@@ -133,6 +134,7 @@ func LoadUri(uri string) (t *Torrent, err error) {
 			log.Debugf("关闭缓存文件失败")
 			// 继续执行
 		}
+		t.Type = TypeFile
 		t.Url = file
 		return t, nil
 	}
@@ -163,6 +165,7 @@ load:
 			log.DebugErr(err)
 			// 继续执行
 		}
+		t.Type = TypeFile
 		t.Url = file
 	default:
 		return nil, errors.WithStack(&exceptions.ErrTorrentUrl{Url: uri})

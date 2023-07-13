@@ -4,7 +4,6 @@ import (
 	"context"
 	"flag"
 	"fmt"
-	"log"
 	"os"
 	"sync"
 	"time"
@@ -54,6 +53,7 @@ var (
 	configFile   string
 	debug        bool
 	webapiEnable bool
+	backupConfig bool
 
 	WG                sync.WaitGroup
 	BangumiCacheMutex sync.Mutex
@@ -61,11 +61,28 @@ var (
 
 func main() {
 	common.PrintInfo()
-
 	flag.StringVar(&configFile, "config", DefaultConfigFile, "配置文件路径；配置文件中的相对路径均是相对与程序的位置")
 	flag.BoolVar(&debug, "debug", false, "Debug模式，将会显示更多的日志")
-	flag.BoolVar(&webapiEnable, "web", true, "启用Web API，默认启用")
+	flag.BoolVar(&webapiEnable, "web", true, "启用Web API")
+	flag.BoolVar(&backupConfig, "backup", true, "配置文件升级前是否备份")
 	flag.Parse()
+
+	tmp := os.Getenv("ANIMEGO_CONFIG")
+	if len(tmp) > 0 {
+		configFile = tmp
+	}
+	tmp = os.Getenv("ANIMEGO_DEBUG")
+	if len(tmp) > 0 {
+		debug = utils.String2Bool(tmp)
+	}
+	tmp = os.Getenv("ANIMEGO_WEB")
+	if len(tmp) > 0 {
+		webapiEnable = utils.String2Bool(tmp)
+	}
+	tmp = os.Getenv("ANIMEGO_CONFIG_BACKUP")
+	if len(tmp) > 0 {
+		backupConfig = utils.String2Bool(tmp)
+	}
 
 	common.RegisterExit(doExit)
 	Main()
@@ -80,58 +97,30 @@ func doExit() {
 	}()
 }
 
-func InitDefaultConfig() {
-	if utils.IsExist(configFile) {
-		// 尝试升级配置文件
-		if configs.UpdateConfig(configFile, true) {
-			os.Exit(0)
-		}
-		return
-	}
-	log.Printf("未找到配置文件（%s），开始初始化默认配置\n", configFile)
-	conf := configs.DefaultConfig()
-	if utils.IsExist(conf.Setting.DataPath) {
-		log.Printf("默认data_path文件夹（%s）已存在，无法完成初始化\n", conf.Setting.DataPath)
-		os.Exit(0)
-	}
-	err := utils.CreateMutiDir(conf.Setting.DataPath)
-	if err != nil {
-		panic(err)
-	}
-	err = configs.DefaultFile(DefaultConfigFile)
-	if err != nil {
-		panic(err)
-	}
-
-	InitDefaultAssets(conf.DataPath, true)
-
-	log.Printf("初始化默认配置完成（%s）\n", conf.Setting.DataPath)
-	log.Println("请设置配置后重新启动")
-	os.Exit(0)
-}
-
-func InitDefaultAssets(dataPath string, skip bool) {
-	assets.WritePlugins(assets.Dir, xpath.Join(dataPath, assets.Dir), skip)
-}
-
 func Main() {
 	var err error
 	configFile = xpath.Abs(configFile)
 	// 初始化默认配置、升级配置
-	InitDefaultConfig()
+	if utils.IsExist(configFile) {
+		configs.InitUpdateConfig(configFile, backupConfig)
+	} else {
+		configs.InitDefaultConfig(configFile)
+	}
+	// 解析环境变量文本并写入配置文件
+	configs.InitEnvConfig(configFile, configFile)
 
 	// ===============================================================================================================
 	// 载入配置文件
-	config := configs.Init(configFile)
-	// 检查参数限制
-	config.Check()
+	config := configs.Load(configFile)
 	constant.Init(&constant.Options{
 		DataPath: config.DataPath,
 	})
+	// 创建子文件夹
 	config.InitDir()
-
+	// 检查参数限制
+	config.Check()
 	// 释放资源
-	InitDefaultAssets(config.DataPath, true)
+	assets.WritePlugins(assets.Dir, xpath.Join(config.DataPath, assets.Dir), true)
 
 	// ===============================================================================================================
 	// 初始化日志
@@ -180,7 +169,12 @@ func Main() {
 		WG:                   &WG,
 	})
 	qbtConf := config.Setting.Client.QBittorrent
-	qbittorrentSrv := qbittorrent.NewQBittorrent(qbtConf.Url, qbtConf.Username, qbtConf.Password)
+	qbittorrentSrv := qbittorrent.NewQBittorrent(&qbittorrent.Options{
+		Url:          qbtConf.Url,
+		Username:     qbtConf.Username,
+		Password:     qbtConf.Password,
+		DownloadPath: qbtConf.DownloadPath,
+	})
 	qbittorrentSrv.Start(ctx)
 
 	// ===============================================================================================================
