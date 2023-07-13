@@ -112,5 +112,9 @@ func (b Bangumi) loadAnimeInfo(bangumiID int) (entity *Entity, err error) {
 	anidata.BangumiCacheLock.Lock()
 	err = anidata.BangumiCache.Get(SubjectBucket, bangumiID, entity)
 	anidata.BangumiCacheLock.Unlock()
+	if entity.Eps == 0 || len(entity.AirDate) == 0 {
+		log.Debugf("%d 缓存数据异常，请求Bangumi", bangumiID)
+		return nil, errors.NewAniError("数据异常")
+	}
 	return entity, err
 }
