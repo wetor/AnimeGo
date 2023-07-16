@@ -8,7 +8,6 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/brahma-adshonor/gohook"
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 
@@ -78,8 +77,8 @@ func TestMain(m *testing.M) {
 		Debug: true,
 	})
 
-	_ = gohook.Hook(request.GetWriter, HookGetWriter, nil)
-	_ = gohook.Hook(request.Get, HookGet, nil)
+	test.Hook(request.GetWriter, HookGetWriter)
+	test.Hook(request.Get, HookGet)
 	defer test.UnHook()
 	b := cache.NewBolt()
 	b.Open("data/bolt.db")

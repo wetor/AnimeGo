@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/brahma-adshonor/gohook"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/wetor/AnimeGo/assets"
@@ -513,8 +512,7 @@ func TestManager_AddFailed(t *testing.T) {
 	manager.Conf.Rename = "move"
 
 	log.Infof("Hook utils.Unix() = %v", HookTimeUnix)
-	_ = gohook.Hook(utils.Unix, MockUnix1, nil)
-	defer gohook.UnHook(utils.Unix)
+	patches := test.HookSingle(utils.Unix, MockUnix1)
 
 	qbt.MockSetError(ErrorAddFailed, true)
 	{
@@ -532,13 +530,15 @@ func TestManager_AddFailed(t *testing.T) {
 	time.Sleep(1*time.Second + 300*time.Millisecond)
 
 	log.Infof("Hook utils.Unix() = %v", HookTimeUnix+manager.AddingExpireSecond)
-	_ = gohook.Hook(utils.Unix, MockUnix2, nil)
+	patches.Reset()
+	patches.ApplyFunc(utils.Unix, MockUnix2)
 	time.Sleep(1*time.Second + 300*time.Millisecond)
 
 	{
 		log.Info("下载 1")
 		file1, _, _ = download("动画1", 1, []int{1})
 	}
+	patches.Reset()
 	wg.Wait()
 	for _, f := range file1 {
 		assert.FileExists(t, f)

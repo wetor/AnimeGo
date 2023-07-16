@@ -53,6 +53,7 @@ func TestMain(m *testing.M) {
 		}
 		return id
 	})
+	test.Hook(torrent.LoadUri, HookLoadUri)
 	defer test.UnHook()
 	plugin.Init(&plugin.Options{
 		Path:  assets.TestPluginPath(),
@@ -95,9 +96,6 @@ func TestMain(m *testing.M) {
 		File:   "builtin_parser.py",
 	}, true)
 	mgr = parser.NewManager(p, &AniSourceMock{})
-
-	Hook()
-	defer UnHook()
 
 	m.Run()
 

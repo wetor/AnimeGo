@@ -1,8 +1,8 @@
 package parser_test
 
 import (
-	"github.com/brahma-adshonor/gohook"
 	"github.com/pkg/errors"
+
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
 	pkgExceptions "github.com/wetor/AnimeGo/pkg/exceptions"
@@ -120,12 +120,4 @@ func HookLoadUri(uri string) (t *torrent.Torrent, err error) {
 		}, nil
 	}
 	return nil, nil
-}
-
-func Hook() {
-	_ = gohook.Hook(torrent.LoadUri, HookLoadUri, nil)
-}
-
-func UnHook() {
-	_ = gohook.UnHook(torrent.LoadUri)
 }
