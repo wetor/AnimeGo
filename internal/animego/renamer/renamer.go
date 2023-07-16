@@ -33,6 +33,7 @@ const (
 
 const (
 	RenameStateChanCap = 5
+	RenameMaxErrCount  = 3
 )
 
 type RenameTask struct {
@@ -47,6 +48,7 @@ type RenameTask struct {
 	// 读写
 	RenameState int
 	State       models.TorrentState
+	ErrCount    int
 }
 
 type RenameTaskGroup struct {
@@ -120,6 +122,16 @@ func (m *Manager) GetEpTaskState(name string, epIndex int) (int, error) {
 }
 
 func (m *Manager) stateSeeding(task *RenameTask) (err error) {
+	if task.ErrCount >= RenameMaxErrCount {
+		log.Warnf("[重命名] 失败，跳过流程：「%s」->「%s」", task.Src, task.Dst)
+		task.RenameState = RenameStateEnd
+		return nil
+	}
+	defer func() {
+		if err != nil {
+			task.ErrCount++
+		}
+	}()
 	switch task.Mode {
 	case "wait_move":
 		task.RenameState = RenameStateComplete
@@ -151,13 +163,24 @@ func (m *Manager) stateSeeding(task *RenameTask) (err error) {
 		}
 		task.RenameState = RenameStateEnd
 	default:
-		task.RenameState = RenameStateSeeding
+		task.RenameState = RenameStateEnd
+		task.ErrCount = RenameMaxErrCount
 		return errors.WithStack(exceptions.ErrRename{Src: task.Src, Message: "不支持的重命名模式 " + task.Mode})
 	}
 	return nil
 }
 
 func (m *Manager) stateComplete(task *RenameTask) (err error) {
+	if task.ErrCount >= RenameMaxErrCount {
+		log.Warnf("[重命名] 失败，跳过流程:「%s」->「%s」", task.Src, task.Dst)
+		task.RenameState = RenameStateEnd
+		return nil
+	}
+	defer func() {
+		if err != nil {
+			task.ErrCount++
+		}
+	}()
 	switch task.Mode {
 	case "wait_move":
 		log.Infof("[重命名] 移动「%s」->「%s」", task.Src, task.Dst)
@@ -170,6 +193,7 @@ func (m *Manager) stateComplete(task *RenameTask) (err error) {
 		task.RenameState = RenameStateEnd
 	case "link_delete":
 		if !utils.IsExist(task.Dst) {
+			// 确保已经链接
 			err = m.stateSeeding(task)
 			if err != nil {
 				task.RenameState = RenameStateSeeding
@@ -185,11 +209,10 @@ func (m *Manager) stateComplete(task *RenameTask) (err error) {
 		}
 		task.RenameState = RenameStateEnd
 	case "link":
-		task.RenameState = RenameStateEnd
 	case "move":
-		task.RenameState = RenameStateEnd
 	default:
-		task.RenameState = RenameStateComplete
+		task.RenameState = RenameStateEnd
+		task.ErrCount = RenameMaxErrCount
 		return errors.WithStack(exceptions.ErrRename{Src: task.Src, Message: "不支持的重命名模式 " + task.Mode})
 	}
 	return nil
@@ -264,14 +287,15 @@ func (m *Manager) Update(ctx context.Context) (err error) {
 				switch {
 				case existSrc && existDst:
 					// 待移动文件和目标文件都存在，覆盖
-					log.Warnf("[重命名] 可能已经移动完成「%s」->「%s」，覆盖", task.Src, task.Dst)
-					fallthrough
-				case existSrc:
+					log.Warnf("[重命名] 可能已经移动完成，覆盖:「%s」->「%s」", task.Src, task.Dst)
+					task.RenameState = RenameStateSeeding
+				case existSrc && !existDst:
 					// 待移动文件存在，开始移动流程
 					task.RenameState = RenameStateSeeding
-				case existDst:
+				case !existSrc && existDst:
 					// 待移动文件不存在，目标文件存在，结束移动
-					log.Warnf("[重命名] 可能已经移动完成「%s」->「%s」，跳过", task.Src, task.Dst)
+					log.Warnf("[重命名] 可能已经移动完成，跳过:「%s」->「%s」", task.Src, task.Dst)
+					task.RenameState = RenameStateEnd
 				default:
 					// 待移动文件和目标文件都不存在，错误，结束移动
 					return errors.WithStack(&exceptions.ErrRename{Src: task.Src, Message: "未找到文件"})
@@ -299,7 +323,9 @@ func (m *Manager) Update(ctx context.Context) (err error) {
 			}
 
 			if task.RenameState == RenameStateEnd {
-				task.RenameCallback(task.RenameResult)
+				if task.ErrCount <= RenameMaxErrCount {
+					task.RenameCallback(task.RenameResult)
+				}
 				continue
 			}
 

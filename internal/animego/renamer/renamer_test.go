@@ -9,7 +9,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
+	"github.com/wetor/AnimeGo/pkg/utils"
 
 	"github.com/wetor/AnimeGo/internal/animego/downloader"
 	"github.com/wetor/AnimeGo/internal/animego/renamer"
@@ -34,6 +36,7 @@ var (
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
+	_ = os.RemoveAll("data")
 	_ = os.MkdirAll(DownloadPath, os.ModePerm)
 	_ = os.MkdirAll(SavePath, os.ModePerm)
 	out = bytes.NewBuffer(nil)
@@ -73,11 +76,15 @@ func liseFiles(anime *models.AnimeEntity) []string {
 	return result
 }
 
-func rename(r *renamer.Manager, mode string, anime *models.AnimeEntity) error {
+func downloadFile(anime *models.AnimeEntity) {
 	srcs := anime.FilePathSrc()
 	for _, s := range srcs {
 		_ = os.WriteFile(xpath.Join(DownloadPath, s), []byte{}, os.ModePerm)
 	}
+}
+
+func rename(r *renamer.Manager, mode string, anime *models.AnimeEntity) error {
+	downloadFile(anime)
 	err := r.AddRenameTask(&models.RenameOptions{
 		Entity: anime,
 		SrcDir: DownloadPath,
@@ -239,7 +246,7 @@ func TestManager_Method(t *testing.T) {
 		NameCN: "动画1",
 		Season: 1,
 		Ep: []*models.AnimeEpEntity{
-			{Type: models.AnimeEpNormal, Ep: 1026, Src: "src_1026.mp4"},
+			{Type: models.AnimeEpNormal, Ep: 1027, Src: "src_1027.mp4"},
 		},
 	}
 
@@ -277,7 +284,7 @@ func TestManager_Method(t *testing.T) {
 	}
 
 	go func() {
-		time.Sleep(3 * time.Second)
+		time.Sleep(5 * time.Second)
 		cancel()
 	}()
 	wg.Wait()
@@ -286,4 +293,345 @@ func TestManager_Method(t *testing.T) {
 		assert.FileExists(t, f)
 		_ = os.Remove(f)
 	}
+	fmt.Println(out.String())
+	test.LogBatchCompare(out, nil,
+		"Rename插件",
+		[]string{"[重命名] 链接", "[重命名] 删除", "下载第1027集完成 动画1"},
+		"下载完成 动画1",
+		"正常退出",
+	)
+}
+
+func TestManager_LinkErr(t *testing.T) {
+	out.Reset()
+	wg, cancel := initTest()
+
+	anime1 := &models.AnimeEntity{
+		NameCN: "动画1",
+		Season: 1,
+		Ep: []*models.AnimeEpEntity{
+			{Type: models.AnimeEpNormal, Ep: 1028, Src: "src_1028.mp4"},
+		},
+	}
+	anime2 := &models.AnimeEntity{
+		NameCN: "动画2",
+		Season: 2,
+		Ep: []*models.AnimeEpEntity{
+			{Type: models.AnimeEpNormal, Ep: 1029, Src: "src_1029.mp4"},
+		},
+	}
+
+	patches := test.HookSingle(utils.CreateLink, func(src, dst string) error {
+		log.Infof("Hook CreateLink")
+		return &os.LinkError{Op: "link", Old: src, New: dst, Err: errors.New("Hook CreateLink")}
+	})
+	defer patches.Reset()
+
+	files1 := liseFiles(anime1)
+	files2 := liseFiles(anime2)
+	var err error
+	err = rename(r, "link_delete", anime1)
+	assert.NoError(t, err)
+	err = rename(r, "link", anime2)
+	assert.NoError(t, err)
+
+	go func() {
+		for i := range files1 {
+			go func(i int) {
+				_ = r.SetDownloadState(anime1.FullName(), i, downloader.StateSeeding)
+				_ = r.SetDownloadState(anime1.FullName(), i, downloader.StateComplete)
+			}(i)
+		}
+		time.Sleep(7 * time.Second)
+		for i := range files2 {
+			go func(i int) {
+				_ = r.SetDownloadState(anime2.FullName(), i, downloader.StateSeeding)
+				_ = r.SetDownloadState(anime2.FullName(), i, downloader.StateComplete)
+			}(i)
+		}
+	}()
+
+	go func() {
+		time.Sleep(13 * time.Second)
+		cancel()
+	}()
+	wg.Wait()
+
+	fmt.Println(out.String())
+	test.LogBatchCompare(out, nil,
+		[]string{"Rename插件", "Rename插件"},
+		[]string{"[重命名] 链接", "Hook CreateLink", "Hook CreateLink", "失败: 创建文件链接失败"},
+		[]string{"[重命名] 链接", "Hook CreateLink", "Hook CreateLink", "失败: 创建文件链接失败"},
+		[]string{"[重命名] 链接", "Hook CreateLink", "Hook CreateLink", "失败: 创建文件链接失败"},
+		[]string{"[重命名] 失败，跳过流程", "下载第1028集完成", "下载完成 动画1"},
+		[]string{"[重命名] 链接", "Hook CreateLink", "Hook CreateLink", "失败: 创建文件链接失败"},
+		[]string{"[重命名] 链接", "Hook CreateLink", "Hook CreateLink", "失败: 创建文件链接失败"},
+		[]string{"[重命名] 链接", "Hook CreateLink", "Hook CreateLink", "失败: 创建文件链接失败"},
+		[]string{"[重命名] 失败，跳过流程", "下载第1029集完成", "下载完成 动画2"},
+		"正常退出",
+	)
+}
+
+func TestManager_MoveErr(t *testing.T) {
+	out.Reset()
+	wg, cancel := initTest()
+
+	anime1 := &models.AnimeEntity{
+		NameCN: "动画1",
+		Season: 1,
+		Ep: []*models.AnimeEpEntity{
+			{Type: models.AnimeEpNormal, Ep: 1030, Src: "src_1030.mp4"},
+		},
+	}
+	anime2 := &models.AnimeEntity{
+		NameCN: "动画2",
+		Season: 2,
+		Ep: []*models.AnimeEpEntity{
+			{Type: models.AnimeEpNormal, Ep: 1031, Src: "src_1031.mp4"},
+		},
+	}
+
+	patches := test.HookSingle(utils.Rename, func(src, dst string) error {
+		log.Infof("Hook Rename")
+		return &os.LinkError{Op: "rename", Old: src, New: dst, Err: errors.New("Hook Rename")}
+	})
+	defer patches.Reset()
+
+	files1 := liseFiles(anime1)
+	files2 := liseFiles(anime2)
+	var err error
+	err = rename(r, "move", anime1)
+	assert.NoError(t, err)
+	err = rename(r, "wait_move", anime2)
+	assert.NoError(t, err)
+
+	go func() {
+		for i := range files1 {
+			go func(i int) {
+				_ = r.SetDownloadState(anime1.FullName(), i, downloader.StateSeeding)
+				_ = r.SetDownloadState(anime1.FullName(), i, downloader.StateComplete)
+			}(i)
+		}
+		time.Sleep(7 * time.Second)
+		for i := range files2 {
+			go func(i int) {
+				_ = r.SetDownloadState(anime2.FullName(), i, downloader.StateSeeding)
+				_ = r.SetDownloadState(anime2.FullName(), i, downloader.StateComplete)
+			}(i)
+		}
+	}()
+
+	go func() {
+		time.Sleep(14 * time.Second)
+		cancel()
+	}()
+	wg.Wait()
+
+	fmt.Println(out.String())
+	test.LogBatchCompare(out, nil,
+		[]string{"Rename插件", "Rename插件"},
+		[]string{"[重命名] 移动", "Hook Rename", "Hook Rename", "失败: 重命名文件失败"},
+		[]string{"[重命名] 移动", "Hook Rename", "Hook Rename", "失败: 重命名文件失败"},
+		[]string{"[重命名] 移动", "Hook Rename", "Hook Rename", "失败: 重命名文件失败"},
+		[]string{"[重命名] 失败，跳过流程", "下载第1030集完成", "下载完成 动画1"},
+		[]string{"[重命名] 移动", "Hook Rename", "Hook Rename", "失败: 重命名文件失败"},
+		[]string{"[重命名] 移动", "Hook Rename", "Hook Rename", "失败: 重命名文件失败"},
+		[]string{"[重命名] 移动", "Hook Rename", "Hook Rename", "失败: 重命名文件失败"},
+		[]string{"[重命名] 失败，跳过流程", "下载第1031集完成", "下载完成 动画2"},
+		"正常退出",
+	)
+}
+
+func TestManager_LinkDeleteErr(t *testing.T) {
+	out.Reset()
+	wg, cancel := initTest()
+
+	anime1 := &models.AnimeEntity{
+		NameCN: "动画1",
+		Season: 1,
+		Ep: []*models.AnimeEpEntity{
+			{Type: models.AnimeEpNormal, Ep: 1032, Src: "src_1032.mp4"},
+		},
+	}
+
+	patches := test.HookSingle(os.Remove, func(dst string) error {
+		log.Infof("Hook Remove")
+		return &os.PathError{Op: "remove", Path: dst, Err: errors.New("Hook Remove")}
+	})
+
+	files1 := liseFiles(anime1)
+	var err error
+	err = rename(r, "link_delete", anime1)
+	assert.NoError(t, err)
+
+	go func() {
+		for i := range files1 {
+			go func(i int) {
+				_ = r.SetDownloadState(anime1.FullName(), i, downloader.StateSeeding)
+				_ = r.SetDownloadState(anime1.FullName(), i, downloader.StateComplete)
+			}(i)
+		}
+	}()
+
+	go func() {
+		time.Sleep(7 * time.Second)
+		cancel()
+	}()
+	wg.Wait()
+	// 可能已经移动完成，覆盖
+	time.Sleep(1 * time.Second)
+	patches.Reset()
+	for _, f := range files1 {
+		assert.FileExists(t, f)
+	}
+	wg, cancel = initTest()
+	err = rename(r, "link_delete", anime1)
+	assert.NoError(t, err)
+
+	go func() {
+		for i := range files1 {
+			go func(i int) {
+				_ = r.SetDownloadState(anime1.FullName(), i, downloader.StateSeeding)
+				_ = r.SetDownloadState(anime1.FullName(), i, downloader.StateComplete)
+			}(i)
+		}
+	}()
+
+	go func() {
+		time.Sleep(5 * time.Second)
+		cancel()
+	}()
+	wg.Wait()
+
+	// 可能已经移动完成，跳过
+	time.Sleep(1 * time.Second)
+	wg, cancel = initTest()
+	patches = test.HookSingle(os.WriteFile, func(name string, data []byte, perm os.FileMode) error {
+		return nil
+	})
+	defer patches.Reset()
+	err = rename(r, "link_delete", anime1)
+	assert.NoError(t, err)
+	go func() {
+		for i := range files1 {
+			go func(i int) {
+				_ = r.SetDownloadState(anime1.FullName(), i, downloader.StateSeeding)
+				_ = r.SetDownloadState(anime1.FullName(), i, downloader.StateComplete)
+			}(i)
+		}
+	}()
+
+	go func() {
+		time.Sleep(4 * time.Second)
+		cancel()
+	}()
+	wg.Wait()
+
+	fmt.Println(out.String())
+	test.LogBatchCompare(out, nil,
+		[]string{"Rename插件"},
+		[]string{"[重命名] 链接", "[重命名] 删除", "Hook Remove", "Hook Remove", "失败: 删除文件失败"},
+		[]string{"[重命名] 删除", "Hook Remove", "Hook Remove", "失败: 删除文件失败"},
+		[]string{"[重命名] 删除", "Hook Remove", "Hook Remove", "失败: 删除文件失败"},
+		[]string{"[重命名] 失败，跳过流程", "下载第1032集完成", "下载完成 动画1"},
+		"正常退出",
+		[]string{"Rename插件"},
+		[]string{"[重命名] 可能已经移动完成，覆盖", "[重命名] 链接", "[重命名] 删除"},
+		[]string{"下载第1032集完成", "下载完成 动画1"},
+		"正常退出",
+		[]string{"Rename插件"},
+		[]string{"[重命名] 可能已经移动完成，跳过"},
+		[]string{"下载第1032集完成", "下载完成 动画1"},
+		"正常退出",
+	)
+}
+
+func TestManager_NotFileErr(t *testing.T) {
+	out.Reset()
+	wg, cancel := initTest()
+
+	anime1 := &models.AnimeEntity{
+		NameCN: "动画1",
+		Season: 1,
+		Ep: []*models.AnimeEpEntity{
+			{Type: models.AnimeEpNormal, Ep: 1033, Src: "src_1033.mp4"},
+		},
+	}
+
+	files1 := liseFiles(anime1)
+
+	var err error
+	patches := test.HookSingle(os.WriteFile, func(name string, data []byte, perm os.FileMode) error {
+		return nil
+	})
+	err = rename(r, "move", anime1)
+	patches.Reset()
+	assert.NoError(t, err)
+
+	go func() {
+		for i := range files1 {
+			go func(i int) {
+				_ = r.SetDownloadState(anime1.FullName(), i, downloader.StateSeeding)
+				_ = r.SetDownloadState(anime1.FullName(), i, downloader.StateComplete)
+			}(i)
+		}
+	}()
+	go func() {
+		time.Sleep(2*time.Second + 500*time.Millisecond)
+		downloadFile(anime1)
+	}()
+	go func() {
+		time.Sleep(6 * time.Second)
+		cancel()
+	}()
+	wg.Wait()
+	fmt.Println(out.String())
+	test.LogBatchCompare(out, nil,
+		"Rename插件",
+		[]string{"失败: 未找到文件", "失败: 未找到文件", "[重命名] 移动"},
+		"下载第1033集完成 动画1",
+		"下载完成 动画1",
+		"正常退出",
+	)
+}
+
+func TestManager_OtherErr(t *testing.T) {
+	out.Reset()
+	wg, cancel := initTest()
+
+	anime1 := &models.AnimeEntity{
+		NameCN: "动画1",
+		Season: 1,
+		Ep: []*models.AnimeEpEntity{
+			{Type: models.AnimeEpNormal, Ep: 1034, Src: "src_1034.mp4"},
+		},
+	}
+
+	files1 := liseFiles(anime1)
+
+	var err error
+	err = rename(r, "test", anime1)
+	assert.NoError(t, err)
+
+	go func() {
+		for i := range files1 {
+			go func(i int) {
+				_ = r.SetDownloadState(anime1.FullName(), i, downloader.StateSeeding)
+				_ = r.SetDownloadState(anime1.FullName(), i, downloader.StateComplete)
+			}(i)
+		}
+	}()
+	go func() {
+		time.Sleep(3 * time.Second)
+		cancel()
+	}()
+	wg.Wait()
+
+	fmt.Println(out.String())
+	test.LogBatchCompare(out, nil,
+		"Rename插件",
+		"失败: 不支持的重命名模式",
+		"下载完成 动画1",
+		"正常退出",
+	)
 }
