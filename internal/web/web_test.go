@@ -22,7 +22,9 @@ import (
 
 type MockFilter struct{}
 
-func (m *MockFilter) Update(ctx context.Context, items []*models.FeedItem) {}
+func (m *MockFilter) Update(ctx context.Context, items []*models.FeedItem, b, c bool) error {
+	return nil
+}
 
 type MockManager struct{}
 

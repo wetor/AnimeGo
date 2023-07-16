@@ -230,7 +230,7 @@
                 "parameters": [
                     {
                         "type": "string",
-                        "default": "all",
+                        "default": "raw",
                         "description": "Key 使用路径方式获取指定yaml key内容\n  [暂不支持] 如 setting.save_path, advanced.download.queue_max_num\n  all 获取所有配置项，json格式\n  default 获取默认值配置项，json格式\n  comment 获取所有配置项的注释文本，json格式\n  raw 获取所有配置项，yaml文件内容，base64编码",
                         "name": "key",
                         "in": "query"

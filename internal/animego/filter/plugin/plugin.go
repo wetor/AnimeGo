@@ -1,12 +1,13 @@
 package plugin
 
 import (
+	"github.com/pkg/errors"
+
+	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin"
-	"github.com/wetor/AnimeGo/pkg/errors"
 	"github.com/wetor/AnimeGo/pkg/log"
 	pkgPlugin "github.com/wetor/AnimeGo/pkg/plugin"
-	"github.com/wetor/AnimeGo/pkg/utils"
 )
 
 const (
@@ -23,61 +24,46 @@ func NewFilterPlugin(pluginInfo *models.Plugin) *Filter {
 	}
 }
 
-func (p *Filter) FilterAll(items []*models.FeedItem) (resultItems []*models.FeedItem) {
-
+func (p *Filter) FilterAll(items []*models.FeedItem) (resultItems []*models.FeedItem, err error) {
 	if !p.plugin.Enable {
-		return items
+		err = errors.WithStack(&exceptions.ErrPluginDisabled{Type: p.plugin.Type, File: p.plugin.File})
+		log.DebugErr(err)
+		return nil, err
 	}
 	log.Debugf("[Plugin] 开始执行Filter插件(%s): %s", p.plugin.Type, p.plugin.File)
 	// 入参
-	pluginInstance := plugin.LoadPlugin(&plugin.LoadPluginOptions{
+	pluginInstance, err := plugin.LoadPlugin(&plugin.LoadPluginOptions{
 		Plugin:    p.plugin,
 		EntryFunc: FuncFilterAll,
 		FuncSchema: []*pkgPlugin.FuncSchemaOptions{
 			{
 				Name:         FuncFilterAll,
 				ParamsSchema: []string{"items"},
-				ResultSchema: []string{"error", "data,optional", "index,optional"},
+				ResultSchema: []string{"error", "index"},
 				DefaultArgs:  p.plugin.Args,
 			},
 		},
 	})
-	result := pluginInstance.Run(FuncFilterAll, map[string]any{
+	if err != nil {
+		return nil, err
+	}
+	result, err := pluginInstance.Run(FuncFilterAll, map[string]any{
 		"items": items,
 	})
-	// 运行出错，或不存在入口函数，返回全部
-	if result == nil {
-		return items
+	if err != nil {
+		return nil, err
 	}
 	if result["error"] != nil {
-		log.Debugf("", errors.NewAniErrorD(result["error"]))
+		err = errors.WithStack(&exceptions.ErrPlugin{Type: p.plugin.Type, File: p.plugin.File, Message: result["error"]})
+		log.DebugErr(err)
 		log.Warnf("[Plugin] %s插件(%s)执行错误: %v", p.plugin.Type, p.plugin.File, result["error"])
+		return nil, err
 	}
 
-	if _, has := result["data"]; has {
-		resultItems = filterData(items, result["data"].([]any))
-	} else if _, has := result["index"]; has {
+	if _, has := result["index"]; has {
 		resultItems = filterIndex(items, result["index"].([]any))
 	}
-	return
-}
-
-func filterData(items []*models.FeedItem, data []any) []*models.FeedItem {
-	itemResult := make([]*models.FeedItem, len(data))
-	for i, val := range data {
-		obj := val.(map[string]any)
-		index := int(obj["index"].(int64))
-		if index < 0 || index >= len(items) {
-			continue
-		}
-		if _, has := obj["parsed"]; has {
-			parsed := &models.TitleParsed{}
-			utils.MapToStruct(obj["parsed"].(map[string]any), parsed)
-			items[index].NameParsed = parsed
-		}
-		itemResult[i] = items[index]
-	}
-	return itemResult
+	return resultItems, nil
 }
 
 func filterIndex(items []*models.FeedItem, indexList []any) []*models.FeedItem {

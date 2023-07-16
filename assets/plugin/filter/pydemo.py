@@ -20,13 +20,9 @@ def filter_all(argv):
         # 跳过非1080
         if not re.search('1080', parsed.resolution):
             continue
-        result.append({
-            'index': i,
-            'parsed': parsed,
-        })
-        log.info(core.dumps(result[len(result)-1]))
+        result.append(i)
 
     return {
-        'data': result,
+        'index': result,
         'error': None,
     }

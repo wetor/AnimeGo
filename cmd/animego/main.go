@@ -11,7 +11,6 @@ import (
 	"github.com/wetor/AnimeGo/assets"
 	"github.com/wetor/AnimeGo/cmd/common"
 	"github.com/wetor/AnimeGo/configs"
-	_ "github.com/wetor/AnimeGo/docs"
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	anidataBangumi "github.com/wetor/AnimeGo/internal/animego/anidata/bangumi"
 	anidataMikan "github.com/wetor/AnimeGo/internal/animego/anidata/mikan"
@@ -35,6 +34,7 @@ import (
 	"github.com/wetor/AnimeGo/internal/schedule/task"
 	"github.com/wetor/AnimeGo/internal/web"
 	webapi "github.com/wetor/AnimeGo/internal/web/api"
+	_ "github.com/wetor/AnimeGo/internal/web/docs"
 	"github.com/wetor/AnimeGo/internal/web/websocket"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	pkgLog "github.com/wetor/AnimeGo/pkg/log"
@@ -98,6 +98,7 @@ func doExit() {
 }
 
 func Main() {
+	var err error
 	configFile = xpath.Abs(configFile)
 	// 初始化默认配置、升级配置
 	if utils.IsExist(configFile) {
@@ -266,7 +267,7 @@ func Main() {
 		WG: &WG,
 	})
 	// 添加定时任务
-	scheduleSrv.Add(&schedule.AddTaskOptions{
+	err = scheduleSrv.Add(&schedule.AddTaskOptions{
 		Name:     "bangumi",
 		StartRun: true,
 		Task: task.NewBangumiTask(&task.BangumiOptions{
@@ -274,8 +275,17 @@ func Main() {
 			CacheMutex: &BangumiCacheMutex,
 		}),
 	})
-	schedule.AddScheduleTasks(scheduleSrv, configs.ConvertPluginInfo(config.Plugin.Schedule))
-	feedPlugin.AddFeedTasks(scheduleSrv, configs.ConvertPluginInfo(config.Plugin.Feed), filterSrv, ctx)
+	if err != nil {
+		panic(err)
+	}
+	err = schedule.AddScheduleTasks(scheduleSrv, configs.ConvertPluginInfo(config.Plugin.Schedule))
+	if err != nil {
+		panic(err)
+	}
+	err = feedPlugin.AddFeedTasks(scheduleSrv, configs.ConvertPluginInfo(config.Plugin.Feed), filterSrv, ctx)
+	if err != nil {
+		panic(err)
+	}
 	// 启动化定时任务
 	scheduleSrv.Start(ctx)
 

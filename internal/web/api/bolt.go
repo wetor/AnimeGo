@@ -10,16 +10,16 @@ import (
 
 // BoltList godoc
 //
-//	@Summary 获取Bolt数据库的Bucket列表或key列表
-//	@Description 获取Bolt数据库的Bucket列表，或指定Bucket下的key列表
-//	@Tags bolt
-//	@Accept  json
-//	@Produce  json
-//	@Param type query webModels.BoltListRequest true "获取bolt数据库列表"
-//	@Success 200 {object} webModels.Response{data=webModels.BoltListResponse}
-//	@Failure 300 {object} webModels.Response
-//	@Security ApiKeyAuth
-//	@Router /api/bolt [get]
+//	@Summary		获取Bolt数据库的Bucket列表或key列表
+//	@Description	获取Bolt数据库的Bucket列表，或指定Bucket下的key列表
+//	@Tags			bolt
+//	@Accept			json
+//	@Produce		json
+//	@Param			type	query		webModels.BoltListRequest	true	"获取bolt数据库列表"
+//	@Success		200		{object}	webModels.Response{data=webModels.BoltListResponse}
+//	@Failure		300		{object}	webModels.Response
+//	@Security		ApiKeyAuth
+//	@Router			/api/bolt [get]
 func (a *Api) BoltList(c *gin.Context) {
 	var request webModels.BoltListRequest
 	if !a.checkRequest(c, &request) {
@@ -58,16 +58,16 @@ func (a *Api) BoltList(c *gin.Context) {
 
 // Bolt godoc
 //
-//	@Summary 获取Bolt数据库的值
-//	@Description 获取Bolt数据库指定Bucket和key所储存的值
-//	@Tags bolt
-//	@Accept  json
-//	@Produce  json
-//	@Param type query webModels.BoltGetRequest true "获取bolt数据库值"
-//	@Success 200 {object} webModels.Response{data=webModels.BoltGetResponse}
-//	@Failure 300 {object} webModels.Response
-//	@Security ApiKeyAuth
-//	@Router /api/bolt/value [get]
+//	@Summary		获取Bolt数据库的值
+//	@Description	获取Bolt数据库指定Bucket和key所储存的值
+//	@Tags			bolt
+//	@Accept			json
+//	@Produce		json
+//	@Param			type	query		webModels.BoltGetRequest	true	"获取bolt数据库值"
+//	@Success		200		{object}	webModels.Response{data=webModels.BoltGetResponse}
+//	@Failure		300		{object}	webModels.Response
+//	@Security		ApiKeyAuth
+//	@Router			/api/bolt/value [get]
 func (a *Api) Bolt(c *gin.Context) {
 	var request webModels.BoltGetRequest
 	if !a.checkRequest(c, &request) {
@@ -116,16 +116,16 @@ func (a *Api) Bolt(c *gin.Context) {
 
 // BoltDelete godoc
 //
-//	@Summary 删除Bolt数据库的值
-//	@Description 删除Bolt数据库指定Bucket和key所储存的值
-//	@Tags bolt
-//	@Accept  json
-//	@Produce  json
-//	@Param type query webModels.BoltDeleteRequest true "删除bolt数据库值"
-//	@Success 200 {object} webModels.Response{data=webModels.BoltGetResponse}
-//	@Failure 300 {object} webModels.Response
-//	@Security ApiKeyAuth
-//	@Router /api/bolt/value [delete]
+//	@Summary		删除Bolt数据库的值
+//	@Description	删除Bolt数据库指定Bucket和key所储存的值
+//	@Tags			bolt
+//	@Accept			json
+//	@Produce		json
+//	@Param			type	query		webModels.BoltDeleteRequest	true	"删除bolt数据库值"
+//	@Success		200		{object}	webModels.Response{data=webModels.BoltGetResponse}
+//	@Failure		300		{object}	webModels.Response
+//	@Security		ApiKeyAuth
+//	@Router			/api/bolt/value [delete]
 func (a *Api) BoltDelete(c *gin.Context) {
 	var request webModels.BoltDeleteRequest
 	if !a.checkRequest(c, &request) {

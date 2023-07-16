@@ -35,30 +35,42 @@ func (m *Manager) Add(pluginInfo *models.Plugin) {
 	m.filters = append(m.filters, p)
 }
 
-func (m *Manager) Update(ctx context.Context, items []*models.FeedItem) {
+func (m *Manager) Update(ctx context.Context, items []*models.FeedItem,
+	skipFilter, skipDelay bool) (err error) {
 	ReInitWG.Add(1)
 	defer ReInitWG.Done()
 	// 筛选
 	if len(items) == 0 {
-		return
+		return nil
 	}
-
-	for _, f := range m.filters {
-		items = f.FilterAll(items)
+	if !skipFilter {
+		for _, f := range m.filters {
+			filterResult, err := f.FilterAll(items)
+			if err != nil {
+				return err
+			}
+			items = filterResult
+		}
 	}
 
 	for _, item := range items {
 		log.Infof("获取「%s」信息开始...", item.Name)
-		anime := m.parser.Parse(&models.ParseOptions{
-			Title:      item.Name,
-			TorrentUrl: item.Download,
-			MikanUrl:   item.Url,
+		anime, err := m.parser.Parse(&models.ParseOptions{
+			Title:              item.Name,
+			TorrentUrl:         item.Download,
+			MikanUrl:           item.Url,
+			AnimeParseOverride: item.ParseOverride,
 		})
-		if anime != nil {
-			log.Debugf("发送 %s 下载项:「%s」", item.DownloadType, anime.FullName())
-			// 发送需要下载的信息
-			m.manager.Download(anime)
+		if err != nil {
+			log.Warnf("%s", err)
+			continue
 		}
-		utils.Sleep(DelaySecond, ctx)
+		log.Debugf("发送下载项:「%s」", anime.FullName())
+		// 发送需要下载的信息
+		m.manager.Download(anime)
+		if !skipDelay {
+			utils.Sleep(DelaySecond, ctx)
+		}
 	}
+	return nil
 }

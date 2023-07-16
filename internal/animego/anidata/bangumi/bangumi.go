@@ -3,8 +3,11 @@ package bangumi
 import (
 	"fmt"
 
+	"github.com/pkg/errors"
+
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
-	"github.com/wetor/AnimeGo/pkg/errors"
+	"github.com/wetor/AnimeGo/internal/api"
+	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/pkg/log"
 	mem "github.com/wetor/AnimeGo/pkg/memorizer"
 	"github.com/wetor/AnimeGo/pkg/request"
@@ -33,49 +36,55 @@ type Bangumi struct {
 	cacheParseAnimeInfo mem.Func
 }
 
-func (b *Bangumi) RegisterCache() {
-	if anidata.Cache == nil {
-		errors.NewAniError("需要先调用anidata.Init初始化缓存").TryPanic()
-	}
-	b.cacheInit = true
-	b.cacheParseAnimeInfo = mem.Memorized(Bucket, anidata.Cache, func(params *mem.Params, results *mem.Results) error {
-		entity := b.parseAnimeInfo(params.Get("bangumiID").(int))
+func (a *Bangumi) Name() string {
+	return "Bangumi"
+}
+
+func (a *Bangumi) RegisterCache() {
+	a.cacheInit = true
+	a.cacheParseAnimeInfo = mem.Memorized(Bucket, anidata.Cache, func(params *mem.Params, results *mem.Results) error {
+		entity, err := a.parseAnimeInfo(params.Get("bangumiID").(int))
+		if err != nil {
+			return err
+		}
 		results.Set("entity", entity)
 		return nil
 	})
 }
 
-func (b Bangumi) ParseCache(bangumiID int) (entity *Entity) {
-	if !b.cacheInit {
-		b.RegisterCache()
+func (a *Bangumi) GetCache(bangumiID int, filters any) (entity any, err error) {
+	if !a.cacheInit {
+		a.RegisterCache()
 	}
-
-	if e, err := b.loadAnimeInfo(bangumiID); err == nil {
-		if e != nil {
-			log.Debugf("使用Bangumi Archive，%d", bangumiID)
-			return e
-		}
+	e, err := a.loadAnimeInfo(bangumiID)
+	if err == nil && e != nil {
+		log.Infof("使用Bangumi本地缓， %d", bangumiID)
+		return e, nil
 	}
 
 	results := mem.NewResults("entity", &Entity{})
-	err := b.cacheParseAnimeInfo(mem.NewParams("bangumiID", bangumiID).
+	err = a.cacheParseAnimeInfo(mem.NewParams("bangumiID", bangumiID).
 		TTL(anidata.CacheTime[Bucket]), results)
-	errors.NewAniErrorD(err).TryPanic()
+	if err != nil {
+		return nil, errors.Wrap(err, "获取Bangumi信息失败")
+	}
 	entity = results.Get("entity").(*Entity)
-
-	return entity
+	return entity, nil
 }
 
-// Parse
+// Get
 //
 //	@Description: 通过bangumiID和指定ep集数，获取番剧信息和剧集信息
 //	@receiver Bangumi
 //	@param bangumiID int
 //	@param ep int
 //	@return entity *Entity
-func (b Bangumi) Parse(bangumiID int) (entity *Entity) {
-	entity = b.parseAnimeInfo(bangumiID)
-	return entity
+func (a *Bangumi) Get(bangumiID int, filters any) (entity any, err error) {
+	entity, err = a.parseAnimeInfo(bangumiID)
+	if err != nil {
+		return nil, errors.Wrap(err, "获取Bangumi信息失败")
+	}
+	return entity, err
 }
 
 // parseAnimeInfo
@@ -84,12 +93,14 @@ func (b Bangumi) Parse(bangumiID int) (entity *Entity) {
 //	@receiver Bangumi
 //	@param bangumiID int
 //	@return entity *Entity
-func (b Bangumi) parseAnimeInfo(bangumiID int) (entity *Entity) {
+func (a *Bangumi) parseAnimeInfo(bangumiID int) (entity *Entity, err error) {
 	uri := infoApi(bangumiID)
 	resp := res.SubjectV0{}
-
-	err := request.Get(uri, &resp)
-	errors.NewAniErrorD(err).TryPanic()
+	err = request.Get(uri, &resp)
+	if err != nil {
+		log.DebugErr(err)
+		return nil, errors.WithStack(&exceptions.ErrRequest{Name: a.Name()})
+	}
 
 	entity = &Entity{
 		ID:     int(resp.ID),
@@ -104,17 +115,23 @@ func (b Bangumi) parseAnimeInfo(bangumiID int) (entity *Entity) {
 	if resp.Date != nil {
 		entity.AirDate = *resp.Date
 	}
-	return entity
+	return entity, nil
 }
 
-func (b Bangumi) loadAnimeInfo(bangumiID int) (entity *Entity, err error) {
+func (a *Bangumi) loadAnimeInfo(bangumiID int) (entity *Entity, err error) {
 	entity = &Entity{}
 	anidata.BangumiCacheLock.Lock()
+	defer anidata.BangumiCacheLock.Unlock()
 	err = anidata.BangumiCache.Get(SubjectBucket, bangumiID, entity)
-	anidata.BangumiCacheLock.Unlock()
-	if entity.Eps == 0 || len(entity.AirDate) == 0 {
-		log.Debugf("%d 缓存数据异常，请求Bangumi", bangumiID)
-		return nil, errors.NewAniError("数据异常")
+	if err != nil {
+		// log.DebugErr(err)
+		return nil, err
 	}
-	return entity, err
+	if entity.Eps == 0 || len(entity.AirDate) == 0 {
+		return nil, errors.WithStack(&exceptions.ErrBangumiCacheNotFound{BangumiID: bangumiID})
+	}
+	return entity, nil
 }
+
+// Check interface is satisfied
+var _ api.AniDataGet = &Bangumi{}

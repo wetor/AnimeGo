@@ -7,13 +7,14 @@ import (
 	"github.com/wetor/AnimeGo/internal/animego/anidata/bangumi"
 	"github.com/wetor/AnimeGo/internal/animego/anidata/mikan"
 	"github.com/wetor/AnimeGo/internal/animego/anidata/themoviedb"
+	"github.com/wetor/AnimeGo/internal/api"
 )
 
 // 单例模式
 var (
-	mikanInstance      *mikan.Mikan
-	bangumiInstance    *bangumi.Bangumi
-	themoviedbInstance *themoviedb.Themoviedb
+	MikanInstance      api.AniDataParse
+	BangumiInstance    api.AniDataGet
+	ThemoviedbInstance api.AniDataSearchGet
 )
 
 type Options struct {
@@ -25,31 +26,31 @@ type Options struct {
 //	@Description: 初始化anisource，需要在程序启动时调用
 //	@param proxy string
 func Init(opts *Options) {
-	mikanInstance = nil
-	bangumiInstance = nil
-	themoviedbInstance = nil
+	MikanInstance = nil
+	BangumiInstance = nil
+	ThemoviedbInstance = nil
 	anidata.Init(opts.Options)
 }
 
-func Mikan() *mikan.Mikan {
-	if mikanInstance == nil {
-		mikanInstance = &mikan.Mikan{}
+func Mikan() api.AniDataParse {
+	if MikanInstance == nil {
+		MikanInstance = &mikan.Mikan{}
 	}
-	return mikanInstance
+	return MikanInstance
 }
 
-func Bangumi() *bangumi.Bangumi {
-	if bangumiInstance == nil {
-		bangumiInstance = &bangumi.Bangumi{}
+func Bangumi() api.AniDataGet {
+	if BangumiInstance == nil {
+		BangumiInstance = &bangumi.Bangumi{}
 	}
-	return bangumiInstance
+	return BangumiInstance
 }
 
-func Themoviedb(key string) *themoviedb.Themoviedb {
-	if themoviedbInstance == nil {
-		themoviedbInstance = &themoviedb.Themoviedb{
+func Themoviedb(key string) api.AniDataSearchGet {
+	if ThemoviedbInstance == nil {
+		ThemoviedbInstance = &themoviedb.Themoviedb{
 			Key: key,
 		}
 	}
-	return themoviedbInstance
+	return ThemoviedbInstance
 }

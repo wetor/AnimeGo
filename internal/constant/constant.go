@@ -19,6 +19,7 @@ var (
 	LogFile          = "data/log/animego.log"
 	PluginPath       = "data/plugin"
 	TempPath         = "data/temp"
+	WebPath          = "data/web"
 )
 
 var (
@@ -51,4 +52,5 @@ func Init(opts *Options) {
 	PluginPath = xpath.Join(dataPath, "plugin")
 	TempPath = xpath.Join(dataPath, "temp")
 
+	WebPath = xpath.Join(dataPath, "web")
 }

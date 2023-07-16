@@ -2,6 +2,7 @@ package lib
 
 import (
 	"github.com/go-python/gpython/py"
+
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/plugin/python"
 )
@@ -73,10 +74,17 @@ func logBase(name string) func(self py.Object, args py.Tuple) (py.Object, error)
 					return py.None, nil
 				}
 			}
-			f := python.ToValue(args[0]).(string)
+			v, err := python.ToValue(args[0])
+			if err != nil {
+				return py.None, err
+			}
+			f := v.(string)
 			list := make([]any, len(args)-1)
 			for i := 0; i < len(args)-1; i++ {
-				list[i] = python.ToValue(args[i+1])
+				list[i], err = python.ToValue(args[i+1])
+				if err != nil {
+					return py.None, err
+				}
 			}
 			logFuncf(f, list...)
 
@@ -89,9 +97,13 @@ func logBase(name string) func(self py.Object, args py.Tuple) (py.Object, error)
 					return py.None, nil
 				}
 			}
+			var err error
 			list := make([]any, len(args))
 			for i := 0; i < len(args); i++ {
-				list[i] = python.ToValue(args[i])
+				list[i], err = python.ToValue(args[i])
+				if err != nil {
+					return py.None, err
+				}
 			}
 			logFunc(list...)
 

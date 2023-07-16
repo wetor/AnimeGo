@@ -48,17 +48,6 @@ type TorrentItem struct {
 	// Upspeed         int    `json:"upspeed"`
 }
 
-type TorrentContentItem struct {
-	// Index        int     `json:"index"`        //File index
-	Name string `json:"name"` //File name (including relative path)
-	Size int    `json:"size"` //File size (bytes)
-	// Progress     float64 `json:"progress"`     //File progress (percentage/100)
-	// Priority     int     `json:"priority"`     //File priority. See possible values here below
-	// IsSeed       bool    `json:"is_seed"`      //True if file is seeding/complete
-	// PieceRange   []int   `json:"piece_range"`  //The first number is the starting piece index and the second number is the ending piece index (inclusive)
-	// Availability float64 `json:"availability"` //Percentage of file pieces currently available (percentage/100)
-}
-
 type ClientConfig struct {
 	ApiUrl       string `json:"api_url"`
 	DownloadPath string `json:"download_path"`

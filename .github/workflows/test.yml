@@ -7,6 +7,9 @@ on:
       - develop
       - 'feature-*'
 
+env:
+  CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -23,3 +26,11 @@ jobs:
           go-version: '1.20'
       - name: Run tests
         run: go test ./...
+
+      - name: Run tests with coverage
+        run: go test -v -coverprofile=coverage.out ./...
+
+      - name: Generate coverage report
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage.out

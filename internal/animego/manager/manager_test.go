@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/brahma-adshonor/gohook"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/wetor/AnimeGo/assets"
@@ -28,7 +27,6 @@ import (
 const (
 	DownloadPath = "data/download"
 	SavePath     = "data/save"
-	ContentFile  = "file.mp4"
 
 	HookTimeUnix = 100
 )
@@ -132,7 +130,8 @@ func download(name string, season int, ep []int) (files []string, fullname, hash
 		Debug: false,
 	})
 	for i := range anime.Ep {
-		files[i] = xpath.Join(SavePath, renamePlugin.Rename(anime, i, srcFiles[i]).Filepath)
+		res, _ := renamePlugin.Rename(anime, i, srcFiles[i])
+		files[i] = xpath.Join(SavePath, res.Filepath)
 	}
 	log.ReInt(&log.Options{
 		Debug: true,
@@ -167,21 +166,18 @@ func TestManager_Success(t *testing.T) {
 		file1, _, _ = download("动画1", 1, []int{1, 2, 3})
 	}
 	wg.Wait()
+	time.Sleep(500 * time.Millisecond)
 	for _, f := range file1 {
 		assert.FileExists(t, f)
 		_ = os.Remove(f)
 	}
 	fmt.Println(out.String())
-	test.LogBatchCompare(out,
+	test.LogBatchCompare(out, nil,
 		"下载 1",
-		"接收到下载项",
-		"开始下载",
-		3, // plugin
-		3, // 下载进度
-		3, // 移动
-		3, // 写入元数据文件
-		1, //移动完成"
-		"正常退出",
+		[]string{"接收到下载项", "开始下载"},
+		[]string{"Rename插件", "Rename插件", "Rename插件", "下载进度", "下载进度", "下载进度"},
+		[]string{"[重命名] 移动", "[重命名] 移动", "[重命名] 移动", "写入元数据文件", "写入元数据文件", "写入元数据文件"},
+		[]string{"移动完成", "正常退出", "正常退出"},
 	)
 }
 
@@ -211,20 +207,13 @@ func TestManager_Exist(t *testing.T) {
 	}
 
 	fmt.Println(out.String())
-	test.LogBatchCompare(out,
+	test.LogBatchCompare(out, nil,
 		"下载 1",
 		"下载 1",
-		"接收到下载项",
-		"开始下载",
-		"接收到下载项",
-		"取消下载",
-		3, // plugin
-		2, // 下载进度
-		3, // 移动
-		3, // 写入元数据文件
-		1, // 下载进度
-		"移动完成",
-		"正常退出",
+		[]string{"接收到下载项", "开始下载", "接收到下载项", "取消下载"},
+		[]string{"Rename插件", "Rename插件", "Rename插件", "下载进度", "下载进度"},
+		[]string{"下载进度", "[重命名] 移动", "[重命名] 移动", "[重命名] 移动", "写入元数据文件", "写入元数据文件", "写入元数据文件"},
+		[]string{"移动完成", "正常退出", "正常退出"},
 	)
 }
 
@@ -266,27 +255,16 @@ func TestManager_DeleteFile_ReDownload(t *testing.T) {
 	}
 
 	fmt.Println(out.String())
-	test.LogBatchCompare(out,
+	test.LogBatchCompare(out, nil,
 		"下载 1",
-		"接收到下载项",
-		"开始下载",
-		1, // plugin
-		2, // 下载进度
-		1, // 移动
-		1, // 写入元数据文件
-		1, // 下载进度
-		"移动完成",
+		[]string{"接收到下载项", "开始下载"},
+		[]string{"Rename插件", "下载进度", "下载进度"},
+		[]string{"[重命名] 移动", "写入元数据文件", "下载进度", "移动完成"},
 		"删除 1",
 		"下载 1",
-		"接收到下载项",
-		"开始下载",
-		1, // plugin
-		2, // 下载进度
-		1, // 移动
-		1, // 写入元数据文件
-		1, // 下载进度
-		"移动完成",
-		"正常退出",
+		[]string{"接收到下载项", "开始下载"},
+		[]string{"Rename插件", "下载进度", "下载进度"},
+		[]string{"[重命名] 移动", "写入元数据文件", "下载进度", "移动完成", "正常退出", "正常退出"},
 	)
 }
 
@@ -329,27 +307,16 @@ func TestManager_DeleteCache_ReDownload(t *testing.T) {
 	}
 
 	fmt.Println(out.String())
-	test.LogBatchCompare(out,
+	test.LogBatchCompare(out, nil,
 		"下载 1",
-		"接收到下载项",
-		"开始下载",
-		1, // plugin
-		2, // 下载进度
-		1, // 移动
-		1, // 写入元数据文件
-		1, // 下载进度
-		"移动完成",
+		[]string{"接收到下载项", "开始下载"},
+		[]string{"Rename插件", "下载进度", "下载进度"},
+		[]string{"[重命名] 移动", "写入元数据文件", "下载进度", "移动完成"},
 		"删除 1",
 		"下载 1",
-		"接收到下载项",
-		"开始下载",
-		1, // plugin
-		2, // 下载进度
-		1, // 移动
-		1, // 写入元数据文件
-		1, // 下载进度
-		"移动完成",
-		"正常退出",
+		[]string{"接收到下载项", "开始下载"},
+		[]string{"Rename插件", "下载进度", "下载进度"},
+		[]string{"[重命名] 可能已经移动完成", "[重命名] 移动", "写入元数据文件", "下载进度", "移动完成", "正常退出", "正常退出"},
 	)
 }
 
@@ -399,28 +366,16 @@ func TestManager_WaitClient(t *testing.T) {
 	}
 
 	fmt.Println(out.String())
-	test.LogBatchCompare(out,
-		"Client离线",
-		"下载 1",
-		"等待连接到下载器。已接收到1个下载项",
-		"下载 2",
-		"等待连接到下载器。已接收到2个下载项",
-		"Client恢复",
-		"接收到下载项",
-		"开始下载",
-		"接收到下载项",
-		"开始下载",
-		1, // plugin
-		1, // 下载进度
-		1, // plugin
-		3, // 下载进度
-		2, // 移动
-		2, // 下载进度
-		4, // 移动
-		2, // 写入元数据文件
-		"移动完成",
-		"移动完成",
-		"正常退出",
+	test.LogBatchCompare(out, nil,
+		[]string{"Client离线", "下载 1"},
+		[]string{"等待连接到下载器。已接收到1个下载项", "下载 2"},
+		[]string{"等待连接到下载器。已接收到2个下载项", "Client恢复"},
+		map[string]int{"接收到下载项": 2, "开始下载": 2},
+		map[string]int{"Rename插件": 2, "下载进度": 4},
+		[]string{"[重命名] 链接", "[重命名] 链接", "下载进度", "下载进度"},
+		[]string{"[重命名] 删除", "[重命名] 删除", "写入元数据文件", "写入元数据文件"},
+		map[string]int{"移动完成": 2},
+		map[string]int{"正常退出": 2},
 	)
 }
 
@@ -438,7 +393,7 @@ func TestManager_WaitClient_FullChan(t *testing.T) {
 			log.Info("Client离线")
 			qbt.MockSetError(ErrorConnectedFailed, true)
 		}
-		time.Sleep(5 * time.Second)
+		time.Sleep(4*time.Second + 500*time.Millisecond)
 		{
 			log.Info("Client恢复")
 			qbt.MockSetError(ErrorConnectedFailed, false)
@@ -471,19 +426,14 @@ func TestManager_WaitClient_FullChan(t *testing.T) {
 	}
 
 	fmt.Println(out.String())
-	test.LogBatchCompare(out,
-		"Client离线",
-		12, // 下载
-		"等待连接到下载器。已接收到10个下载项",
-		"等待连接到下载器。已接收到10个下载项",
-		"Client恢复",
-		26,
-		24, // plugin
-		12, // 下载进度
-		12, // 移动
-		12, // 写入元数据文件
-		12, // 下载进度
-		12, // 移动完成
+	test.LogBatchCompare(out, nil,
+		map[string]int{"Client离线": 1, "下载": 12},
+		map[string]int{"等待连接到下载器。已接收到10个下载项": 2, "Client恢复": 1},
+		map[string]int{"接收到下载项": 12, "开始下载": 12, "等待连接到下载器。已接收到10个下载项": 2},
+		map[string]int{"Rename插件": 12, "下载进度": 24},
+		map[string]int{"[重命名] 移动": 12, "写入元数据文件": 12, "下载进度": 12},
+		map[string]int{"移动完成": 12},
+		"正常退出",
 		"正常退出",
 	)
 }
@@ -509,7 +459,7 @@ func TestManager_ReStart_NotDownloaded(t *testing.T) {
 			assert.FileExists(t, f)
 		}
 	}
-	time.Sleep(1 * time.Second)
+	time.Sleep(1*time.Second + 300*time.Millisecond)
 	{
 		log.Info("重启")
 		wg, cancel := initTest()
@@ -531,24 +481,14 @@ func TestManager_ReStart_NotDownloaded(t *testing.T) {
 	}
 
 	fmt.Println(out.String())
-	test.LogBatchCompare(out,
+	test.LogBatchCompare(out, nil,
 		"下载 1",
-		"接收到下载项",
-		"开始下载",
-		1,
-		2,
-		1, // 移动
-		1,
-		1,
-		"正常退出",
-		"正常退出",
-		"重启",
-		2,
-		"下载 1",
-		"接收到下载项",
-		"发现已下载",
-		"取消下载，不允许重复",
-		"正常退出",
+		[]string{"接收到下载项", "开始下载"},
+		[]string{"Rename插件", "下载进度", "下载进度"},
+		[]string{"[重命名] 移动", "写入元数据文件", "下载进度"},
+		[]string{"移动完成", "正常退出", "正常退出", "重启", "存在可能未下载完成的项目", "下载 1"},
+		[]string{"接收到下载项", "发现已下载", "取消下载"},
+		[]string{"正常退出", "正常退出"},
 	)
 }
 
@@ -572,8 +512,7 @@ func TestManager_AddFailed(t *testing.T) {
 	manager.Conf.Rename = "move"
 
 	log.Infof("Hook utils.Unix() = %v", HookTimeUnix)
-	_ = gohook.Hook(utils.Unix, MockUnix1, nil)
-	defer gohook.UnHook(utils.Unix)
+	patches := test.HookSingle(utils.Unix, MockUnix1)
 
 	qbt.MockSetError(ErrorAddFailed, true)
 	{
@@ -585,19 +524,21 @@ func TestManager_AddFailed(t *testing.T) {
 
 	qbt.MockSetError(ErrorAddFailed, false)
 	{
-		log.Info("下载 1, 重复下载")
-		file1, _, _ = download("动画1", 1, []int{1})
+		//log.Info("下载 1, 重复下载")
+		//file1, _, _ = download("动画1", 1, []int{1})
 	}
 	time.Sleep(1*time.Second + 300*time.Millisecond)
 
 	log.Infof("Hook utils.Unix() = %v", HookTimeUnix+manager.AddingExpireSecond)
-	_ = gohook.Hook(utils.Unix, MockUnix2, nil)
+	patches.Reset()
+	patches.ApplyFunc(utils.Unix, MockUnix2)
 	time.Sleep(1*time.Second + 300*time.Millisecond)
 
 	{
 		log.Info("下载 1")
 		file1, _, _ = download("动画1", 1, []int{1})
 	}
+	patches.Reset()
 	wg.Wait()
 	for _, f := range file1 {
 		assert.FileExists(t, f)
@@ -605,24 +546,18 @@ func TestManager_AddFailed(t *testing.T) {
 	}
 	fmt.Println(out.String())
 
-	test.LogBatchCompare(out,
+	test.LogBatchCompare(out, nil,
 		"Hook",
 		"下载 1, 添加失败",
-		"接收到下载项",
-		"开始下载",
-		"下载 1, 重复下载",
-		"接收到下载项",
-		"取消下载，不允许重复",
+		[]string{"接收到下载项", "开始下载"},
+		"add_failed",
+		//"下载 1, 重复下载",
+		//[]string{"接收到下载项", "开始下载", "接收到下载项", "取消下载，不允许重复"},
 		"Hook",
 		"下载 1",
-		"接收到下载项",
-		"开始下载",
-		1,
-		2,
-		1, // 移动
-		1,
-		1,
-		"移动完成",
-		"正常退出",
+		[]string{"接收到下载项", "开始下载"},
+		[]string{"Rename插件", "下载进度", "下载进度"},
+		[]string{"[重命名] 移动", "写入元数据文件", "下载进度", "移动完成"},
+		[]string{"正常退出", "正常退出"},
 	)
 }

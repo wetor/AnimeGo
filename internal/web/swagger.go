@@ -8,16 +8,19 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
-	"github.com/wetor/AnimeGo/docs"
+	"github.com/wetor/AnimeGo/internal/web/docs"
 )
 
-// @termsOfService https://github.com/wetor/AnimeGo
-// @license.name MIT
-// @license.url https://www.mit-license.org/
+//go:generate swag fmt -g swagger.go
+//go:generate swag init -g swagger.go
 
-// @securityDefinitions.apikey ApiKeyAuth
-// @in header
-// @name Access-Key
+//	@termsOfService	https://github.com/wetor/AnimeGo
+//	@license.name	MIT
+//	@license.url	https://www.mit-license.org/
+
+//	@securityDefinitions.apikey	ApiKeyAuth
+//	@in							header
+//	@name						Access-Key
 
 func InitSwagger(r *gin.Engine) {
 	docs.SwaggerInfo.Title = "AnimeGo"

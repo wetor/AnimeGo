@@ -7,17 +7,19 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/wetor/AnimeGo/assets"
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/internal/animego/anisource"
-	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
 	"github.com/wetor/AnimeGo/internal/animego/parser"
 	parserPlugin "github.com/wetor/AnimeGo/internal/animego/parser/plugin"
+	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/pkg/cache"
+	pkgExceptions "github.com/wetor/AnimeGo/pkg/exceptions"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/request"
 	"github.com/wetor/AnimeGo/pkg/torrent"
@@ -26,6 +28,8 @@ import (
 )
 
 const testdata = "parser"
+
+var mgr *parser.Manager
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
@@ -49,6 +53,7 @@ func TestMain(m *testing.M) {
 		}
 		return id
 	})
+	test.Hook(torrent.LoadUri, HookLoadUri)
 	defer test.UnHook()
 	plugin.Init(&plugin.Options{
 		Path:  assets.TestPluginPath(),
@@ -84,6 +89,14 @@ func TestMain(m *testing.M) {
 	request.Init(&request.Options{
 		Proxy: "http://127.0.0.1:7890",
 	})
+
+	p := parserPlugin.NewParserPlugin(&models.Plugin{
+		Enable: true,
+		Type:   "builtin",
+		File:   "builtin_parser.py",
+	}, true)
+	mgr = parser.NewManager(p, &AniSourceMock{})
+
 	m.Run()
 
 	b.Close()
@@ -101,45 +114,36 @@ func TestManager_Parse(t *testing.T) {
 		name       string
 		args       args
 		wantEntity *models.AnimeEntity
+		wantErr    error
+		wantErrStr string
 	}{
 		// TODO: Add test cases.
 		{
-			name: "1",
+			name: "success",
 			args: args{
 				opts: &models.ParseOptions{
-					Title:      "[猎户不鸽压制] 万事屋斋藤先生转生异世界 / 斋藤先生无所不能 Benriya Saitou-san, Isekai ni Iku [01-12] [合集] [WebRip 1080p] [繁中内嵌] [H265 AAC] [2023年1月番] [4.8 GB]",
-					TorrentUrl: "https://mikanani.me/Download/20230328/ac5d8d6fcc4d83cb18f18c209b66afd8e1edba86.torrent",
-					MikanUrl:   "https://mikanani.me/Home/Episode/ac5d8d6fcc4d83cb18f18c209b66afd8e1edba86",
+					Title:      "success",
+					TorrentUrl: "success",
+					MikanUrl:   "success",
 				},
 			},
 			wantEntity: &models.AnimeEntity{ID: 366165, ThemoviedbID: 155942, MikanID: 2922, Name: "便利屋斎藤さん、異世界に行く", NameCN: "万事屋斋藤、到异世界", Season: 1, Eps: 12, AirDate: "2023-01-08",
 				Ep: []*models.AnimeEpEntity{
-					{Type: models.AnimeEpNormal, Ep: 1, Src: "[orion origin] Benriya Saitou-san, Isekai ni Iku [01-12] [WebRip] [1080p] [H265 AAC] [CHT]/[orion origin] Benriya Saitou-san, Isekai ni Iku [01] [1080p] [H265 AAC] [CHT].mp4"},
-					{Type: models.AnimeEpNormal, Ep: 2, Src: "[orion origin] Benriya Saitou-san, Isekai ni Iku [01-12] [WebRip] [1080p] [H265 AAC] [CHT]/[orion origin] Benriya Saitou-san, Isekai ni Iku [02] [1080p] [H265 AAC] [CHT].mp4"},
-					{Type: models.AnimeEpNormal, Ep: 3, Src: "[orion origin] Benriya Saitou-san, Isekai ni Iku [01-12] [WebRip] [1080p] [H265 AAC] [CHT]/[orion origin] Benriya Saitou-san, Isekai ni Iku [03] [1080p] [H265 AAC] [CHT].mp4"},
-					{Type: models.AnimeEpNormal, Ep: 4, Src: "[orion origin] Benriya Saitou-san, Isekai ni Iku [01-12] [WebRip] [1080p] [H265 AAC] [CHT]/[orion origin] Benriya Saitou-san, Isekai ni Iku [04] [1080p] [H265 AAC] [CHT].mp4"},
-					{Type: models.AnimeEpNormal, Ep: 5, Src: "[orion origin] Benriya Saitou-san, Isekai ni Iku [01-12] [WebRip] [1080p] [H265 AAC] [CHT]/[orion origin] Benriya Saitou-san, Isekai ni Iku [05] [1080p] [H265 AAC] [CHT].mp4"},
-					{Type: models.AnimeEpNormal, Ep: 6, Src: "[orion origin] Benriya Saitou-san, Isekai ni Iku [01-12] [WebRip] [1080p] [H265 AAC] [CHT]/[orion origin] Benriya Saitou-san, Isekai ni Iku [06] [1080p] [H265 AAC] [CHT].mp4"},
-					{Type: models.AnimeEpNormal, Ep: 7, Src: "[orion origin] Benriya Saitou-san, Isekai ni Iku [01-12] [WebRip] [1080p] [H265 AAC] [CHT]/[orion origin] Benriya Saitou-san, Isekai ni Iku [07] [1080p] [H265 AAC] [CHT].mp4"},
-					{Type: models.AnimeEpNormal, Ep: 8, Src: "[orion origin] Benriya Saitou-san, Isekai ni Iku [01-12] [WebRip] [1080p] [H265 AAC] [CHT]/[orion origin] Benriya Saitou-san, Isekai ni Iku [08] [1080p] [H265 AAC] [CHT].mp4"},
-					{Type: models.AnimeEpNormal, Ep: 9, Src: "[orion origin] Benriya Saitou-san, Isekai ni Iku [01-12] [WebRip] [1080p] [H265 AAC] [CHT]/[orion origin] Benriya Saitou-san, Isekai ni Iku [09] [1080p] [H265 AAC] [CHT].mp4"},
-					{Type: models.AnimeEpNormal, Ep: 10, Src: "[orion origin] Benriya Saitou-san, Isekai ni Iku [01-12] [WebRip] [1080p] [H265 AAC] [CHT]/[orion origin] Benriya Saitou-san, Isekai ni Iku [10] [1080p] [H265 AAC] [CHT].mp4"},
-					{Type: models.AnimeEpNormal, Ep: 11, Src: "[orion origin] Benriya Saitou-san, Isekai ni Iku [01-12] [WebRip] [1080p] [H265 AAC] [CHT]/[orion origin] Benriya Saitou-san, Isekai ni Iku [11] [1080p] [H265 AAC] [CHT].mp4"},
-					{Type: models.AnimeEpNormal, Ep: 12, Src: "[orion origin] Benriya Saitou-san, Isekai ni Iku [01-12] [WebRip] [1080p] [H265 AAC] [CHT]/[orion origin] Benriya Saitou-san, Isekai ni Iku [12] [END] [1080p] [H265 AAC] [CHT].mp4"},
+					{Type: models.AnimeEpNormal, Ep: 10, Src: "514/[orion origin] Benriya Saitou-san, Isekai ni Iku [10] [1080p] [H265 AAC] [CHT].mp4"},
 				},
 				Torrent: &models.AnimeTorrent{
-					Hash: "ac5d8d6fcc4d83cb18f18c209b66afd8e1edba86",
-					File: "data/ac5d8d6fcc4d83cb18f18c209b66afd8e1edba86.torrent",
+					Hash: "success",
+					Url:  "success",
 				},
 			},
 		},
 		{
-			name: "2",
+			name: "ep_unknown",
 			args: args{
 				opts: &models.ParseOptions{
-					Title:      "【SW字幕组】[宠物小精灵 / 宝可梦 地平线 莉可与罗伊的旅途][01-02][简日双语字幕][2023.04.14][1080P][AVC][MP4][CHS_JP] [875.7MB]",
-					TorrentUrl: "https://mikanani.me/Download/20230427/51ecf2415af99521d07595178685587e16edd926.torrent",
-					MikanUrl:   "https://mikanani.me/Home/Episode/51ecf2415af99521d07595178685587e16edd926",
+					Title:      "ep_unknown",
+					TorrentUrl: "ep_unknown",
+					MikanUrl:   "ep_unknown",
 				},
 			},
 			wantEntity: &models.AnimeEntity{ID: 411247, ThemoviedbID: 220150, MikanID: 3015, Name: "ポケットモンスター", NameCN: "宝可梦 地平线", Season: 1, Eps: 22, AirDate: "2023-04-14",
@@ -148,24 +152,126 @@ func TestManager_Parse(t *testing.T) {
 					{Type: models.AnimeEpUnknown, Ep: 0, Src: "[SWSUB][Pokemon Horizons][01-02][CHS_JP][AVC][1080P].mp4"},
 				},
 				Torrent: &models.AnimeTorrent{
-					Hash: "51ecf2415af99521d07595178685587e16edd926",
-					File: "data/51ecf2415af99521d07595178685587e16edd926.torrent",
+					Hash: "ep_unknown",
+					Url:  "ep_unknown",
+				},
+			},
+		},
+		{
+			name: "err_anisource_parse",
+			args: args{
+				opts: &models.ParseOptions{
+					Title:      "err_anisource_parse",
+					TorrentUrl: "err_anisource_parse",
+					MikanUrl:   "err_anisource_parse",
+				},
+			},
+			wantErr:    &exceptions.ErrMikanParseHTML{},
+			wantErrStr: "解析anisource失败，结束此流程: 解析Mikan信息失败: 解析 MikanUrl 失败，解析网页错误",
+		},
+		{
+			name: "err_torrent",
+			args: args{
+				opts: &models.ParseOptions{
+					Title:      "err_torrent",
+					TorrentUrl: "err_torrent",
+					MikanUrl:   "err_torrent",
+				},
+			},
+			wantErr:    &pkgExceptions.ErrTorrentUrl{},
+			wantErrStr: "解析torrent失败，结束此流程: 无法识别Torrent Url: err_torrent",
+		},
+		{
+			name: "err_season",
+			args: args{
+				opts: &models.ParseOptions{
+					Title:      "err_season",
+					TorrentUrl: "err_season",
+					MikanUrl:   "err_season",
+				},
+			},
+			wantEntity: &models.AnimeEntity{ID: 411247, ThemoviedbID: 220150, MikanID: 3015, Name: "ポケットモンスター", NameCN: "宝可梦 地平线", Season: 1, Eps: 22, AirDate: "2023-04-14",
+				Flag: models.AnimeFlagEpParseFailed,
+				Ep: []*models.AnimeEpEntity{
+					{Type: models.AnimeEpUnknown, Ep: 0, Src: "[SWSUB][Pokemon Horizons][01-02][CHS_JP][AVC][1080P].mp4"},
+				},
+				Torrent: &models.AnimeTorrent{
+					Hash: "err_season",
+					Url:  "err_season",
+				},
+			},
+		},
+		{
+			name: "err_season_use_title",
+			args: args{
+				opts: &models.ParseOptions{
+					Title:      "err_season_use_title",
+					TorrentUrl: "err_season_use_title",
+					MikanUrl:   "err_season_use_title",
+				},
+			},
+			wantEntity: &models.AnimeEntity{ID: 411247, ThemoviedbID: 220150, MikanID: 3015, Name: "ポケットモンスター", NameCN: "宝可梦 地平线", Season: 2, Eps: 22, AirDate: "2023-04-14",
+				Ep: []*models.AnimeEpEntity{
+					{Type: models.AnimeEpNormal, Ep: 1, Src: "[SWSUB][Pokemon Horizons][第二季][01][CHS_JP][AVC][1080P].mp4"},
+				},
+				Torrent: &models.AnimeTorrent{
+					Hash: "err_season_use_title",
+					Url:  "err_season_use_title",
 				},
 			},
 		},
 	}
 
-	p := parserPlugin.NewParserPlugin(&models.Plugin{
-		Enable: true,
-		Type:   "builtin",
-		File:   "builtin_parser.py",
-	}, true)
-	m := parser.NewManager(p, mikan.Mikan{})
-
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotEntity := m.Parse(tt.args.opts)
-			assert.Equalf(t, tt.wantEntity, gotEntity, "Parse(%v)", tt.args.opts)
+			gotEntity, err := mgr.Parse(tt.args.opts)
+			if tt.wantErr != nil {
+				assert.IsType(t, tt.wantErr, errors.Cause(err))
+				assert.EqualError(t, err, tt.wantErrStr)
+			} else {
+				assert.NoError(t, err)
+				assert.Equalf(t, tt.wantEntity, gotEntity, "Parse(%v)", tt.args.opts)
+			}
+		})
+	}
+}
+
+func TestManager_Parse_Failed(t *testing.T) {
+	type args struct {
+		opts *models.ParseOptions
+	}
+	tests := []struct {
+		name       string
+		args       args
+		wantEntity *models.AnimeEntity
+		wantErr    error
+		wantErrStr string
+	}{
+		// TODO: Add test cases.
+		{
+			name: "err_season_failed",
+			args: args{
+				opts: &models.ParseOptions{
+					Title:      "err_season_failed",
+					TorrentUrl: "err_season_failed",
+					MikanUrl:   "err_season_failed",
+				},
+			},
+			wantErr:    &exceptions.ErrParseFailed{},
+			wantErrStr: "解析季度失败，未设置默认值，结束此流程",
+		},
+	}
+	parser.TMDBFailSkip = true
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotEntity, err := mgr.Parse(tt.args.opts)
+			if tt.wantErr != nil {
+				assert.IsType(t, tt.wantErr, errors.Cause(err))
+				assert.EqualError(t, err, tt.wantErrStr)
+			} else {
+				assert.NoError(t, err)
+				assert.Equalf(t, tt.wantEntity, gotEntity, "Parse(%v)", tt.args.opts)
+			}
 		})
 	}
 }

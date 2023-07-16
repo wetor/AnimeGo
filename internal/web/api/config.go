@@ -9,22 +9,22 @@ import (
 
 	"github.com/wetor/AnimeGo/configs"
 	webModels "github.com/wetor/AnimeGo/internal/web/models"
-	"github.com/wetor/AnimeGo/pkg/errors"
 	"github.com/wetor/AnimeGo/pkg/log"
+	"github.com/wetor/AnimeGo/pkg/xerrors"
 )
 
 // ConfigGet godoc
 //
-//	@Summary 获取设置
-//	@Description 获取AnimeGo的配置文件内容
-//	@Tags config
-//	@Accept  json
-//	@Produce  json
-//	@Param type query webModels.ConfigGetRequest true "获取配置文件"
-//	@Success 200 {object} webModels.Response
-//	@Failure 300 {object} webModels.Response
-//	@Security ApiKeyAuth
-//	@Router /api/config [get]
+//	@Summary		获取设置
+//	@Description	获取AnimeGo的配置文件内容
+//	@Tags			config
+//	@Accept			json
+//	@Produce		json
+//	@Param			type	query		webModels.ConfigGetRequest	true	"获取配置文件"
+//	@Success		200		{object}	webModels.Response
+//	@Failure		300		{object}	webModels.Response
+//	@Security		ApiKeyAuth
+//	@Router			/api/config [get]
 func (a *Api) ConfigGet(c *gin.Context) {
 	var request webModels.ConfigGetRequest
 	if !a.checkRequest(c, &request) {
@@ -38,8 +38,8 @@ func (a *Api) ConfigGet(c *gin.Context) {
 		data := make(map[string]interface{})
 		err := jsoniter.Unmarshal(configs.DefaultDoc(), &data)
 		if err != nil {
-			err = errors.NewAniErrorD(err)
-			log.Debugf("", err)
+			err = xerrors.NewAniErrorD(err)
+			log.DebugErr(err)
 			c.JSON(webModels.Fail("配置项说明格式化错误"))
 			return
 		}
@@ -47,8 +47,8 @@ func (a *Api) ConfigGet(c *gin.Context) {
 	} else if request.Key == "raw" {
 		data, err := os.ReadFile(configs.ConfigFile)
 		if err != nil {
-			err = errors.NewAniErrorD(err)
-			log.Debugf("", err)
+			err = xerrors.NewAniErrorD(err)
+			log.DebugErr(err)
 			c.JSON(webModels.Fail("打开文件 " + configs.ConfigFile + " 失败"))
 			return
 		}
@@ -61,16 +61,16 @@ func (a *Api) ConfigGet(c *gin.Context) {
 
 // ConfigPut godoc
 //
-//	@Summary 更新设置
-//	@Description 更新AnimeGo的配置文件内容
-//	@Tags config
-//	@Accept  json
-//	@Produce  json
-//	@Param type body webModels.ConfigPutRequest true "更新配置文件"
-//	@Success 200 {object} webModels.Response
-//	@Failure 300 {object} webModels.Response
-//	@Security ApiKeyAuth
-//	@Router /api/config [put]
+//	@Summary		更新设置
+//	@Description	更新AnimeGo的配置文件内容
+//	@Tags			config
+//	@Accept			json
+//	@Produce		json
+//	@Param			type	body		webModels.ConfigPutRequest	true	"更新配置文件"
+//	@Success		200		{object}	webModels.Response
+//	@Failure		300		{object}	webModels.Response
+//	@Security		ApiKeyAuth
+//	@Router			/api/config [put]
 func (a *Api) ConfigPut(c *gin.Context) {
 	var request webModels.ConfigPutRequest
 	if !a.checkRequest(c, &request) {
@@ -88,8 +88,8 @@ func (a *Api) ConfigPut(c *gin.Context) {
 			return
 		}
 		if err != nil {
-			err = errors.NewAniErrorD(err)
-			log.Debugf("", err)
+			err = xerrors.NewAniErrorD(err)
+			log.DebugErr(err)
 			c.JSON(webModels.Fail("参数格式错误"))
 			return
 		}
@@ -97,16 +97,16 @@ func (a *Api) ConfigPut(c *gin.Context) {
 		if *request.Backup {
 			err = configs.BackupConfig(configs.ConfigFile, "")
 			if err != nil {
-				err = errors.NewAniErrorD(err)
-				log.Debugf("", err)
+				err = xerrors.NewAniErrorD(err)
+				log.DebugErr(err)
 				c.JSON(webModels.Fail("备份文件 " + configs.ConfigFile + " 失败"))
 				return
 			}
 		}
 		err = os.WriteFile(configs.ConfigFile, data, 0644)
 		if err != nil {
-			err = errors.NewAniErrorD(err)
-			log.Debugf("", err)
+			err = xerrors.NewAniErrorD(err)
+			log.DebugErr(err)
 			c.JSON(webModels.Fail("写到文件 " + configs.ConfigFile + " 失败"))
 			return
 		}

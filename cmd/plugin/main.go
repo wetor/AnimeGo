@@ -63,45 +63,60 @@ func doExit() {
 }
 
 func pluginPython(entryFunc string, info *models.Plugin) map[string]any {
-	p := plugin.LoadPlugin(&plugin.LoadPluginOptions{
+	p, err := plugin.LoadPlugin(&plugin.LoadPluginOptions{
 		Plugin:    info,
 		EntryFunc: entryFunc,
 	})
-	return p.Run(entryFunc, map[string]any{})
+	if err != nil {
+		panic(err)
+	}
+	result, err := p.Run(entryFunc, map[string]any{})
+	if err != nil {
+		panic(err)
+	}
+	return result
 }
 
 func pluginFilter(items []*models.FeedItem, info *models.Plugin) []*models.FeedItem {
 	f := filterPlugin.NewFilterPlugin(info)
-	return f.FilterAll(items)
+	res, _ := f.FilterAll(items)
+	return res
 }
 
 func pluginRename(anime *models.AnimeEntity, info *models.Plugin) []*models.RenameResult {
 	result := make([]*models.RenameResult, len(anime.Ep))
 	r := renamerPlugin.NewRenamePlugin(info)
+	var err error
 	for i, ep := range anime.Ep {
-		result[i] = r.Rename(anime, i, ep.Src)
+		result[i], err = r.Rename(anime, i, ep.Src)
+		if err != nil {
+			panic(err)
+		}
 	}
 	return result
 }
 
 func pluginSchedule(file string, s *schedule.Schedule, info *models.Plugin) {
+	t, _ := task.NewScheduleTask(&task.ScheduleOptions{
+		Plugin: info,
+	})
 	s.Add(&schedule.AddTaskOptions{
 		Name:     xpath.Base(file),
 		StartRun: false,
-		Task: task.NewScheduleTask(&task.ScheduleOptions{
-			Plugin: info,
-		}),
+		Task:     t,
 	})
 }
 
-func pluginFeed(file string, s *schedule.Schedule, info *models.Plugin, callback func(items []*models.FeedItem)) {
+func pluginFeed(file string, s *schedule.Schedule, info *models.Plugin, callback func(items []*models.FeedItem) error) {
+	t, _ := task.NewFeedTask(&task.FeedOptions{
+		Plugin:   info,
+		Callback: callback,
+	})
+
 	s.Add(&schedule.AddTaskOptions{
 		Name:     xpath.Base(file),
 		StartRun: false,
-		Task: task.NewFeedTask(&task.FeedOptions{
-			Plugin:   info,
-			Callback: callback,
-		}),
+		Task:     t,
 	})
 }
 
@@ -183,11 +198,12 @@ func Main() {
 		if pPlugin == constant.PluginTemplateSchedule {
 			pluginSchedule(pFile, s, pluginInfo)
 		} else if pPlugin == constant.PluginTemplateFeed {
-			pluginFeed(pFile, s, pluginInfo, func(items []*models.FeedItem) {
+			pluginFeed(pFile, s, pluginInfo, func(items []*models.FeedItem) error {
 				for i, item := range items {
 					jsonData, _ := json.Marshal(item)
 					log.Infof("[%d] feed结果: %v", i, string(jsonData))
 				}
+				return nil
 			})
 		}
 		s.Start(ctx)

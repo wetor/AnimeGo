@@ -9,7 +9,8 @@ import (
 	"time"
 
 	"github.com/parnurzeal/gorequest"
-	"github.com/wetor/AnimeGo/pkg/errors"
+	"github.com/pkg/errors"
+
 	"github.com/wetor/AnimeGo/pkg/log"
 )
 
@@ -91,28 +92,18 @@ func get(uri string, header map[string]string) *gorequest.SuperAgent {
 
 func handleError(resp gorequest.Response, errs []error) (err error) {
 	if len(errs) != 0 {
-		log.Debugf("", errors.NewAniErrorD(errs))
-		log.Warnf("HTTP 请求失败")
 		return errs[0]
 	}
 	if resp.StatusCode != http.StatusOK {
-		err = errors.NewAniErrorSkipf(3, "HTTP 请求失败，%s, 重试 %s 次", resp.Status, resp.Header.Get("Retry-Count"))
-		log.Debugf("", err)
-		log.Warnf("HTTP 请求失败, %s", resp.Status)
-		return err
-	}
-
-	if retryCount := resp.Header.Get("Retry-Count"); retryCount != "0" {
-		log.Infof("HTTP 请求完成，重试 %s 次", retryCount)
-	} else {
-		log.Infof("HTTP 请求完成")
+		return errors.Errorf("HTTP 请求失败, %s", resp.Status)
 	}
 	return nil
 }
 
 // GetString
-//  uri string 请求地址
-//  args[0] map[string]string 请求头header
+//
+//	uri string 请求地址
+//	args[0] map[string]string 请求头header
 func GetString(uri string, args ...interface{}) (string, error) {
 	ReInitWG.Add(1)
 	defer ReInitWG.Done()
@@ -149,7 +140,7 @@ func GetFile(uri string, file string) error {
 	}
 	err = os.WriteFile(file, bodyBytes, 0666)
 	if err != nil {
-		return errors.NewAniErrorD(err)
+		return err
 	}
 	return nil
 }
@@ -164,7 +155,7 @@ func GetWriter(uri string, w io.Writer) error {
 	}
 	_, err = w.Write(bodyBytes)
 	if err != nil {
-		return errors.NewAniErrorD(err)
+		return err
 	}
 	return nil
 }

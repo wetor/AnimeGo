@@ -15,21 +15,24 @@ func GetDataPath(name string, file string) string {
 	return testdata
 }
 
-func GetDataFile(name string, file string) *os.File {
+func GetDataFile(name string, file string) (*os.File, error) {
 	testdata := GetDataPath(name, file)
 	f, err := os.Open(testdata)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return f
+	return f, nil
 }
 
-func GetData(name string, file string) []byte {
-	f := GetDataFile(name, file)
+func GetData(name string, file string) ([]byte, error) {
+	f, err := GetDataFile(name, file)
+	if err != nil {
+		return nil, err
+	}
 	defer f.Close()
 	d, err := io.ReadAll(f)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-	return d
+	return d, nil
 }

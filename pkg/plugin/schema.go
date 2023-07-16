@@ -3,7 +3,10 @@ package plugin
 import (
 	"strings"
 
-	"github.com/wetor/AnimeGo/pkg/errors"
+	"github.com/pkg/errors"
+
+	"github.com/wetor/AnimeGo/pkg/exceptions"
+	"github.com/wetor/AnimeGo/pkg/log"
 )
 
 type Schema struct {
@@ -26,11 +29,8 @@ func ParseSchemas(schemas []string) []*Schema {
 	return paramsSchema
 }
 
-func CheckSchema(schemas []*Schema, object any) {
-	objectMap, ok := object.(map[string]any)
-	if !ok {
-		errors.NewAniError("类型错误").TryPanic()
-	}
+func CheckSchema(schemas []*Schema, object any) error {
+	objectMap := object.(map[string]any)
 
 	for _, schema := range schemas {
 		if !schema.Optional {
@@ -42,7 +42,9 @@ func CheckSchema(schemas []*Schema, object any) {
 				}
 			}
 			if !has {
-				errors.NewAniError("缺少参数: " + schema.Name).TryPanic()
+				err := errors.WithStack(&exceptions.ErrPluginSchemaMissing{Name: schema.Name})
+				log.DebugErr(err)
+				return err
 			}
 		}
 	}
@@ -56,7 +58,10 @@ func CheckSchema(schemas []*Schema, object any) {
 			}
 		}
 		if !has {
-			errors.NewAniError("多余参数: " + key).TryPanic()
+			err := errors.WithStack(&exceptions.ErrPluginSchemaUnknown{Name: key})
+			log.DebugErr(err)
+			return err
 		}
 	}
+	return nil
 }

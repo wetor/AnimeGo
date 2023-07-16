@@ -17,9 +17,9 @@ var (
 	py api.Plugin = nil
 )
 
-func ParserName(title string) (ep *models.TitleParsed) {
+func ParserName(title string) (ep *models.TitleParsed, err error) {
 	if py == nil {
-		py = plugin.LoadPlugin(&plugin.LoadPluginOptions{
+		py, err = plugin.LoadPlugin(&plugin.LoadPluginOptions{
 			Plugin: &models.Plugin{
 				Type: "builtin",
 				File: assets.BuiltinRawParser,
@@ -32,18 +32,27 @@ func ParserName(title string) (ep *models.TitleParsed) {
 				},
 			},
 		})
+		if err != nil {
+			return nil, err
+		}
 	}
-	result := py.Run(FuncMain, map[string]any{
+	result, err := py.Run(FuncMain, map[string]any{
 		"title": title,
 	})
+	if err != nil {
+		return nil, err
+	}
 	ep = &models.TitleParsed{
 		TitleRaw: title,
 	}
-	utils.MapToStruct(result, ep)
+	err = utils.MapToStruct(result, ep)
+	if err != nil {
+		return nil, err
+	}
 	if len(ep.NameCN) > 0 {
 		ep.Name = ep.NameCN
 	} else if len(ep.Name) == 0 && len(ep.NameEN) > 0 {
 		ep.Name = ep.NameEN
 	}
-	return ep
+	return ep, nil
 }

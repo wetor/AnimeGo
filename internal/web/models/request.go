@@ -83,3 +83,11 @@ type BoltDeleteRequest struct {
 	Bucket string `json:"bucket" form:"bucket" binding:"required"`
 	Key    string `json:"key" form:"key" binding:"required"`
 }
+
+type AddItemsRequest struct {
+	Source string `json:"source" binding:"required"`
+	Data   []struct {
+		Url  string         `json:"url" binding:"required"`
+		Info map[string]any `json:"info"`
+	} `json:"data" binding:"required"`
+}

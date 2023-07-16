@@ -6,13 +6,13 @@ import (
 
 	"github.com/go-python/gpython/py"
 	_ "github.com/go-python/gpython/stdlib"
+	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
 
-	"github.com/wetor/AnimeGo/pkg/errors"
+	"github.com/wetor/AnimeGo/pkg/exceptions"
 	"github.com/wetor/AnimeGo/pkg/json"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/plugin"
-	"github.com/wetor/AnimeGo/pkg/try"
 	"github.com/wetor/AnimeGo/pkg/utils"
 	"github.com/wetor/AnimeGo/pkg/xpath"
 )
@@ -52,14 +52,15 @@ func (p *Python) preExecute() {
 //
 //	@Description: 执行脚本
 //	@receiver p
-func (p *Python) execute() {
-	var err error
+func (p *Python) execute() (err error) {
 	if p.code != nil {
 		var code *py.Code
 		code, err = py.Compile(*p.code, p.file, py.ExecMode, 0, true)
 		if err != nil {
 			py.TracebackDump(err)
-			errors.NewAniErrorD(err).TryPanic()
+			log.DebugErr(err)
+			log.Warnf("%s: %s", "编译失败", p.file)
+			return errors.Wrap(err, "编译失败")
 		}
 		p.module, err = py.RunCode(p.ctx, code, "", nil)
 	} else {
@@ -69,16 +70,18 @@ func (p *Python) execute() {
 	}
 	if err != nil {
 		py.TracebackDump(err)
-		errors.NewAniErrorD(err).TryPanic()
+		log.DebugErr(err)
+		log.Warnf("%s: %s", "执行失败", p.file)
+		return errors.Wrap(err, "执行失败")
 	}
-
+	return nil
 }
 
 // endExecute
 //
 //	@Description: 后置执行，写入变量，获取方法
 //	@receiver p
-func (p *Python) endExecute() {
+func (p *Python) endExecute() (err error) {
 	for name, function := range p.functions {
 		f, ok := p.module.Globals[name]
 		if !ok {
@@ -89,35 +92,57 @@ func (p *Python) endExecute() {
 			continue
 		}
 		function.Exist = true
-		function.Func = func(args map[string]any) map[string]any {
-			pyObj := ToObject(args)
+		function.Func = func(args map[string]any) (map[string]any, error) {
+			pyObj, err := ToObject(args)
+			if err != nil {
+				return nil, err
+			}
 			res, err := caller.M__call__(py.Tuple{pyObj}, nil)
 			if err != nil {
 				py.TracebackDump(err)
+				log.DebugErr(err)
+				return nil, errors.Wrapf(err, "函数调用失败: %s", name)
 			}
-			obj, ok := ToValue(res).(map[string]any)
+			val, err := ToValue(res)
+			if err != nil {
+				return nil, err
+			}
+			obj, ok := val.(map[string]any)
 			if !ok {
 				obj = map[string]any{
 					"result": obj,
 				}
 			}
-			return obj
+			return obj, nil
 		}
 	}
 	for name, val := range p.globalVars {
-		p.Set(name, val)
+		err = p.Set(name, val)
+		if err != nil {
+			return err
+		}
 	}
 	for name, variable := range p.variables {
 		_, has := p.module.Globals[name]
 		if !has && !variable.Nullable {
-			log.Warnf("未找到全局变量 %s", name)
-			errors.NewAniErrorf("未找到全局变量 %s", name).TryPanic()
+			err = errors.WithStack(exceptions.ErrPlugin{Type: p.Type(), File: p.file, Message: "未找到全局变量: " + name})
+			log.DebugErr(err)
+			return err
 		}
 	}
-	p.Set("__debug__", plugin.Debug)
-	p.Set("__plugin_name__", p.name)
-	p.Set("__plugin_dir__", p.dir)
-	p.Set("_get_config", py.MustNewMethod("_get_config", func(self py.Object, args py.Tuple) (py.Object, error) {
+	err = p.Set("__debug__", plugin.Debug)
+	if err != nil {
+		return err
+	}
+	err = p.Set("__plugin_name__", p.name)
+	if err != nil {
+		return err
+	}
+	err = p.Set("__plugin_dir__", p.dir)
+	if err != nil {
+		return err
+	}
+	err = p.Set("_get_config", py.MustNewMethod("_get_config", func(self py.Object, args py.Tuple) (py.Object, error) {
 		result := map[string]any{}
 		yamlFile := xpath.Join(p.dir, p.name+".yaml")
 		jsonFile := xpath.Join(p.dir, p.name+".json")
@@ -140,9 +165,9 @@ func (p *Python) endExecute() {
 				return nil, err
 			}
 		}
-		return ToObject(result), nil
+		return ToObject(result)
 	}, 0, `_get_config() -> dict`))
-
+	return err
 }
 
 // Get
@@ -151,7 +176,7 @@ func (p *Python) endExecute() {
 //	@receiver p
 //	@param name
 //	@return any
-func (p *Python) Get(name string) any {
+func (p *Python) Get(name string) (any, error) {
 	return ToValue(p.module.Globals[name])
 }
 
@@ -161,12 +186,17 @@ func (p *Python) Get(name string) any {
 //	@receiver p
 //	@param name
 //	@param val
-func (p *Python) Set(name string, val any) {
+func (p *Python) Set(name string, val any) error {
 	if m, ok := val.(*py.Method); ok {
 		p.module.Globals[name] = m
 	} else {
-		p.module.Globals[name] = ToObject(val)
+		obj, err := ToObject(val)
+		if err != nil {
+			return err
+		}
+		p.module.Globals[name] = obj
 	}
+	return nil
 }
 
 // Type
@@ -199,7 +229,7 @@ func (p *Python) loadPre(file string) {
 //	@Description: 加载脚本
 //	@receiver p
 //	@param opts
-func (p *Python) Load(opts *plugin.LoadOptions) {
+func (p *Python) Load(opts *plugin.LoadOptions) (err error) {
 	p.globalVars = opts.GlobalVars
 	if opts.Code == nil {
 		p.loadPre(opts.File)
@@ -223,16 +253,16 @@ func (p *Python) Load(opts *plugin.LoadOptions) {
 			Nullable: v.Nullable,
 		}
 	}
-
-	try.This(func() {
-		p.preExecute()
-		p.execute()
-		p.endExecute()
-
-	}).Catch(func(err try.E) {
-		log.Warnf("%s 脚本运行时出错", p.Type())
-		log.Debugf("", err)
-	})
+	p.preExecute()
+	err = p.execute()
+	if err != nil {
+		return err
+	}
+	err = p.endExecute()
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // Run
@@ -242,22 +272,21 @@ func (p *Python) Load(opts *plugin.LoadOptions) {
 //	@param function 函数名
 //	@param args 参数列表
 //	@return result
-func (p *Python) Run(function string, args map[string]any) (result map[string]any) {
-	try.This(func() {
-		f := p.functions[function]
-		if !f.Exist {
-			log.Warnf("%s 脚本函数 %s 不存在，跳过", p.Type(), function)
-			return
+func (p *Python) Run(function string, args map[string]any) (result map[string]any, err error) {
+	f := p.functions[function]
+	if !f.Exist {
+		log.Warnf("%s 脚本函数 %s 不存在，跳过", p.Type(), function)
+		return
+	}
+	for k, v := range f.DefaultArgs {
+		if _, ok := args[k]; !ok {
+			args[k] = v
 		}
-		for k, v := range f.DefaultArgs {
-			if _, ok := args[k]; !ok {
-				args[k] = v
-			}
-		}
-		result = p.functions[function].Run(args)
-	}).Catch(func(err try.E) {
-		log.Warnf("%s 脚本函数 %s 运行时出错", p.Type(), function)
-		log.Debugf("", err)
-	})
-	return result
+	}
+	result, err = p.functions[function].Run(args)
+	if err != nil {
+		log.DebugErr(err)
+		return nil, errors.Wrapf(err, "%s 脚本函数 %s 运行时出错", p.Type(), function)
+	}
+	return result, nil
 }

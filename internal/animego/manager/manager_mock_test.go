@@ -5,6 +5,7 @@ import (
 	"os"
 	"sync"
 
+	"github.com/pkg/errors"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/pkg/utils"
 	"github.com/wetor/AnimeGo/pkg/xpath"
@@ -100,7 +101,9 @@ func (m *ClientMock) MockAddName(name, hash string, src []string) {
 }
 
 func (m *ClientMock) Config() *models.ClientConfig {
-	return nil
+	return &models.ClientConfig{
+		DownloadPath: DownloadPath,
+	}
 }
 
 func (m *ClientMock) Connected() bool {
@@ -130,27 +133,27 @@ func (m *ClientMock) Start(ctx context.Context) {
 	}()
 }
 
-func (m *ClientMock) List(opt *models.ClientListOptions) []*models.TorrentItem {
+func (m *ClientMock) List(opt *models.ClientListOptions) ([]*models.TorrentItem, error) {
 	m.Lock()
 	defer m.Unlock()
 
 	if m.MockGetError(ErrorListFailed) {
-		return nil
+		return nil, errors.New(ErrorListFailed)
 	}
 
 	list := make([]*models.TorrentItem, 0, len(m.name2item))
 	for _, item := range m.name2item {
 		list = append(list, item)
 	}
-	return list
+	return list, nil
 }
 
-func (m *ClientMock) Add(opt *models.ClientAddOptions) {
+func (m *ClientMock) Add(opt *models.ClientAddOptions) error {
 	m.Lock()
 	defer m.Unlock()
 
 	if m.MockGetError(ErrorAddFailed) {
-		return
+		return errors.New(ErrorAddFailed)
 	}
 
 	m.name2item[opt.Rename] = &models.TorrentItem{
@@ -160,14 +163,15 @@ func (m *ClientMock) Add(opt *models.ClientAddOptions) {
 		Progress:    0.0,
 		State:       QbtDownloading,
 	}
+	return nil
 }
 
-func (m *ClientMock) Delete(opt *models.ClientDeleteOptions) {
+func (m *ClientMock) Delete(opt *models.ClientDeleteOptions) error {
 	m.Lock()
 	defer m.Unlock()
 
 	if m.MockGetError(ErrDeleteFailed) {
-		return
+		return errors.New(ErrDeleteFailed)
 	}
 
 	for _, hash := range opt.Hash {
@@ -176,10 +180,5 @@ func (m *ClientMock) Delete(opt *models.ClientDeleteOptions) {
 		delete(m.name2hash, name)
 		delete(m.hash2name, hash)
 	}
-
-}
-
-func (m *ClientMock) GetContent(opt *models.ClientGetOptions) []*models.TorrentContentItem {
-
-	return []*models.TorrentContentItem{}
+	return nil
 }

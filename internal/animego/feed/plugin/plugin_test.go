@@ -29,10 +29,11 @@ var s *schedule.Schedule
 type MockFilterManager struct {
 }
 
-func (m *MockFilterManager) Update(ctx context.Context, items []*models.FeedItem) {
+func (m *MockFilterManager) Update(ctx context.Context, items []*models.FeedItem, b, c bool) error {
 	for _, item := range items {
 		fmt.Println(item)
 	}
+	return nil
 }
 
 func TestMain(m *testing.M) {
@@ -74,7 +75,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestNewSchedule3_feed(t *testing.T) {
-	feedPlugin.AddFeedTasks(s, []models.Plugin{
+	_ = feedPlugin.AddFeedTasks(s, []models.Plugin{
 		{
 			Enable: true,
 			Type:   "builtin",

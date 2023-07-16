@@ -23,7 +23,7 @@ func TestPyObject2Object(t *testing.T) {
 	})
 	fmt.Println(dict)
 
-	obj := python.ToValue(dict)
+	obj, _ := python.ToValue(dict)
 	fmt.Println(obj)
 }
 
@@ -51,7 +51,7 @@ func TestValue2PyObject(t *testing.T) {
 			false,
 		},
 	}
-	pyObj := python.ToObject(object)
+	pyObj, _ := python.ToObject(object)
 	fmt.Println(pyObj)
 }
 
@@ -73,6 +73,6 @@ func TestStructToObject(t *testing.T) {
 			TestKey: "我",
 		},
 	}
-	obj := python.ToObject(model)
+	obj, _ := python.ToObject(model)
 	fmt.Println(obj)
 }

@@ -7,15 +7,13 @@ import (
 	"sync"
 	"time"
 
-	jsoniter "github.com/json-iterator/go"
+	"github.com/pkg/errors"
 	bolt "go.etcd.io/bbolt"
 
-	"github.com/wetor/AnimeGo/pkg/errors"
+	"github.com/wetor/AnimeGo/pkg/json"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/xpath"
 )
-
-var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 type Bolt struct {
 	db       *bolt.DB
@@ -38,7 +36,7 @@ func (c *Bolt) Open(file string) {
 		ReadOnly: c.readOnly,
 	})
 	if err != nil {
-		log.Debugf("", errors.NewAniErrorD(err))
+		log.DebugErr(err)
 		log.Warnf("打开bolt数据库失败")
 		return
 	}
@@ -48,7 +46,7 @@ func (c *Bolt) Open(file string) {
 func (c *Bolt) Close() {
 	err := c.db.Close()
 	if err != nil {
-		log.Debugf("", errors.NewAniErrorD(err))
+		log.DebugErr(err)
 		log.Warnf("关闭bolt数据库失败")
 		return
 	}
@@ -63,7 +61,7 @@ func (c *Bolt) Add(bucket string) {
 		return nil
 	})
 	if err != nil {
-		log.Debugf("", errors.NewAniErrorD(err))
+		log.DebugErr(err)
 		log.Warnf("关闭bolt数据库失败")
 		return
 	}
@@ -86,7 +84,7 @@ func (c *Bolt) Put(bucket string, key, val interface{}, ttl int64) {
 		return b.Put(dbKey, dbVal)
 	})
 	if err != nil {
-		log.Debugf("", errors.NewAniErrorD(err))
+		log.DebugErr(err)
 		log.Warnf("bolt添加数据失败")
 		return
 	}
@@ -119,13 +117,13 @@ func (c *Bolt) BatchPut(bucket string, key, val []interface{}, ttl int64) {
 		for i := 0; i < len(key); i++ {
 			err := b.Put(dbKeys[i], dbVals[i])
 			if err != nil {
-				return err
+				return errors.Wrap(err, "添加Key失败")
 			}
 		}
 		return nil
 	})
 	if err != nil {
-		log.Debugf("", errors.NewAniErrorD(err))
+		log.DebugErr(err)
 		log.Warnf("bolt添加数据失败")
 		return
 	}
@@ -141,15 +139,15 @@ func (c *Bolt) Get(bucket string, key, val interface{}) error {
 		return nil
 	})
 	if dbVal == nil {
-		return errors.NewAniError("Key不存在")
+		return errors.New("Key不存在")
 	}
 	ttl = c.toValue(dbVal, val)
 	if ttl != 0 && ttl <= time.Now().Unix() {
 		err := c.Delete(bucket, key)
 		if err != nil {
-			return errors.NewAniErrorD(err)
+			return errors.Wrap(err, "删除Key失败")
 		}
-		return errors.NewAniError("Key已过期")
+		return errors.New("Key已过期")
 	}
 	return nil
 }
@@ -163,7 +161,7 @@ func (c *Bolt) GetValue(bucket string, key interface{}) (int64, string, error) {
 		return nil
 	})
 	if dbVal == nil {
-		return 0, "", errors.NewAniError("Key不存在")
+		return 0, "", errors.New("Key不存在")
 	}
 	if len(dbVal) <= 8 {
 		return 0, "", nil
@@ -172,9 +170,9 @@ func (c *Bolt) GetValue(bucket string, key interface{}) (int64, string, error) {
 	if ttl != 0 && ttl <= time.Now().Unix() {
 		err := c.Delete(bucket, key)
 		if err != nil {
-			return 0, "", errors.NewAniErrorD(err)
+			return 0, "", errors.Wrap(err, "删除Key失败")
 		}
-		return 0, "", errors.NewAniError("Key已过期")
+		return 0, "", errors.New("Key已过期")
 	}
 	val := string(dbVal[8:])
 	return ttl, val, nil
@@ -230,7 +228,7 @@ func (c *Bolt) toBytes(val interface{}, extra int64) []byte {
 	}
 	data, err := json.Marshal(val)
 	if err != nil {
-		log.Debugf("", errors.NewAniErrorD(err))
+		log.DebugErr(err)
 		log.Errorf("Json Encode失败")
 	}
 	buf.Write(data)
@@ -242,7 +240,7 @@ func (c *Bolt) toValue(data []byte, val interface{}) (extra int64) {
 	extra = int64(binary.LittleEndian.Uint64(data[0:8]))
 	err := json.Unmarshal(data[8:], val)
 	if err != nil {
-		log.Debugf("", errors.NewAniErrorD(err))
+		log.DebugErr(err)
 		log.Errorf("Json Decode失败")
 	}
 	return extra

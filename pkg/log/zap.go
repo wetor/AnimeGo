@@ -28,7 +28,7 @@ func NewLogger(file string, debug bool, out io.Writer) *zap.Logger {
 	var consoleConf zapcore.Core
 
 	if out != nil {
-		consoleConf = zapcore.NewCore(GetEncoder(cEncodeLevel), zapcore.AddSync(out), level)
+		consoleConf = zapcore.NewCore(GetEncoder(cEncodeLevel), zapcore.Lock(zapcore.AddSync(out)), level)
 	} else {
 		consoleConf = zapcore.NewCore(GetEncoder(zapcore.CapitalColorLevelEncoder), zapcore.Lock(os.Stdout), level)
 	}

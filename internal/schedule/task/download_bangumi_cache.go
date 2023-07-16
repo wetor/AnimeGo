@@ -8,12 +8,13 @@ import (
 	"time"
 
 	"github.com/parnurzeal/gorequest"
+	"github.com/pkg/errors"
 	"github.com/robfig/cron/v3"
 
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/constant"
+	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/pkg/errors"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/utils"
 	"github.com/wetor/AnimeGo/pkg/xpath"
@@ -66,33 +67,41 @@ func (t *BangumiTask) SetVars(vars models.Object) {
 }
 
 func (t *BangumiTask) NextTime() time.Time {
-	next, err := t.parser.Parse(t.cron)
-	errors.NewAniErrorD(err).TryPanic()
+	next, err := t.parser.Parse(t.Cron())
+	if err != nil {
+		log.DebugErr(err)
+	}
 	return next.Next(time.Now())
 }
 
-func (t *BangumiTask) download(url, name string) string {
-
+func (t *BangumiTask) download(url, name string) (string, error) {
+	var err error
 	req := gorequest.New()
 	_, data, errs := req.Get(url).EndBytes()
 	if errs != nil {
-		log.Debugf("", errors.NewAniErrorD(errs))
-		log.Errorf("使用ghproxy下载%s失败", name)
-		return ""
+		log.DebugErr(errs[0])
+		err = errors.WithStack(&exceptions.ErrSchedule{Message: "使用ghproxy下载失败: " + name})
+		log.Warnf("%s", err)
+		return "", err
 	}
 	file := xpath.Join(constant.CachePath, name)
-	err := os.WriteFile(file, data, 0644)
+	err = os.WriteFile(file, data, 0644)
 	if err != nil {
-		log.Debugf("", errors.NewAniErrorD(err))
-		log.Errorf("保存文件到%s失败", name)
-		return ""
+		log.DebugErr(err)
+		err = errors.WithStack(&exceptions.ErrSchedule{Message: "保存到文件失败: " + name})
+		log.Warnf("%s", err)
+		return "", err
 	}
-	return file
+	return file, nil
 }
 
-func (t *BangumiTask) unzip(filename string) {
+func (t *BangumiTask) unzip(filename string) (err error) {
 	zr, err := zip.OpenReader(filename)
-	errors.NewAniErrorD(err).TryPanic()
+	if err != nil {
+		log.DebugErr(err)
+		err = errors.WithStack(&exceptions.ErrSchedule{Message: "载入zip文件失败"})
+		return err
+	}
 
 	// 遍历 zr ，将文件写入到磁盘
 	for _, file := range zr.File {
@@ -101,27 +110,47 @@ func (t *BangumiTask) unzip(filename string) {
 		// 如果是目录，就创建目录
 		if file.FileInfo().IsDir() {
 			err = os.MkdirAll(path_, file.Mode())
-			errors.NewAniErrorD(err).TryPanic()
-			continue
+			if err != nil {
+				log.DebugErr(err)
+				err = errors.WithStack(&exceptions.ErrSchedule{Message: "创建文件夹失败: " + path_})
+				return err
+			}
 		}
 
 		// 获取到 Reader
 		fr, err := file.Open()
-		errors.NewAniErrorD(err).TryPanic()
+		if err != nil {
+			log.DebugErr(err)
+			err = errors.WithStack(&exceptions.ErrSchedule{Message: "读取zip内文件失败"})
+			return err
+		}
 
 		// 创建要写出的文件对应的 Write
 		fw, err := os.OpenFile(path_, os.O_CREATE|os.O_RDWR|os.O_TRUNC, file.Mode())
-		errors.NewAniErrorD(err).TryPanic()
+		if err != nil {
+			log.DebugErr(err)
+			err = errors.WithStack(&exceptions.ErrSchedule{Message: "打开文件失败: " + path_})
+			return err
+		}
 
 		_, err = io.Copy(fw, fr)
-		errors.NewAniErrorD(err).TryPanic()
+		if err != nil {
+			log.DebugErr(err)
+			err = errors.WithStack(&exceptions.ErrSchedule{Message: "写入文件失败: " + path_})
+			return err
+		}
 
-		fw.Close()
-		fr.Close()
+		_ = fw.Close()
+		_ = fr.Close()
 	}
-	zr.Close()
+	_ = zr.Close()
 	err = os.Remove(filename)
-	errors.NewAniErrorD(err).TryPanic()
+	if err != nil {
+		log.DebugErr(err)
+		err = errors.WithStack(&exceptions.ErrSchedule{Message: "删除文件失败: " + filename})
+		return err
+	}
+	return nil
 }
 
 // Run
@@ -130,7 +159,7 @@ func (t *BangumiTask) unzip(filename string) {
 //	@receiver *BangumiTask
 //	@param opts ...interface{}
 //	  opts[0] bool 是否启动时执行
-func (t *BangumiTask) Run(args models.Object) {
+func (t *BangumiTask) Run(args models.Object) (err error) {
 	db := xpath.Join(constant.CachePath, SubjectDB)
 	stat, err := os.Stat(db)
 	// 首次启动时，若
@@ -142,14 +171,21 @@ func (t *BangumiTask) Run(args models.Object) {
 		return
 	}
 	subUrl := CDN1 + ArchiveReleaseBase + Subject
-	file := t.download(subUrl, Subject)
+	file, err := t.download(subUrl, Subject)
+	if err != nil {
+		return err
+	}
 	t.cacheMutex.Lock()
 	t.cache.Close()
-	t.unzip(file)
+	err = t.unzip(file)
+	if err != nil {
+		return err
+	}
 	// 重新加载bolt
 	t.cache.Open(db)
 	t.cacheMutex.Unlock()
 	if utils.FileSize(db) <= MinFileSizeKB*1024 {
-		errors.NewAniError("缓存文件小于512KB").TryPanic()
+		return errors.WithStack(&exceptions.ErrSchedule{Message: "缓存文件小于512KB"})
 	}
+	return nil
 }

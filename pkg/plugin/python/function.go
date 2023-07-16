@@ -11,18 +11,26 @@ type Function struct {
 	Name            string
 	SkipSchemaCheck bool
 	DefaultArgs     map[string]any
-	Func            func(args map[string]any) map[string]any
+	Func            func(args map[string]any) (map[string]any, error)
 }
 
-func (f *Function) Run(args map[string]any) map[string]any {
+func (f *Function) Run(args map[string]any) (map[string]any, error) {
 	if !f.SkipSchemaCheck {
-		plugin.CheckSchema(f.ParamsSchema, args)
+		err := plugin.CheckSchema(f.ParamsSchema, args)
+		if err != nil {
+			return nil, err
+		}
 	}
 
-	result := f.Func(args)
-
-	if !f.SkipSchemaCheck {
-		plugin.CheckSchema(f.ResultSchema, result)
+	result, err := f.Func(args)
+	if err != nil {
+		return nil, err
 	}
-	return result
+	if !f.SkipSchemaCheck {
+		err = plugin.CheckSchema(f.ResultSchema, result)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return result, nil
 }

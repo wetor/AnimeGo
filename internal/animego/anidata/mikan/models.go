@@ -1,5 +1,10 @@
 package mikan
 
+type Entity struct {
+	MikanID   int `json:"mikan_id"`
+	BangumiID int `json:"bangumi_id"`
+}
+
 type MikanInfo struct {
 	ID         int    `json:"id"`
 	SubGroupID int    `json:"sub_group_id"`

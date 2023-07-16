@@ -60,15 +60,13 @@ func Sleep(second int, ctx context.Context) bool {
 	return false
 }
 
-func MapToStruct(src map[string]any, dst any) {
+func MapToStruct(src map[string]any, dst any) error {
 	data, err := json.Marshal(src)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	err = json.Unmarshal(data, dst)
-	if err != nil {
-		panic(err)
-	}
+	return err
 }
 
 func StructToMap(src any) (dst map[string]any) {
@@ -202,6 +200,10 @@ func Rename(src, dst string) error {
 	return nil
 }
 
+func Remove(dst string) error {
+	return os.Remove(dst)
+}
+
 func Unix() int64 {
 	return time.Now().Unix()
 }
@@ -212,5 +214,15 @@ func String2Bool(str string) bool {
 		return true
 	default:
 		return false
+	}
+}
+
+func HandleError(fn func(error)) {
+	if err := recover(); err != nil {
+		if e, ok := err.(error); ok {
+			fn(e)
+		} else {
+			panic(err)
+		}
 	}
 }

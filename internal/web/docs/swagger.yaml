@@ -198,7 +198,7 @@ paths:
       - application/json
       description: 获取AnimeGo的配置文件内容
       parameters:
-      - default: all
+      - default: raw
         description: |-
           Key 使用路径方式获取指定yaml key内容
             [暂不支持] 如 setting.save_path, advanced.download.queue_max_num

@@ -5,15 +5,15 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/pkg/errors"
 	"github.com/robfig/cron/v3"
 
 	"github.com/wetor/AnimeGo/internal/api"
+	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/logger"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/schedule/task"
-	"github.com/wetor/AnimeGo/pkg/errors"
 	"github.com/wetor/AnimeGo/pkg/log"
-	"github.com/wetor/AnimeGo/pkg/try"
 	"github.com/wetor/AnimeGo/pkg/utils"
 	"github.com/wetor/AnimeGo/pkg/xpath"
 )
@@ -58,7 +58,7 @@ func NewSchedule(opts *Options) *Schedule {
 	return schedule
 }
 
-func (s *Schedule) Add(opts *AddTaskOptions) {
+func (s *Schedule) Add(opts *AddTaskOptions) (err error) {
 	if opts.Args == nil {
 		opts.Args = make(models.Object)
 	}
@@ -83,24 +83,20 @@ func (s *Schedule) Add(opts *AddTaskOptions) {
 		Task: opts.Task,
 		TaskRun: func(args models.Object) {
 			log.Infof("[定时任务] %s 开始执行", opts.Task.Name())
-			success := false
 			for i := 0; i < RetryNum; i++ {
-				try.This(func() {
-					opts.Task.Run(args)
-					success = true
-				}).Catch(func(err try.E) {
-					log.Debugf("", err)
+				err := opts.Task.Run(args)
+				if err != nil {
+					log.DebugErr(err)
 					if i == RetryNum-1 {
-						log.Warnf("[定时任务] %s 第%d次执行失败", opts.Task.Name(), i+1)
+						log.Warnf("[定时任务] %s 第 %d 次执行失败", opts.Task.Name(), i+1)
 					} else {
-						log.Warnf("[定时任务] %s 第%d次执行失败，%d 秒后重新执行", opts.Task.Name(), i+1, RetryWait)
+						log.Warnf("[定时任务] %s 第 %d 次执行失败，%d 秒后重新执行", opts.Task.Name(), i+1, RetryWait)
 					}
 					utils.Sleep(RetryWait, context.Background())
-				})
-				if success {
-					log.Infof("[定时任务] %s 执行完毕，下次执行时间: %s", opts.Task.Name(), opts.Task.NextTime())
-					break
+					continue
 				}
+				log.Infof("[定时任务] %s 执行完毕，下次执行时间: %s", opts.Task.Name(), opts.Task.NextTime())
+				break
 			}
 		},
 	}
@@ -109,7 +105,8 @@ func (s *Schedule) Add(opts *AddTaskOptions) {
 		t.TaskRun(opts.Args)
 	})
 	if err != nil {
-		errors.NewAniErrorD(err).TryPanic()
+		log.DebugErr(err)
+		return errors.WithStack(&exceptions.ErrScheduleAdd{Name: t.Name})
 	}
 	if opts.StartRun {
 		t.TaskRun(opts.Args)
@@ -117,6 +114,7 @@ func (s *Schedule) Add(opts *AddTaskOptions) {
 	s.tasks[t.Name] = t
 	s.task2id[t.Name] = id
 	log.Infof("[定时任务] %s 创建完成，下次执行时间: %s", opts.Task.Name(), opts.Task.NextTime())
+	return nil
 }
 
 func (s *Schedule) Get(name string) *TaskInfo {
@@ -152,17 +150,25 @@ func (s *Schedule) Start(ctx context.Context) {
 	}()
 }
 
-func AddScheduleTasks(s *Schedule, plugins []models.Plugin) {
+func AddScheduleTasks(s *Schedule, plugins []models.Plugin) (err error) {
 	for _, p := range plugins {
 		if !p.Enable {
 			continue
 		}
-		s.Add(&AddTaskOptions{
+		t, err := task.NewScheduleTask(&task.ScheduleOptions{
+			Plugin: &p,
+		})
+		if err != nil {
+			return err
+		}
+		err = s.Add(&AddTaskOptions{
 			Name:     xpath.Base(p.File),
 			StartRun: false,
-			Task: task.NewScheduleTask(&task.ScheduleOptions{
-				Plugin: &p,
-			}),
+			Task:     t,
 		})
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }

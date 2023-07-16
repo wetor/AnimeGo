@@ -74,22 +74,23 @@ func TestNewSchedule(t *testing.T) {
 }
 
 func TestNewSchedule2(t *testing.T) {
+	tt, _ := task.NewScheduleTask(&task.ScheduleOptions{
+		Plugin: &models.Plugin{
+			Enable: true,
+			Type:   "python",
+			File:   "schedule/refresh.py",
+			Vars: models.Object{
+				"__name__": "Vars_Test",
+			},
+			Args: models.Object{
+				"Args_Test": 13213,
+			},
+		},
+	})
 	s.Add(&schedule.AddTaskOptions{
 		Name:     "test",
 		StartRun: false,
-		Task: task.NewScheduleTask(&task.ScheduleOptions{
-			Plugin: &models.Plugin{
-				Enable: true,
-				Type:   "python",
-				File:   "schedule/refresh.py",
-				Vars: models.Object{
-					"__name__": "Vars_Test",
-				},
-				Args: models.Object{
-					"Args_Test": 13213,
-				},
-			},
-		}),
+		Task:     tt,
 		Args: models.Object{
 			"Args_Test1": "测试",
 		},
