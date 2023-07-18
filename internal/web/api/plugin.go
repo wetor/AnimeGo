@@ -12,7 +12,6 @@ import (
 	"github.com/wetor/AnimeGo/internal/models"
 	webModels "github.com/wetor/AnimeGo/internal/web/models"
 	"github.com/wetor/AnimeGo/pkg/log"
-	"github.com/wetor/AnimeGo/pkg/xerrors"
 	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
@@ -90,18 +89,16 @@ func (a *Api) PluginConfigPost(c *gin.Context) {
 
 	data, err := base64.StdEncoding.DecodeString(request.Data)
 	if err != nil {
-		err = xerrors.NewAniErrorD(err)
 		log.DebugErr(err)
-		c.JSON(webModels.Fail(err.Error()))
+		c.JSON(webModels.Fail("配置解析错误"))
 		return
 	}
 
 	filename := strings.TrimSuffix(file, xpath.Ext(file)) + ".json"
 	err = os.WriteFile(filename, data, 0666)
 	if err != nil {
-		err = xerrors.NewAniErrorD(err)
 		log.DebugErr(err)
-		c.JSON(webModels.Fail(err.Error()))
+		c.JSON(webModels.Fail("写入文件失败"))
 		return
 	}
 	c.JSON(webModels.Succ("写入插件配置文件成功", webModels.PluginResponse{
@@ -139,7 +136,6 @@ func (a *Api) PluginConfigGet(c *gin.Context) {
 
 	data, err := os.ReadFile(filename)
 	if err != nil {
-		err = xerrors.NewAniErrorD(err)
 		log.DebugErr(err)
 		c.JSON(webModels.Fail("打开文件 " + filename + " 失败"))
 		return

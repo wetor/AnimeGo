@@ -213,15 +213,19 @@ func (p *Python) Type() string {
 //	@Description: 前置加载，脚本路径转为绝对路径
 //	@receiver p
 //	@param file
-func (p *Python) loadPre(file string) {
+func (p *Python) loadPre(file string) (err error) {
 	if xpath.IsAbs(file) {
 		p.file = xpath.Abs(xpath.P(file))
 	} else {
 		p.file = xpath.Abs(xpath.Join(plugin.Path, xpath.P(file)))
 	}
-	p.file = utils.FindScript(p.file, ".py")
+	p.file, err = utils.FindScript(p.file, ".py")
+	if err != nil {
+		return errors.Wrap(err, "加载插件失败")
+	}
 	p.dir, p.name = xpath.Split(p.file)
 	p.name = strings.TrimSuffix(p.name, xpath.Ext(p.file))
+	return nil
 }
 
 // Load
@@ -232,7 +236,10 @@ func (p *Python) loadPre(file string) {
 func (p *Python) Load(opts *plugin.LoadOptions) (err error) {
 	p.globalVars = opts.GlobalVars
 	if opts.Code == nil {
-		p.loadPre(opts.File)
+		err = p.loadPre(opts.File)
+		if err != nil {
+			return err
+		}
 	} else {
 		p.code = opts.Code
 	}

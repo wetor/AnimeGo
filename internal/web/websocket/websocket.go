@@ -14,7 +14,6 @@ import (
 	"github.com/wetor/AnimeGo/pkg/json"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/utils"
-	"github.com/wetor/AnimeGo/pkg/xerrors"
 )
 
 const LogNotifyCap = 1000 // 暂停监听状态最多储存的日志数量
@@ -72,7 +71,6 @@ func (w *WebSocket) Start(ctx context.Context) {
 						w.wsConnLock.Lock()
 						for _, conn := range w.wsConns {
 							if err := conn.WriteMessage(websocket.TextMessage, data.Bytes()); err != nil {
-								err = xerrors.NewAniErrorD(err)
 								log.DebugErr(err)
 								log.Warnf("[WebSocket] 发送消息失败")
 							}
@@ -113,7 +111,6 @@ func (w *WebSocket) deleteConn(conn *websocket.Conn) {
 func (w *WebSocket) wsHandler(resp http.ResponseWriter, req *http.Request, before func(), after func()) {
 	conn, err := w.upgrader.Upgrade(resp, req, nil)
 	if err != nil {
-		err = xerrors.NewAniErrorD(err)
 		log.DebugErr(err)
 		log.Warnf("[WebSocket] 请求升级为WebSocket失败")
 		return
@@ -143,14 +140,12 @@ func (w *WebSocket) wsHandler(resp http.ResponseWriter, req *http.Request, befor
 			break
 		}
 		if err != nil {
-			err = xerrors.NewAniErrorD(err)
 			log.DebugErr(err)
 			log.Warnf("[WebSocket] 异常结束")
 			break
 		}
 		err = json.Unmarshal(data, cmd)
 		if err != nil {
-			err = xerrors.NewAniErrorD(err)
 			log.DebugErr(err)
 			log.Warnf("[WebSocket] 命令解析失败")
 		}

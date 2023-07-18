@@ -27,8 +27,7 @@ func (p PluginRequest) FindFile() (string, error) {
 	} else {
 		file = xpath.Abs(xpath.Join(constant.PluginPath, xpath.P(file)))
 	}
-	script := utils.FindScript(file, ".py")
-	return script, nil
+	return utils.FindScript(file, ".py")
 }
 
 type PluginConfigUploadRequest struct {

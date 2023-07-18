@@ -5,12 +5,11 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	jsoniter "github.com/json-iterator/go"
 
 	"github.com/wetor/AnimeGo/configs"
 	webModels "github.com/wetor/AnimeGo/internal/web/models"
+	"github.com/wetor/AnimeGo/pkg/json"
 	"github.com/wetor/AnimeGo/pkg/log"
-	"github.com/wetor/AnimeGo/pkg/xerrors"
 )
 
 // ConfigGet godoc
@@ -36,9 +35,8 @@ func (a *Api) ConfigGet(c *gin.Context) {
 		c.JSON(webModels.Succ("配置项默认值", configs.DefaultConfig()))
 	} else if request.Key == "comment" {
 		data := make(map[string]interface{})
-		err := jsoniter.Unmarshal(configs.DefaultDoc(), &data)
+		err := json.Unmarshal(configs.DefaultDoc(), &data)
 		if err != nil {
-			err = xerrors.NewAniErrorD(err)
 			log.DebugErr(err)
 			c.JSON(webModels.Fail("配置项说明格式化错误"))
 			return
@@ -47,7 +45,6 @@ func (a *Api) ConfigGet(c *gin.Context) {
 	} else if request.Key == "raw" {
 		data, err := os.ReadFile(configs.ConfigFile)
 		if err != nil {
-			err = xerrors.NewAniErrorD(err)
 			log.DebugErr(err)
 			c.JSON(webModels.Fail("打开文件 " + configs.ConfigFile + " 失败"))
 			return
@@ -88,7 +85,6 @@ func (a *Api) ConfigPut(c *gin.Context) {
 			return
 		}
 		if err != nil {
-			err = xerrors.NewAniErrorD(err)
 			log.DebugErr(err)
 			c.JSON(webModels.Fail("参数格式错误"))
 			return
@@ -97,7 +93,6 @@ func (a *Api) ConfigPut(c *gin.Context) {
 		if *request.Backup {
 			err = configs.BackupConfig(configs.ConfigFile, "")
 			if err != nil {
-				err = xerrors.NewAniErrorD(err)
 				log.DebugErr(err)
 				c.JSON(webModels.Fail("备份文件 " + configs.ConfigFile + " 失败"))
 				return
@@ -105,7 +100,6 @@ func (a *Api) ConfigPut(c *gin.Context) {
 		}
 		err = os.WriteFile(configs.ConfigFile, data, 0644)
 		if err != nil {
-			err = xerrors.NewAniErrorD(err)
 			log.DebugErr(err)
 			c.JSON(webModels.Fail("写到文件 " + configs.ConfigFile + " 失败"))
 			return

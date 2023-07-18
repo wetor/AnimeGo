@@ -7,9 +7,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/pkg/errors"
 	"github.com/wetor/AnimeGo/internal/web/models"
 	"github.com/wetor/AnimeGo/pkg/log"
-	"github.com/wetor/AnimeGo/pkg/xerrors"
 )
 
 func Run(ctx context.Context) {
@@ -21,7 +21,7 @@ func Run(ctx context.Context) {
 		r.Use(GinLogger(log.GetLogger())) // 日志中间件
 		r.Use(GinRecovery(log.GetLogger(), true, func(c *gin.Context, recovered any) {
 			if err, ok := recovered.(error); ok {
-				log.Debugf("服务器错误，err: %v", xerrors.NewAniErrorD(err))
+				log.DebugErr(errors.Wrap(err, "服务器错误"))
 				c.JSON(models.ErrSvr("服务器错误"))
 			} else {
 				log.Debugf(recovered.(string))

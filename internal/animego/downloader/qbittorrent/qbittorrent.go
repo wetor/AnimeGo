@@ -12,7 +12,6 @@ import (
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/utils"
-	"github.com/wetor/AnimeGo/pkg/xerrors"
 	"github.com/wetor/AnimeGo/third_party/qbapi"
 )
 
@@ -88,12 +87,12 @@ func (c *QBittorrent) Start(ctx context.Context) {
 		var err error
 		c.client, err = qbapi.NewAPI(c.option...)
 		if err != nil {
-			log.DebugErr(xerrors.NewAniErrorD(err))
+			log.DebugErr(err)
 			log.Warnf("初始化QBittorrent客户端第%d次，失败", c.retryNum)
 			return false
 		}
 		if err = c.client.Login(ctx); err != nil {
-			log.DebugErr(xerrors.NewAniErrorD(err))
+			log.DebugErr(err)
 			log.Warnf("连接QBittorrent第%d次，失败", c.retryNum)
 			return false
 		}
@@ -169,29 +168,6 @@ func (c *QBittorrent) Start(ctx context.Context) {
 			}
 		}
 	}()
-
-}
-
-// checkError
-//
-//	@Description: 检查错误，返回是否需要结束流程
-//	@receiver *QBittorrent
-//	@param err error
-//	@return bool
-func (c *QBittorrent) checkError(err error) bool {
-	if err == nil {
-		return false
-	}
-	if qerror, ok := err.(*qbapi.QError); ok && qerror.Code() == -10004 {
-		log.DebugErr(xerrors.NewAniErrorSkipf(2, "请求失败，等待客户端响应").SetData(err))
-		c.retryNum = 1
-		c.connected = false
-		c.retryChan <- ChanRetryConnect
-	} else {
-		log.DebugErr(xerrors.NewAniErrorSkipf(2, "").SetData(err))
-		log.Warnf("请求QBittorrent接口失败")
-	}
-	return true
 }
 
 func (c *QBittorrent) List(opt *models.ClientListOptions) ([]*models.TorrentItem, error) {
