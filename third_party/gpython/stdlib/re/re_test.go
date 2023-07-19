@@ -8,10 +8,10 @@ import (
 	"testing"
 
 	"github.com/go-python/gpython/pytest"
-	"github.com/wetor/AnimeGo/third_party/gpython/stdlib/re"
+	_ "github.com/wetor/AnimeGo/third_party/gpython/py"
+	_ "github.com/wetor/AnimeGo/third_party/gpython/stdlib/re"
 )
 
 func TestRe(t *testing.T) {
-	re.Init()
-	pytest.RunScript(t, "testdata/test.py")
+	pytest.RunTests(t, "tests")
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/wetor/AnimeGo/internal/web/docs"
 )
 
+//go:generate go install github.com/swaggo/swag/cmd/swag@latest
 //go:generate swag fmt -g swagger.go
 //go:generate swag init -g swagger.go
 

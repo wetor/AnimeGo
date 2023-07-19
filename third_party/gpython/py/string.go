@@ -2,29 +2,65 @@ package py
 
 import (
 	"fmt"
-	"github.com/go-python/gpython/py"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/go-python/gpython/py"
 )
+
+func init() {
+	py.StringType.Dict["join"] = py.MustNewMethod("join", join, 0, join_doc)
+	py.StringType.Dict["format"] = py.MustNewMethod("format", format, 0, format_doc)
+}
+
+const join_doc = `S.join(iterable) -> str
+
+Return a string which is the concatenation of the strings in the
+iterable.  The separator between elements is S.`
+
+func join(self py.Object, args py.Object) (py.Object, error) {
+	seqLenObj, err := args.(py.I__len__).M__len__()
+	if err != nil {
+		return nil, err
+	}
+	seqLen := int(seqLenObj.(py.Int))
+	switch seqLen {
+	case 0:
+		return py.String(""), nil
+	case 1:
+		item, err := py.GetItem(args, py.Int(0))
+		if err != nil {
+			return nil, err
+		}
+		return item, nil
+	}
+	sep := string(self.(py.String))
+	var b strings.Builder
+	for i := 0; i < seqLen; i++ {
+		item, err := py.GetItem(args, py.Int(i))
+		if err != nil {
+			return py.String(b.String()), err
+		}
+		str, err := py.StrAsString(item)
+		if err != nil {
+			return py.String(b.String()), err
+		}
+		b.WriteString(str)
+		if i < seqLen-1 {
+			b.WriteString(sep)
+		}
+	}
+	return py.String(b.String()), nil
+}
+
+const format_doc = `S.format(*args, **kwargs) -> str
+
+Return a formatted version of S, using substitutions from args and kwargs.
+The substitutions are identified by braces ('{' and '}').`
 
 // var formatRegx = regexp.MustCompile(`\{((\d+)|(\w*((\.\w+)+|(\[\w+])+)*)*)((:[^}]*)?)}`)
 var formatRegx = regexp.MustCompile(`\{((\d+)|(\w*((\.\w+)+|(\[\w+])+)*)*)((:(.?[<^>]\d+)?[^}]*)?)}`)
-
-func init() {
-
-	py.StringType.Dict["join"] = py.MustNewMethod("join", func(self py.Object, args py.Object) (py.Object, error) {
-		argList := args.(*py.List)
-		list := make([]string, argList.Len())
-		for i, item := range argList.Items {
-			list[i] = string(item.(py.String))
-		}
-		return py.String(strings.Join(list, string(self.(py.String)))), nil
-	}, 0, `join(list)`)
-
-	py.StringType.Dict["format"] = py.MustNewMethod("format", format, 0, `format(args...)`)
-
-}
 
 func format(self py.Object, args py.Tuple, kwargs py.StringDict) (py.Object, error) {
 	var argString string
