@@ -223,7 +223,7 @@ func TestManager_AddRenameTask(t *testing.T) {
 
 	fmt.Println(out.String())
 	test.LogBatchCompare(out, nil,
-		map[string]int{"Rename插件": 6, "[重命名] 链接": 3},
+		map[string]any{"Rename插件": 6, "[重命名] 链接": 3},
 		[]string{"[重命名] 删除", "下载第712集完成 动画1"},
 		[]string{"[重命名] 删除", "下载第713集完成 动画1"},
 		[]string{"[重命名] 删除", "下载第0集完成 动画1"},

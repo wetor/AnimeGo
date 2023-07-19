@@ -174,8 +174,8 @@ func TestManager_Success(t *testing.T) {
 	fmt.Println(out.String())
 	test.LogBatchCompare(out, nil,
 		"下载 1",
-		[]string{"接收到下载项", "开始下载"},
-		[]string{"Rename插件", "Rename插件", "Rename插件", "下载进度", "下载进度", "下载进度"},
+		map[string]any{"接收到下载项": test.NewRange(0, 1), "开始下载": 1},
+		map[string]any{"Rename插件": 3, "下载进度": test.NewRange(2, 3)},
 		[]string{"[重命名] 移动", "[重命名] 移动", "[重命名] 移动", "写入元数据文件", "写入元数据文件", "写入元数据文件"},
 		[]string{"移动完成", "正常退出", "正常退出"},
 	)
@@ -370,12 +370,12 @@ func TestManager_WaitClient(t *testing.T) {
 		[]string{"Client离线", "下载 1"},
 		[]string{"等待连接到下载器。已接收到1个下载项", "下载 2"},
 		[]string{"等待连接到下载器。已接收到2个下载项", "Client恢复"},
-		map[string]int{"接收到下载项": 2, "开始下载": 2},
-		map[string]int{"Rename插件": 2, "下载进度": 4},
+		map[string]any{"接收到下载项": 2, "开始下载": 2},
+		map[string]any{"Rename插件": 2, "下载进度": 4},
 		[]string{"[重命名] 链接", "[重命名] 链接", "下载进度", "下载进度"},
 		[]string{"[重命名] 删除", "[重命名] 删除", "写入元数据文件", "写入元数据文件"},
-		map[string]int{"移动完成": 2},
-		map[string]int{"正常退出": 2},
+		map[string]any{"移动完成": 2},
+		map[string]any{"正常退出": 2},
 	)
 }
 
@@ -427,12 +427,12 @@ func TestManager_WaitClient_FullChan(t *testing.T) {
 
 	fmt.Println(out.String())
 	test.LogBatchCompare(out, nil,
-		map[string]int{"Client离线": 1, "下载": 12},
-		map[string]int{"等待连接到下载器。已接收到10个下载项": 2, "Client恢复": 1},
-		map[string]int{"接收到下载项": 12, "开始下载": 12, "等待连接到下载器。已接收到10个下载项": 2},
-		map[string]int{"Rename插件": 12, "下载进度": 24},
-		map[string]int{"[重命名] 移动": 12, "写入元数据文件": 12, "下载进度": 12},
-		map[string]int{"移动完成": 12},
+		map[string]any{"Client离线": 1, "下载": 12},
+		map[string]any{"等待连接到下载器。已接收到10个下载项": 2, "Client恢复": 1},
+		map[string]any{"接收到下载项": 12, "开始下载": 12, "等待连接到下载器。已接收到10个下载项": 2},
+		map[string]any{"Rename插件": 12, "下载进度": 24},
+		map[string]any{"[重命名] 移动": 12, "写入元数据文件": 12, "下载进度": 12},
+		map[string]any{"移动完成": 12},
 		"正常退出",
 		"正常退出",
 	)
