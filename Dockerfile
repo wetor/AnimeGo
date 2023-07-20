@@ -12,6 +12,11 @@ ENV LANG="C.UTF-8" \
 
 COPY AnimeGo /app/AnimeGo
 
+RUN apk add --no-cache tzdata \
+    && cp /usr/share/zoneinfo/$TZ /etc/localtime \
+    && echo $TZ > /etc/localtime \
+    && apk del tzdata
+
 WORKDIR /app
 
 ENTRYPOINT ["sh", "-c", "/app/AnimeGo"]

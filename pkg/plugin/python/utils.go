@@ -170,6 +170,8 @@ func ToValue(pyObj py.Object) (any, error) {
 			return nil, err
 		}
 		goVal = obj
+	case *py.Exception:
+		goVal = val.Error()
 	default:
 		err := errors.WithStack(exceptions.ErrPluginTypeNotSupported{Type: reflect.ValueOf(pyObj).Type()})
 		log.DebugErr(err)

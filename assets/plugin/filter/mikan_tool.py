@@ -109,7 +109,7 @@ def filter_all(args):
                 elif key2 in myFiliters.Filiter2.keys():
                     isPush2 = get_is_push(myFiliters.Filiter2.get(key2), key2, item.name)
                 elif key3 in myFiliters.Filiter3.keys():
-                    isPush3 = get_is_push(myFiliters.Filiter3.get(key2), key3, item.name)
+                    isPush3 = get_is_push(myFiliters.Filiter3.get(key3), key3, item.name)
                 else:
                     log.debug('| no fetch')
             # 4
