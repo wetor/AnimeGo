@@ -1,0 +1,65 @@
+version: 1.2.0
+setting:
+    feed:
+        mikan:
+            name: Mikan
+            url: ""
+    client:
+        qbittorrent:
+            url: http://127.0.0.1:8080
+            username: admin
+            password: adminadmin
+    download_path: download/incomplete
+    save_path: download/anime
+    data_path: data
+    filter:
+        plugin:
+            - enable: true
+              type: js
+              file: filter/default.js
+            - enable: true
+              type: js
+              file: filter/regexp.js
+            - enable: true
+              type: py
+              file: filter/mikan_tool.py
+    category: AnimeGo
+    tag: '{year}年{quarter}月新番'
+    webapi:
+        access_key: animego123
+        host: localhost
+        port: 7991
+    proxy:
+        enable: true
+        url: http://127.0.0.1:7890
+    key:
+        themoviedb: d3d8430aefee6c19520d0f7da145daf5
+advanced:
+    update_delay_second: 10
+    request:
+        timeout_second: 5
+        retry_num: 3
+        retry_wait_second: 5
+    download:
+        allow_duplicate_download: false
+        seeding_time_minute: 1
+        ignore_size_max_kb: 1024
+        rename: link_delete
+    feed:
+        update_delay_minute: 15
+        delay_second: 2
+        multi_goroutine:
+            enable: false
+            goroutine_max: 4
+    default:
+        tmdb_fail_skip: false
+        tmdb_fail_use_title_season: true
+        tmdb_fail_use_first_season: true
+    client:
+        connect_timeout_second: 5
+        retry_connect_num: 10
+        check_time_second: 30
+    cache:
+        mikan_cache_hour: 168
+        bangumi_cache_hour: 72
+        themoviedb_cache_hour: 336

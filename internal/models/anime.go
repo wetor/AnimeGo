@@ -1,113 +1,93 @@
 package models
 
 import (
-	"AnimeGo/internal/utils"
 	"fmt"
-	"path"
 	"strconv"
 )
 
+const (
+	AnimeFlagNone          = 0
+	AnimeFlagEpParseFailed = 1 << (iota - 1)
+	AnimeFlagSeasonParseFailed
+)
+
+// AnimeEntity 动画信息结构体
+//
+//	必须要有的值
+//	  NameCN: 用于保存文件名，可用 Name 和 ID 替代
+//	  Season: 用于保存文件名
+//	  Ep: 用于保存文件名
+//	可选值
+//	  ID: bangumi id，用于生成nfo文件
+//	  ThemoviedbID: themoviedb id，用于生成nfo文件
 type AnimeEntity struct {
-	ID      int    // bangumi id
-	Name    string // 名称，从bgm获取
-	NameCN  string // 中文名称，从bgm获取
-	AirDate string // 最初播放日期，从bgm获取
-	Eps     int    // 总集数，从bgm获取
-	*AnimeSeason
-	*AnimeEp
-	*AnimeExtra
-	*TorrentInfo
+	ID           int              `json:"id"`            // bangumi id
+	ThemoviedbID int              `json:"themoviedb_id"` // themoviedb ID
+	MikanID      int              `json:"mikan_id"`      // [暂时无用] rss id
+	Name         string           `json:"name"`          // 名称，从bgm获取
+	NameCN       string           `json:"name_cn"`       // 中文名称，从bgm获取
+	Season       int              `json:"season"`        // 当前季，从themoviedb获取
+	Eps          int              `json:"eps"`           // [暂时无用] 总集数，从bgm获取
+	AirDate      string           `json:"air_date"`      // 最初播放日期，从bgm获取
+	Ep           []*AnimeEpEntity `json:"ep"`
+	Flag         int              `json:"flag"`
+	Torrent      *AnimeTorrent    `json:"torrent"`
 }
 
-type AnimeSeason struct {
-	Season int // 当前季，从themoviedb获取
-}
-type AnimeEp struct {
-	Ep       int    // 当前集，从下载文件名解析
-	Date     string // 当前集播放日期，从bgm获取
-	Duration string // 当前集时长
-	EpDesc   string // 当前集简介
-	EpName   string // 当前集标题
-	EpNameCN string // 当前集中文标题
-	EpID     int    // 当前集bgm id
+const (
+	AnimeEpUnknown int8 = iota
+	AnimeEpNormal
+	AnimeEpSpecial
+)
 
-}
-type AnimeExtra struct {
-	ThemoviedbID int    // themoviedb ID
-	MikanID      int    // mikan id
-	MikanUrl     string // mikan当前集的url
+type AnimeEpEntity struct {
+	Type    int8   `json:"type"`     // ep类型。0:未知，1:正常剧集，2:SP
+	Ep      int    `json:"ep"`       // 集数，Type=0时，不使用此参数
+	Src     string `json:"src"`      // 原文件名
+	AirDate string `json:"air_date"` // 首映日期
 }
 
-type TorrentInfo struct {
-	Url  string // 当前集种子链接
-	Hash string // 当前集种子Hash，唯一ID
+type AnimeTorrent struct {
+	Hash string `json:"hash"`
+	Url  string `json:"url"`
 }
 
-func (b *AnimeEntity) FullName() string {
-	if len(b.NameCN) == 0 {
-		b.NameCN = b.Name
+func (a *AnimeEntity) Default() {
+	if len(a.NameCN) == 0 {
+		a.NameCN = a.Name
 	}
-	if len(b.NameCN) == 0 {
-		b.NameCN = strconv.Itoa(b.ID)
+	if len(a.NameCN) == 0 {
+		a.NameCN = strconv.Itoa(a.ID)
 	}
-	return fmt.Sprintf("%s[第%d季][第%d集]", b.NameCN, b.Season, b.Ep)
 }
 
-func (b *AnimeEntity) FileName() string {
-	return path.Join(fmt.Sprintf("S%02d", b.Season), fmt.Sprintf("E%03d", b.Ep))
-}
-
-func (b *AnimeEntity) DirName() string {
-	if len(b.NameCN) == 0 {
-		b.NameCN = b.Name
+func (a *AnimeEntity) FullName() string {
+	if a.Flag&AnimeFlagEpParseFailed > 0 {
+		return fmt.Sprintf("%s[第%d季][第-集][%s]", a.NameCN, a.Season, a.Torrent.Hash)
 	}
-	if len(b.NameCN) == 0 {
-		b.NameCN = strconv.Itoa(b.ID)
+	if len(a.Ep) == 1 {
+		return fmt.Sprintf("%s[第%d季][第%d集]", a.NameCN, a.Season, a.Ep[0].Ep)
 	}
-	return utils.Filename(b.NameCN)
+	return fmt.Sprintf("%s[第%d季][%s集]", a.NameCN, a.Season, ToIntervals(a.Ep))
+
 }
 
-func (b *AnimeEntity) Meta() string {
-	nfoTemplate := "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>\n<tvshow>\n"
-	if b.ThemoviedbID != 0 {
-		nfoTemplate += "  <tmdbid>{tmdbid}</tmdbid>\n"
-	}
-	nfoTemplate += "  <bangumiid>{bangumiid}</bangumiid>\n</tvshow>"
-	return utils.Format(nfoTemplate, utils.FormatMap{
-		"tmdbid":    b.ThemoviedbID,
-		"bangumiid": b.ID,
-	})
+func (a *AnimeEntity) FileName(index int) string {
+	return AnimeToFileName(a, index)
 }
 
-type ThemoviedbIdResponse struct {
-	Page         int `json:"page"`
-	TotalPages   int `json:"total_pages"`
-	TotalResults int `json:"total_results"`
-	Result       []*struct {
-		BackdropPath string `json:"backdrop_path"`
-		FirstAirDate string `json:"first_air_date"`
-		ID           int    `json:"id"`
-		Name         string `json:"name"`
-		OriginalName string `json:"original_name"`
-		PosterPath   string `json:"poster_path"`
-	} `json:"results"`
+func (a *AnimeEntity) DirName() string {
+	return FileName(a.NameCN)
 }
 
-type ThemoviedbResponse struct {
-	ID               int                       `json:"id"`
-	LastAirDate      string                    `json:"last_air_date"`
-	LastEpisodeToAir *ThemoviedbItemResponse   `json:"last_episode_to_air"`
-	NextEpisodeToAir *ThemoviedbItemResponse   `json:"next_episode_to_air"`
-	NumberOfEpisodes int                       `json:"number_of_episodes"`
-	NumberOfSeasons  int                       `json:"number_of_seasons"`
-	OriginalName     string                    `json:"original_name"`
-	Seasons          []*ThemoviedbItemResponse `json:"seasons"`
+func (a *AnimeEntity) FilePath() []string {
+	return AnimeToFilePath(a)
 }
-type ThemoviedbItemResponse struct {
-	AirDate       string `json:"air_date"`
-	EpisodeNumber int    `json:"episode_number"`
-	ID            int    `json:"id"`
-	EpisodeCount  int    `json:"episode_count"`
-	Name          string `json:"name"`
-	SeasonNumber  int    `json:"season_number"`
+
+func (a *AnimeEntity) FilePathSrc() []string {
+	return AnimeToFilePathSrc(a)
+}
+
+func (a *AnimeEntity) Meta() string {
+	return ToMetaData(a.ThemoviedbID, a.ID)
 }

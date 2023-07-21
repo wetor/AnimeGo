@@ -1,0 +1,141 @@
+{
+  "adult": false,
+  "backdrop_path": "/tlxcIrzFPtLHhUjSSv0dsd0UV9x.jpg",
+  "created_by": [],
+  "episode_run_time": [
+    24
+  ],
+  "first_air_date": "2015-04-04",
+  "genres": [
+    {
+      "id": 16,
+      "name": "Animation"
+    },
+    {
+      "id": 35,
+      "name": "Comedy"
+    },
+    {
+      "id": 10765,
+      "name": "Sci-Fi & Fantasy"
+    },
+    {
+      "id": 10759,
+      "name": "Action & Adventure"
+    }
+  ],
+  "homepage": "https://danmachi.com",
+  "id": 62745,
+  "in_production": false,
+  "languages": [
+    "ja"
+  ],
+  "last_air_date": "2023-03-18",
+  "last_episode_to_air": {
+    "id": 4141847,
+    "name": "Luvia | Starry Flower",
+    "overview": "After five years of grief, guilt and pain, Ryu finally faces a new path—a new justice. The Juggernaut should beware.",
+    "vote_average": 8.5,
+    "vote_count": 2,
+    "air_date": "2023-03-18",
+    "episode_number": 22,
+    "production_code": "",
+    "runtime": 24,
+    "season_number": 4,
+    "show_id": 62745,
+    "still_path": "/9NPBh1f64IGhKirWDrxLbAZU8T.jpg"
+  },
+  "name": "Is It Wrong to Try to Pick Up Girls in a Dungeon?",
+  "next_episode_to_air": null,
+  "networks": [
+    {
+      "id": 614,
+      "logo_path": "/hSdroyVthq3CynxTIIY7lnS8w1.png",
+      "name": "Tokyo MX",
+      "origin_country": "JP"
+    }
+  ],
+  "number_of_episodes": 59,
+  "number_of_seasons": 4,
+  "origin_country": [
+    "JP"
+  ],
+  "original_language": "ja",
+  "original_name": "ダンジョンに出会いを求めるのは間違っているだろうか",
+  "overview": "In a world, where the deities have descended from the heavens lies the town of Orario that features the Dungeon, which contains an assortment of monsters from goblins to dragons. Adventurers slay those monsters and take their shards, which are then used to craft magic items. To become an adventurer, people join groups called Familia. Each of which is named after and serves a resident deity. The adventurers and their attributes and abilities are ranked by level, improved by experience and supervised by their Familia's deity.\n\nBell Cranel, a novice adventurer, is the sole member of the Familia under the goddess Hestia. After being saved by top level adventurer Ais Wallenstein of the Loki Familia, he falls in love with her and decides to improve and become worthy of her attention. All the while mostly unaware that other girls, deities and mortals, also develop feelings for him. Especially Hestia herself.",
+  "popularity": 12.141,
+  "poster_path": "/h97iHupymkJXBv0gyr4qlePhKAk.jpg",
+  "production_companies": [
+    {
+      "id": 11884,
+      "logo_path": "/tHzHPSKdmLT5zCdqFbcmHzZvRIc.png",
+      "name": "J.C.Staff",
+      "origin_country": "JP"
+    }
+  ],
+  "production_countries": [
+    {
+      "iso_3166_1": "JP",
+      "name": "Japan"
+    }
+  ],
+  "seasons": [
+    {
+      "air_date": "2016-12-06",
+      "episode_count": 5,
+      "id": 83833,
+      "name": "Specials",
+      "overview": "",
+      "poster_path": "/mhohmyDPrANf28VzJcwYMZMvQPp.jpg",
+      "season_number": 0
+    },
+    {
+      "air_date": "2015-04-04",
+      "episode_count": 13,
+      "id": 66993,
+      "name": "Season 1",
+      "overview": "Life in the bustling city of Orario is never dull, especially for Bell Cranel, a naïve young man who hopes to become the greatest adventurer in the land. After a chance encounter with the lonely goddess, Hestia, his dreams become a little closer to reality. With her support, Bell embarks on a fantastic quest as he ventures deep within the city's monster-filled catacombs, known only as the \"Dungeon.\" Death lurks around every corner in the cavernous depths of this terrifying labyrinth, and a mysterious power moves amidst the shadows.\n\nEven on the surface, survival is a hard-earned privilege. Indeed, nothing is ever certain in a world where gods and humans live and work together, especially when they often struggle to get along. One thing is for sure, though: a myriad of blunders, triumphs and friendships awaits the dauntlessly optimistic protagonist of this herculean tale.",
+      "poster_path": "/uiEpRfa2NmgvZD7P0COJ8TeH0G5.jpg",
+      "season_number": 1
+    },
+    {
+      "air_date": "2019-07-13",
+      "episode_count": 12,
+      "id": 126032,
+      "name": "Season 2",
+      "overview": "It is business as usual in the massive city of Orario, where legions of adventurers gather to explore the monster-infested \"Dungeon.\" Among them is the easily flustered yet brave Bell Cranel, the sole member of the Hestia Familia. With the help of his demi-human supporter Liliruca Arde and competent blacksmith Welf Crozzo, Bell has earned the title of Little Rookie by becoming Orario's fastest-growing adventurer thanks to his endeavors within the deeper levels of the Dungeon.\n\nThis season continues Bell's adventures as he tries to bring glory to his goddess and protect those he cares about. However, various familias and gods across the city begin to take notice of his achievements and attempt to add him to their ranks.",
+      "poster_path": "/nCY0zcmq2soLcOJ6SULelNq4o67.jpg",
+      "season_number": 2
+    },
+    {
+      "air_date": "2020-10-03",
+      "episode_count": 12,
+      "id": 138862,
+      "name": "Season 3",
+      "overview": "Hestia Familia faces an unparalleled crisis when Bell encounters an injured vouivre (dragon-type monster girl) in the Dungeon. . . one who can talk. His decision to protect the girl, who will come to be called Weine, upends everything he and his familia thought they understood about monsters and threatens to put them at odds with Orario as a whole. But Weine is just part of greater schemes concerning talking monsters, schemes which Hestia Familia will soon find themselves at the heart of.",
+      "poster_path": "/7iOoE5BSXWjzhCiI8R1R4SgLOlQ.jpg",
+      "season_number": 3
+    },
+    {
+      "air_date": "2022-07-23",
+      "episode_count": 22,
+      "id": 193725,
+      "name": "Season 4",
+      "overview": "Intrepid adventurer Bell Cranel has leveled up, but he can’t rest on his dungeoneering laurels just yet. The Hestia Familia still has a long way to go before it can stand toe-to-toe with the other Familias of Orario — but before Bell can set out on his next mission, reports of a brutal murder rock the adventuring community! One of Bell’s trusted allies stands accused of the horrible crime, and it’s up to Bell and his friends to clear their name and uncover a nefarious plot brewing in the dungeon’s dark depths.",
+      "poster_path": "/3IOPOs27t7z6uWOdkDfkuzqxbIm.jpg",
+      "season_number": 4
+    }
+  ],
+  "spoken_languages": [
+    {
+      "english_name": "Japanese",
+      "iso_639_1": "ja",
+      "name": "日本語"
+    }
+  ],
+  "status": "Ended",
+  "tagline": "",
+  "type": "Scripted",
+  "vote_average": 7.278,
+  "vote_count": 180
+}

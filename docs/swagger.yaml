@@ -1,0 +1,406 @@
+definitions:
+  models.BoltGetResponse:
+    properties:
+      bucket:
+        type: string
+      key:
+        type: string
+      ttl:
+        type: integer
+      value: {}
+    type: object
+  models.BoltListResponse:
+    properties:
+      bucket:
+        type: string
+      data:
+        items:
+          type: string
+        type: array
+      type:
+        description: bucket, key
+        type: string
+    type: object
+  models.ConfigPutRequest:
+    type: object
+  models.PluginConfigUploadRequest:
+    properties:
+      data:
+        description: base64格式的文本数据
+        type: string
+      name:
+        description: 插件文件名
+        type: string
+    required:
+    - data
+    - name
+    type: object
+  models.Response:
+    properties:
+      code:
+        type: integer
+      data: {}
+      msg:
+        type: string
+    type: object
+  models.SelectEpRequest:
+    properties:
+      ep_links:
+        items:
+          type: string
+        type: array
+      is_select_ep:
+        default: false
+        type: boolean
+      rss:
+        properties:
+          url:
+            type: string
+        required:
+        - url
+        type: object
+      source:
+        type: string
+    required:
+    - rss
+    - source
+    type: object
+info:
+  contact: {}
+  license:
+    name: MIT
+    url: https://www.mit-license.org/
+  termsOfService: https://github.com/wetor/AnimeGo
+paths:
+  /api/bolt:
+    get:
+      consumes:
+      - application/json
+      description: 获取Bolt数据库的Bucket列表，或指定Bucket下的key列表
+      parameters:
+      - description: 当type=key时，需要此参数
+        in: query
+        name: bucket
+        type: string
+      - default: bolt
+        description: bolt, bolt_sub
+        in: query
+        name: db
+        type: string
+      - description: bucket, key
+        in: query
+        name: type
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.BoltListResponse'
+              type: object
+        "300":
+          description: Multiple Choices
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: 获取Bolt数据库的Bucket列表或key列表
+      tags:
+      - bolt
+  /api/bolt/value:
+    delete:
+      consumes:
+      - application/json
+      description: 删除Bolt数据库指定Bucket和key所储存的值
+      parameters:
+      - in: query
+        name: bucket
+        required: true
+        type: string
+      - default: bolt
+        description: bolt, bolt_sub
+        in: query
+        name: db
+        type: string
+      - in: query
+        name: key
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.BoltGetResponse'
+              type: object
+        "300":
+          description: Multiple Choices
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: 删除Bolt数据库的值
+      tags:
+      - bolt
+    get:
+      consumes:
+      - application/json
+      description: 获取Bolt数据库指定Bucket和key所储存的值
+      parameters:
+      - in: query
+        name: bucket
+        required: true
+        type: string
+      - default: bolt
+        description: bolt, bolt_sub
+        in: query
+        name: db
+        type: string
+      - in: query
+        name: key
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.BoltGetResponse'
+              type: object
+        "300":
+          description: Multiple Choices
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: 获取Bolt数据库的值
+      tags:
+      - bolt
+  /api/config:
+    get:
+      consumes:
+      - application/json
+      description: 获取AnimeGo的配置文件内容
+      parameters:
+      - default: all
+        description: |-
+          Key 使用路径方式获取指定yaml key内容
+            [暂不支持] 如 setting.save_path, advanced.download.queue_max_num
+            all 获取所有配置项，json格式
+            default 获取默认值配置项，json格式
+            comment 获取所有配置项的注释文本，json格式
+            raw 获取所有配置项，yaml文件内容，base64编码
+        in: query
+        name: key
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Response'
+        "300":
+          description: Multiple Choices
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: 获取设置
+      tags:
+      - config
+    put:
+      consumes:
+      - application/json
+      description: 更新AnimeGo的配置文件内容
+      parameters:
+      - description: 更新配置文件
+        in: body
+        name: type
+        required: true
+        schema:
+          $ref: '#/definitions/models.ConfigPutRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Response'
+        "300":
+          description: Multiple Choices
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: 更新设置
+      tags:
+      - config
+  /api/plugin/config:
+    get:
+      consumes:
+      - application/json
+      description: |-
+        从AnimeGo中获取当前插件的配置
+        插件名为不包含 'plugin' 的路径
+        插件名可以忽略'.js'后缀；插件名也可以使用上层文件夹名，会自动寻找文件夹内部的 'main.js' 或 'plugin.js'
+        如传入 'test'，会依次尝试寻找 'plugin/test/main.js', 'plugin/test/plugin.js', 'plugin/test.js'
+      parameters:
+      - description: 插件信息
+        in: query
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Response'
+        "300":
+          description: Multiple Choices
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: 获取插件配置
+      tags:
+      - plugin
+    post:
+      consumes:
+      - application/json
+      description: |-
+        将当前插件的配置发送给AnimeGo并保存
+        插件名为不包含 'plugin' 的路径
+        插件名可以忽略'.py'后缀；插件名也可以使用上层文件夹名，会自动加载文件夹内部的 'main.py'
+        如设置为 'plugin/test'，会依次尝试加载 'plugin/test/main.py', 'plugin/test.py'
+      parameters:
+      - description: 插件信息，data为base64编码后的json文本
+        in: body
+        name: plugin
+        required: true
+        schema:
+          $ref: '#/definitions/models.PluginConfigUploadRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Response'
+        "300":
+          description: Multiple Choices
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: 发送插件配置
+      tags:
+      - plugin
+  /api/rss:
+    post:
+      consumes:
+      - application/json
+      description: 将待下载项组合成rss发送给AnimeGo
+      parameters:
+      - description: 组合的rss信息
+        in: body
+        name: rss
+        required: true
+        schema:
+          $ref: '#/definitions/models.SelectEpRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Response'
+        "300":
+          description: Multiple Choices
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: 发送下载项
+      tags:
+      - plugin
+  /ping:
+    get:
+      consumes:
+      - application/json
+      description: Pong
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Response'
+      summary: Ping
+      tags:
+      - web
+  /sha256:
+    get:
+      consumes:
+      - application/json
+      description: SHA256计算
+      parameters:
+      - description: 原文本
+        in: query
+        name: access_key
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.Response'
+            - properties:
+                data:
+                  type: string
+              type: object
+      summary: SHA256计算
+      tags:
+      - web
+  /websocket/log:
+    get:
+      description: 监听日志接口
+      produces:
+      - application/json
+      responses:
+        "101":
+          description: Switching Protocols
+          schema:
+            type: string
+      security:
+      - ApiKeyAuth: []
+      summary: WebSocket日志监听接口
+      tags:
+      - websocket
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Access-Key
+    type: apiKey
+swagger: "2.0"

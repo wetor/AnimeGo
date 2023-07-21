@@ -1,38 +1,44 @@
 package logger
 
 import (
-	"AnimeGo/internal/store"
-	"AnimeGo/internal/utils"
 	"context"
-	"go.uber.org/zap"
+	"io"
+	"sync"
+
+	"github.com/wetor/AnimeGo/pkg/log"
+	"github.com/wetor/AnimeGo/pkg/utils"
 )
 
-type InitOptions struct {
+const logSyncSecond = 30
+
+type Options struct {
 	File    string
 	Debug   bool
 	Context context.Context
+	WG      *sync.WaitGroup
+	Out     io.Writer
 }
 
-func Init(opt *InitOptions) {
-	store.WG.Add(1)
-
-	GetLogger(opt)
+func Init(opts *Options) {
+	log.Init(&log.Options{
+		File:  opts.File,
+		Debug: opts.Debug,
+		Out:   opts.Out,
+	})
+	opts.WG.Add(1)
 	go func() {
-		defer store.WG.Done()
+		defer opts.WG.Done()
 		for {
 			select {
-			case <-opt.Context.Done():
-				Flush()
-				zap.S().Debug("正常退出")
+			case <-opts.Context.Done():
+				_ = log.Sync()
+				_ = log.Close()
+				log.Debugf("正常退出 logger")
 				return
 			default:
-				Flush()
-				utils.Sleep(30, opt.Context)
+				_ = log.Sync()
+				utils.Sleep(logSyncSecond, opts.Context)
 			}
 		}
 	}()
-}
-
-func Flush() {
-	_ = zap.S().Sync()
 }

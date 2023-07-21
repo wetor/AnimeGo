@@ -29,6 +29,9 @@ func (p *Params) TTL(ttl int64) *Params {
 func (p Params) Get(paramName string) interface{} {
 	for i, key := range p.Keys {
 		if key == paramName {
+			if v, ok := p.Values[i].(float64); ok {
+				return int(v)
+			}
 			return p.Values[i]
 		}
 	}

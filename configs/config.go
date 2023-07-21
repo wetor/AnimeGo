@@ -1,103 +1,82 @@
 package configs
 
 import (
-	"AnimeGo/internal/models"
-	"AnimeGo/internal/utils"
 	"log"
 	"os"
-	"path"
-	"time"
 
 	"gopkg.in/yaml.v3"
+
+	"github.com/wetor/AnimeGo/internal/constant"
+	"github.com/wetor/AnimeGo/pkg/utils"
+	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
-func Init(path string) *Config {
-	if len(path) == 0 {
-		path = "../data/config/animego.yaml"
+var ConfigFile = "./data/animego.yaml"
+
+func Init(file string) *Config {
+	if len(file) == 0 {
+		file = xpath.Abs(ConfigFile)
 	}
-	data, err := os.ReadFile(path)
+
+	data, err := os.ReadFile(file)
 	if err != nil {
 		log.Fatal("配置文件加载错误：", err)
 	}
+	ConfigFile = file
+
 	conf := &Config{}
 	err = yaml.Unmarshal(data, conf)
 	if err != nil {
 		log.Fatal("配置文件加载错误：", err)
 	}
+
+	// 路径设置转绝对路径
+	conf.DataPath = xpath.Abs(conf.DataPath)
+
+	conf.DownloadPath = xpath.Abs(conf.DownloadPath)
+
+	conf.SavePath = xpath.Abs(conf.SavePath)
+
 	return conf
 }
 
 func (c *Config) InitDir() {
-	c.TempPath = path.Join(c.DataPath, c.TempPath)
 
 	err := utils.CreateMutiDir(c.DataPath)
 	if err != nil {
 		log.Fatalf("创建文件夹失败，%s", c.DataPath)
 	}
+
+	err = utils.CreateMutiDir(c.DownloadPath)
+	if err != nil {
+		log.Fatalf("创建文件夹失败，%s", c.DownloadPath)
+	}
+
 	err = utils.CreateMutiDir(c.SavePath)
 	if err != nil {
 		log.Fatalf("创建文件夹失败，%s", c.SavePath)
 	}
-	err = utils.CreateMutiDir(c.TempPath)
+
+	err = utils.CreateMutiDir(constant.CachePath)
 	if err != nil {
-		log.Fatalf("创建文件夹失败，%s", c.TempPath)
+		log.Fatalf("创建文件夹失败，%s", constant.CachePath)
 	}
-	dbDir := path.Join(c.DataPath, path.Dir(c.DbFile))
-	err = utils.CreateMutiDir(dbDir)
+
+	err = utils.CreateMutiDir(constant.LogPath)
 	if err != nil {
-		log.Fatalf("创建文件夹失败，%s", dbDir)
+		log.Fatalf("创建文件夹失败，%s", constant.LogPath)
 	}
-	logDir := path.Join(c.DataPath, path.Dir(c.LogFile))
-	err = utils.CreateMutiDir(logDir)
+
+	err = utils.CreateMutiDir(constant.TempPath)
 	if err != nil {
-		log.Fatalf("创建文件夹失败，%s", logDir)
+		log.Fatalf("创建文件夹失败，%s", constant.TempPath)
 	}
-
-	c.DbFile = path.Join(c.DataPath, c.DbFile)
-	c.LogFile = path.Join(c.DataPath, c.LogFile)
-	c.JavaScript = path.Join(c.DataPath, c.JavaScript)
-}
-
-func (c *Config) ClientQBt() *Client {
-	if client, has := c.Client["qbittorrent"]; has {
-		return client
-	}
-	return nil
-}
-
-func (c *Config) RssMikan() *Rss {
-	if rss, has := c.Feed.Rss["mikan"]; has {
-		return rss
-	}
-	return nil
-}
-
-func (c *Config) KeyTmdb() string {
-	if key, has := c.Key["themoviedb"]; has {
-		return key
-	}
-	return ""
 }
 
 func (c *Config) Proxy() string {
-	if c.ProxyConf.Enable {
-		return c.ProxyConf.Url
+	if c.Setting.Proxy.Enable {
+		return c.Setting.Proxy.Url
 	} else {
 		return ""
 	}
-}
-
-func (s *Setting) Tag(info *models.AnimeEntity) string {
-	date, _ := time.Parse("2006-01-02", info.AirDate)
-	mouth := (int(date.Month()) + 2) / 3
-	tag := utils.Format(s.TagSrc, utils.FormatMap{
-		"year":          date.Year(),
-		"quarter":       (mouth-1)*3 + 1,
-		"quarter_index": mouth,
-		"quarter_name":  []string{"冬", "春", "夏", "秋"}[mouth-1],
-		"ep":            info.Ep,
-		"week":          (int(date.Weekday())+6)%7 + 1,
-		"week_name":     []string{"星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"}[date.Weekday()],
-	})
-	return tag
 }

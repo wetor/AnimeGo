@@ -1,24 +1,97 @@
-package configs
+package configs_test
 
 import (
-	"AnimeGo/internal/models"
-	"fmt"
+	"bytes"
+	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/wetor/AnimeGo/configs"
+	"github.com/wetor/AnimeGo/pkg/utils"
+	"github.com/wetor/AnimeGo/test"
 )
 
-func TestNewConfig(t *testing.T) {
-	c := NewConfig("/Users/wetor/GoProjects/AnimeGo/data/config/conf.yaml")
-	fmt.Println(c)
+const testdata = "config"
+
+func TestMain(m *testing.M) {
+	_ = utils.CreateMutiDir("data")
+	m.Run()
+	_ = os.RemoveAll("data")
 }
 
-func TestSettings_Tag(t *testing.T) {
-	setting := Setting{}
-	setting.TagSrc = "{year}年{quarter}月新番,{quarter_index},{quarter_name}季,第{ep}集,周{week},{week_name}"
-	str := setting.Tag(&models.AnimeEntity{
-		AirDate: "2022-04-11",
-		AnimeEp: &models.AnimeEp{
-			Ep: 10,
-		},
-	})
-	fmt.Println(str)
+func TestDefaultConfig(t *testing.T) {
+	_ = configs.DefaultFile("data/animego_default.yaml")
+}
+
+func EqualFile(t *testing.T, file1, file2 string) {
+	want, _ := os.ReadFile(file1)
+	got, _ := os.ReadFile(file2)
+	want = bytes.ReplaceAll(want, []byte("\r\n"), []byte("\n"))
+	got = bytes.ReplaceAll(got, []byte("\r\n"), []byte("\n"))
+	assert.Equal(t, string(got), string(want))
+}
+
+func TestUpdateConfig_120(t *testing.T) {
+	configs.ConfigVersion = "1.2.0"
+
+	file := test.GetData(testdata, "animego_110.yaml")
+	_ = os.WriteFile("data/animego.yaml", file, 0666)
+	configs.UpdateConfig("data/animego.yaml", false)
+
+	EqualFile(t, "data/animego.yaml", test.GetDataPath(testdata, "animego_120.yaml"))
+}
+
+func TestUpdateConfig_130(t *testing.T) {
+	configs.ConfigVersion = "1.3.0"
+	file := test.GetData(testdata, "animego_120.yaml")
+	_ = os.WriteFile("data/animego.yaml", file, 0666)
+	configs.UpdateConfig("data/animego.yaml", false)
+
+	EqualFile(t, "data/animego.yaml", test.GetDataPath(testdata, "animego_130.yaml"))
+}
+
+func TestUpdateConfig_140(t *testing.T) {
+	configs.ConfigVersion = "1.4.0"
+	file := test.GetData(testdata, "animego_130.yaml")
+	_ = os.WriteFile("data/animego.yaml", file, 0666)
+	configs.UpdateConfig("data/animego.yaml", false)
+
+	EqualFile(t, "data/animego.yaml", test.GetDataPath(testdata, "animego_140.yaml"))
+}
+
+func TestUpdateConfig_141(t *testing.T) {
+	configs.ConfigVersion = "1.4.1"
+	file := test.GetData(testdata, "animego_140.yaml")
+	_ = os.WriteFile("data/animego.yaml", file, 0666)
+	configs.UpdateConfig("data/animego.yaml", false)
+
+	EqualFile(t, "data/animego.yaml", test.GetDataPath(testdata, "animego_141.yaml"))
+}
+
+func TestUpdateConfig_150(t *testing.T) {
+	configs.ConfigVersion = "1.5.0"
+	file := test.GetData(testdata, "animego_141.yaml")
+	_ = os.WriteFile("data/animego.yaml", file, 0666)
+	configs.UpdateConfig("data/animego.yaml", false)
+
+	EqualFile(t, "data/animego.yaml", test.GetDataPath(testdata, "animego_150.yaml"))
+}
+
+func TestUpdateConfig_151(t *testing.T) {
+	configs.ConfigVersion = "1.5.1"
+	file := test.GetData(testdata, "animego_150.yaml")
+	_ = os.WriteFile("data/animego.yaml", file, 0666)
+	configs.UpdateConfig("data/animego.yaml", false)
+
+	EqualFile(t, "data/animego.yaml", test.GetDataPath(testdata, "animego_151.yaml"))
+}
+
+func TestUpdateConfig_152(t *testing.T) {
+	configs.ConfigVersion = "1.5.2"
+	file := test.GetData(testdata, "animego_151.yaml")
+	_ = os.WriteFile("data/animego.yaml", file, 0666)
+	configs.UpdateConfig("data/animego.yaml", false)
+
+	EqualFile(t, "data/animego.yaml", test.GetDataPath(testdata, "animego_152.yaml"))
 }

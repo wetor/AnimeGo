@@ -1,0 +1,145 @@
+{
+  "adult": false,
+  "backdrop_path": "/c2sl2dLlyFFeb18pJtOpBD8cidr.jpg",
+  "created_by": [],
+  "episode_run_time": [
+    24
+  ],
+  "first_air_date": "2017-07-12",
+  "genres": [
+    {
+      "id": 18,
+      "name": "Drama"
+    },
+    {
+      "id": 16,
+      "name": "Animation"
+    }
+  ],
+  "homepage": "http://you-zitsu.com/",
+  "id": 72517,
+  "in_production": true,
+  "languages": [
+    "ja"
+  ],
+  "last_air_date": "2022-09-26",
+  "last_episode_to_air": {
+    "id": 3802224,
+    "name": "The worst enemy you can meet will always be yourself.",
+    "overview": "The aftermath of the gymnasium incident plays out as Christmas brings romance to the school.",
+    "vote_average": 9.0,
+    "vote_count": 1,
+    "air_date": "2022-09-26",
+    "episode_number": 13,
+    "production_code": "",
+    "runtime": 24,
+    "season_number": 2,
+    "show_id": 72517,
+    "still_path": "/d3ML6HoEhX8n1BZWXs4TxdQ6gVj.jpg"
+  },
+  "name": "Classroom of the Elite",
+  "next_episode_to_air": null,
+  "networks": [
+    {
+      "id": 173,
+      "logo_path": "/fERjndErEpveJmQZccJbJDi93rj.png",
+      "name": "AT-X",
+      "origin_country": "JP"
+    },
+    {
+      "id": 252,
+      "logo_path": "/zFZ5KCuvx7K0vP9XgGcidfXjuUd.png",
+      "name": "TV Aichi",
+      "origin_country": "JP"
+    },
+    {
+      "id": 614,
+      "logo_path": "/hSdroyVthq3CynxTIIY7lnS8w1.png",
+      "name": "Tokyo MX",
+      "origin_country": "JP"
+    }
+  ],
+  "number_of_episodes": 25,
+  "number_of_seasons": 3,
+  "origin_country": [
+    "JP"
+  ],
+  "original_language": "ja",
+  "original_name": "ようこそ実力至上主義の教室へ",
+  "overview": "Koudo Ikusei Senior High School is a leading prestigious school with state-of-the-art facilities where nearly 100% of students go on to university or find employment. The students there have the freedom to wear any hairstyle and bring any personal effects they desire. Koudo Ikusei is a paradise-like school, but the truth is that only the most superior of students receive favorable treatment.\n\nAyanokouji Kiyotaka is a student of D-class, which is where the school dumps its \"inferior\" students in order to ridicule them. For a certain reason, Kiyotaka was careless on his entrance examination, and was put in D-class. After meeting Horikita Suzune and Kushida Kikyou, two other students in his class, Kiyotaka’s situation begins to change.",
+  "popularity": 70.525,
+  "poster_path": "/8BtSk9DGIlS24otIB3qCagVCI6W.jpg",
+  "production_companies": [
+    {
+      "id": 42811,
+      "logo_path": "/2ZPUk3aYOtKbZk1W4Kp6mfeays8.png",
+      "name": "Lerche",
+      "origin_country": "JP"
+    },
+    {
+      "id": 2073,
+      "logo_path": "/6FlTZGliYTN2HaS9Qq6tCdZItWc.png",
+      "name": "KADOKAWA",
+      "origin_country": "JP"
+    },
+    {
+      "id": 6683,
+      "logo_path": "/reCkuk3GEomdx5gQpsm15Zl1sgX.png",
+      "name": "Lantis",
+      "origin_country": "JP"
+    },
+    {
+      "id": 84461,
+      "logo_path": "/c5rCgOHtg8vSfRumU84w6VZBt8U.png",
+      "name": "HALF H・P STUDIO",
+      "origin_country": "JP"
+    }
+  ],
+  "production_countries": [
+    {
+      "iso_3166_1": "JP",
+      "name": "Japan"
+    }
+  ],
+  "seasons": [
+    {
+      "air_date": "2017-07-12",
+      "episode_count": 12,
+      "id": 89821,
+      "name": "Season 1",
+      "overview": "",
+      "poster_path": "/8BtSk9DGIlS24otIB3qCagVCI6W.jpg",
+      "season_number": 1
+    },
+    {
+      "air_date": "2022-07-04",
+      "episode_count": 13,
+      "id": 245063,
+      "name": "Season 2",
+      "overview": "Tokyo Metropolitan Advanced Nurturing High School seems like a paradise, but in reality, it is an extreme meritocracy. In the class of underachievers, Kiyotaka has begun working with Suzune, who seeks to ascend higher. After a survival test on an uninhabited island, they get to enjoy a luxury liner, but a new class-scrambling test will begin.",
+      "poster_path": "/lLD9Xg5bASKrUAp7bLCm7s8WbKW.jpg",
+      "season_number": 2
+    },
+    {
+      "air_date": null,
+      "episode_count": 0,
+      "id": 294407,
+      "name": "Season 3",
+      "overview": "",
+      "poster_path": null,
+      "season_number": 3
+    }
+  ],
+  "spoken_languages": [
+    {
+      "english_name": "Japanese",
+      "iso_639_1": "ja",
+      "name": "日本語"
+    }
+  ],
+  "status": "Returning Series",
+  "tagline": "",
+  "type": "Scripted",
+  "vote_average": 8.593,
+  "vote_count": 553
+}

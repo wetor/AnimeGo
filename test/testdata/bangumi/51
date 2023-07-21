@@ -1,0 +1,232 @@
+{
+  "date": "2007-10-04",
+  "platform": "TV",
+  "images": {
+    "small": "https://lain.bgm.tv/r/200/pic/cover/l/28/38/51_6PN42.jpg",
+    "grid": "https://lain.bgm.tv/r/100/pic/cover/l/28/38/51_6PN42.jpg",
+    "large": "https://lain.bgm.tv/pic/cover/l/28/38/51_6PN42.jpg",
+    "medium": "https://lain.bgm.tv/r/800/pic/cover/l/28/38/51_6PN42.jpg",
+    "common": "https://lain.bgm.tv/r/400/pic/cover/l/28/38/51_6PN42.jpg"
+  },
+  "summary": "故事发生在一个小镇上，冈崎朋也是光坂高中在校生，因为家庭原因他一直过着浑浑噩噩的生活。他不参加任何社团活动，唯一的朋友是春原阳平。\r\n某天的上学途中，在樱花飞舞的坡道上，他邂逅了一名少女——古河渚，从此他的生活发生改变。渚因病休学一年，重返校园的她对周围环境感到相当不适应。她想加入戏剧部，然而戏剧部早已休部。朋也决定帮助她一起开展戏剧部的活动，二人关系变得越发亲密。随后不久朋也在图书馆中结识了一名天才少女一之濑琴美。",
+  "name": "CLANNAD -クラナド-",
+  "name_cn": "CLANNAD",
+  "tags": [
+    {
+      "name": "Clannad",
+      "count": 4538
+    },
+    {
+      "name": "key",
+      "count": 4012
+    },
+    {
+      "name": "京阿尼",
+      "count": 3925
+    },
+    {
+      "name": "催泪",
+      "count": 3110
+    },
+    {
+      "name": "団子大家族",
+      "count": 2280
+    },
+    {
+      "name": "神作",
+      "count": 1677
+    },
+    {
+      "name": "治愈",
+      "count": 1658
+    },
+    {
+      "name": "人生",
+      "count": 1436
+    },
+    {
+      "name": "GAL改",
+      "count": 1372
+    },
+    {
+      "name": "2007年10月",
+      "count": 1052
+    },
+    {
+      "name": "TV",
+      "count": 913
+    },
+    {
+      "name": "京都",
+      "count": 625
+    },
+    {
+      "name": "2007",
+      "count": 602
+    },
+    {
+      "name": "游戏改",
+      "count": 507
+    },
+    {
+      "name": "麻枝准",
+      "count": 425
+    },
+    {
+      "name": "校园",
+      "count": 230
+    },
+    {
+      "name": "京都动画",
+      "count": 212
+    },
+    {
+      "name": "石原立也",
+      "count": 205
+    },
+    {
+      "name": "恋爱",
+      "count": 175
+    },
+    {
+      "name": "海星",
+      "count": 159
+    },
+    {
+      "name": "改编自游戏",
+      "count": 130
+    },
+    {
+      "name": "中村悠一",
+      "count": 74
+    },
+    {
+      "name": "2007年10月番",
+      "count": 72
+    },
+    {
+      "name": "日常",
+      "count": 69
+    },
+    {
+      "name": "京都アニメーション",
+      "count": 61
+    },
+    {
+      "name": "クラナド",
+      "count": 48
+    },
+    {
+      "name": "后宫",
+      "count": 47
+    },
+    {
+      "name": "最萌",
+      "count": 45
+    },
+    {
+      "name": "galgame",
+      "count": 43
+    },
+    {
+      "name": "中原麻衣",
+      "count": 41
+    }
+  ],
+  "infobox": [
+    {
+      "key": "中文名",
+      "value": "CLANNAD"
+    },
+    {
+      "key": "别名",
+      "value": [
+        {
+          "v": "クラナド"
+        },
+        {
+          "v": "小镇家族"
+        }
+      ]
+    },
+    {
+      "key": "话数",
+      "value": "23"
+    },
+    {
+      "key": "放送开始",
+      "value": "2007年10月4日"
+    },
+    {
+      "key": "放送星期",
+      "value": "星期四"
+    },
+    {
+      "key": "官方网站",
+      "value": "http://www.tbs.co.jp/clannad/clannad1/"
+    },
+    {
+      "key": "播放电视台",
+      "value": "TBS"
+    },
+    {
+      "key": "其他电视台",
+      "value": "MBS CBC BS-i"
+    },
+    {
+      "key": "播放结束",
+      "value": "2008年3月27日"
+    },
+    {
+      "key": "Copyright",
+      "value": "©Visual Art's/Key/光坂高校演劇部"
+    },
+    {
+      "key": "主题歌演出",
+      "value": "eufonius、茶太、真理絵、くない瓜、Rio、Morrigan、藤枝あかね、たくまる"
+    },
+    {
+      "key": "原作",
+      "value": "Key/Visual Art's"
+    },
+    {
+      "key": "导演",
+      "value": "石原立也"
+    },
+    {
+      "key": "人物设定",
+      "value": "池田和美"
+    }
+  ],
+  "rating": {
+    "rank": 68,
+    "total": 16007,
+    "count": {
+      "1": 80,
+      "2": 27,
+      "3": 31,
+      "4": 76,
+      "5": 253,
+      "6": 780,
+      "7": 2091,
+      "8": 4668,
+      "9": 4669,
+      "10": 3332
+    },
+    "score": 8.4
+  },
+  "total_episodes": 23,
+  "collection": {
+    "on_hold": 875,
+    "dropped": 282,
+    "wish": 3103,
+    "collect": 22479,
+    "doing": 941
+  },
+  "id": 51,
+  "eps": 23,
+  "volumes": 0,
+  "locked": false,
+  "nsfw": false,
+  "type": 2
+}

@@ -8,14 +8,9 @@ type ClientListOptions struct {
 	Tag      string
 }
 
-type ClientRenameOptions struct {
-	Hash    string
-	OldPath string
-	NewPath string
-}
-
 type ClientAddOptions struct {
-	Urls        []string
+	Url         string
+	File        string // optional torrent file
 	SavePath    string
 	Category    string
 	Tag         string
@@ -30,28 +25,17 @@ type ClientDeleteOptions struct {
 
 type ClientGetOptions struct {
 	Hash string
+	Item *TorrentItem
 }
 
 // =========== AnimeEntity ===========
 
 type AnimeParseOptions struct {
-	Url  string
-	Name string
-	ID   int
-	Date string
-	Ep   int
+	Url string // Mikan url
 }
-
-// =========== Parser ===========
 
 type ParseOptions struct {
-	Name      string
-	StartStep int
-}
-
-// =========== Process ===========
-
-type ProcessBangumiOptions struct {
-	Url  string
-	Name string
+	Title      string
+	TorrentUrl string
+	MikanUrl   string
 }

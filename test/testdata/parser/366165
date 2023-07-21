@@ -1,0 +1,330 @@
+{
+  "date": "2023-01-08",
+  "platform": "TV",
+  "images": {
+    "small": "https://lain.bgm.tv/r/200/pic/cover/l/5a/a2/366165_Ds2pa.jpg",
+    "grid": "https://lain.bgm.tv/r/100/pic/cover/l/5a/a2/366165_Ds2pa.jpg",
+    "large": "https://lain.bgm.tv/pic/cover/l/5a/a2/366165_Ds2pa.jpg",
+    "medium": "https://lain.bgm.tv/r/800/pic/cover/l/5a/a2/366165_Ds2pa.jpg",
+    "common": "https://lain.bgm.tv/r/400/pic/cover/l/5a/a2/366165_Ds2pa.jpg"
+  },
+  "summary": "一直都过得很平凡，不管是运动还是读书都差强人意，绝对无法成为第一名的普通人——斋藤，被召唤到了异世界。即使在异世界，斋藤也绝非是特别的，一点都不强。但在与超有个性的伙伴一起挑战攻略迷宫的过程中，告诉严重健忘的魔法师咒语、用身体当盾来保护小妖精、将针对敌人的合适武器拿给战士，他逐渐成为了队伍当中不可或缺的存在。\r\n",
+  "name": "便利屋斎藤さん、異世界に行く",
+  "name_cn": "万事屋斋藤、到异世界",
+  "tags": [
+    {
+      "name": "异世界",
+      "count": 567
+    },
+    {
+      "name": "2023年1月",
+      "count": 432
+    },
+    {
+      "name": "搞笑",
+      "count": 375
+    },
+    {
+      "name": "漫画改",
+      "count": 320
+    },
+    {
+      "name": "TV",
+      "count": 213
+    },
+    {
+      "name": "C2C",
+      "count": 210
+    },
+    {
+      "name": "冒险",
+      "count": 200
+    },
+    {
+      "name": "穿越",
+      "count": 182
+    },
+    {
+      "name": "奇幻",
+      "count": 175
+    },
+    {
+      "name": "日常",
+      "count": 164
+    },
+    {
+      "name": "漫改",
+      "count": 116
+    },
+    {
+      "name": "2023",
+      "count": 108
+    },
+    {
+      "name": "窪岡俊之",
+      "count": 40
+    },
+    {
+      "name": "東山奈央",
+      "count": 39
+    },
+    {
+      "name": "战斗",
+      "count": 28
+    },
+    {
+      "name": "洼冈俊之",
+      "count": 15
+    },
+    {
+      "name": "涩涩",
+      "count": 9
+    },
+    {
+      "name": "7.22",
+      "count": 8
+    },
+    {
+      "name": "2023年",
+      "count": 8
+    },
+    {
+      "name": "追番",
+      "count": 7
+    },
+    {
+      "name": "恋爱",
+      "count": 7
+    },
+    {
+      "name": "猪原健太",
+      "count": 6
+    },
+    {
+      "name": "日本动画",
+      "count": 5
+    },
+    {
+      "name": "日本",
+      "count": 4
+    },
+    {
+      "name": "温馨",
+      "count": 4
+    },
+    {
+      "name": "沙雕",
+      "count": 3
+    },
+    {
+      "name": "TVA",
+      "count": 3
+    },
+    {
+      "name": "木村良平",
+      "count": 3
+    },
+    {
+      "name": "热血",
+      "count": 2
+    },
+    {
+      "name": "万事屋斋藤",
+      "count": 2
+    }
+  ],
+  "infobox": [
+    {
+      "key": "中文名",
+      "value": "万事屋斋藤、到异世界"
+    },
+    {
+      "key": "别名",
+      "value": [
+        {
+          "v": "万事屋斋藤到异世界"
+        },
+        {
+          "v": "万事屋斋藤先生转生异世界"
+        },
+        {
+          "v": "Handyman Saitou In Another World"
+        },
+        {
+          "v": "Benriya Saitou-san, Isekai ni Iku"
+        }
+      ]
+    },
+    {
+      "key": "话数",
+      "value": "12"
+    },
+    {
+      "key": "放送开始",
+      "value": "2023年1月8日"
+    },
+    {
+      "key": "放送星期",
+      "value": "星期日"
+    },
+    {
+      "key": "官方网站",
+      "value": "https://saitou-anime.com/"
+    },
+    {
+      "key": "播放电视台",
+      "value": "AT-X"
+    },
+    {
+      "key": "其他电视台",
+      "value": "TOKYO MX / KBS 京都 / サンテレビ / BS日テレ"
+    },
+    {
+      "key": "播放结束",
+      "value": "2023年3月26日"
+    },
+    {
+      "key": "Copyright",
+      "value": "©一智和智・KADOKAWA刊／「便利屋斎藤さん、異世界に行く」製作委員会"
+    },
+    {
+      "key": "原作",
+      "value": "一智和智（MFC / KADOKAWA刊）"
+    },
+    {
+      "key": "导演",
+      "value": "窪岡俊之"
+    },
+    {
+      "key": "人物设定",
+      "value": "たなべようこ"
+    },
+    {
+      "key": "系列构成",
+      "value": "猪原健太"
+    },
+    {
+      "key": "脚本",
+      "value": "猪原健太"
+    },
+    {
+      "key": "美术监督",
+      "value": "柏村明香；美术监督辅佐：隈元萌絵"
+    },
+    {
+      "key": "色彩设计",
+      "value": "高木雅人；色彩设计辅佐：手倉森咲子"
+    },
+    {
+      "key": "摄影监督",
+      "value": "村上展之；摄影监督辅佐：藤原航毅"
+    },
+    {
+      "key": "音乐",
+      "value": "大隅知宇"
+    },
+    {
+      "key": "音响监督",
+      "value": "今泉雄一"
+    },
+    {
+      "key": "音效",
+      "value": "斎藤みち代、小山恭正"
+    },
+    {
+      "key": "主题歌编曲",
+      "value": "Nanao（OP） / MIMI（ED）"
+    },
+    {
+      "key": "主题歌作曲",
+      "value": "Nanao（OP） / MIMI（ED）"
+    },
+    {
+      "key": "主题歌作词",
+      "value": "Nanao（OP） / MIMI（ED）"
+    },
+    {
+      "key": "主题歌演出",
+      "value": "Teary Planet（OP） / konoco（ED）"
+    },
+    {
+      "key": "动画制作",
+      "value": "C2C"
+    },
+    {
+      "key": "监修",
+      "value": "桝田省治；动作监修：和田伸一；道具监修：横山友紀；美术监修：佐藤勝"
+    },
+    {
+      "key": "设定",
+      "value": "怪物设计：長森佳容；文字设计：横山友紀"
+    },
+    {
+      "key": "特效",
+      "value": "村上宜隆、楊怡、久保田淳"
+    },
+    {
+      "key": "製作",
+      "value": "「便利屋斎藤さん、異世界に行く」製作委員会（KADOKAWA、グリーエンターテインメント、AT-X、BS日本）"
+    },
+    {
+      "key": "企画",
+      "value": "菊池剛、工藤大丈、青柳昌行；企画协力：中山卓也、清原誠巳、成田明浩"
+    },
+    {
+      "key": "执行制片人",
+      "value": "田中翔、宿輪浩介、山崎明日香、久保田暁"
+    },
+    {
+      "key": "制片人",
+      "value": "菊島憲文、西ヶ谷英武、飯塚彩、丸山創；动画制片人：早坂一将；宣传制片人：野呂瀬友里"
+    },
+    {
+      "key": "助理制片人",
+      "value": "吉澤太郎、寺本南椎"
+    },
+    {
+      "key": "总制片",
+      "value": "制作统括：山田良輔"
+    },
+    {
+      "key": "音乐制作",
+      "value": "KADOKAWA"
+    },
+    {
+      "key": "音乐制作人",
+      "value": "水鳥智栄子"
+    }
+  ],
+  "rating": {
+    "rank": 3478,
+    "total": 1659,
+    "count": {
+      "1": 10,
+      "2": 3,
+      "3": 12,
+      "4": 31,
+      "5": 110,
+      "6": 395,
+      "7": 761,
+      "8": 281,
+      "9": 27,
+      "10": 29
+    },
+    "score": 6.8
+  },
+  "total_episodes": 13,
+  "collection": {
+    "on_hold": 103,
+    "dropped": 176,
+    "wish": 578,
+    "collect": 1699,
+    "doing": 1141
+  },
+  "id": 366165,
+  "eps": 12,
+  "volumes": 0,
+  "locked": false,
+  "nsfw": false,
+  "type": 2
+}

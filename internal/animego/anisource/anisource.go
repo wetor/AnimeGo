@@ -3,16 +3,11 @@
 package anisource
 
 import (
-	"AnimeGo/internal/models"
-	"AnimeGo/pkg/anisource"
-	"AnimeGo/pkg/anisource/bangumi"
-	"AnimeGo/pkg/anisource/mikan"
-	"AnimeGo/pkg/anisource/themoviedb"
+	"github.com/wetor/AnimeGo/internal/animego/anidata"
+	"github.com/wetor/AnimeGo/internal/animego/anidata/bangumi"
+	"github.com/wetor/AnimeGo/internal/animego/anidata/mikan"
+	"github.com/wetor/AnimeGo/internal/animego/anidata/themoviedb"
 )
-
-type AniSource interface {
-	Parse(opt *models.AnimeParseOptions) *models.AnimeEntity
-}
 
 // 单例模式
 var (
@@ -21,16 +16,19 @@ var (
 	themoviedbInstance *themoviedb.Themoviedb
 )
 
+type Options struct {
+	*anidata.Options
+}
+
 // Init
-//  @Description: 初始化anisource，需要在程序启动时调用
-//  @param cache cache.Cache
-//  @param proxy string
 //
-func Init(opts *anisource.Options) {
+//	@Description: 初始化anisource，需要在程序启动时调用
+//	@param proxy string
+func Init(opts *Options) {
 	mikanInstance = nil
 	bangumiInstance = nil
 	themoviedbInstance = nil
-	anisource.Init(opts)
+	anidata.Init(opts.Options)
 }
 
 func Mikan() *mikan.Mikan {

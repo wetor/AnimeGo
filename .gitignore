@@ -15,8 +15,10 @@
 # vendor/
 .DS_Store
 data/
-!test/data
+key/
+download/
 log/
+!pkg/log/
 *.log
 *.db
 animego
@@ -26,3 +28,5 @@ main
 .idea/
 modules/proxy/
 note_*.*
+.vscode/
+dist/

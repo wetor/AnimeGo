@@ -1,0 +1,51 @@
+{
+  "page": 1,
+  "results": [
+    {
+      "backdrop_path": "/g1DgfhkneXTRzJH38POYm4Es3gQ.jpg",
+      "first_air_date": "2022-10-14",
+      "genre_ids": [
+        16,
+        35,
+        10759,
+        10765
+      ],
+      "id": 154524,
+      "name": "福星小子",
+      "origin_country": [
+        "JP"
+      ],
+      "original_language": "ja",
+      "original_name": "うる星やつら",
+      "overview": "　　日本老牌漫画家高桥留美子首部长篇连载漫画，1978 年起在「周刊少年 SUNDAY」杂志开始连载。以魔幻写实的现代日本为舞台，外星鬼族少女「拉姆」与地球好色少年「诸星当」之间的爱情故事为主轴，描写一连串由人类、外星人、妖怪、幽灵、神明等众多稀奇古怪角色共同演出的荒诞喜剧。",
+      "popularity": 123.059,
+      "poster_path": "/6m8uVYPFeDVHXS0yDqx5VJyHrrI.jpg",
+      "vote_average": 7.6,
+      "vote_count": 12
+    },
+    {
+      "backdrop_path": "/pMlkgIGVxX0cWclzeFS2Zxtmasj.jpg",
+      "first_air_date": "1981-10-14",
+      "genre_ids": [
+        16,
+        35,
+        10765,
+        10751
+      ],
+      "id": 34163,
+      "name": "福星小子",
+      "origin_country": [
+        "JP"
+      ],
+      "original_language": "ja",
+      "original_name": "うる星やつら",
+      "overview": "友引高中2年4班的学生诸星当，堪称史上最好色的男子，虽然有青梅竹马的阿忍，但他仍然四处搭讪，为了美女命都可以不顾。某天外星鬼族入侵地球，鬼族首领要求双方各派出一名代表，通过赛跑决定地球的命运。一向厄运缠身的阿当成了当之无愧的中彩者，鬼族则派出首领的女儿——身穿比基尼，吊眼梢，会飞会放电的小美女拉姆。这场重要的比赛最终以阿当获胜告终，而拉姆却爱上了这个不着调的对手。从此，他们的命运被紧紧联系在一起，也由此引发了一系列神奇、爆笑、感人的小故事……",
+      "popularity": 70.269,
+      "poster_path": "/oUVW6AlkD50tVufoz1ZXDw467Ry.jpg",
+      "vote_average": 7.9,
+      "vote_count": 20
+    }
+  ],
+  "total_pages": 1,
+  "total_results": 2
+}

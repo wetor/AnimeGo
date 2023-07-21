@@ -1,51 +1,171 @@
-package parser
+package parser_test
 
 import (
 	"fmt"
-	"github.com/stretchr/testify/assert"
+	"net/url"
+	"os"
+	"sync"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+
+	"github.com/wetor/AnimeGo/assets"
+	"github.com/wetor/AnimeGo/internal/animego/anidata"
+	"github.com/wetor/AnimeGo/internal/animego/anisource"
+	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
+	"github.com/wetor/AnimeGo/internal/animego/parser"
+	parserPlugin "github.com/wetor/AnimeGo/internal/animego/parser/plugin"
+	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/plugin"
+	"github.com/wetor/AnimeGo/pkg/cache"
+	"github.com/wetor/AnimeGo/pkg/log"
+	"github.com/wetor/AnimeGo/pkg/request"
+	"github.com/wetor/AnimeGo/pkg/torrent"
+	"github.com/wetor/AnimeGo/pkg/xpath"
+	"github.com/wetor/AnimeGo/test"
 )
 
-func TestBangumiEp_Parse(t *testing.T) {
-	ep, err := ParseTitle("【幻樱字幕组】【4月新番】【古见同学有交流障碍症 第二季 Komi-san wa, Komyushou Desu. S02】【22】【GB_MP4】【1920X1080】")
-	fmt.Println(ep, err)
+const testdata = "parser"
+
+func TestMain(m *testing.M) {
+	fmt.Println("begin")
+	_ = os.MkdirAll("data", os.ModePerm)
+	log.Init(&log.Options{
+		File:  "data/log.log",
+		Debug: true,
+	})
+	torrent.Init(&torrent.Options{
+		TempPath: "data",
+	})
+	test.HookGetWriter(testdata, nil)
+	test.HookGet(testdata, func(uri string) string {
+		u, err := url.Parse(uri)
+		if err != nil {
+			return ""
+		}
+		id := u.Query().Get("with_text_query")
+		if len(id) == 0 {
+			id = xpath.Base(u.Path)
+		}
+		return id
+	})
+	defer test.UnHook()
+	plugin.Init(&plugin.Options{
+		Path:  assets.TestPluginPath(),
+		Debug: true,
+	})
+
+	b := cache.NewBolt()
+	b.Open("data/bolt.db")
+	anisource.Init(&anisource.Options{
+		Options: &anidata.Options{
+			Cache: b,
+			CacheTime: map[string]int64{
+				"mikan":      int64(7 * 24 * 60 * 60),
+				"bangumi":    int64(3 * 24 * 60 * 60),
+				"themoviedb": int64(14 * 24 * 60 * 60),
+			},
+		},
+	})
+	parser.Init(&parser.Options{
+		TMDBFailSkip:           false,
+		TMDBFailUseTitleSeason: true,
+		TMDBFailUseFirstSeason: true,
+	})
+	bangumiCache := cache.NewBolt(true)
+	bangumiCache.Open(test.GetDataPath("", "bolt_sub.bolt"))
+	bangumiCache.Add("bangumi_sub")
+	mutex := sync.Mutex{}
+	anidata.Init(&anidata.Options{
+		Cache:            b,
+		BangumiCache:     bangumiCache,
+		BangumiCacheLock: &mutex,
+	})
+	request.Init(&request.Options{
+		Proxy: "http://127.0.0.1:7890",
+	})
+	m.Run()
+
+	b.Close()
+	bangumiCache.Close()
+	_ = log.Close()
+	_ = os.RemoveAll("data")
+	fmt.Println("end")
 }
 
-func TestBangumiEp_Parse2(t *testing.T) {
-	tests := []struct {
-		title string
-		want  int
-	}{
-		{title: "【幻樱字幕组】【4月新番】【古见同学有交流障碍症 第二季 Komi-san wa, Komyushou Desu. S02】【22】【GB_MP4】【1920X1080】", want: 22},
-		{title: "【极影字幕社】LoveLive! 虹咲学园学园偶像同好会 第2期 第12集 GB_CN HEVC_opus 1080p [复制磁连]", want: 12},
-		{title: "[虹咲学园烤肉同好会][Love Live! 虹咲学园学园偶像同好会 第二季][03][简日内嵌][特效歌词][WebRip][1080p][AVC AAC MP4]", want: 3},
-		{title: "[LoliHouse] Love Live! 虹咲学园学园偶像同好会 第二季 / Love Live! Nijigasaki S2 - 09 [WebRip 1080p HEVC-10bit AAC][简繁内封字幕]", want: 9},
-
-		{title: "[NaN-Raws]Love_Live！虹咲学园_学园偶像同好会_第二季[10][Bahamut][WEB-DL][1080P][AVC_AAC][CHT][MP4][bangumi.online]", want: 10},
-		{title: "[Lilith-Raws x WitEx.io] Love Live！虹咲学园 学园偶像同好会 S02 - 08 [Baha][WEB-DL][1080p][AVC AAC][CHT][MP4]", want: 8},
-		{title: "[ANi] Love Live！虹咲学园 学园偶像同好会 第二季 - 12 [1080P][Baha][WEB-DL][AAC AVC][CHT][MP4]", want: 12},
-		{title: "[NC-Raws] Love Live！虹咲学园 学园偶像同好会 第二季 / Nijigasaki S2 - 12 (Baha 1920x1080 AVC AAC MP4)", want: 12},
-
-		{title: "Love Live！虹咲学园偶像同好会 第2季 第8集/Love Live! Nijigasaki - 08 (1080P)(AVC AAC)(CHS)", want: 8},
-		{title: "[酷漫404][辉夜大小姐想让我告白 一终极浪漫一][10][1080P][WebRip][简日双语][AVC AAC][MP4][字幕组招人内详]", want: 10},
-		{title: "[云光字幕组]辉夜大小姐想让我告白 -超级浪漫- Kaguya-sama wa Kokurasetai S3 [08][简体双语][1080p]招募后期", want: 8},
-		{title: "[猎户不鸽发布组] 辉夜大小姐想让我告白？第3季 ~超级浪漫 ~ Kaguya-sama wa Kokurasetai S3 [11] [1080p+] [简中] [2022年4月番] [复制磁连]", want: 11},
-		{title: "【极影字幕社+辉夜汉化组】辉夜大小姐想让我告白 究极浪漫 第10集 GB_CN HEVC opus 1080p [复制磁连]", want: 10},
-		{title: "[Skymoon-Raws] 辉夜姬想让人告白 一超级浪漫一 / Kaguya-sama wa Kokurasetai S03 - 11 [ViuTV][WEB-RIP][1080p][AVC AAC][CHT][SRT][MKV](先行版本) ", want: 11},
-
-		{title: "[澄空学园&雪飘工作室][辉夜大小姐想让我告白 第三季 / かぐや様は告らせたい 三期 / Kaguya-sama wa Kokurasetai Season 3][05][720p][繁体内嵌]", want: 5},
-		{title: "[MingY] 辉夜大小姐想让我告白-Ultra Romantic-​ / Kaguya-sama wa Kokurasetai​ S3 [01][1080p][CHS] [复制磁连]", want: 1},
-
-		{title: "[NC-Raws] 幕末替身传说 / Bucchigire! - 06 (Baha 1920x1080 AVC AAC MP4) [复制磁连]", want: 6},
-		{title: "[NC-Raws] 杜鹃的婚约 / Kakkou no Iinazuke (A Couple of Cuckoos) - 15 (B-Global 3840x2160 HEVC AAC MKV) [复制磁连]", want: 15},
-		{title: "[NC-Raws] 星源之主 / Master of the Star Spring - 07 (B-Global Donghua 1920x1080 HEVC AAC MKV) [复制磁连]", want: 7},
+func TestManager_Parse(t *testing.T) {
+	type args struct {
+		opts *models.ParseOptions
 	}
+	tests := []struct {
+		name       string
+		args       args
+		wantEntity *models.AnimeEntity
+	}{
+		// TODO: Add test cases.
+		{
+			name: "1",
+			args: args{
+				opts: &models.ParseOptions{
+					Title:      "[猎户不鸽压制] 万事屋斋藤先生转生异世界 / 斋藤先生无所不能 Benriya Saitou-san, Isekai ni Iku [01-12] [合集] [WebRip 1080p] [繁中内嵌] [H265 AAC] [2023年1月番] [4.8 GB]",
+					TorrentUrl: "https://mikanani.me/Download/20230328/ac5d8d6fcc4d83cb18f18c209b66afd8e1edba86.torrent",
+					MikanUrl:   "https://mikanani.me/Home/Episode/ac5d8d6fcc4d83cb18f18c209b66afd8e1edba86",
+				},
+			},
+			wantEntity: &models.AnimeEntity{ID: 366165, ThemoviedbID: 155942, MikanID: 2922, Name: "便利屋斎藤さん、異世界に行く", NameCN: "万事屋斋藤、到异世界", Season: 1, Eps: 12, AirDate: "2023-01-08",
+				Ep: []*models.AnimeEpEntity{
+					{Type: models.AnimeEpNormal, Ep: 1, Src: "[orion origin] Benriya Saitou-san, Isekai ni Iku [01-12] [WebRip] [1080p] [H265 AAC] [CHT]/[orion origin] Benriya Saitou-san, Isekai ni Iku [01] [1080p] [H265 AAC] [CHT].mp4"},
+					{Type: models.AnimeEpNormal, Ep: 2, Src: "[orion origin] Benriya Saitou-san, Isekai ni Iku [01-12] [WebRip] [1080p] [H265 AAC] [CHT]/[orion origin] Benriya Saitou-san, Isekai ni Iku [02] [1080p] [H265 AAC] [CHT].mp4"},
+					{Type: models.AnimeEpNormal, Ep: 3, Src: "[orion origin] Benriya Saitou-san, Isekai ni Iku [01-12] [WebRip] [1080p] [H265 AAC] [CHT]/[orion origin] Benriya Saitou-san, Isekai ni Iku [03] [1080p] [H265 AAC] [CHT].mp4"},
+					{Type: models.AnimeEpNormal, Ep: 4, Src: "[orion origin] Benriya Saitou-san, Isekai ni Iku [01-12] [WebRip] [1080p] [H265 AAC] [CHT]/[orion origin] Benriya Saitou-san, Isekai ni Iku [04] [1080p] [H265 AAC] [CHT].mp4"},
+					{Type: models.AnimeEpNormal, Ep: 5, Src: "[orion origin] Benriya Saitou-san, Isekai ni Iku [01-12] [WebRip] [1080p] [H265 AAC] [CHT]/[orion origin] Benriya Saitou-san, Isekai ni Iku [05] [1080p] [H265 AAC] [CHT].mp4"},
+					{Type: models.AnimeEpNormal, Ep: 6, Src: "[orion origin] Benriya Saitou-san, Isekai ni Iku [01-12] [WebRip] [1080p] [H265 AAC] [CHT]/[orion origin] Benriya Saitou-san, Isekai ni Iku [06] [1080p] [H265 AAC] [CHT].mp4"},
+					{Type: models.AnimeEpNormal, Ep: 7, Src: "[orion origin] Benriya Saitou-san, Isekai ni Iku [01-12] [WebRip] [1080p] [H265 AAC] [CHT]/[orion origin] Benriya Saitou-san, Isekai ni Iku [07] [1080p] [H265 AAC] [CHT].mp4"},
+					{Type: models.AnimeEpNormal, Ep: 8, Src: "[orion origin] Benriya Saitou-san, Isekai ni Iku [01-12] [WebRip] [1080p] [H265 AAC] [CHT]/[orion origin] Benriya Saitou-san, Isekai ni Iku [08] [1080p] [H265 AAC] [CHT].mp4"},
+					{Type: models.AnimeEpNormal, Ep: 9, Src: "[orion origin] Benriya Saitou-san, Isekai ni Iku [01-12] [WebRip] [1080p] [H265 AAC] [CHT]/[orion origin] Benriya Saitou-san, Isekai ni Iku [09] [1080p] [H265 AAC] [CHT].mp4"},
+					{Type: models.AnimeEpNormal, Ep: 10, Src: "[orion origin] Benriya Saitou-san, Isekai ni Iku [01-12] [WebRip] [1080p] [H265 AAC] [CHT]/[orion origin] Benriya Saitou-san, Isekai ni Iku [10] [1080p] [H265 AAC] [CHT].mp4"},
+					{Type: models.AnimeEpNormal, Ep: 11, Src: "[orion origin] Benriya Saitou-san, Isekai ni Iku [01-12] [WebRip] [1080p] [H265 AAC] [CHT]/[orion origin] Benriya Saitou-san, Isekai ni Iku [11] [1080p] [H265 AAC] [CHT].mp4"},
+					{Type: models.AnimeEpNormal, Ep: 12, Src: "[orion origin] Benriya Saitou-san, Isekai ni Iku [01-12] [WebRip] [1080p] [H265 AAC] [CHT]/[orion origin] Benriya Saitou-san, Isekai ni Iku [12] [END] [1080p] [H265 AAC] [CHT].mp4"},
+				},
+				Torrent: &models.AnimeTorrent{
+					Hash: "ac5d8d6fcc4d83cb18f18c209b66afd8e1edba86",
+					Url:  "data/ac5d8d6fcc4d83cb18f18c209b66afd8e1edba86.torrent",
+				},
+			},
+		},
+		{
+			name: "2",
+			args: args{
+				opts: &models.ParseOptions{
+					Title:      "【SW字幕组】[宠物小精灵 / 宝可梦 地平线 莉可与罗伊的旅途][01-02][简日双语字幕][2023.04.14][1080P][AVC][MP4][CHS_JP] [875.7MB]",
+					TorrentUrl: "https://mikanani.me/Download/20230427/51ecf2415af99521d07595178685587e16edd926.torrent",
+					MikanUrl:   "https://mikanani.me/Home/Episode/51ecf2415af99521d07595178685587e16edd926",
+				},
+			},
+			wantEntity: &models.AnimeEntity{ID: 411247, ThemoviedbID: 220150, MikanID: 3015, Name: "ポケットモンスター", NameCN: "宝可梦 地平线", Season: 1, Eps: 22, AirDate: "2023-04-14",
+				Flag: models.AnimeFlagEpParseFailed,
+				Ep: []*models.AnimeEpEntity{
+					{Type: models.AnimeEpUnknown, Ep: 0, Src: "[SWSUB][Pokemon Horizons][01-02][CHS_JP][AVC][1080P].mp4"},
+				},
+				Torrent: &models.AnimeTorrent{
+					Hash: "51ecf2415af99521d07595178685587e16edd926",
+					Url:  "data/51ecf2415af99521d07595178685587e16edd926.torrent",
+				},
+			},
+		},
+	}
+
+	p := parserPlugin.NewParserPlugin(&models.Plugin{
+		Enable: true,
+		Type:   "builtin",
+		File:   "builtin_parser.py",
+	}, true)
+	m := parser.NewManager(p, mikan.Mikan{})
+
 	for _, tt := range tests {
-
-		g, err := ParseTitle(tt.title)
-		fmt.Println(g)
-		assert.Equal(t, err, nil)
-		assert.Equal(t, g.Ep, tt.want)
-
+		t.Run(tt.name, func(t *testing.T) {
+			gotEntity := m.Parse(tt.args.opts)
+			assert.Equalf(t, tt.wantEntity, gotEntity, "Parse(%v)", tt.args.opts)
+		})
 	}
 }

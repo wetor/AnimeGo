@@ -1,48 +1,27 @@
 package web
 
 import (
-	"AnimeGo/internal/store"
-	"context"
-	"fmt"
 	"github.com/gin-gonic/gin"
-	"go.uber.org/zap"
-	"net/http"
 )
 
-func Run(ctx context.Context) {
-	store.WG.Add(1)
-	go func() {
-		defer store.WG.Done()
-		r := gin.New()
+func InitRouter(r gin.IRouter) {
+	r.GET("/ping", API.Ping)
+	r.GET("/sha256", API.SHA256)
 
-		r.Use(Cors())             // 跨域中间件
-		r.Use(GinLogger(zap.S())) // 日志中间件
-		r.Use(GinRecovery(zap.S(), true, func(c *gin.Context, recovered interface{}) {
-			if err, ok := recovered.(error); ok {
-				c.JSON(ErrSvr(err.Error()))
-			} else {
-				c.JSON(ErrSvr(recovered.(string)))
-			}
-		})) // 错误处理中间件
-		gin.SetMode("debug")
+	apiRoot := r.Group("/api")
+	apiRoot.Use(KeyAuth())
+	apiRoot.POST("/rss", API.Rss)
+	apiRoot.POST("/plugin/config", API.PluginConfigPost)
+	apiRoot.GET("/plugin/config", API.PluginConfigGet)
 
-		r.GET("/ping", Pong)
-		r.POST("/api", Download)
-		s := &http.Server{
-			Addr:    fmt.Sprintf("%s:%d", store.Config.WebApi.Host, store.Config.WebApi.Port),
-			Handler: r,
-		}
-		go func() {
-			if err := s.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-				zap.S().Warn(err)
-			}
-		}()
-		select {
-		case <-ctx.Done():
-			if err := s.Close(); err != nil {
-				zap.S().Warn(err)
-			}
-			zap.S().Debug("正常退出")
-		}
-	}()
+	apiRoot.GET("/config", API.ConfigGet)
+	apiRoot.PUT("/config", API.ConfigPut)
+
+	apiRoot.GET("/bolt", API.BoltList)
+	apiRoot.GET("/bolt/value", API.Bolt)
+	apiRoot.DELETE("/bolt/value", API.BoltDelete)
+
+	wsRoot := r.Group("/websocket")
+	wsRoot.Use(KeyAuth())
+	wsRoot.GET("/log", WS.Log)
 }

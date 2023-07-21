@@ -1,0 +1,12 @@
+matchObj.group() :  Cats are smarter than dogs
+matchObj.group(1) :  Cats
+matchObj.group(2) :  smarter
+searchObj.group() :  Cats are smarter than dogs
+searchObj.group(1) :  Cats
+searchObj.group(2) :  smarter
+电话号码 :  2004-959-559
+电话号码 :  2004959559
+A46G8HFD1134
+['123', '456']
+['123', '456']
+['88', '12']
