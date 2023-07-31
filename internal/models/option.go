@@ -2,34 +2,6 @@ package models
 
 import "time"
 
-// =========== Client ===========
-
-type ClientListOptions struct {
-	Status   string
-	Category string
-	Tag      string
-}
-
-type ClientAddOptions struct {
-	Url         string
-	File        string // optional torrent file
-	SavePath    string
-	Category    string
-	Tag         string
-	SeedingTime int    // 分钟
-	Rename      string // 保存名字
-}
-
-type ClientDeleteOptions struct {
-	Hash       []string
-	DeleteFile bool
-}
-
-type ClientGetOptions struct {
-	Hash string
-	Item *TorrentItem
-}
-
 // =========== AnimeEntity ===========
 
 type AnimeParseOverride struct {

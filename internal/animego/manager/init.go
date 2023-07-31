@@ -5,10 +5,10 @@ import "sync"
 var (
 	WG       *sync.WaitGroup
 	ReInitWG sync.WaitGroup
-	Conf     Downloader
+	Conf     DownloaderConf
 )
 
-type Downloader struct {
+type DownloaderConf struct {
 	UpdateDelaySecond      int
 	DownloadPath           string
 	SavePath               string
@@ -20,19 +20,19 @@ type Downloader struct {
 }
 
 type Options struct {
-	Downloader
+	DownloaderConf
 	WG *sync.WaitGroup
 }
 
 func Init(opts *Options) {
 	WG = opts.WG
-	Conf = opts.Downloader
+	Conf = opts.DownloaderConf
 }
 
 func ReInit(opts *Options) {
 	ReInitWG.Wait()
-	opts.Downloader.DownloadPath = Conf.DownloadPath
-	opts.Downloader.SavePath = Conf.SavePath
+	opts.DownloaderConf.DownloadPath = Conf.DownloadPath
+	opts.DownloaderConf.SavePath = Conf.SavePath
 
-	Conf = opts.Downloader
+	Conf = opts.DownloaderConf
 }

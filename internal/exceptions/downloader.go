@@ -2,19 +2,11 @@ package exceptions
 
 import "fmt"
 
-type ErrDownloader struct {
-	Client  string
-	Message string
-}
-
-func (e ErrDownloader) Error() string {
-	return fmt.Sprintf("%s 下载器错误: %s", e.Client, e.Message)
-}
-
-type ErrDownloaderNoConnected struct {
+type ErrClientExistItem struct {
 	Client string
+	Name   string
 }
 
-func (e ErrDownloaderNoConnected) Error() string {
-	return fmt.Sprintf("未连接到 %s 下载器", e.Client)
+func (e ErrClientExistItem) Error() string {
+	return fmt.Sprintf("%s 正在下载: %s", e.Client, e.Name)
 }

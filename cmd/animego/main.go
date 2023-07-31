@@ -17,8 +17,6 @@ import (
 	anidataThemoviedb "github.com/wetor/AnimeGo/internal/animego/anidata/themoviedb"
 	"github.com/wetor/AnimeGo/internal/animego/anisource"
 	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
-	"github.com/wetor/AnimeGo/internal/animego/downloader"
-	"github.com/wetor/AnimeGo/internal/animego/downloader/qbittorrent"
 	feedPlugin "github.com/wetor/AnimeGo/internal/animego/feed/plugin"
 	"github.com/wetor/AnimeGo/internal/animego/filter"
 	"github.com/wetor/AnimeGo/internal/animego/manager"
@@ -37,6 +35,7 @@ import (
 	_ "github.com/wetor/AnimeGo/internal/web/docs"
 	"github.com/wetor/AnimeGo/internal/web/websocket"
 	"github.com/wetor/AnimeGo/pkg/cache"
+	"github.com/wetor/AnimeGo/pkg/client/qbittorrent"
 	pkgLog "github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/request"
 	"github.com/wetor/AnimeGo/pkg/torrent"
@@ -162,18 +161,15 @@ func Main() {
 
 	// ===============================================================================================================
 	// 初始化并连接下载器
-	downloader.Init(&downloader.Options{
+	qbittorrentSrv := qbittorrent.NewQBittorrent(&qbittorrent.Options{
+		Url:                  config.Setting.Client.QBittorrent.Url,
+		Username:             config.Setting.Client.QBittorrent.Username,
+		Password:             config.Setting.Client.QBittorrent.Password,
+		DownloadPath:         config.Setting.Client.QBittorrent.DownloadPath,
 		ConnectTimeoutSecond: config.Advanced.Client.ConnectTimeoutSecond,
 		CheckTimeSecond:      config.Advanced.Client.CheckTimeSecond,
 		RetryConnectNum:      config.Advanced.Client.RetryConnectNum,
 		WG:                   &WG,
-	})
-	qbtConf := config.Setting.Client.QBittorrent
-	qbittorrentSrv := qbittorrent.NewQBittorrent(&qbittorrent.Options{
-		Url:          qbtConf.Url,
-		Username:     qbtConf.Username,
-		Password:     qbtConf.Password,
-		DownloadPath: qbtConf.DownloadPath,
 	})
 	qbittorrentSrv.Start(ctx)
 
@@ -217,7 +213,7 @@ func Main() {
 	// ===============================================================================================================
 	// 初始化manager配置
 	manager.Init(&manager.Options{
-		Downloader: manager.Downloader{
+		DownloaderConf: manager.DownloaderConf{
 			UpdateDelaySecond:      config.UpdateDelaySecond,
 			DownloadPath:           config.DownloadPath,
 			SavePath:               config.SavePath,

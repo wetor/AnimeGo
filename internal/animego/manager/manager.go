@@ -14,6 +14,7 @@ import (
 	"github.com/wetor/AnimeGo/internal/animego/downloader"
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/pkg/client"
 	"github.com/wetor/AnimeGo/pkg/exceptions"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/utils"
@@ -35,7 +36,7 @@ const (
 )
 
 type Manager struct {
-	client api.Downloader
+	client api.Client
 	cache  api.Cacher
 	rename api.Renamer
 
@@ -57,7 +58,7 @@ type Manager struct {
 //	@param cache api.Cacher 缓存
 //	@param rename api.Renamer 重命名
 //	@return *Manager
-func NewManager(client api.Downloader, cache api.Cacher, rename api.Renamer) *Manager {
+func NewManager(client api.Client, cache api.Cacher, rename api.Renamer) *Manager {
 	m := &Manager{
 		client:           client,
 		cache:            cache,
@@ -101,7 +102,7 @@ func (m *Manager) loadCache() {
 }
 
 func (m *Manager) Delete(hash []string) {
-	err := m.client.Delete(&models.ClientDeleteOptions{
+	err := m.client.Delete(&client.DeleteOptions{
 		Hash:       hash,
 		DeleteFile: true,
 	})
@@ -143,7 +144,7 @@ func (m *Manager) download(anime *models.AnimeEntity) {
 		}
 	}
 	log.Infof("开始下载「%s」", name)
-	err := m.client.Add(&models.ClientAddOptions{
+	err := m.client.Add(&client.AddOptions{
 		Url:         anime.Torrent.Url,
 		File:        anime.Torrent.File,
 		SavePath:    m.client.Config().DownloadPath,
@@ -195,7 +196,7 @@ func (m *Manager) Start(ctx context.Context) {
 				}()
 				select {
 				case <-ctx.Done():
-					log.Debugf("正常退出 manager downloader")
+					log.Debugf("正常退出 manager cache")
 					exit = true
 					return
 				case download := <-m.downloadChan:
@@ -356,14 +357,14 @@ func (m *Manager) UpdateList() {
 	defer m.Unlock()
 
 	// 获取客户端下载列表
-	items, err := m.client.List(&models.ClientListOptions{
+	items, err := m.client.List(&client.ListOptions{
 		Category: Conf.Category,
 	})
 	if err != nil {
 		m.addError(err)
 		return
 	}
-	hash2item := make(map[string]*models.TorrentItem)
+	hash2item := make(map[string]*client.TorrentItem)
 	for _, item := range items {
 		hash2item[item.Hash] = item
 		if state := downloader.StateMap(item.State); state != downloader.StateComplete &&
@@ -418,7 +419,7 @@ func (m *Manager) UpdateList() {
 					// 重命名完成
 					if status.Renamed {
 						// 删除已完成的列表记录
-						err = m.client.Delete(&models.ClientDeleteOptions{
+						err = m.client.Delete(&client.DeleteOptions{
 							Hash:       []string{status.Hash},
 							DeleteFile: false,
 						})

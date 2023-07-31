@@ -1,4 +1,4 @@
-package manager_test
+package qbittorrent
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"sync"
 
 	"github.com/pkg/errors"
-	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/pkg/client"
 	"github.com/wetor/AnimeGo/pkg/utils"
 	"github.com/wetor/AnimeGo/pkg/xpath"
 )
@@ -38,23 +38,29 @@ var defaultUpdateList = func(m *ClientMock) {
 	}
 }
 
+type ClientMockOptions struct {
+	DownloadPath string
+	UpdateList   func(m *ClientMock)
+}
+
 type ClientMock struct {
-	name2item  map[string]*models.TorrentItem
-	name2hash  map[string]string
-	hash2name  map[string]string
-	updateList func(m *ClientMock)
-	errorFlag  map[string]struct{}
+	name2item map[string]*client.TorrentItem
+	name2hash map[string]string
+	hash2name map[string]string
+	errorFlag map[string]struct{}
+	conf      ClientMockOptions
 	sync.Mutex
 }
 
-func (m *ClientMock) MockInit(updateList func(m *ClientMock)) {
-	m.name2item = make(map[string]*models.TorrentItem)
+func (m *ClientMock) MockInit(opts ClientMockOptions) {
+	m.conf = opts
+
+	m.name2item = make(map[string]*client.TorrentItem)
 	m.name2hash = make(map[string]string)
 	m.hash2name = make(map[string]string)
-	if updateList == nil {
-		updateList = defaultUpdateList
+	if m.conf.UpdateList == nil {
+		m.conf.UpdateList = defaultUpdateList
 	}
-	m.updateList = updateList
 	m.errorFlag = make(map[string]struct{})
 }
 
@@ -74,7 +80,7 @@ func (m *ClientMock) MockGetError(name string) bool {
 }
 
 func (m *ClientMock) MockSetUpdateList(updateList func(m *ClientMock)) {
-	m.updateList = updateList
+	m.conf.UpdateList = updateList
 }
 
 func (m *ClientMock) MockAddName(name, hash string, src []string) {
@@ -88,22 +94,26 @@ func (m *ClientMock) MockAddName(name, hash string, src []string) {
 	m.name2hash[name] = hash
 	m.hash2name[hash] = name
 
-	err := utils.CreateMutiDir(xpath.Join(DownloadPath, xpath.Dir(src[0])))
+	err := utils.CreateMutiDir(xpath.Join(m.conf.DownloadPath, xpath.Dir(src[0])))
 	if err != nil {
 		panic(err)
 	}
 	for _, s := range src {
-		err = os.WriteFile(xpath.Join(DownloadPath, s), []byte{}, os.ModePerm)
+		err = os.WriteFile(xpath.Join(m.conf.DownloadPath, s), []byte{}, os.ModePerm)
 		if err != nil {
 			panic(err)
 		}
 	}
 }
 
-func (m *ClientMock) Config() *models.ClientConfig {
-	return &models.ClientConfig{
-		DownloadPath: DownloadPath,
+func (m *ClientMock) Config() *client.Config {
+	return &client.Config{
+		DownloadPath: m.conf.DownloadPath,
 	}
+}
+
+func (m *ClientMock) Name() string {
+	return "MockClient"
 }
 
 func (m *ClientMock) Connected() bool {
@@ -116,7 +126,7 @@ func (m *ClientMock) Connected() bool {
 func (m *ClientMock) update() {
 	m.Lock()
 	defer m.Unlock()
-	m.updateList(m)
+	m.conf.UpdateList(m)
 }
 
 func (m *ClientMock) Start(ctx context.Context) {
@@ -133,7 +143,7 @@ func (m *ClientMock) Start(ctx context.Context) {
 	}()
 }
 
-func (m *ClientMock) List(opt *models.ClientListOptions) ([]*models.TorrentItem, error) {
+func (m *ClientMock) List(opt *client.ListOptions) ([]*client.TorrentItem, error) {
 	m.Lock()
 	defer m.Unlock()
 
@@ -141,14 +151,14 @@ func (m *ClientMock) List(opt *models.ClientListOptions) ([]*models.TorrentItem,
 		return nil, errors.New(ErrorListFailed)
 	}
 
-	list := make([]*models.TorrentItem, 0, len(m.name2item))
+	list := make([]*client.TorrentItem, 0, len(m.name2item))
 	for _, item := range m.name2item {
 		list = append(list, item)
 	}
 	return list, nil
 }
 
-func (m *ClientMock) Add(opt *models.ClientAddOptions) error {
+func (m *ClientMock) Add(opt *client.AddOptions) error {
 	m.Lock()
 	defer m.Unlock()
 
@@ -156,7 +166,7 @@ func (m *ClientMock) Add(opt *models.ClientAddOptions) error {
 		return errors.New(ErrorAddFailed)
 	}
 
-	m.name2item[opt.Rename] = &models.TorrentItem{
+	m.name2item[opt.Rename] = &client.TorrentItem{
 		ContentPath: opt.Rename,
 		Hash:        m.name2hash[opt.Rename],
 		Name:        opt.Rename,
@@ -166,7 +176,7 @@ func (m *ClientMock) Add(opt *models.ClientAddOptions) error {
 	return nil
 }
 
-func (m *ClientMock) Delete(opt *models.ClientDeleteOptions) error {
+func (m *ClientMock) Delete(opt *client.DeleteOptions) error {
 	m.Lock()
 	defer m.Unlock()
 

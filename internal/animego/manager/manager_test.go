@@ -18,6 +18,7 @@ import (
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/pkg/cache"
+	"github.com/wetor/AnimeGo/pkg/client/qbittorrent"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/utils"
 	"github.com/wetor/AnimeGo/pkg/xpath"
@@ -32,7 +33,7 @@ const (
 )
 
 var (
-	qbt          *ClientMock
+	qbt          *qbittorrent.ClientMock
 	rename       *renamer.Manager
 	mgr          *manager.Manager
 	renamePlugin *renamerPlugin.Rename
@@ -55,10 +56,10 @@ func TestMain(m *testing.M) {
 		Path:  assets.TestPluginPath(),
 		Debug: true,
 	})
-	qbt = &ClientMock{}
+	qbt = &qbittorrent.ClientMock{}
 	wg := sync.WaitGroup{}
 	manager.Init(&manager.Options{
-		Downloader: manager.Downloader{
+		DownloaderConf: manager.DownloaderConf{
 			UpdateDelaySecond:      1,
 			DownloadPath:           DownloadPath,
 			SavePath:               SavePath,
@@ -144,7 +145,9 @@ func initTest() (*sync.WaitGroup, func()) {
 	renamer.WG = &wg
 	manager.WG = &wg
 	ctx, cancel := context.WithCancel(context.Background())
-	qbt.MockInit(nil)
+	qbt.MockInit(qbittorrent.ClientMockOptions{
+		DownloadPath: DownloadPath,
+	})
 	qbt.Start(ctx)
 	rename.Start(ctx)
 	mgr.Start(ctx)
@@ -332,12 +335,12 @@ func TestManager_WaitClient(t *testing.T) {
 	go func() {
 		{
 			log.Info("Client离线")
-			qbt.MockSetError(ErrorConnectedFailed, true)
+			qbt.MockSetError(qbittorrent.ErrorConnectedFailed, true)
 		}
 		time.Sleep(2*time.Second + 300*time.Millisecond)
 		{
 			log.Info("Client恢复")
-			qbt.MockSetError(ErrorConnectedFailed, false)
+			qbt.MockSetError(qbittorrent.ErrorConnectedFailed, false)
 		}
 	}()
 	manager.Conf.Rename = "link_delete"
@@ -391,12 +394,12 @@ func TestManager_WaitClient_FullChan(t *testing.T) {
 	go func() {
 		{
 			log.Info("Client离线")
-			qbt.MockSetError(ErrorConnectedFailed, true)
+			qbt.MockSetError(qbittorrent.ErrorConnectedFailed, true)
 		}
 		time.Sleep(4*time.Second + 500*time.Millisecond)
 		{
 			log.Info("Client恢复")
-			qbt.MockSetError(ErrorConnectedFailed, false)
+			qbt.MockSetError(qbittorrent.ErrorConnectedFailed, false)
 		}
 	}()
 	manager.Conf.Rename = "move"
@@ -514,7 +517,7 @@ func TestManager_AddFailed(t *testing.T) {
 	log.Infof("Hook utils.Unix() = %v", HookTimeUnix)
 	patches := test.HookSingle(utils.Unix, MockUnix1)
 
-	qbt.MockSetError(ErrorAddFailed, true)
+	qbt.MockSetError(qbittorrent.ErrorAddFailed, true)
 	{
 		log.Info("下载 1, 添加失败")
 		file1, _, _ = download("动画1", 1, []int{1})
@@ -522,7 +525,7 @@ func TestManager_AddFailed(t *testing.T) {
 
 	time.Sleep(1*time.Second + 300*time.Millisecond)
 
-	qbt.MockSetError(ErrorAddFailed, false)
+	qbt.MockSetError(qbittorrent.ErrorAddFailed, false)
 	{
 		//log.Info("下载 1, 重复下载")
 		//file1, _, _ = download("动画1", 1, []int{1})
