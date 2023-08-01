@@ -120,6 +120,18 @@ func IsExist(path string) bool {
 	return true
 }
 
+func IsExistDir(filepath string) (exist bool, dir bool) {
+	s, err := os.Stat(filepath)
+	exist = true
+	if err != nil {
+		exist = os.IsExist(err)
+	}
+	if exist {
+		dir = s.IsDir()
+	}
+	return
+}
+
 // FileSize 获取文件大小，文件不存返回-1
 func FileSize(path string) int64 {
 	s, err := os.Stat(path) //os.Stat获取文件信息
