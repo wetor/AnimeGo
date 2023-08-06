@@ -1,4 +1,24 @@
 definitions:
+  models.AddItemsRequest:
+    properties:
+      data:
+        items:
+          properties:
+            info:
+              additionalProperties: {}
+              type: object
+            torrent:
+              type: string
+          required:
+          - torrent
+          type: object
+        type: array
+      source:
+        type: string
+    required:
+    - data
+    - source
+    type: object
   models.BoltGetResponse:
     properties:
       bucket:
@@ -252,6 +272,34 @@ paths:
       summary: 更新设置
       tags:
       - config
+  /api/download/manager:
+    post:
+      consumes:
+      - application/json
+      description: 添加下载项到AnimeGo
+      parameters:
+      - description: 下载项信息
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/models.AddItemsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Response'
+        "300":
+          description: Multiple Choices
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: 添加下载项
+      tags:
+      - manager
   /api/plugin/config:
     get:
       consumes:

@@ -307,6 +307,51 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/download/manager": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "添加下载项到AnimeGo",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "manager"
+                ],
+                "summary": "添加下载项",
+                "parameters": [
+                    {
+                        "description": "下载项信息",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.AddItemsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Response"
+                        }
+                    },
+                    "300": {
+                        "description": "Multiple Choices",
+                        "schema": {
+                            "$ref": "#/definitions/models.Response"
+                        }
+                    }
+                }
+            }
+        },
         "/api/plugin/config": {
             "get": {
                 "security": [
@@ -532,6 +577,36 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "models.AddItemsRequest": {
+            "type": "object",
+            "required": [
+                "data",
+                "source"
+            ],
+            "properties": {
+                "data": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "required": [
+                            "torrent"
+                        ],
+                        "properties": {
+                            "info": {
+                                "type": "object",
+                                "additionalProperties": {}
+                            },
+                            "torrent": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
+                "source": {
+                    "type": "string"
+                }
+            }
+        },
         "models.BoltGetResponse": {
             "type": "object",
             "properties": {

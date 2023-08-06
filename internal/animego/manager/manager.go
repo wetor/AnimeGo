@@ -320,7 +320,7 @@ func (m *Manager) DeleteCache(fullname string) {
 }
 
 func (m *Manager) isCompleted(status *models.DownloadStatus) bool {
-	return (status.Init && status.Seeded && status.Downloaded && status.Renamed && status.Scraped) ||
+	return (status.Seeded && status.Downloaded && status.Renamed && status.Scraped) ||
 		(status.State == downloader.StateNotFound)
 }
 

@@ -21,6 +21,7 @@ func InitRouter(r gin.IRouter) {
 	apiRoot.GET("/bolt/value", API.Bolt)
 	apiRoot.DELETE("/bolt/value", API.BoltDelete)
 
+	apiRoot.POST("/download/manager", API.AddItems)
 	wsRoot := r.Group("/websocket")
 	wsRoot.Use(KeyAuth())
 	wsRoot.GET("/log", WS.Log)
