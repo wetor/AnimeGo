@@ -4,16 +4,17 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"os"
+	"sync"
+	"testing"
+	"time"
+
 	"github.com/wetor/AnimeGo/internal/animego/downloader"
 	"github.com/wetor/AnimeGo/internal/animego/manager"
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/pkg/client"
 	"github.com/wetor/AnimeGo/pkg/client/qbittorrent"
 	"github.com/wetor/AnimeGo/pkg/log"
-	"os"
-	"sync"
-	"testing"
-	"time"
 )
 
 const (
@@ -60,6 +61,22 @@ func initTest() (*sync.WaitGroup, func()) {
 	ctx, cancel := context.WithCancel(context.Background())
 	qbt.MockInit(qbittorrent.ClientMockOptions{
 		DownloadPath: DownloadPath,
+		UpdateList: func(m *qbittorrent.ClientMock) {
+			for name, item := range m.Name2item {
+				if item.State == qbittorrent.QbtDownloading {
+					item.Progress += 0.1
+					if item.Progress >= 0.5 {
+						item.State = qbittorrent.QbtUploading
+					}
+				} else if item.State == qbittorrent.QbtUploading {
+					item.Progress += 0.1
+					if item.Progress >= 1 {
+						item.State = qbittorrent.QbtCheckingUP
+					}
+				}
+				log.Debugf("%s: %v", name, int((item.Progress+0.005)*100))
+			}
+		},
 	})
 	qbt.Start(ctx)
 	dmgr.Start(ctx)
@@ -70,7 +87,7 @@ func TestManager_UpdateList(t *testing.T) {
 	wg, cancel := initTest()
 
 	go func() {
-		time.Sleep(5 * time.Second)
+		time.Sleep(13 * time.Second)
 		cancel()
 	}()
 	hash := "326eb2aa240d4ebd8902489b031dc532"
@@ -83,4 +100,5 @@ func TestManager_UpdateList(t *testing.T) {
 		panic(err)
 	}
 	wg.Wait()
+	time.Sleep(1 * time.Second)
 }

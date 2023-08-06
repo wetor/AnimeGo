@@ -44,6 +44,7 @@ func (m *Manager) addError(err error) {
 }
 
 func (m *Manager) transition(oldTorrentState, newTorrentState models.TorrentState) NotifyState {
+	log.Debugf("torrent %v -> %v", oldTorrentState, newTorrentState)
 	result := NotifyOnNone
 	if newTorrentState == StateError {
 		// error
@@ -107,6 +108,7 @@ func (m *Manager) transition(oldTorrentState, newTorrentState models.TorrentStat
 }
 
 func (m *Manager) notify(oldNotifyState, newNotifyState NotifyState, event []models.ClientEvent) error {
+	log.Debugf("notify %v -> %v", oldNotifyState, newNotifyState)
 	if newNotifyState == NotifyOnNone {
 		return nil
 	}
@@ -223,6 +225,7 @@ func (m *Manager) UpdateList() {
 			itemState.Notify = notify
 			itemState.Torrent = state
 		}
+		m.stateList[item.Hash] = itemState
 	}
 }
 
