@@ -66,6 +66,11 @@ func loadBuiltinPlugin(src string) {
 	}
 }
 
+func IsBuiltinPlugin(name string) bool {
+	_, ok := BuiltinPlugin[name]
+	return ok
+}
+
 func GetBuiltinPlugin(name string) *string {
 	return BuiltinPlugin[name]
 }

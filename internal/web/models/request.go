@@ -61,6 +61,10 @@ type ConfigPutRequest struct {
 	ConfigRaw *string         `json:"config_raw"`
 }
 
+type ConfigFilePutRequest struct {
+	Backup bool `json:"backup" form:"backup"`
+}
+
 type BoltRequest struct {
 	DB string `json:"db" form:"db" default:"bolt"` // bolt, bolt_sub
 }
@@ -89,4 +93,8 @@ type AddItemsRequest struct {
 		Torrent string         `json:"torrent" binding:"required"`
 		Info    map[string]any `json:"info"`
 	} `json:"data" binding:"required"`
+}
+
+type PathRequest struct {
+	Path string `json:"path" form:"path"`
 }

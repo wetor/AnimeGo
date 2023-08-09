@@ -76,14 +76,6 @@ func (a *Api) checkRequest(c *gin.Context, data any) bool {
 		c.JSON(webModels.Fail("Uri参数错误"))
 		return false
 	}
-
-	key, has := c.Get("access_key")
-	localKey := utils.Sha256(a.accessKey)
-	if has && key != localKey {
-		log.Warnf("Access key错误")
-		c.JSON(webModels.Fail("Access key错误"))
-		return false
-	}
 	return true
 }
 

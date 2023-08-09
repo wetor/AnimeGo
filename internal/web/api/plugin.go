@@ -2,62 +2,114 @@ package api
 
 import (
 	"encoding/base64"
-	"fmt"
+	"github.com/wetor/AnimeGo/assets"
+	"net/http"
 	"os"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/wetor/AnimeGo/internal/animego/feed/rss"
-	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/constant"
 	webModels "github.com/wetor/AnimeGo/internal/web/models"
 	"github.com/wetor/AnimeGo/pkg/log"
+	"github.com/wetor/AnimeGo/pkg/utils"
 	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
-// Rss godoc
+// PluginDirGet godoc
 //
-//	@Summary		发送下载项
-//	@Description	将待下载项组合成rss发送给AnimeGo
+//	@Summary		获取插件文件列表
+//	@Description	获取插件文件夹中指定文件夹的文件列表
 //	@Tags			plugin
 //	@Accept			json
 //	@Produce		json
-//	@Param			rss	body		webModels.SelectEpRequest	true	"组合的rss信息"
-//	@Success		200	{object}	webModels.Response
-//	@Failure		300	{object}	webModels.Response
+//	@Param			path	query		string	true	"路径"
+//	@Success		200		{object}	webModels.Response{data=webModels.DirResponse}
+//	@Failure		300		{object}	webModels.Response
 //	@Security		ApiKeyAuth
-//	@Router			/api/rss [post]
-func (a *Api) Rss(c *gin.Context) {
-	var request webModels.SelectEpRequest
-	if !a.checkRequest(c, &request) {
-		return
+//	@Router			/api/plugin/manager/dir [get]
+func (a *Api) PluginDirGet(c *gin.Context) {
+	path := c.GetString("path")
+	isPluginRoot := false
+	if len(path) == 0 || path == "/" {
+		isPluginRoot = true
 	}
-	reqRss := rss.NewRss(&rss.Options{Url: request.Rss.Url})
+	pluginPath := xpath.Join(constant.PluginPath, path)
 
-	items, err := reqRss.Parse()
+	dirs, err := os.ReadDir(pluginPath)
 	if err != nil {
-		c.JSON(webModels.Fail(err.Error()))
+		log.DebugErr(err)
+		c.JSON(webModels.Fail("读取文件夹失败"))
 		return
 	}
-	if request.IsSelectEp {
-		set := make(map[string]bool)
-		for _, item := range request.EpLinks {
-			set[item] = true
+	files := make([]webModels.File, 0, len(dirs))
+	for _, f := range dirs {
+		info, err := f.Info()
+		if err != nil {
+			log.DebugErr(err)
+			continue
 		}
-		selectItems := make([]*models.FeedItem, 0, len(request.EpLinks))
-		for _, item := range items {
-			if _, has := set[item.Url]; has {
-				selectItems = append(selectItems, item)
+		file := webModels.File{
+			Name:      f.Name(),
+			IsDir:     f.IsDir(),
+			Size:      info.Size(),
+			ModTime:   info.ModTime(),
+			CanRead:   true,
+			CanWrite:  true,
+			CanDelete: true,
+		}
+		if isPluginRoot {
+			ok := false
+			file.Comment, ok = constant.PluginDirComment[f.Name()]
+			if ok {
+				file.CanWrite = false
+				file.CanDelete = false
 			}
 		}
-		items = selectItems
+		if assets.IsBuiltinPlugin(f.Name()) {
+			file.CanWrite = false
+			file.CanDelete = false
+		}
+		if f.Name() == "README.md" {
+			file.CanWrite = false
+			file.CanDelete = false
+		}
+		files = append(files, file)
 	}
-	err = a.filterManager.Update(a.ctx, items, false, true)
-	if err != nil {
-		c.JSON(webModels.Fail(err.Error()))
+	c.JSON(webModels.Succ("获取成功", webModels.DirResponse{
+		Path:  path,
+		Files: files,
+	}))
+}
+
+// PluginFileGet godoc
+//
+//	@Summary		获取插件文件内容
+//	@Description	获取插件文件夹中指定文件的内容
+//	@Tags			plugin
+//	@Accept			json
+//	@Produce		plain
+//	@Param			path	query		string	true	"路径"
+//	@Success		200		{object}	string
+//	@Failure		300		{object}	webModels.Response
+//	@Security		ApiKeyAuth
+//	@Router			/api/plugin/manager/file [get]
+func (a *Api) PluginFileGet(c *gin.Context) {
+	path := c.GetString("path")
+	pluginFile := xpath.Join(constant.PluginPath, path)
+	if !utils.IsExist(pluginFile) {
+		log.Warnf("文件不存在: " + pluginFile)
+		c.JSON(webModels.Fail("文件不存在: " + path))
 		return
 	}
-	c.JSON(webModels.Succ(fmt.Sprintf("开始处理%d个下载项", len(items))))
+	data, err := os.ReadFile(pluginFile)
+	if err != nil {
+		log.DebugErr(err)
+		c.JSON(webModels.Fail("打开文件失败: " + path))
+		return
+	}
+	c.Writer.Header().Set("Content-Type", "text/plain")
+	c.String(http.StatusOK, string(data))
 }
 
 // PluginConfigPost godoc

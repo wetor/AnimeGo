@@ -43,6 +43,28 @@ definitions:
     type: object
   models.ConfigPutRequest:
     type: object
+  models.DirResponse:
+    properties:
+      files:
+        items:
+          $ref: '#/definitions/models.File'
+        type: array
+      path:
+        type: string
+    type: object
+  models.File:
+    properties:
+      comment:
+        type: string
+      is_dir:
+        type: boolean
+      modify_time:
+        type: string
+      name:
+        type: string
+      size:
+        type: integer
+    type: object
   models.PluginConfigUploadRequest:
     properties:
       data:
@@ -272,6 +294,59 @@ paths:
       summary: 更新设置
       tags:
       - config
+  /api/config/file:
+    get:
+      consumes:
+      - application/json
+      description: 获取AnimeGo的配置文件文本内容
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Response'
+        "300":
+          description: Multiple Choices
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: 获取配置文件
+      tags:
+      - config
+    put:
+      consumes:
+      - text/plain
+      description: 写入AnimeGo的配置文件文本内容
+      parameters:
+      - description: 备份旧的配置
+        in: query
+        name: backup
+        required: true
+        type: boolean
+      - description: 配置文件文本
+        in: body
+        name: config
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Response'
+        "300":
+          description: Multiple Choices
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: 写入配置文件
+      tags:
+      - config
   /api/manager:
     post:
       consumes:
@@ -362,6 +437,65 @@ paths:
       summary: 发送插件配置
       tags:
       - plugin
+  /api/plugin/manager/dir:
+    get:
+      consumes:
+      - application/json
+      description: 获取插件文件夹中指定文件夹的文件列表
+      parameters:
+      - description: 路径
+        in: query
+        name: path
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            allOf:
+            - $ref: '#/definitions/models.Response'
+            - properties:
+                data:
+                  $ref: '#/definitions/models.DirResponse'
+              type: object
+        "300":
+          description: Multiple Choices
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: 获取插件文件列表
+      tags:
+      - plugin
+  /api/plugin/manager/file:
+    get:
+      consumes:
+      - application/json
+      description: 获取插件文件夹中指定文件的内容
+      parameters:
+      - description: 路径
+        in: query
+        name: path
+        required: true
+        type: string
+      produces:
+      - text/plain
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+        "300":
+          description: Multiple Choices
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: 获取插件文件内容
+      tags:
+      - plugin
   /api/rss:
     post:
       consumes:
@@ -389,7 +523,7 @@ paths:
       - ApiKeyAuth: []
       summary: 发送下载项
       tags:
-      - plugin
+      - rss
   /ping:
     get:
       consumes:

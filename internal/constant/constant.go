@@ -31,9 +31,18 @@ var (
 	PluginTemplatePython   = "python"
 	PluginTemplateFilter   = "filter"
 	PluginTemplateFeed     = "feed"
+	PluginTemplateParser   = "parser"
 	PluginTemplateRename   = "rename"
 	PluginTemplateSchedule = "schedule"
 )
+
+var PluginDirComment = map[string]string{
+	PluginTemplateFilter:   "过滤器插件",
+	PluginTemplateFeed:     "订阅插件",
+	PluginTemplateParser:   "标题解析插件",
+	PluginTemplateRename:   "重命名插件",
+	PluginTemplateSchedule: "定时任务插件",
+}
 
 type Options struct {
 	DataPath string

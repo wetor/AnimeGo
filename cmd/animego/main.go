@@ -307,10 +307,11 @@ func Main() {
 				WG:     &WG,
 				Notify: notify,
 			},
-			Host:  config.WebApi.Host,
-			Port:  config.WebApi.Port,
-			WG:    &WG,
-			Debug: debug,
+			AccessKey: config.WebApi.AccessKey,
+			Host:      config.WebApi.Host,
+			Port:      config.WebApi.Port,
+			WG:        &WG,
+			Debug:     debug,
 		})
 		// 启动Web API
 		web.Run(ctx)

@@ -9,9 +9,11 @@ import (
 
 var (
 	Debug bool
-	Host  string
-	Port  int
-	WG    *sync.WaitGroup
+
+	AccessKey string
+	Host      string
+	Port      int
+	WG        *sync.WaitGroup
 
 	API *api.Api
 	WS  *websocket.WebSocket
@@ -20,6 +22,7 @@ var (
 type Options struct {
 	ApiOptions       *api.Options
 	WebSocketOptions *websocket.Options
+	AccessKey        string
 	Host             string
 	Port             int
 	WG               *sync.WaitGroup
@@ -30,6 +33,7 @@ type Options struct {
 
 func Init(opts *Options) {
 	Debug = opts.Debug
+	AccessKey = opts.AccessKey
 	Host = opts.Host
 	Port = opts.Port
 	WG = opts.WG

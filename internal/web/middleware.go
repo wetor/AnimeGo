@@ -13,8 +13,41 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/wetor/AnimeGo/internal/web/models"
+	"github.com/wetor/AnimeGo/pkg/utils"
 	"github.com/wetor/AnimeGo/pkg/xpath"
 )
+
+func CheckPath() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		path := ctx.Query("path")
+		if len(path) == 0 {
+			path = ctx.PostForm("path")
+		}
+		if len(path) == 0 {
+			var request models.PathRequest
+			err := ctx.ShouldBindJSON(&request)
+			if err != nil {
+				ctx.JSON(models.ErrIpt("参数解析错误"))
+				ctx.Abort()
+				return
+			}
+			path = request.Path
+		}
+		if len(path) == 0 {
+			ctx.JSON(models.ErrIpt("缺少参数: path"))
+			ctx.Abort()
+			return
+		}
+		path = xpath.P(path)
+		if strings.Contains(path, "../") {
+			ctx.JSON(models.ErrIpt("路径参数禁止使用 '../'"))
+			ctx.Abort()
+			return
+		}
+		ctx.Set("path", path)
+		ctx.Next()
+	}
+}
 
 // KeyAuth 鉴权
 func KeyAuth() gin.HandlerFunc {
@@ -28,7 +61,12 @@ func KeyAuth() gin.HandlerFunc {
 				return
 			}
 		}
-		ctx.Set("access_key", tokenRaw)
+		localKey := utils.Sha256(AccessKey)
+		if tokenRaw != localKey {
+			ctx.JSON(models.ErrJwt("Access key错误"))
+			ctx.Abort()
+			return
+		}
 		ctx.Next()
 	}
 }

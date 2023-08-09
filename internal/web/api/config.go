@@ -2,6 +2,8 @@ package api
 
 import (
 	"encoding/base64"
+	"io"
+	"net/http"
 	"os"
 
 	"github.com/gin-gonic/gin"
@@ -11,6 +13,72 @@ import (
 	"github.com/wetor/AnimeGo/pkg/json"
 	"github.com/wetor/AnimeGo/pkg/log"
 )
+
+// ConfigFileGet godoc
+//
+//	@Summary		获取配置文件
+//	@Description	获取AnimeGo的配置文件文本内容
+//	@Tags			config
+//	@Accept			json
+//	@Produce		plain
+//	@Success		200	{object}	webModels.Response
+//	@Failure		300	{object}	webModels.Response
+//	@Security		ApiKeyAuth
+//	@Router			/api/config/file [get]
+func (a *Api) ConfigFileGet(c *gin.Context) {
+	data, err := os.ReadFile(configs.ConfigFile)
+	if err != nil {
+		log.DebugErr(err)
+		c.JSON(webModels.Fail("打开配置文件失败"))
+		return
+	}
+	c.Writer.Header().Set("Content-Type", "text/plain")
+	c.String(http.StatusOK, string(data))
+}
+
+// ConfigFilePut godoc
+//
+//	@Summary		写入配置文件
+//	@Description	写入AnimeGo的配置文件文本内容
+//	@Tags			config
+//	@Accept			plain
+//	@Produce		json
+//	@Param			backup	query		bool	true	"备份旧的配置"
+//	@Param			config	body		string	true	"配置文件文本"
+//	@Success		200		{object}	webModels.Response
+//	@Failure		300		{object}	webModels.Response
+//	@Security		ApiKeyAuth
+//	@Router			/api/config/file [put]
+func (a *Api) ConfigFilePut(c *gin.Context) {
+	var request webModels.ConfigFilePutRequest
+	if !a.checkRequest(c, &request) {
+		return
+	}
+	body, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		log.DebugErr(err)
+		c.JSON(webModels.Fail("读取文件参数失败"))
+	}
+	defer c.Request.Body.Close()
+
+	if request.Backup {
+		err = configs.BackupConfig(configs.ConfigFile, "web-backup")
+		if err != nil {
+			log.DebugErr(err)
+			c.JSON(webModels.Fail("备份配置文件失败"))
+			return
+		}
+	}
+
+	err = os.WriteFile(configs.ConfigFile, body, 0644)
+	if err != nil {
+		log.DebugErr(err)
+		c.JSON(webModels.Fail("写入配置文件失败"))
+		return
+	}
+	// TODO 重载配置
+	c.JSON(webModels.Succ("更新成功，需要重启AnimeGo以应用配置"))
+}
 
 // ConfigGet godoc
 //
