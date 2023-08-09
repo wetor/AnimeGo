@@ -1,0 +1,36 @@
+FROM golang:1.20-alpine AS builder
+
+ENV GO111MODULE=on \
+    GOPROXY=https://goproxy.cn,direct \
+    CGO_ENABLED=0 \
+    GOOS=linux \
+    GOARCH=amd64
+
+WORKDIR /build
+
+COPY . .
+
+RUN go generate ./...
+RUN go build -o AnimeGo cmd/animego/main.go
+
+
+FROM alpine:latest
+
+ENV LANG="C.UTF-8" \
+    ANIMEGO_CONFIG="/data/animego.yaml" \
+    ANIMEGO_DATA_PATH="/data" \
+    ANIMEGO_DOWNLOAD_PATH="/download" \
+    ANIMEGO_SAVE_PATH="/anime" \
+    ANIMEGO_CONFIG_BACKUP=1
+
+WORKDIR /app
+
+COPY --from=builder /build/AnimeGo /app
+
+ENTRYPOINT ["sh", "-c", "/app/AnimeGo"]
+
+EXPOSE 7991
+VOLUME ["/data", "/download", "/anime"]
+
+# docker build . -f Dockerfile-dev -t animego:dev
+# docker run -d --name AnimeGo -p 7991:7991 -v ./data:/data -e ANIMEGO_DEBUG=1 animego:dev

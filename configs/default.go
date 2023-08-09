@@ -127,9 +127,9 @@ func defaultAdvanced() {
 	defaultConfig.Advanced.Default.TMDBFailUseTitleSeason = true
 	defaultConfig.Advanced.Default.TMDBFailUseFirstSeason = true
 
-	defaultConfig.Advanced.Client.ConnectTimeoutSecond = 5
-	defaultConfig.Advanced.Client.RetryConnectNum = 10
-	defaultConfig.Advanced.Client.CheckTimeSecond = 30
+	defaultConfig.Advanced.Client.ConnectTimeoutSecond = 10
+	defaultConfig.Advanced.Client.RetryConnectNum = 3
+	defaultConfig.Advanced.Client.CheckTimeSecond = 60
 
 	defaultConfig.Advanced.Cache.MikanCacheHour = 7 * 24
 	defaultConfig.Advanced.Cache.BangumiCacheHour = 3 * 24
