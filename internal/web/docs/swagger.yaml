@@ -56,14 +56,32 @@ definitions:
     properties:
       comment:
         type: string
+      delete:
+        type: boolean
       is_dir:
         type: boolean
       modify_time:
-        type: string
+        type: integer
       name:
         type: string
+      read:
+        type: boolean
       size:
         type: integer
+      write:
+        type: boolean
+    type: object
+  models.NewPathRequest:
+    properties:
+      new_path:
+        type: string
+      path:
+        type: string
+    type: object
+  models.PathRequest:
+    properties:
+      path:
+        type: string
     type: object
   models.PluginConfigUploadRequest:
     properties:
@@ -469,6 +487,33 @@ paths:
       summary: 获取插件文件列表
       tags:
       - plugin
+    post:
+      consumes:
+      - application/json
+      description: 创建插件文件夹中的文件夹
+      parameters:
+      - description: 创建文件夹信息
+        in: body
+        name: path
+        required: true
+        schema:
+          $ref: '#/definitions/models.PathRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Response'
+        "300":
+          description: Multiple Choices
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: 创建文件夹
+      tags:
+      - plugin
   /api/plugin/manager/file:
     get:
       consumes:
@@ -494,6 +539,66 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: 获取插件文件内容
+      tags:
+      - plugin
+    post:
+      consumes:
+      - text/plain
+      description: 创建或修改插件文件夹中指定文件
+      parameters:
+      - description: 路径
+        in: query
+        name: path
+        required: true
+        type: string
+      - description: 文件内容
+        in: body
+        name: file
+        required: true
+        schema:
+          type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Response'
+        "300":
+          description: Multiple Choices
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: 创建或修改插件文件
+      tags:
+      - plugin
+  /api/plugin/manager/rename:
+    put:
+      consumes:
+      - application/json
+      description: 重命名插件文件夹中的文件或文件夹
+      parameters:
+      - description: 重命名信息
+        in: body
+        name: path
+        required: true
+        schema:
+          $ref: '#/definitions/models.NewPathRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Response'
+        "300":
+          description: Multiple Choices
+          schema:
+            $ref: '#/definitions/models.Response'
+      security:
+      - ApiKeyAuth: []
+      summary: 重命名文件或文件夹
       tags:
       - plugin
   /api/rss:

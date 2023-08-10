@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/wetor/AnimeGo/configs"
+	"github.com/wetor/AnimeGo/internal/constant"
 	webModels "github.com/wetor/AnimeGo/internal/web/models"
 	"github.com/wetor/AnimeGo/pkg/json"
 	"github.com/wetor/AnimeGo/pkg/log"
@@ -70,7 +71,7 @@ func (a *Api) ConfigFilePut(c *gin.Context) {
 		}
 	}
 
-	err = os.WriteFile(configs.ConfigFile, body, 0644)
+	err = os.WriteFile(configs.ConfigFile, body, constant.FilePerm)
 	if err != nil {
 		log.DebugErr(err)
 		c.JSON(webModels.Fail("写入配置文件失败"))
@@ -166,7 +167,7 @@ func (a *Api) ConfigPut(c *gin.Context) {
 				return
 			}
 		}
-		err = os.WriteFile(configs.ConfigFile, data, 0644)
+		err = os.WriteFile(configs.ConfigFile, data, constant.FilePerm)
 		if err != nil {
 			log.DebugErr(err)
 			c.JSON(webModels.Fail("写到文件 " + configs.ConfigFile + " 失败"))

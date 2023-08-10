@@ -13,6 +13,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/wetor/AnimeGo/internal/web/models"
+	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/utils"
 	"github.com/wetor/AnimeGo/pkg/xpath"
 )
@@ -38,13 +39,14 @@ func CheckPath() gin.HandlerFunc {
 			ctx.Abort()
 			return
 		}
-		path = xpath.P(path)
-		if strings.Contains(path, "../") {
-			ctx.JSON(models.ErrIpt("路径参数禁止使用 '../'"))
+		p, err := utils.CheckPath(path)
+		if err != nil {
+			log.DebugErr(err)
+			ctx.JSON(models.ErrIpt("路径参数错误"))
 			ctx.Abort()
 			return
 		}
-		ctx.Set("path", path)
+		ctx.Set("path", p)
 		ctx.Next()
 	}
 }

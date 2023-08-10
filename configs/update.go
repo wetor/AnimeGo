@@ -199,7 +199,7 @@ func update_110_120(file string) {
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
 	}
-	err = os.WriteFile(file, content, 0644)
+	err = os.WriteFile(file, content, constant.FilePerm)
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
 	}
@@ -241,7 +241,7 @@ func update_120_130(file string) {
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
 	}
-	err = os.WriteFile(file, content, 0644)
+	err = os.WriteFile(file, content, constant.FilePerm)
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
 	}
@@ -296,7 +296,7 @@ func update_130_140(file string) {
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
 	}
-	err = os.WriteFile(file, content, 0644)
+	err = os.WriteFile(file, content, constant.FilePerm)
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
 	}
@@ -335,7 +335,7 @@ func update_140_141(file string) {
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
 	}
-	err = os.WriteFile(file, content, 0644)
+	err = os.WriteFile(file, content, constant.FilePerm)
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
 	}
@@ -389,7 +389,7 @@ func update_141_150(file string) {
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
 	}
-	err = os.WriteFile(file, content, 0644)
+	err = os.WriteFile(file, content, constant.FilePerm)
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
 	}
@@ -423,7 +423,7 @@ func update_150_151(file string) {
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
 	}
-	err = os.WriteFile(file, content, 0644)
+	err = os.WriteFile(file, content, constant.FilePerm)
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
 	}
@@ -457,7 +457,7 @@ func update_151_152(file string) {
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
 	}
-	err = os.WriteFile(file, content, 0644)
+	err = os.WriteFile(file, content, constant.FilePerm)
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
 	}
@@ -491,7 +491,7 @@ func BackupConfig(file string, version string) error {
 		return err
 	}
 	out := xpath.Join(dir, name)
-	err = os.WriteFile(out, oldFile, 0644)
+	err = os.WriteFile(out, oldFile, constant.FilePerm)
 	if err != nil {
 		return err
 	}

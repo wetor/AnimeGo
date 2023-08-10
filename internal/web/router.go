@@ -14,9 +14,12 @@ func InitRouter(r gin.IRouter) {
 
 	apiRoot.POST("/plugin/config", API.PluginConfigPost)
 	apiRoot.GET("/plugin/config", API.PluginConfigGet)
-	pluginManager := apiRoot.Group("/plugin/manager", CheckPath())
-	pluginManager.GET("/dir", API.PluginDirGet)
-	pluginManager.GET("/file", API.PluginFileGet)
+	pluginManager := apiRoot.Group("/plugin/manager")
+	pluginManager.GET("/dir", CheckPath(), API.PluginDirGet)
+	pluginManager.POST("/dir", CheckPath(), API.PluginDirPost)
+	pluginManager.GET("/file", CheckPath(), API.PluginFileGet)
+	pluginManager.POST("/file", CheckPath(), API.PluginFilePost)
+	pluginManager.PUT("/rename", API.PluginRename)
 
 	apiRoot.GET("/config", API.ConfigGet)
 	apiRoot.PUT("/config", API.ConfigPut)

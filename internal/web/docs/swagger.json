@@ -563,6 +563,49 @@
                         }
                     }
                 }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "创建插件文件夹中的文件夹",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "plugin"
+                ],
+                "summary": "创建文件夹",
+                "parameters": [
+                    {
+                        "description": "创建文件夹信息",
+                        "name": "path",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.PathRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Response"
+                        }
+                    },
+                    "300": {
+                        "description": "Multiple Choices",
+                        "schema": {
+                            "$ref": "#/definitions/models.Response"
+                        }
+                    }
+                }
             }
         },
         "/api/plugin/manager/file": {
@@ -597,6 +640,101 @@
                         "description": "OK",
                         "schema": {
                             "type": "string"
+                        }
+                    },
+                    "300": {
+                        "description": "Multiple Choices",
+                        "schema": {
+                            "$ref": "#/definitions/models.Response"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "创建或修改插件文件夹中指定文件",
+                "consumes": [
+                    "text/plain"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "plugin"
+                ],
+                "summary": "创建或修改插件文件",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "路径",
+                        "name": "path",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "description": "文件内容",
+                        "name": "file",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Response"
+                        }
+                    },
+                    "300": {
+                        "description": "Multiple Choices",
+                        "schema": {
+                            "$ref": "#/definitions/models.Response"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/plugin/manager/rename": {
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "重命名插件文件夹中的文件或文件夹",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "plugin"
+                ],
+                "summary": "重命名文件或文件夹",
+                "parameters": [
+                    {
+                        "description": "重命名信息",
+                        "name": "path",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.NewPathRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.Response"
                         }
                     },
                     "300": {
@@ -833,17 +971,45 @@
                 "comment": {
                     "type": "string"
                 },
+                "delete": {
+                    "type": "boolean"
+                },
                 "is_dir": {
                     "type": "boolean"
                 },
                 "modify_time": {
-                    "type": "string"
+                    "type": "integer"
                 },
                 "name": {
                     "type": "string"
                 },
+                "read": {
+                    "type": "boolean"
+                },
                 "size": {
                     "type": "integer"
+                },
+                "write": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "models.NewPathRequest": {
+            "type": "object",
+            "properties": {
+                "new_path": {
+                    "type": "string"
+                },
+                "path": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.PathRequest": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "string"
                 }
             }
         },

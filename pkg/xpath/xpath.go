@@ -30,6 +30,10 @@ func P(path string) string {
 	return filepath.ToSlash(path)
 }
 
+func Clean(p string) string {
+	return path.Clean(p)
+}
+
 func IsAbs(file string) bool {
 	return filepath.IsAbs(file)
 }

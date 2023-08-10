@@ -98,3 +98,8 @@ type AddItemsRequest struct {
 type PathRequest struct {
 	Path string `json:"path" form:"path"`
 }
+
+type NewPathRequest struct {
+	Path    string `json:"path" form:"path"`
+	NewPath string `json:"new_path" form:"new_path"`
+}

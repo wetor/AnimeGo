@@ -5,6 +5,8 @@ import (
 	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
+const FilePerm = 0644
+
 var (
 	AnimeGoGithub = "https://github.com/wetor/AnimeGo"
 )

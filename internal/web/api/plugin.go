@@ -2,19 +2,55 @@ package api
 
 import (
 	"encoding/base64"
-	"github.com/wetor/AnimeGo/assets"
+	"io"
 	"net/http"
 	"os"
+	"path"
+	"sort"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/wetor/AnimeGo/assets"
 	"github.com/wetor/AnimeGo/internal/constant"
 	webModels "github.com/wetor/AnimeGo/internal/web/models"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/utils"
 	"github.com/wetor/AnimeGo/pkg/xpath"
 )
+
+func checkPluginPerm(p string) (read, write, delete bool) {
+	read = true
+	write = true
+	delete = true
+	if len(p) == 0 || p == "/" || p == "." {
+		write = false
+		delete = false
+	}
+
+	dir := path.Dir(p)
+	isPluginRoot := false
+	if len(dir) == 0 || dir == "/" || dir == "." {
+		isPluginRoot = true
+	}
+	name := xpath.Base(p)
+	// 顶层指定文件夹不可编辑和删除
+	if _, ok := constant.PluginDirComment[name]; ok && isPluginRoot {
+		write = false
+		delete = false
+	}
+	// 内置插件不可编辑和删除
+	if assets.IsBuiltinPlugin(name) {
+		write = false
+		delete = false
+	}
+	// README不可编辑和删除
+	if name == "README.md" {
+		write = false
+		delete = false
+	}
+	return
+}
 
 // PluginDirGet godoc
 //
@@ -31,7 +67,7 @@ import (
 func (a *Api) PluginDirGet(c *gin.Context) {
 	path := c.GetString("path")
 	isPluginRoot := false
-	if len(path) == 0 || path == "/" {
+	if len(path) == 0 || path == "/" || path == "." {
 		isPluginRoot = true
 	}
 	pluginPath := xpath.Join(constant.PluginPath, path)
@@ -50,36 +86,59 @@ func (a *Api) PluginDirGet(c *gin.Context) {
 			continue
 		}
 		file := webModels.File{
-			Name:      f.Name(),
-			IsDir:     f.IsDir(),
-			Size:      info.Size(),
-			ModTime:   info.ModTime(),
-			CanRead:   true,
-			CanWrite:  true,
-			CanDelete: true,
+			Name:    f.Name(),
+			IsDir:   f.IsDir(),
+			Size:    info.Size(),
+			ModTime: info.ModTime().Unix(),
 		}
 		if isPluginRoot {
-			ok := false
-			file.Comment, ok = constant.PluginDirComment[f.Name()]
-			if ok {
-				file.CanWrite = false
-				file.CanDelete = false
-			}
+			file.Comment = constant.PluginDirComment[f.Name()]
 		}
-		if assets.IsBuiltinPlugin(f.Name()) {
-			file.CanWrite = false
-			file.CanDelete = false
-		}
-		if f.Name() == "README.md" {
-			file.CanWrite = false
-			file.CanDelete = false
-		}
+		file.CanRead, file.CanWrite, file.CanDelete = checkPluginPerm(xpath.Join(path, f.Name()))
 		files = append(files, file)
 	}
+	sort.Slice(files, func(i, j int) bool {
+		if files[i].IsDir && !files[j].IsDir {
+			return true
+		} else if !files[i].IsDir && files[j].IsDir {
+			return false
+		} else {
+			return files[i].Name < files[j].Name
+		}
+	})
 	c.JSON(webModels.Succ("获取成功", webModels.DirResponse{
 		Path:  path,
 		Files: files,
 	}))
+}
+
+// PluginDirPost godoc
+//
+//	@Summary		创建文件夹
+//	@Description	创建插件文件夹中的文件夹
+//	@Tags			plugin
+//	@Accept			json
+//	@Produce		json
+//	@Param			path	body		webModels.PathRequest	true	"创建文件夹信息"
+//	@Success		200		{object}	webModels.Response
+//	@Failure		300		{object}	webModels.Response
+//	@Security		ApiKeyAuth
+//	@Router			/api/plugin/manager/dir [post]
+func (a *Api) PluginDirPost(c *gin.Context) {
+	path := c.GetString("path")
+	pluginPath := xpath.Join(constant.PluginPath, path)
+	if utils.IsExist(pluginPath) {
+		log.Warnf("文件夹已存在: " + pluginPath)
+		c.JSON(webModels.Fail("文件夹已存在: " + path))
+		return
+	}
+	err := utils.CreateMutiDir(pluginPath)
+	if err != nil {
+		log.DebugErr(err)
+		c.JSON(webModels.Fail("创建文件夹失败"))
+		return
+	}
+	c.JSON(webModels.Succ("创建文件夹成功"))
 }
 
 // PluginFileGet godoc
@@ -102,6 +161,11 @@ func (a *Api) PluginFileGet(c *gin.Context) {
 		c.JSON(webModels.Fail("文件不存在: " + path))
 		return
 	}
+	r, _, _ := checkPluginPerm(path)
+	if !r {
+		c.JSON(webModels.Fail("禁止读取: " + path))
+		return
+	}
 	data, err := os.ReadFile(pluginFile)
 	if err != nil {
 		log.DebugErr(err)
@@ -110,6 +174,110 @@ func (a *Api) PluginFileGet(c *gin.Context) {
 	}
 	c.Writer.Header().Set("Content-Type", "text/plain")
 	c.String(http.StatusOK, string(data))
+}
+
+// PluginFilePost godoc
+//
+//	@Summary		创建或修改插件文件
+//	@Description	创建或修改插件文件夹中指定文件
+//	@Tags			plugin
+//	@Accept			plain
+//	@Produce		json
+//	@Param			path	query		string	true	"路径"
+//	@Param			file	body		string	true	"文件内容"
+//	@Success		200		{object}	webModels.Response
+//	@Failure		300		{object}	webModels.Response
+//	@Security		ApiKeyAuth
+//	@Router			/api/plugin/manager/file [post]
+func (a *Api) PluginFilePost(c *gin.Context) {
+	path := c.GetString("path")
+	pluginFile := xpath.Join(constant.PluginPath, path)
+	create := !utils.IsExist(pluginFile)
+	if !create {
+		_, w, _ := checkPluginPerm(path)
+		if !w {
+			c.JSON(webModels.Fail("禁止编辑: " + path))
+			return
+		}
+	}
+
+	body, err := io.ReadAll(c.Request.Body)
+	if err != nil {
+		log.DebugErr(err)
+		c.JSON(webModels.Fail("读取文件参数失败"))
+	}
+	defer c.Request.Body.Close()
+
+	err = os.WriteFile(pluginFile, body, constant.FilePerm)
+	if err != nil {
+		log.DebugErr(err)
+		c.JSON(webModels.Fail("写入插件文件失败"))
+		return
+	}
+	if create {
+		c.JSON(webModels.Succ("创建插件成功"))
+	} else {
+		c.JSON(webModels.Succ("修改插件成功"))
+	}
+}
+
+// PluginRename godoc
+//
+//	@Summary		重命名文件或文件夹
+//	@Description	重命名插件文件夹中的文件或文件夹
+//	@Tags			plugin
+//	@Accept			json
+//	@Produce		json
+//	@Param			path	body		webModels.NewPathRequest	true	"重命名信息"
+//	@Success		200		{object}	webModels.Response
+//	@Failure		300		{object}	webModels.Response
+//	@Security		ApiKeyAuth
+//	@Router			/api/plugin/manager/rename [put]
+func (a *Api) PluginRename(c *gin.Context) {
+	var request webModels.NewPathRequest
+	if !a.checkRequest(c, &request) {
+		return
+	}
+	path, err := utils.CheckPath(request.Path)
+	if err != nil {
+		log.DebugErr(err)
+		c.JSON(webModels.ErrIpt("路径参数错误"))
+		c.Abort()
+		return
+	}
+	pluginPath := xpath.Join(constant.PluginPath, path)
+	if !utils.IsExist(pluginPath) {
+		log.Warnf("文件或文件夹不存在: " + pluginPath)
+		c.JSON(webModels.Fail("文件或文件夹不存在: " + path))
+		return
+	}
+
+	newPath, err := utils.CheckPath(request.NewPath)
+	if err != nil {
+		log.DebugErr(err)
+		c.JSON(webModels.ErrIpt("目标路径参数错误"))
+		c.Abort()
+		return
+	}
+	newPluginPath := xpath.Join(constant.PluginPath, newPath)
+	if utils.IsExist(newPluginPath) {
+		log.Warnf("目标文件或文件夹已存在: " + newPluginPath)
+		c.JSON(webModels.Fail("目标文件或文件夹已存在: " + newPath))
+		return
+	}
+	_, w, _ := checkPluginPerm(path)
+	if !w {
+		c.JSON(webModels.Fail("禁止编辑: " + path))
+		return
+	}
+
+	err = utils.Rename(pluginPath, newPluginPath)
+	if err != nil {
+		log.DebugErr(err)
+		c.JSON(webModels.Fail("重命名失败"))
+		return
+	}
+	c.JSON(webModels.Succ("重命名成功"))
 }
 
 // PluginConfigPost godoc
@@ -147,7 +315,7 @@ func (a *Api) PluginConfigPost(c *gin.Context) {
 	}
 
 	filename := strings.TrimSuffix(file, xpath.Ext(file)) + ".json"
-	err = os.WriteFile(filename, data, 0666)
+	err = os.WriteFile(filename, data, constant.FilePerm)
 	if err != nil {
 		log.DebugErr(err)
 		c.JSON(webModels.Fail("写入文件失败"))

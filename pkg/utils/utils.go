@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pkg/errors"
+
 	"github.com/wetor/AnimeGo/pkg/json"
 	"github.com/wetor/AnimeGo/pkg/xpath"
 )
@@ -225,4 +227,12 @@ func HandleError(fn func(error)) {
 			panic(err)
 		}
 	}
+}
+
+func CheckPath(p string) (string, error) {
+	p = xpath.P(p)
+	if strings.Contains(p, "../") {
+		return "", errors.New("路径中不允许的字符: ../")
+	}
+	return xpath.Clean(p), nil
 }

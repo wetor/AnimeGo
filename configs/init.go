@@ -6,6 +6,7 @@ import (
 	"path"
 
 	"github.com/caarlos0/env/v9"
+	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/pkg/utils"
 )
 
@@ -63,7 +64,7 @@ func InitEnvConfig(configFile, saveFile string) {
 		panic(err)
 	}
 
-	err = os.WriteFile(saveFile, data, 0644)
+	err = os.WriteFile(saveFile, data, constant.FilePerm)
 	if err != nil {
 		panic(err)
 	}

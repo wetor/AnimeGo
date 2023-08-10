@@ -85,7 +85,7 @@ func (t *BangumiTask) download(url, name string) (string, error) {
 		return "", err
 	}
 	file := xpath.Join(constant.CachePath, name)
-	err = os.WriteFile(file, data, 0644)
+	err = os.WriteFile(file, data, constant.FilePerm)
 	if err != nil {
 		log.DebugErr(err)
 		err = errors.WithStack(&exceptions.ErrSchedule{Message: "保存到文件失败: " + name})
