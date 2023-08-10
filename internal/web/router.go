@@ -17,8 +17,10 @@ func InitRouter(r gin.IRouter) {
 	pluginManager := apiRoot.Group("/plugin/manager")
 	pluginManager.GET("/dir", CheckPath(), API.PluginDirGet)
 	pluginManager.POST("/dir", CheckPath(), API.PluginDirPost)
+	pluginManager.DELETE("/dir", CheckPath(), API.PluginDirDelete)
 	pluginManager.GET("/file", CheckPath(), API.PluginFileGet)
 	pluginManager.POST("/file", CheckPath(), API.PluginFilePost)
+	pluginManager.DELETE("/file", CheckPath(), API.PluginFileDelete)
 	pluginManager.PUT("/rename", API.PluginRename)
 
 	apiRoot.GET("/config", API.ConfigGet)

@@ -71,7 +71,11 @@ func (a *Api) PluginDirGet(c *gin.Context) {
 		isPluginRoot = true
 	}
 	pluginPath := xpath.Join(constant.PluginPath, path)
-
+	if !utils.IsDirExist(pluginPath) {
+		log.Warnf("文件夹不存在: " + pluginPath)
+		c.JSON(webModels.Fail("文件夹不存在: " + path))
+		return
+	}
 	dirs, err := os.ReadDir(pluginPath)
 	if err != nil {
 		log.DebugErr(err)
@@ -127,7 +131,7 @@ func (a *Api) PluginDirGet(c *gin.Context) {
 func (a *Api) PluginDirPost(c *gin.Context) {
 	path := c.GetString("path")
 	pluginPath := xpath.Join(constant.PluginPath, path)
-	if utils.IsExist(pluginPath) {
+	if utils.IsDirExist(pluginPath) {
 		log.Warnf("文件夹已存在: " + pluginPath)
 		c.JSON(webModels.Fail("文件夹已存在: " + path))
 		return
@@ -139,6 +143,40 @@ func (a *Api) PluginDirPost(c *gin.Context) {
 		return
 	}
 	c.JSON(webModels.Succ("创建文件夹成功"))
+}
+
+// PluginDirDelete godoc
+//
+//	@Summary		删除文件夹
+//	@Description	删除插件文件夹中指定文件文件夹
+//	@Tags			plugin
+//	@Accept			json
+//	@Produce		json
+//	@Param			path	query		string	true	"路径"
+//	@Success		200		{object}	string
+//	@Failure		300		{object}	webModels.Response
+//	@Security		ApiKeyAuth
+//	@Router			/api/plugin/manager/dir [delete]
+func (a *Api) PluginDirDelete(c *gin.Context) {
+	path := c.GetString("path")
+	pluginFile := xpath.Join(constant.PluginPath, path)
+	if !utils.IsDirExist(pluginFile) {
+		log.Warnf("文件夹不存在: " + pluginFile)
+		c.JSON(webModels.Fail("文件夹不存在: " + path))
+		return
+	}
+	_, w, d := checkPluginPerm(path)
+	if !w || !d {
+		c.JSON(webModels.Fail("禁止删除: " + path))
+		return
+	}
+	err := os.Remove(pluginFile)
+	if err != nil {
+		log.DebugErr(err)
+		c.JSON(webModels.Fail("删除文件夹失败: " + path))
+		return
+	}
+	c.JSON(webModels.Succ("删除文件夹成功"))
 }
 
 // PluginFileGet godoc
@@ -156,7 +194,7 @@ func (a *Api) PluginDirPost(c *gin.Context) {
 func (a *Api) PluginFileGet(c *gin.Context) {
 	path := c.GetString("path")
 	pluginFile := xpath.Join(constant.PluginPath, path)
-	if !utils.IsExist(pluginFile) {
+	if !utils.IsFileExist(pluginFile) {
 		log.Warnf("文件不存在: " + pluginFile)
 		c.JSON(webModels.Fail("文件不存在: " + path))
 		return
@@ -192,7 +230,7 @@ func (a *Api) PluginFileGet(c *gin.Context) {
 func (a *Api) PluginFilePost(c *gin.Context) {
 	path := c.GetString("path")
 	pluginFile := xpath.Join(constant.PluginPath, path)
-	create := !utils.IsExist(pluginFile)
+	create := !utils.IsFileExist(pluginFile)
 	if !create {
 		_, w, _ := checkPluginPerm(path)
 		if !w {
@@ -219,6 +257,40 @@ func (a *Api) PluginFilePost(c *gin.Context) {
 	} else {
 		c.JSON(webModels.Succ("修改插件成功"))
 	}
+}
+
+// PluginFileDelete godoc
+//
+//	@Summary		删除插件
+//	@Description	删除插件文件夹中指定插件文件
+//	@Tags			plugin
+//	@Accept			json
+//	@Produce		json
+//	@Param			path	query		string	true	"路径"
+//	@Success		200		{object}	string
+//	@Failure		300		{object}	webModels.Response
+//	@Security		ApiKeyAuth
+//	@Router			/api/plugin/manager/file [delete]
+func (a *Api) PluginFileDelete(c *gin.Context) {
+	path := c.GetString("path")
+	pluginFile := xpath.Join(constant.PluginPath, path)
+	if !utils.IsFileExist(pluginFile) {
+		log.Warnf("文件不存在: " + pluginFile)
+		c.JSON(webModels.Fail("文件不存在: " + path))
+		return
+	}
+	_, w, d := checkPluginPerm(path)
+	if !w || !d {
+		c.JSON(webModels.Fail("禁止删除: " + path))
+		return
+	}
+	err := os.Remove(pluginFile)
+	if err != nil {
+		log.DebugErr(err)
+		c.JSON(webModels.Fail("删除文件失败: " + path))
+		return
+	}
+	c.JSON(webModels.Succ("删除文件成功"))
 }
 
 // PluginRename godoc

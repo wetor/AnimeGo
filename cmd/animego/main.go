@@ -315,6 +315,7 @@ func Main() {
 		})
 		// 启动Web API
 		web.Run(ctx)
+		web.RunWeb(ctx)
 	}
 
 	// 等待程序运行结束

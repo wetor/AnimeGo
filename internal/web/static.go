@@ -16,8 +16,7 @@ import (
 var staticFiles embed.FS
 
 func InitStatic(router gin.IRouter) {
-	uiRoot := router.Group("/ui")
-	InitAssets(uiRoot)
+	InitAssets(router)
 }
 
 func InitAssets(router gin.IRouter) {
