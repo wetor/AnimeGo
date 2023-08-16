@@ -4,7 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
-	"github.com/wetor/AnimeGo/pkg/xpath"
+	"path"
 	"sort"
 	"strconv"
 	"strings"
@@ -43,17 +43,17 @@ func Md5Str(str string) string {
 
 func AnimeToFileName(a *AnimeEntity, index int) string {
 	if a.Ep[index].Type == AnimeEpUnknown {
-		file := strings.TrimSuffix(xpath.Base(a.Ep[index].Src), xpath.Ext(a.Ep[index].Src))
-		return xpath.Join(fmt.Sprintf("S%02d", a.Season), file)
+		file := strings.TrimSuffix(path.Base(a.Ep[index].Src), path.Ext(a.Ep[index].Src))
+		return path.Join(fmt.Sprintf("S%02d", a.Season), file)
 	}
-	return xpath.Join(fmt.Sprintf("S%02d", a.Season), fmt.Sprintf("E%03d", a.Ep[index].Ep))
+	return path.Join(fmt.Sprintf("S%02d", a.Season), fmt.Sprintf("E%03d", a.Ep[index].Ep))
 }
 
 func AnimeToFilePath(a *AnimeEntity) []string {
 	filePath := make([]string, 0, len(a.Ep))
 	dir := FileName(a.NameCN)
 	for i, ep := range a.Ep {
-		filePath = append(filePath, xpath.Join(dir, AnimeToFileName(a, i)+xpath.Ext(ep.Src)))
+		filePath = append(filePath, path.Join(dir, AnimeToFileName(a, i)+path.Ext(ep.Src)))
 	}
 	return filePath
 }

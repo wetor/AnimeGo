@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"os"
+	"path"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -12,7 +13,6 @@ import (
 	"github.com/wetor/AnimeGo/internal/models"
 	webModels "github.com/wetor/AnimeGo/internal/web/models"
 	"github.com/wetor/AnimeGo/pkg/log"
-	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
 // Rss godoc
@@ -94,7 +94,7 @@ func (a *Api) PluginConfigPost(c *gin.Context) {
 		return
 	}
 
-	filename := strings.TrimSuffix(file, xpath.Ext(file)) + ".json"
+	filename := strings.TrimSuffix(file, path.Ext(file)) + ".json"
 	err = os.WriteFile(filename, data, 0666)
 	if err != nil {
 		log.DebugErr(err)

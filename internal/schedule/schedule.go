@@ -2,6 +2,8 @@ package schedule
 
 import (
 	"context"
+	"github.com/wetor/AnimeGo/pkg/xpath"
+	"path"
 	"strings"
 	"sync"
 
@@ -15,7 +17,6 @@ import (
 	"github.com/wetor/AnimeGo/internal/schedule/task"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/utils"
-	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
 const (
@@ -162,7 +163,7 @@ func AddScheduleTasks(s *Schedule, plugins []models.Plugin) (err error) {
 			return err
 		}
 		err = s.Add(&AddTaskOptions{
-			Name:     xpath.Base(p.File),
+			Name:     path.Base(xpath.P(p.File)),
 			StartRun: false,
 			Task:     t,
 		})

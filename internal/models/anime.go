@@ -62,6 +62,25 @@ func (a *AnimeEntity) Default() {
 	}
 }
 
+func (a *AnimeEntity) AnimeName() string {
+	return a.NameCN
+}
+
+func (a *AnimeEntity) EpKeys() []string {
+	result := make([]string, len(a.Ep))
+	for i := range a.Ep {
+		result[i] = a.EpKey(i)
+	}
+	return result
+}
+
+func (a *AnimeEntity) EpKey(index int) string {
+	if a.Flag&AnimeFlagEpParseFailed > 0 {
+		return fmt.Sprintf("key-%v-S%v-idx%v", a.NameCN, a.Season, index)
+	}
+	return fmt.Sprintf("key-%v-S%v-E%v", a.NameCN, a.Season, a.Ep[index].Ep)
+}
+
 func (a *AnimeEntity) FullName() string {
 	if a.Flag&AnimeFlagEpParseFailed > 0 {
 		return fmt.Sprintf("%s[第%d季][第-集][%s]", a.NameCN, a.Season, a.Torrent.Hash)

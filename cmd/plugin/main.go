@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"os"
+	"path/filepath"
 	"sync"
 	"time"
 
@@ -17,7 +18,6 @@ import (
 	"github.com/wetor/AnimeGo/internal/schedule/task"
 	"github.com/wetor/AnimeGo/pkg/json"
 	"github.com/wetor/AnimeGo/pkg/log"
-	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
 var (
@@ -101,7 +101,7 @@ func pluginSchedule(file string, s *schedule.Schedule, info *models.Plugin) {
 		Plugin: info,
 	})
 	s.Add(&schedule.AddTaskOptions{
-		Name:     xpath.Base(file),
+		Name:     filepath.Base(file),
 		StartRun: false,
 		Task:     t,
 	})
@@ -114,7 +114,7 @@ func pluginFeed(file string, s *schedule.Schedule, info *models.Plugin, callback
 	})
 
 	s.Add(&schedule.AddTaskOptions{
-		Name:     xpath.Base(file),
+		Name:     filepath.Base(file),
 		StartRun: false,
 		Task:     t,
 	})
@@ -174,7 +174,7 @@ func Main() {
 		result := pluginRename(anime, pluginInfo)
 		log.Infof("rename结果: ")
 		for _, r := range result {
-			log.Infof("    [%d] %v -> %v, tvshow.nfo位置: %v", r.Index, anime.Ep[r.Index].Src, r.Filepath, r.TVShowDir)
+			log.Infof("    [%d] %v -> %v, tvshow.nfo位置: %v", r.Index, anime.Ep[r.Index].Src, r.Filename, r.AnimeDir)
 		}
 	case constant.PluginTemplateFilter:
 		data, err := os.ReadFile(pFilterInputFile)

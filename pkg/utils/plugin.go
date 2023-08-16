@@ -1,8 +1,9 @@
 package utils
 
 import (
+	"path"
+
 	"github.com/pkg/errors"
-	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
 // FindScript
@@ -16,8 +17,8 @@ import (
 func FindScript(file, ext string) (string, error) {
 	if IsDir(file) {
 		// 文件夹，在文件夹中寻找 main
-		if IsExist(xpath.Join(file, "main"+ext)) {
-			return xpath.Join(file, "main"+ext), nil
+		if IsExist(path.Join(file, "main"+ext)) {
+			return path.Join(file, "main"+ext), nil
 		} else {
 			return "", errors.WithStack(errors.Errorf("文件夹中找不到 'main%s' 插件", ext))
 		}
@@ -28,7 +29,7 @@ func FindScript(file, ext string) (string, error) {
 		} else {
 			return "", errors.WithStack(errors.New("插件不存在"))
 		}
-	} else if xpath.Ext(file) != ext {
+	} else if path.Ext(file) != ext {
 		// 文件存在，判断扩展名是否为 ext
 		return "", errors.WithStack(errors.New("插件扩展名错误"))
 	}

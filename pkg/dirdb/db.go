@@ -45,7 +45,7 @@ func (d *JsonDB) Marshal(value any) error {
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(d.file, data, 0)
+	err = os.WriteFile(d.file, data, os.ModePerm)
 	if err != nil {
 		return err
 	}

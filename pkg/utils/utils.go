@@ -7,12 +7,12 @@ import (
 	"encoding/hex"
 	"fmt"
 	"os"
+	"path"
 	"reflect"
 	"strings"
 	"time"
 
 	"github.com/wetor/AnimeGo/pkg/json"
-	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
 func Format(format string, p map[string]any) string {
@@ -185,7 +185,7 @@ func UTCToTimeStr(t1 string) string {
 }
 
 func CreateLink(src, dst string) error {
-	dir := xpath.Dir(dst)
+	dir := path.Dir(dst)
 	if err := CreateMutiDir(dir); err != nil {
 		return err
 	}
@@ -201,7 +201,7 @@ func CreateLink(src, dst string) error {
 }
 
 func Rename(src, dst string) error {
-	dir := xpath.Dir(dst)
+	dir := path.Dir(dst)
 	if err := CreateMutiDir(dir); err != nil {
 		return err
 	}

@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/url"
 	"os"
+	"path"
 	"sync"
 	"testing"
 
@@ -29,7 +30,7 @@ import (
 
 func HookGetWriter(uri string, w io.Writer) error {
 	log.Infof("Mock HTTP GET %s", uri)
-	id := xpath.Base(uri)
+	id := path.Base(xpath.P(uri))
 	jsonData, err := test.GetData("mikan", id)
 	if err != nil {
 		return err
@@ -49,7 +50,7 @@ func HookGet(uri string, body interface{}) error {
 	}
 	id := u.Query().Get("with_text_query")
 	if len(id) == 0 {
-		id = xpath.Base(u.Path)
+		id = path.Base(xpath.P(u.Path))
 	}
 
 	p := test.GetDataPath("themoviedb", id)

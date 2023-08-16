@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"path"
 	"sync"
 	"testing"
 
@@ -49,7 +50,7 @@ func TestMain(m *testing.M) {
 		}
 		id := u.Query().Get("with_text_query")
 		if len(id) == 0 {
-			id = xpath.Base(u.Path)
+			id = path.Base(xpath.P(u.Path))
 		}
 		return id
 	})

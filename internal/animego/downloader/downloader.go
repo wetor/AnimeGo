@@ -2,6 +2,7 @@ package downloader
 
 import (
 	"context"
+	"github.com/pkg/errors"
 	"sync"
 
 	"github.com/wetor/AnimeGo/internal/api"
@@ -12,8 +13,15 @@ import (
 	"github.com/wetor/AnimeGo/pkg/utils"
 )
 
+const (
+	AllowDuplicateDownload = false
+	Tag                    = ""
+	SeedingTimeMinute      = 0
+)
+
 type Manager struct {
 	client   api.Client
+	database api.Database
 	notifier api.ClientNotifier
 
 	// 保存上一次状态，检查状态是否改变
@@ -144,6 +152,37 @@ func (m *Manager) notify(oldNotifyState, newNotifyState NotifyState, event []mod
 			break
 		}
 		m.notifier.OnDownloadError(event)
+	}
+	return nil
+}
+
+func (m *Manager) Download(anime *models.AnimeEntity) error {
+	ReInitWG.Add(1)
+	defer ReInitWG.Done()
+	name := anime.FullName()
+	if m.database.IsExist(anime) {
+		log.Infof("发现已下载「%s」", name)
+		if !AllowDuplicateDownload {
+			log.Infof("取消下载，不允许重复「%s」", name)
+			return exceptions.ErrDownloadExist{Name: name}
+		}
+	}
+	log.Infof("添加下载「%s」", name)
+	err := m.database.Add(anime)
+	if err != nil {
+		return errors.Wrap(err, "添加下载项失败")
+	}
+	err = m.Add(anime.Torrent.Hash, &client.AddOptions{
+		Url:         anime.Torrent.Url,
+		File:        anime.Torrent.File,
+		SavePath:    m.client.Config().DownloadPath,
+		Category:    Category,
+		Tag:         utils.Tag(Tag, anime.AirDate, anime.Ep[0].Ep),
+		SeedingTime: SeedingTimeMinute,
+		Rename:      name,
+	})
+	if err != nil {
+		return errors.Wrap(err, "添加下载项失败")
 	}
 	return nil
 }

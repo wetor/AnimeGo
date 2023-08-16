@@ -2,28 +2,20 @@ package xpath
 
 import (
 	"log"
-	"path"
 	"path/filepath"
+	"strings"
 )
 
-func Join(elem ...string) string {
-	return path.Join(elem...)
-}
-
-func Dir(path string) string {
-	return filepath.Dir(path)
-}
-
-func Split(path string) (string, string) {
-	return filepath.Split(path)
-}
-
-func Ext(path string) string {
-	return filepath.Ext(path)
-}
-
-func Base(path string) string {
-	return filepath.Base(path)
+// Root
+//
+//	返回 Unix路径 或 相对路径 的最上层文件夹名
+func Root(path string) string {
+	p := strings.TrimPrefix(P(filepath.Clean(path)), "/")
+	root := strings.SplitN(p, "/", 2)[0]
+	if root == p {
+		return "."
+	}
+	return root
 }
 
 func P(path string) string {

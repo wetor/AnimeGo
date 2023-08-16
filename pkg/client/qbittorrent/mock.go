@@ -3,12 +3,12 @@ package qbittorrent
 import (
 	"context"
 	"os"
+	"path"
 	"sync"
 
 	"github.com/pkg/errors"
 	"github.com/wetor/AnimeGo/pkg/client"
 	"github.com/wetor/AnimeGo/pkg/utils"
-	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
 const (
@@ -94,12 +94,12 @@ func (m *ClientMock) MockAddName(name, hash string, src []string) {
 	m.Name2hash[name] = hash
 	m.Hash2name[hash] = name
 
-	err := utils.CreateMutiDir(xpath.Join(m.Conf.DownloadPath, xpath.Dir(src[0])))
+	err := utils.CreateMutiDir(path.Join(m.Conf.DownloadPath, path.Dir(src[0])))
 	if err != nil {
 		panic(err)
 	}
 	for _, s := range src {
-		err = os.WriteFile(xpath.Join(m.Conf.DownloadPath, s), []byte{}, os.ModePerm)
+		err = os.WriteFile(path.Join(m.Conf.DownloadPath, s), []byte{}, os.ModePerm)
 		if err != nil {
 			panic(err)
 		}

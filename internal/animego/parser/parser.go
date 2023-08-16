@@ -2,6 +2,7 @@ package parser
 
 import (
 	"github.com/pkg/errors"
+	"github.com/wetor/AnimeGo/pkg/xpath"
 
 	"github.com/wetor/AnimeGo/internal/animego/parser/utils"
 	"github.com/wetor/AnimeGo/internal/api"
@@ -52,7 +53,7 @@ func (m *Manager) Parse(opts *models.ParseOptions) (entity *models.AnimeEntity, 
 	for _, t := range torrentInfo.Files {
 		// TODO: 筛选文件
 		epEntity := &models.AnimeEpEntity{
-			Src: t.Path(),
+			Src: xpath.P(t.Path()),
 		}
 		if isSp, sp := utils.ParseSp(t.Name); isSp {
 			epEntity.Type = models.AnimeEpSpecial

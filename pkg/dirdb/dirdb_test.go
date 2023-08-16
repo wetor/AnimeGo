@@ -2,9 +2,9 @@ package dirdb_test
 
 import (
 	"fmt"
-	"github.com/wetor/AnimeGo/pkg/dirdb"
-	"math/rand"
 	"testing"
+
+	"github.com/wetor/AnimeGo/pkg/dirdb"
 )
 
 func TestDirDB_ReadAll(t *testing.T) {
@@ -22,14 +22,13 @@ func TestDirDB_ReadAll(t *testing.T) {
 		ID   int            `json:"id"`
 		Info map[string]any `json:"info"`
 	}{}
-	for _, f := range files {
-
+	for i, f := range files {
 		_ = f.Open()
 		data.Path = f.File
-		data.ID = rand.Int()
+		data.ID = i * 1000
 		data.Info = map[string]any{
 			"path": f.File,
-			"id":   rand.Int(),
+			"id":   i * 2000,
 		}
 		err = f.DB.Marshal(data)
 		if err != nil {

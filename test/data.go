@@ -3,15 +3,14 @@ package test
 import (
 	"io"
 	"os"
+	"path"
 	"runtime"
-
-	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
 func GetDataPath(name string, file string) string {
 	_, currFile, _, _ := runtime.Caller(0)
-	dir := xpath.Dir(currFile)
-	testdata := xpath.Join(dir, "testdata", name, file)
+	dir := path.Dir(currFile)
+	testdata := path.Join(dir, "testdata", name, file)
 	return testdata
 }
 

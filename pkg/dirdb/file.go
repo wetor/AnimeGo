@@ -1,14 +1,14 @@
 package dirdb
 
 import (
+	"path"
 	"reflect"
-
-	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
 type File struct {
 	DB   DB
 	Dir  string
+	Ext  string
 	File string
 }
 
@@ -17,7 +17,8 @@ func NewFile(file string) *File {
 	db.Set(reflect.ValueOf(DefaultDB))
 	return &File{
 		File: file,
-		Dir:  xpath.Dir(file),
+		Dir:  path.Dir(file),
+		Ext:  path.Ext(file),
 		DB:   db.Interface().(DB),
 	}
 }

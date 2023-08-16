@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path"
 	"strings"
 	"time"
 
@@ -20,7 +21,6 @@ import (
 	"github.com/wetor/AnimeGo/configs/version/v_151"
 	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/pkg/utils"
-	"github.com/wetor/AnimeGo/pkg/xpath"
 	encoder "github.com/wetor/AnimeGo/third_party/yaml-encoder"
 )
 
@@ -179,7 +179,7 @@ func update_110_120(file string) {
 		for i, filename := range oldConfig.Filter.JavaScript {
 			newConfig.Filter.Plugin[i] = v_120.PluginInfo{
 				Enable: true,
-				Type:   xpath.Ext(filename)[1:],
+				Type:   path.Ext(filename)[1:],
 				File:   strings.TrimPrefix(filename, "plugin/"),
 			}
 		}
@@ -189,10 +189,10 @@ func update_110_120(file string) {
 	})
 	log.Printf("[移除] 配置项(setting.advanced.xpath.db_file)\n")
 	_ = utils.CreateMutiDir(constant.CachePath)
-	_ = os.Rename(xpath.Join(oldConfig.DataPath, oldConfig.Advanced.Path.DbFile), constant.CacheFile)
+	_ = os.Rename(path.Join(oldConfig.DataPath, oldConfig.Advanced.Path.DbFile), constant.CacheFile)
 	log.Printf("[移除] 配置项(setting.advanced.xpath.log_file)\n")
 	_ = utils.CreateMutiDir(constant.LogPath)
-	_ = os.Rename(xpath.Join(oldConfig.DataPath, oldConfig.Advanced.Path.LogFile), constant.LogFile)
+	_ = os.Rename(path.Join(oldConfig.DataPath, oldConfig.Advanced.Path.LogFile), constant.LogFile)
 	log.Printf("[移除] 配置项(setting.advanced.xpath.temp_path)\n")
 
 	content, err := encodeConfig(newConfig)
@@ -246,7 +246,7 @@ func update_120_130(file string) {
 		log.Fatal("配置文件升级失败：", err)
 	}
 	// 强制写入
-	assets.WritePlugins(assets.Dir, xpath.Join(newConfig.DataPath, assets.Dir), false)
+	assets.WritePlugins(assets.Dir, path.Join(newConfig.DataPath, assets.Dir), false)
 }
 
 func update_130_140(file string) {
@@ -301,7 +301,7 @@ func update_130_140(file string) {
 		log.Fatal("配置文件升级失败：", err)
 	}
 	// 强制写入
-	assets.WritePlugins(assets.Dir, xpath.Join(newConfig.DataPath, assets.Dir), false)
+	assets.WritePlugins(assets.Dir, path.Join(newConfig.DataPath, assets.Dir), false)
 }
 
 func update_140_141(file string) {
@@ -340,7 +340,7 @@ func update_140_141(file string) {
 		log.Fatal("配置文件升级失败：", err)
 	}
 	// 强制写入
-	assets.WritePlugins(assets.Dir, xpath.Join(newConfig.DataPath, assets.Dir), false)
+	assets.WritePlugins(assets.Dir, path.Join(newConfig.DataPath, assets.Dir), false)
 }
 
 func update_141_150(file string) {
@@ -384,7 +384,7 @@ func update_141_150(file string) {
 		newConfig.Plugin.Feed[i] = p
 	}
 	log.Println("[清理] 清理缓存(data/cache/bolt.db)")
-	_ = os.Remove(xpath.Join(oldConfig.DataPath, "cache", "bolt.db"))
+	_ = os.Remove(path.Join(oldConfig.DataPath, "cache", "bolt.db"))
 	content, err := encodeConfig(newConfig)
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
@@ -394,7 +394,7 @@ func update_141_150(file string) {
 		log.Fatal("配置文件升级失败：", err)
 	}
 	// 强制写入
-	assets.WritePlugins(assets.Dir, xpath.Join(newConfig.DataPath, assets.Dir), false)
+	assets.WritePlugins(assets.Dir, path.Join(newConfig.DataPath, assets.Dir), false)
 }
 
 func update_150_151(file string) {
@@ -428,7 +428,7 @@ func update_150_151(file string) {
 		log.Fatal("配置文件升级失败：", err)
 	}
 	// 强制写入
-	assets.WritePlugins(assets.Dir, xpath.Join(newConfig.DataPath, assets.Dir), false)
+	assets.WritePlugins(assets.Dir, path.Join(newConfig.DataPath, assets.Dir), false)
 
 }
 
@@ -462,7 +462,7 @@ func update_151_152(file string) {
 		log.Fatal("配置文件升级失败：", err)
 	}
 	// 强制写入
-	assets.WritePlugins(assets.Dir, xpath.Join(newConfig.DataPath, assets.Dir), false)
+	assets.WritePlugins(assets.Dir, path.Join(newConfig.DataPath, assets.Dir), false)
 
 }
 
@@ -481,8 +481,8 @@ func encodeConfig(conf any) ([]byte, error) {
 }
 
 func BackupConfig(file string, version string) error {
-	dir, name := xpath.Split(file)
-	ext := xpath.Ext(name)
+	dir, name := path.Split(file)
+	ext := path.Ext(name)
 	name = strings.TrimSuffix(name, ext)
 	timeStr := time.Now().Format("20060102150405")
 	name = fmt.Sprintf("%s-%s-%s%s", name, version, timeStr, ext)
@@ -490,7 +490,7 @@ func BackupConfig(file string, version string) error {
 	if err != nil {
 		return err
 	}
-	out := xpath.Join(dir, name)
+	out := path.Join(dir, name)
 	err = os.WriteFile(out, oldFile, 0644)
 	if err != nil {
 		return err

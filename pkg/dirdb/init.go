@@ -1,20 +1,28 @@
 package dirdb
 
 var (
-	DefaultExt    = ".json"
+	DefaultExt    = map[string]struct{}{".json": {}}
 	DefaultDB  DB = &JsonDB{}
 )
 
 type Options struct {
-	DefaultExt string
+	DefaultExt []string
 	DefaultDB  DB
 }
 
 func Init(opts *Options) {
 	if len(opts.DefaultExt) != 0 {
-		DefaultExt = opts.DefaultExt
+		DefaultExt = make(map[string]struct{}, len(opts.DefaultExt))
+		for _, ext := range opts.DefaultExt {
+			DefaultExt[ext] = struct{}{}
+		}
 	}
 	if opts.DefaultDB != nil {
 		DefaultDB = opts.DefaultDB
 	}
+}
+
+func InExt(ext string) bool {
+	_, has := DefaultExt[ext]
+	return has
 }

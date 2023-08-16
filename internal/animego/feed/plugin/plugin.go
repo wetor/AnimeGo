@@ -2,12 +2,13 @@ package plugin
 
 import (
 	"context"
+	"github.com/wetor/AnimeGo/pkg/xpath"
+	"path"
 
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/schedule"
 	"github.com/wetor/AnimeGo/internal/schedule/task"
-	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
 func AddFeedTasks(s *schedule.Schedule, plugins []models.Plugin, filterManager api.FilterManager, ctx context.Context) (err error) {
@@ -25,7 +26,7 @@ func AddFeedTasks(s *schedule.Schedule, plugins []models.Plugin, filterManager a
 			return err
 		}
 		err = s.Add(&schedule.AddTaskOptions{
-			Name:     xpath.Base(p.File),
+			Name:     path.Base(xpath.P(p.File)),
 			StartRun: false,
 			Vars:     p.Vars,
 			Args:     p.Args,

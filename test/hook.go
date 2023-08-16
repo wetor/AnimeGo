@@ -3,12 +3,12 @@ package test
 import (
 	"encoding/json"
 	"io"
+	"path/filepath"
 
 	"github.com/agiledragon/gomonkey/v2"
 
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/request"
-	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
 const (
@@ -53,7 +53,7 @@ func HookSingle(target interface{}, replace interface{}) *gomonkey.Patches {
 func HookGetWriter(testdataDir string, filenameFunc func(string) string) {
 	testdata[GetWriter] = testdataDir
 	if filenameFunc == nil {
-		filenameFunc = xpath.Base
+		filenameFunc = filepath.Base
 	}
 	filename[GetWriter] = filenameFunc
 	patches.ApplyFunc(request.GetWriter, getWriter)
@@ -62,7 +62,7 @@ func HookGetWriter(testdataDir string, filenameFunc func(string) string) {
 func HookGet(testdataDir string, filenameFunc func(string) string) {
 	testdata[Get] = testdataDir
 	if filenameFunc == nil {
-		filenameFunc = xpath.Base
+		filenameFunc = filepath.Base
 	}
 	filename[Get] = filenameFunc
 	patches.ApplyFunc(request.Get, get)
@@ -71,7 +71,7 @@ func HookGet(testdataDir string, filenameFunc func(string) string) {
 func HookGetString(testdataDir string, filenameFunc func(string) string) {
 	testdata[GetString] = testdataDir
 	if filenameFunc == nil {
-		filenameFunc = xpath.Base
+		filenameFunc = filepath.Base
 	}
 	filename[GetString] = filenameFunc
 	patches.ApplyFunc(request.GetString, getString)

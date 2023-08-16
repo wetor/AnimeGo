@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path"
 	"sync"
 	"time"
 
@@ -112,14 +113,14 @@ func Main() {
 	// 载入配置文件
 	config := configs.Load(configFile)
 	constant.Init(&constant.Options{
-		DataPath: config.DataPath,
+		DataPath: xpath.P(config.DataPath),
 	})
 	// 创建子文件夹
 	config.InitDir()
 	// 检查参数限制
 	config.Check()
 	// 释放资源
-	assets.WritePlugins(assets.Dir, xpath.Join(config.DataPath, assets.Dir), true)
+	assets.WritePlugins(assets.Dir, path.Join(xpath.P(config.DataPath), assets.Dir), true)
 
 	// ===============================================================================================================
 	// 初始化日志
@@ -215,8 +216,8 @@ func Main() {
 	manager.Init(&manager.Options{
 		DownloaderConf: manager.DownloaderConf{
 			UpdateDelaySecond:      config.UpdateDelaySecond,
-			DownloadPath:           config.DownloadPath,
-			SavePath:               config.SavePath,
+			DownloadPath:           xpath.P(config.DownloadPath),
+			SavePath:               xpath.P(config.SavePath),
 			Category:               config.Category,
 			Tag:                    config.Tag,
 			AllowDuplicateDownload: config.Download.AllowDuplicateDownload,

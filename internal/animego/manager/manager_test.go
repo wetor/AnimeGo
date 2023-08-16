@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path"
 	"sync"
 	"testing"
 	"time"
@@ -21,7 +22,6 @@ import (
 	"github.com/wetor/AnimeGo/pkg/client/qbittorrent"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/utils"
-	"github.com/wetor/AnimeGo/pkg/xpath"
 	"github.com/wetor/AnimeGo/test"
 )
 
@@ -132,7 +132,7 @@ func download(name string, season int, ep []int) (files []string, fullname, hash
 	})
 	for i := range anime.Ep {
 		res, _ := renamePlugin.Rename(anime, i, srcFiles[i])
-		files[i] = xpath.Join(SavePath, res.Filepath)
+		files[i] = path.Join(SavePath, res.Filename)
 	}
 	log.ReInt(&log.Options{
 		Debug: true,

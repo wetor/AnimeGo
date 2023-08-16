@@ -3,7 +3,6 @@ package cache
 import (
 	"bytes"
 	"encoding/binary"
-	"os"
 	"sync"
 	"time"
 
@@ -12,7 +11,6 @@ import (
 
 	"github.com/wetor/AnimeGo/pkg/json"
 	"github.com/wetor/AnimeGo/pkg/log"
-	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
 type Bolt struct {
@@ -31,7 +29,6 @@ func NewBolt(readOnly ...bool) *Bolt {
 }
 
 func (c *Bolt) Open(file string) {
-	_ = os.MkdirAll(xpath.Dir(file), os.ModePerm)
 	db, err := bolt.Open(file, 0600, &bolt.Options{
 		ReadOnly: c.readOnly,
 	})

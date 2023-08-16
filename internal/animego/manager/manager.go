@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"path"
 	"regexp"
 	"strings"
 	"sync"
@@ -18,7 +19,6 @@ import (
 	"github.com/wetor/AnimeGo/pkg/exceptions"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/utils"
-	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
 const (
@@ -232,6 +232,7 @@ func (m *Manager) updateStatus(status *models.DownloadStatus, anime *models.Anim
 		return
 	}
 	name := anime.FullName()
+	keys := anime.EpKeys()
 	if status.Path == nil || len(status.Path) == 0 {
 		status.Path = make([]string, len(anime.Ep))
 	}
@@ -242,23 +243,29 @@ func (m *Manager) updateStatus(status *models.DownloadStatus, anime *models.Anim
 	}
 
 	if !status.Renamed && len(anime.Ep) > 0 {
-		if _, err := m.rename.GetRenameTaskState(name); err != nil {
+		if _, err := m.rename.GetRenameTaskState(keys); err != nil {
 			renameOpt := &models.RenameOptions{
+				Name:   name,
 				Entity: anime,
 				SrcDir: Conf.DownloadPath,
 				DstDir: Conf.SavePath,
 				Mode:   Conf.Rename,
 				RenameCallback: func(opts *models.RenameResult) {
-					status.Path[opts.Index] = opts.Filepath
+					status.Path[opts.Index] = opts.Filename
 					// TODO: 无法确保scrape成功
-					status.Scraped = m.scrape(anime, opts.TVShowDir)
 				},
-				CompleteCallback: func(opts *models.RenameResult) {
+				CompleteCallback: func(opts *models.RenameAllResult) {
 					status.Renamed = true
-					log.Infof("移动完成「%s」", name)
+					status.Scraped = m.scrape(anime, opts.AnimeDir)
+					log.Infof("移动完成「%s」", opts.Name)
 				},
 			}
-			err := m.rename.AddRenameTask(renameOpt)
+			_, err := m.rename.AddRenameTask(renameOpt)
+			if err != nil {
+				m.addError(err)
+				return
+			}
+			err = m.rename.EnableTask(keys)
 			if err != nil {
 				m.addError(err)
 				return
@@ -271,11 +278,9 @@ func (m *Manager) updateStatus(status *models.DownloadStatus, anime *models.Anim
 		if status.State == downloader.StateSeeding || status.State == downloader.StateComplete {
 			if !status.Renamed {
 				go func() {
-					for i := range anime.Ep {
-						err := m.rename.SetDownloadState(name, i, downloader.StateSeeding)
-						if err != nil {
-							m.addError(err)
-						}
+					err := m.rename.SetDownloadState(keys, downloader.StateSeeding)
+					if err != nil {
+						m.addError(err)
 					}
 				}()
 			}
@@ -289,11 +294,9 @@ func (m *Manager) updateStatus(status *models.DownloadStatus, anime *models.Anim
 		if status.State == downloader.StateComplete {
 			if !status.Renamed {
 				go func() {
-					for i := range anime.Ep {
-						err := m.rename.SetDownloadState(name, i, downloader.StateComplete)
-						if err != nil {
-							m.addError(err)
-						}
+					err := m.rename.SetDownloadState(keys, downloader.StateComplete)
+					if err != nil {
+						m.addError(err)
 					}
 				}()
 			}
@@ -334,14 +337,14 @@ func (m *Manager) setDownloaded(status *models.DownloadStatus) {
 	status.State = downloader.StateComplete
 }
 
-func (m *Manager) fileExist(dir string, path []string) int {
+func (m *Manager) fileExist(dir string, ps []string) int {
 	existNum := 0
-	for _, p := range path {
-		if len(p) != 0 && utils.IsExist(xpath.Join(dir, p)) {
+	for _, p := range ps {
+		if len(p) != 0 && utils.IsExist(path.Join(dir, p)) {
 			existNum++
 		}
 	}
-	if len(path) == existNum {
+	if len(ps) == existNum {
 		return FileAllExist
 	} else if existNum > 0 {
 		return FileSomeExist
@@ -539,7 +542,7 @@ func (m *Manager) scrape(bangumi *models.AnimeEntity, dir string) bool {
 	if len(dir) == 0 {
 		return true
 	}
-	nfo := xpath.Join(Conf.SavePath, dir, "tvshow.nfo")
+	nfo := path.Join(Conf.SavePath, dir, "tvshow.nfo")
 	log.Infof("写入元数据文件「%s」", nfo)
 
 	if !utils.IsExist(nfo) {

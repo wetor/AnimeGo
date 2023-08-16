@@ -53,7 +53,7 @@ func TestRename_Rename(t *testing.T) {
 				},
 				index: 0,
 			},
-			want: &models.RenameResult{Index: 0, Filepath: "动画1/S01/E712.mp4", TVShowDir: "动画1"},
+			want: &models.RenameResult{Index: 0, Filename: "动画1/S01/E712.mp4", AnimeDir: "动画1", Scrape: true},
 		},
 		{
 			args: args{
@@ -68,7 +68,7 @@ func TestRename_Rename(t *testing.T) {
 				},
 				index: 0,
 			},
-			want: &models.RenameResult{Index: 0, Filepath: "动画1/S01/E712.mp4", TVShowDir: "动画1"},
+			want: &models.RenameResult{Index: 0, Filename: "动画1/S01/E712.mp4", AnimeDir: "动画1", Scrape: true},
 		},
 		{
 			args: args{
@@ -81,7 +81,7 @@ func TestRename_Rename(t *testing.T) {
 				},
 				index: 0,
 			},
-			want: &models.RenameResult{Index: 0, Filepath: "18692/S02/src_1.mp4", TVShowDir: "18692"},
+			want: &models.RenameResult{Index: 0, Filename: "18692/S02/src_1.mp4", AnimeDir: "18692", Scrape: true},
 		},
 	}
 	p := renamerPlugin.NewRenamePlugin(&models.Plugin{

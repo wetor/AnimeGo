@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io"
 	"os"
+	"path"
 	"regexp"
 	"strings"
 
@@ -14,7 +15,6 @@ import (
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/request"
 	"github.com/wetor/AnimeGo/pkg/utils"
-	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
 const (
@@ -40,7 +40,7 @@ type File struct {
 }
 
 func (f File) Path() string {
-	return xpath.Join(f.Dir, f.Name)
+	return path.Join(f.Dir, f.Name)
 }
 
 type Torrent struct {
@@ -72,9 +72,9 @@ func LoadTorrent(r io.Reader) (*Torrent, error) {
 		if strings.HasPrefix(filePath, PaddingFilePrefix) {
 			continue
 		}
-		dir, name := xpath.Split(filePath)
+		dir, name := path.Split(filePath)
 		if len(infoFiles) > 1 {
-			dir = xpath.Join(infoName, dir)
+			dir = path.Join(infoName, dir)
 		}
 		files = append(files, &File{
 			Name:   name,
@@ -113,7 +113,7 @@ func LoadMagnetUri(uri string) (*Torrent, error) {
 func LoadUri(uri string) (t *Torrent, err error) {
 	hash, uriType := tryParseHash(uri)
 	// 已存在缓存文件，直接读取文件
-	file := xpath.Join(TempPath, hash+".torrent")
+	file := path.Join(TempPath, hash+".torrent")
 	if len(hash) == 40 && utils.IsExist(file) {
 		f, err := os.Open(file)
 		if err != nil {
@@ -159,7 +159,7 @@ load:
 		if err != nil {
 			return nil, err
 		}
-		file = xpath.Join(TempPath, t.Hash+".torrent")
+		file = path.Join(TempPath, t.Hash+".torrent")
 		err = os.WriteFile(file, w.Bytes(), 0666)
 		if err != nil {
 			log.DebugErr(err)

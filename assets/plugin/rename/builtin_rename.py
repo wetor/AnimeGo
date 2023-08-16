@@ -1,7 +1,7 @@
 import core
 
 
-__write_tvshow__ = True
+__scrape__ = True
 
 def rename(args):
     anime = args['anime']
@@ -14,6 +14,6 @@ def rename(args):
         filepath = '%s/S%02d/E%03d.%s' % (dir, anime['season'], anime['ep'], ext)
     return {
         'error': None,
-        'filepath': filepath,
-        'tvshow_dir': dir
+        'filename': filepath,
+        'dir': dir
     }
