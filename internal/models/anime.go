@@ -78,7 +78,11 @@ func (a *AnimeEntity) EpKey(index int) string {
 	if a.Flag&AnimeFlagEpParseFailed > 0 {
 		return fmt.Sprintf("key-%v-S%v-idx%v", a.NameCN, a.Season, index)
 	}
-	return fmt.Sprintf("key-%v-S%v-E%v", a.NameCN, a.Season, a.Ep[index].Ep)
+	return a.EpKeyByEp(a.Ep[index].Ep)
+}
+
+func (a *AnimeEntity) EpKeyByEp(ep int) string {
+	return fmt.Sprintf("key-%v-S%v-E%v", a.NameCN, a.Season, ep)
 }
 
 func (a *AnimeEntity) FullName() string {

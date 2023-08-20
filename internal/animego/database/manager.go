@@ -1,15 +1,23 @@
 package database
 
 import (
+	"fmt"
 	"path"
+	"strings"
 
 	"github.com/pkg/errors"
+	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/pkg/dirdb"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/utils"
 )
 
+// Scan
+//
+//	扫描已完成下载
+//	构建name2dir和dir2name缓存
+//	如果启用CacheMode，同时会载入所有的文件数据库
 func (m *Database) Scan() error {
 	m.dirMutex.Lock()
 	defer m.dirMutex.Unlock()
@@ -39,18 +47,7 @@ func (m *Database) Scan() error {
 				log.Warnf("读取数据文件失败: %s", file.File)
 				break
 			}
-			m.dir2name[file.Dir] = anime.Name
-			if _, ok := m.name2dir[anime.Name]; ok {
-				m.name2dir[anime.Name].Dir = file.Dir
-			} else {
-				m.name2dir[anime.Name] = &AnimeDir{
-					Dir:       file.Dir,
-					SeasonDir: make(map[int]string),
-				}
-			}
-			if CacheMode {
-				m.cacheAnimeDBEntity[anime.Name] = anime
-			}
+			m.setAnimeCache(file.Dir, anime)
 		case path.Ext(SeasonDBName):
 			season := &models.SeasonDBEntity{}
 			err = file.DB.Unmarshal(season)
@@ -59,24 +56,17 @@ func (m *Database) Scan() error {
 				log.Warnf("读取数据文件失败: %s", file.File)
 				break
 			}
-			m.dir2name[file.Dir] = season.Name
-			if _, ok := m.name2dir[season.Name]; ok {
-				m.name2dir[season.Name].SeasonDir[season.Season] = file.Dir
-			} else {
-				m.name2dir[season.Name] = &AnimeDir{
-					Dir:       path.Dir(file.Dir),
-					SeasonDir: make(map[int]string),
-				}
-				m.name2dir[season.Name].SeasonDir[season.Season] = file.Dir
+			m.setSeasonCache(file.Dir, season)
+		case path.Ext(EpisodeDBFmt):
+			ep := &models.EpisodeDBEntity{}
+			err = file.DB.Unmarshal(ep)
+			if err != nil {
+				log.DebugErr(err)
+				log.Warnf("读取数据文件失败: %s", file.File)
+				break
 			}
-			if CacheMode {
-				if m.cacheSeasonDBEntity[season.Name] == nil {
-					m.cacheSeasonDBEntity[season.Name] = make(map[int]*models.SeasonDBEntity)
-				}
-				m.cacheSeasonDBEntity[season.Name][season.Season] = season
-			}
+			m.setEpisodeCache(file.Dir, ep)
 		}
-
 		err = file.Close()
 		if err != nil {
 			log.DebugErr(err)
@@ -127,10 +117,55 @@ func (m *Database) read(file string, data any) error {
 	return nil
 }
 
+func (m *Database) setAnimeCache(dir string, anime *models.AnimeDBEntity) {
+	m.dir2name[dir] = anime.Name
+	if _, ok := m.name2dir[anime.Name]; !ok {
+		m.name2dir[anime.Name] = &AnimeDir{
+			Dir:       dir,
+			SeasonDir: make(map[int]string),
+		}
+	}
+	m.name2dir[anime.Name].Dir = dir
+	m.cacheAnimeDBEntity[anime.Name] = anime
+}
+
+func (m *Database) setSeasonCache(dir string, season *models.SeasonDBEntity) {
+	m.dir2name[dir] = season.Name
+	if _, ok := m.name2dir[season.Name]; !ok {
+		m.name2dir[season.Name] = &AnimeDir{
+			Dir:       path.Dir(dir),
+			SeasonDir: make(map[int]string),
+		}
+	}
+	m.name2dir[season.Name].SeasonDir[season.Season] = dir
+	if _, ok := m.cacheSeasonDBEntity[season.Name]; !ok {
+		m.cacheSeasonDBEntity[season.Name] = make(map[int]*models.SeasonDBEntity)
+	}
+	m.cacheSeasonDBEntity[season.Name][season.Season] = season
+}
+
+func (m *Database) setEpisodeCache(dir string, ep *models.EpisodeDBEntity) {
+	m.dir2name[dir] = ep.Name
+	if _, ok := m.name2dir[ep.Name]; !ok {
+		m.name2dir[ep.Name] = &AnimeDir{
+			Dir:       path.Dir(dir), // 上层文件夹
+			SeasonDir: make(map[int]string),
+		}
+	}
+	m.name2dir[ep.Name].SeasonDir[ep.Season] = dir
+	if _, ok := m.cacheDB[ep.Name]; !ok {
+		m.cacheDB[ep.Name] = make(map[int][]*models.EpisodeDBEntity)
+	}
+	if _, ok := m.cacheDB[ep.Name][ep.Season]; !ok {
+		m.cacheDB[ep.Name][ep.Season] = make([]*models.EpisodeDBEntity, 0)
+	}
+	m.cacheDB[ep.Name][ep.Season] = append(m.cacheDB[ep.Name][ep.Season], ep)
+}
+
 // getAnimeEntityByHash
 //
 //	获取AnimeEntity
-//	从内存或bolt中获取
+//	从bolt中获取
 func (m *Database) getAnimeEntity(hash string) (*models.AnimeEntity, error) {
 	var name string
 	err := m.cache.Get(Hash2NameBucket, hash, &name)
@@ -143,7 +178,7 @@ func (m *Database) getAnimeEntity(hash string) (*models.AnimeEntity, error) {
 // getAnimeEntityByName
 //
 //	获取AnimeEntity，使用name
-//	从内存或bolt中获取
+//	从bolt中获取
 func (m *Database) getAnimeEntityByName(name string) (*models.AnimeEntity, error) {
 	anime := &models.AnimeEntity{}
 	err := m.cache.Get(Name2EntityBucket, name, anime)
@@ -158,25 +193,12 @@ func (m *Database) getAnimeEntityByName(name string) (*models.AnimeEntity, error
 //	获取文件数据库AnimeDBEntity，使用dir
 //	从内存或文件数据库中获取
 func (m *Database) getAnimeDBEntityByDir(dir string) (*models.AnimeDBEntity, error) {
-	if CacheMode {
-		name, ok := m.dir2name[dir]
-		if ok {
-			if anime, ok := m.cacheAnimeDBEntity[name]; ok {
-				return anime, nil
-			}
-		}
-		log.Debugf("未找到内存缓存，读取文件数据库: %s", dir)
+	if _, ok := m.dir2name[dir]; !ok {
+		return nil, &exceptions.ErrDatabaseDirNotFound{Dir: dir}
 	}
-	file := path.Join(dir, AnimeDBName)
-	if !utils.IsExist(file) {
-		return nil, nil
-	}
-	a := &models.AnimeDBEntity{}
-	err := m.read(file, a)
-	if err != nil {
-		return nil, err
-	}
-	return a, nil
+	name := m.dir2name[dir]
+	return m.getAnimeDBEntity(name)
+
 }
 
 // getAnimeDBEntity
@@ -184,17 +206,11 @@ func (m *Database) getAnimeDBEntityByDir(dir string) (*models.AnimeDBEntity, err
 //	获取文件数据库AnimeDBEntity
 //	从内存或文件数据库中获取
 func (m *Database) getAnimeDBEntity(name string) (*models.AnimeDBEntity, error) {
-	if CacheMode {
-		if anime, ok := m.cacheAnimeDBEntity[name]; ok {
-			return anime, nil
-		}
-		log.Debugf("未找到 %s 内存缓存，读取文件数据库", name)
+	if anime, ok := m.cacheAnimeDBEntity[name]; !ok {
+		return nil, &exceptions.ErrDatabaseDBNotFound{Name: name}
+	} else {
+		return anime, nil
 	}
-	dir, ok := m.name2dir[name]
-	if !ok {
-		return nil, nil
-	}
-	return m.getAnimeDBEntityByDir(dir.Dir)
 }
 
 // setAnimeDBEntity
@@ -212,15 +228,10 @@ func (m *Database) setAnimeDBEntity(dir string, a *models.AnimeDBEntity) error {
 	}
 	file := path.Join(dir, AnimeDBName)
 	err = m.write(file, a)
-
-	m.dir2name[dir] = a.Name
-	m.name2dir[a.Name] = &AnimeDir{
-		Dir:       dir,
-		SeasonDir: make(map[int]string),
+	if err != nil {
+		return err
 	}
-	if CacheMode {
-		m.cacheAnimeDBEntity[a.Name] = a
-	}
+	m.setAnimeCache(dir, a)
 	return nil
 }
 
@@ -229,28 +240,11 @@ func (m *Database) setAnimeDBEntity(dir string, a *models.AnimeDBEntity) error {
 //	获取文件数据库SeasonDBEntity，使用dir
 //	从内存或文件数据库中获取
 func (m *Database) getSeasonDBEntityByDir(dir string, season int) (*models.SeasonDBEntity, error) {
-	if CacheMode {
-		name, ok := m.dir2name[dir]
-		if ok {
-			if anime, ok := m.cacheSeasonDBEntity[name]; ok {
-				if s, ok := anime[season]; ok {
-					return s, nil
-				}
-			}
-		}
-		log.Debugf("未找到内存缓存，读取文件数据库: %s", dir)
+	if _, ok := m.dir2name[dir]; !ok {
+		return nil, &exceptions.ErrDatabaseDirNotFound{Dir: dir}
 	}
-
-	file := path.Join(dir, SeasonDBName)
-	if !utils.IsExist(file) {
-		return nil, nil
-	}
-	s := &models.SeasonDBEntity{}
-	err := m.read(file, s)
-	if err != nil {
-		return nil, err
-	}
-	return s, nil
+	name := m.dir2name[dir]
+	return m.getSeasonDBEntity(name, season)
 }
 
 // getSeasonDBEntity
@@ -258,23 +252,15 @@ func (m *Database) getSeasonDBEntityByDir(dir string, season int) (*models.Seaso
 //	获取文件数据库SeasonDBEntity
 //	从内存或文件数据库中获取
 func (m *Database) getSeasonDBEntity(name string, season int) (*models.SeasonDBEntity, error) {
-	if CacheMode {
-		if anime, ok := m.cacheSeasonDBEntity[name]; ok {
-			if s, ok := anime[season]; ok {
-				return s, nil
-			}
-		}
-		log.Debugf("未找到 %s 内存缓存，读取文件数据库", name)
+	if _, ok := m.cacheSeasonDBEntity[name]; !ok {
+		return nil, &exceptions.ErrDatabaseDBNotFound{Name: name}
 	}
-	dir, ok := m.name2dir[name]
-	if !ok {
-		return nil, nil
+	anime := m.cacheSeasonDBEntity[name]
+	if s, ok := anime[season]; ok {
+		return nil, &exceptions.ErrDatabaseDBNotFound{Name: name, Season: season}
+	} else {
+		return s, nil
 	}
-	seasonDir, ok := dir.SeasonDir[season]
-	if !ok {
-		return nil, nil
-	}
-	return m.getSeasonDBEntityByDir(path.Join(dir.Dir, seasonDir), season)
 }
 
 // setSeasonDBEntity
@@ -295,21 +281,62 @@ func (m *Database) setSeasonDBEntity(dir string, s *models.SeasonDBEntity) error
 	if err != nil {
 		return err
 	}
-	m.dir2name[dir] = s.Name
-	if _, ok := m.name2dir[s.Name]; ok {
-		m.name2dir[s.Name].SeasonDir[s.Season] = path.Base(dir)
+	m.setSeasonCache(dir, s)
+	return nil
+}
+
+func (m *Database) getEpisodeDBEntity(name string, season int, ep int, epType int8) (*models.EpisodeDBEntity, error) {
+	if _, ok := m.cacheDB[name]; !ok {
+		return nil, &exceptions.ErrDatabaseDBNotFound{Name: name}
+	}
+	if _, ok := m.cacheDB[name][season]; !ok {
+		return nil, &exceptions.ErrDatabaseDBNotFound{Name: name, Season: season}
+	}
+	for _, e := range m.cacheDB[name][season] {
+		if e.Type == epType && e.Ep == ep {
+			return e, nil
+		}
+	}
+	return nil, &exceptions.ErrDatabaseDBNotFound{Name: name, Season: season, Ep: ep}
+}
+
+func (m *Database) getEpisodeDBEntityList(name string, season int) ([]*models.EpisodeDBEntity, error) {
+	if _, ok := m.cacheDB[name]; !ok {
+		return nil, &exceptions.ErrDatabaseDBNotFound{Name: name}
+	}
+	eps := make([]*models.EpisodeDBEntity, 0)
+	if season > 0 {
+		if _, ok := m.cacheDB[name][season]; !ok {
+			return nil, &exceptions.ErrDatabaseDBNotFound{Name: name, Season: season}
+		}
+		for _, e := range m.cacheDB[name][season] {
+			eps = append(eps, e)
+		}
 	} else {
-		m.name2dir[s.Name] = &AnimeDir{
-			Dir:       path.Dir(dir),
-			SeasonDir: make(map[int]string),
+		for _, s := range m.cacheDB[name] {
+			for _, e := range s {
+				eps = append(eps, e)
+			}
 		}
-		m.name2dir[s.Name].SeasonDir[s.Season] = dir
 	}
-	if CacheMode {
-		if m.cacheSeasonDBEntity[s.Name] == nil {
-			m.cacheSeasonDBEntity[s.Name] = make(map[int]*models.SeasonDBEntity)
-		}
-		m.cacheSeasonDBEntity[s.Name][s.Season] = s
+	return eps, nil
+}
+
+func (m *Database) setEpisodeDBEntity(filename string, ep *models.EpisodeDBEntity) error {
+	ep.UpdateAt = utils.Unix()
+	if ep.CreateAt == 0 {
+		ep.CreateAt = ep.UpdateAt
 	}
+	dir := path.Dir(filename)
+	err := utils.CreateMutiDir(dir)
+	if err != nil {
+		return err
+	}
+	file := fmt.Sprintf(EpisodeDBFmt, strings.TrimSuffix(filename, path.Ext(filename)))
+	err = m.write(file, ep)
+	if err != nil {
+		return err
+	}
+	m.setEpisodeCache(dir, ep)
 	return nil
 }

@@ -1,9 +1,10 @@
 package dirdb
 
 import (
+	"os"
+
 	"github.com/pkg/errors"
 	"github.com/wetor/AnimeGo/pkg/json"
-	"os"
 )
 
 type DB interface {
@@ -41,7 +42,7 @@ func (d *JsonDB) Unmarshal(value any) error {
 }
 
 func (d *JsonDB) Marshal(value any) error {
-	data, err := json.Marshal(value)
+	data, err := json.MarshalIndent(value)
 	if err != nil {
 		return err
 	}

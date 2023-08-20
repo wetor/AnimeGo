@@ -52,7 +52,6 @@ type RenameTask struct {
 }
 
 type RenameTaskGroup struct {
-	Enable           bool
 	Keys             []string
 	RenameResult     *models.RenameAllResult
 	CompleteCallback models.CompleteCallback // 完成重命名所有流程后回调
@@ -80,7 +79,7 @@ func (m *Manager) SetDownloadState(keys []string, state models.TorrentState) err
 			return errors.WithStack(exceptions.ErrRename{Src: key, Message: "任务不存在"})
 		}
 		if !t.Enable {
-			return errors.WithStack(exceptions.ErrRename{Src: key, Message: "任务未启用"})
+			continue
 		}
 		t.StateChan <- state
 	}
@@ -294,19 +293,23 @@ func (m *Manager) EnableTask(keys []string) error {
 
 func (m *Manager) isComplete(keys []string) (int, bool) {
 	incomplete := 0
+	all := 0
 	for _, key := range keys {
 		if task, ok := m.tasks[key]; ok {
-			if task.RenameState != RenameStateEnd {
-				incomplete++
+			if task.Enable {
+				all++
+				if task.RenameState != RenameStateEnd {
+					incomplete++
+				}
 			}
-		} else {
-			return AllRenameStateError, false
 		}
 	}
-
+	if all == 0 {
+		return AllRenameStateError, false
+	}
 	if incomplete == 0 {
 		return AllRenameStateComplete, true
-	} else if incomplete == len(keys) {
+	} else if incomplete == all {
 		return AllRenameStateStart, true
 	} else {
 		return AllRenameStateIncomplete, true

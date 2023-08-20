@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/wetor/AnimeGo/assets"
 	"github.com/wetor/AnimeGo/internal/animego/database"
 	"github.com/wetor/AnimeGo/internal/animego/renamer"
@@ -58,7 +59,7 @@ func TestMain(m *testing.M) {
 		DownloaderConf: database.DownloaderConf{
 			DownloadPath: DownloadPath,
 			SavePath:     SavePath,
-			Rename:       "wait_move",
+			Rename:       "link_delete",
 		},
 	})
 	renamer.Init(&renamer.Options{
@@ -82,7 +83,7 @@ func TestMain(m *testing.M) {
 	m.Run()
 	db.Close()
 	_ = log.Close()
-	_ = os.RemoveAll("data")
+	//_ = os.RemoveAll("data")
 	fmt.Println("end")
 }
 func initTest() (*sync.WaitGroup, func()) {
@@ -129,7 +130,6 @@ func AddItem(name string, season int, ep []int) (hash string) {
 }
 
 func TestOnDownloadStart(t *testing.T) {
-	database.CacheMode = false
 	wg, cancel := initTest()
 	hash := AddItem("动画1", 2, []int{1, 2, 3})
 	dbManager.OnDownloadStart([]models.ClientEvent{
@@ -139,12 +139,46 @@ func TestOnDownloadStart(t *testing.T) {
 		{Hash: hash},
 	})
 	go func() {
-		time.Sleep(5 * time.Second)
+		time.Sleep(3 * time.Second)
 		cancel()
 	}()
 	time.Sleep(1 * time.Second)
 	dbManager.OnDownloadComplete([]models.ClientEvent{
 		{Hash: hash},
 	})
+	wg.Wait()
+	assert.FileExists(t, path.Join(SavePath, "动画1", "anime.a_json"))
+}
+
+func TestOnDownloadExistAnime(t *testing.T) {
+	wg, cancel := initTest()
+
+	hash := AddItem("动画1", 2, []int{1, 2, 3})
+	dbManager.OnDownloadStart([]models.ClientEvent{
+		{Hash: hash},
+	})
+	dbManager.OnDownloadSeeding([]models.ClientEvent{
+		{Hash: hash},
+	})
+	time.Sleep(1 * time.Second)
+	dbManager.OnDownloadComplete([]models.ClientEvent{
+		{Hash: hash},
+	})
+	time.Sleep(1 * time.Second)
+	hash2 := AddItem("动画1", 2, []int{3, 4, 5})
+	dbManager.OnDownloadStart([]models.ClientEvent{
+		{Hash: hash2},
+	})
+	dbManager.OnDownloadSeeding([]models.ClientEvent{
+		{Hash: hash2},
+	})
+	time.Sleep(1 * time.Second)
+	dbManager.OnDownloadComplete([]models.ClientEvent{
+		{Hash: hash2},
+	})
+	go func() {
+		time.Sleep(3 * time.Second)
+		cancel()
+	}()
 	wg.Wait()
 }

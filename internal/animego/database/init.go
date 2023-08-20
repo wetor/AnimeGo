@@ -2,8 +2,6 @@ package database
 
 import "sync"
 
-var CacheMode = true // 将数据库加载到内存中，减少IO
-
 var (
 	ReInitWG sync.WaitGroup
 	Conf     DownloaderConf

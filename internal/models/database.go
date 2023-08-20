@@ -9,21 +9,22 @@ type BaseDBEntity struct {
 
 type AnimeDBEntity struct {
 	BaseDBEntity `json:"info"`
-	Init         bool `json:"init"`       // 是否初始化
-	Renamed      bool `json:"renamed"`    // 是否已重命名/移动
-	Downloaded   bool `json:"downloaded"` // 是否已下载完成
-	Seeded       bool `json:"seeded"`     // 是否做种
-	Scraped      bool `json:"scraped"`    // 是否已经完成搜刮
-}
-
-type EpisodeDBEntity struct {
-	File string `json:"file"`
-	Type int8   `json:"type"`
-	Ep   int    `json:"ep"`
 }
 
 type SeasonDBEntity struct {
 	BaseDBEntity `json:"info"`
-	Season       int               `json:"season"`
-	Episodes     []EpisodeDBEntity `json:"episodes"`
+	Season       int `json:"season"`
+}
+
+type StateDB struct {
+	Renamed bool `json:"renamed"` // 是否已重命名/移动
+	Scraped bool `json:"scraped"` // 是否已经完成搜刮
+}
+
+type EpisodeDBEntity struct {
+	BaseDBEntity
+	StateDB
+	Season int  `json:"season"`
+	Type   int8 `json:"type"`
+	Ep     int  `json:"ep"`
 }
