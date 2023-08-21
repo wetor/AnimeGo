@@ -2,7 +2,7 @@ package models
 
 type RenameResult struct {
 	Index     int    `json:"index"`
-	Scrape    bool   `json:"scrape"`
+	Scrape    bool   `json:"scrape"` // 是否进行刮削
 	Filename  string `json:"filename"`
 	AnimeDir  string `json:"anime_dir"`
 	SeasonDir string `json:"season_dir"`
@@ -22,6 +22,14 @@ func (r RenameAllResult) Scrape() bool {
 		}
 	}
 	return false
+}
+
+func (r RenameAllResult) Filenames() []string {
+	result := make([]string, len(r.Results))
+	for i, res := range r.Results {
+		result[i] = res.Filename
+	}
+	return result
 }
 
 type RenameCallback func(*RenameResult)

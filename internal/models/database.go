@@ -17,14 +17,16 @@ type SeasonDBEntity struct {
 }
 
 type StateDB struct {
-	Renamed bool `json:"renamed"` // 是否已重命名/移动
-	Scraped bool `json:"scraped"` // 是否已经完成搜刮
+	Seeded     bool `json:"seeded"`     // 是否做种
+	Downloaded bool `json:"downloaded"` // 是否已下载完成
+	Renamed    bool `json:"renamed"`    // 是否已重命名/移动
+	Scraped    bool `json:"scraped"`    // 是否已经完成搜刮
 }
 
 type EpisodeDBEntity struct {
-	BaseDBEntity
-	StateDB
-	Season int  `json:"season"`
-	Type   int8 `json:"type"`
-	Ep     int  `json:"ep"`
+	BaseDBEntity `json:"info"`
+	StateDB      `json:"state"`
+	Season       int  `json:"season"`
+	Type         int8 `json:"type"`
+	Ep           int  `json:"ep"`
 }
