@@ -3,7 +3,10 @@ package test
 import (
 	"bytes"
 	"fmt"
+	"github.com/wetor/AnimeGo/pkg/json"
 	"io"
+	"os"
+	"reflect"
 	"strings"
 )
 
@@ -181,4 +184,88 @@ func LogBatchCompare(r io.Reader, match MatchFunc, args ...any) {
 		}
 
 	}
+}
+
+func CompareJSONFile(filename string, data interface{}, skipFiled []string) (bool, error) {
+	// 读取文件内容
+	fileContent, err := os.ReadFile(filename)
+	if err != nil {
+		return false, err
+	}
+	return CompareJSON(fileContent, data, skipFiled)
+}
+
+func CompareJSON(fileContent []byte, data interface{}, skipFiled []string) (bool, error) {
+	// 解析json
+	dataValue := reflect.ValueOf(data).Elem()
+	jsonData := reflect.New(dataValue.Type()).Interface()
+	err := json.Unmarshal(fileContent, jsonData)
+	if err != nil {
+		return false, err
+	}
+
+	// 比较data和jsonData的值
+	return compareStruct(dataValue, reflect.ValueOf(jsonData).Elem(), skipFiled, ""), nil
+}
+
+func compareStruct(dataValue, jsonValue reflect.Value, skipFiled []string, prefix string) bool {
+	for i := 0; i < dataValue.NumField(); i++ {
+		field := dataValue.Type().Field(i)
+		if contains(skipFiled, field.Tag.Get("json")) {
+			continue
+		}
+
+		dataFieldValue := dataValue.Field(i)
+		jsonFieldValue := jsonValue.Field(i)
+
+		if !compareField(dataFieldValue, jsonFieldValue, skipFiled, prefix+field.Name) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func compareField(dataFieldValue, jsonFieldValue reflect.Value, skipFiled []string, fieldName string) bool {
+	if dataFieldValue.Kind() != jsonFieldValue.Kind() {
+		fmt.Printf("字段 %s 类型不相同\n", fieldName)
+		return false
+	}
+
+	switch dataFieldValue.Kind() {
+	case reflect.Struct:
+		return compareStruct(dataFieldValue, jsonFieldValue, skipFiled, fieldName+".")
+	case reflect.Slice, reflect.Array:
+		return compareSlice(dataFieldValue, jsonFieldValue, skipFiled, fieldName)
+	default:
+		if !reflect.DeepEqual(dataFieldValue.Interface(), jsonFieldValue.Interface()) {
+			fmt.Printf("字段 %s 不相同\n  预期: %v\n  实际: %v\n", fieldName, dataFieldValue.Interface(), jsonFieldValue.Interface())
+			return false
+		}
+	}
+	return true
+}
+
+func compareSlice(dataSlice, jsonSlice reflect.Value, skipFiled []string, fieldName string) bool {
+	if dataSlice.Len() != jsonSlice.Len() {
+		fmt.Printf("字段 %s 长度不相同\n", fieldName)
+		return false
+	}
+
+	for i := 0; i < dataSlice.Len(); i++ {
+		if !compareField(dataSlice.Index(i), jsonSlice.Index(i), skipFiled, fmt.Sprintf("%s[%d]", fieldName, i)) {
+			return false
+		}
+	}
+
+	return true
+}
+
+func contains(arr []string, str string) bool {
+	for _, a := range arr {
+		if a == str {
+			return true
+		}
+	}
+	return false
 }

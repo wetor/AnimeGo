@@ -154,12 +154,12 @@ func (m *Database) setEpisodeCache(dir string, ep *models.EpisodeDBEntity) {
 	}
 	m.name2dir[ep.Name].SeasonDir[ep.Season] = dir
 	if _, ok := m.cacheDB[ep.Name]; !ok {
-		m.cacheDB[ep.Name] = make(map[int][]*models.EpisodeDBEntity)
+		m.cacheDB[ep.Name] = make(map[int]map[string]*models.EpisodeDBEntity)
 	}
 	if _, ok := m.cacheDB[ep.Name][ep.Season]; !ok {
-		m.cacheDB[ep.Name][ep.Season] = make([]*models.EpisodeDBEntity, 0)
+		m.cacheDB[ep.Name][ep.Season] = make(map[string]*models.EpisodeDBEntity)
 	}
-	m.cacheDB[ep.Name][ep.Season] = append(m.cacheDB[ep.Name][ep.Season], ep)
+	m.cacheDB[ep.Name][ep.Season][ep.Key()] = ep
 }
 
 // getAnimeEntityByHash
@@ -285,19 +285,18 @@ func (m *Database) setSeasonDBEntity(dir string, s *models.SeasonDBEntity) error
 	return nil
 }
 
-func (m *Database) getEpisodeDBEntity(name string, season int, ep int, epType int8) (*models.EpisodeDBEntity, error) {
+func (m *Database) getEpisodeDBEntity(name string, season int, ep int, epType models.AnimeEpType) (*models.EpisodeDBEntity, error) {
 	if _, ok := m.cacheDB[name]; !ok {
 		return nil, &exceptions.ErrDatabaseDBNotFound{Name: name}
 	}
 	if _, ok := m.cacheDB[name][season]; !ok {
 		return nil, &exceptions.ErrDatabaseDBNotFound{Name: name, Season: season}
 	}
-	for _, e := range m.cacheDB[name][season] {
-		if e.Type == epType && e.Ep == ep {
-			return e, nil
-		}
+	key := fmt.Sprintf("E%d-%v", ep, epType)
+	if _, ok := m.cacheDB[name][season][key]; !ok {
+		return nil, &exceptions.ErrDatabaseDBNotFound{Name: name, Season: season, Ep: ep}
 	}
-	return nil, &exceptions.ErrDatabaseDBNotFound{Name: name, Season: season, Ep: ep}
+	return m.cacheDB[name][season][key], nil
 }
 
 func (m *Database) getEpisodeDBEntityList(name string, season int) ([]*models.EpisodeDBEntity, error) {

@@ -1,5 +1,7 @@
 package models
 
+import "fmt"
+
 type BaseDBEntity struct {
 	Hash     string `json:"hash"`
 	Name     string `json:"name"`
@@ -26,7 +28,11 @@ type StateDB struct {
 type EpisodeDBEntity struct {
 	BaseDBEntity `json:"info"`
 	StateDB      `json:"state"`
-	Season       int  `json:"season"`
-	Type         int8 `json:"type"`
-	Ep           int  `json:"ep"`
+	Season       int         `json:"season"`
+	Type         AnimeEpType `json:"type"`
+	Ep           int         `json:"ep"`
+}
+
+func (e EpisodeDBEntity) Key() string {
+	return fmt.Sprintf("E%d-%v", e.Ep, e.Type)
 }

@@ -34,17 +34,19 @@ type AnimeEntity struct {
 	Torrent      *AnimeTorrent    `json:"torrent"`
 }
 
+type AnimeEpType int8
+
 const (
-	AnimeEpUnknown int8 = iota
+	AnimeEpUnknown AnimeEpType = iota
 	AnimeEpNormal
 	AnimeEpSpecial
 )
 
 type AnimeEpEntity struct {
-	Type    int8   `json:"type"`     // ep类型。0:未知，1:正常剧集，2:SP
-	Ep      int    `json:"ep"`       // 集数，Type=0时，不使用此参数
-	Src     string `json:"src"`      // 原文件名
-	AirDate string `json:"air_date"` // 首映日期
+	Type    AnimeEpType `json:"type"`     // ep类型。0:未知，1:正常剧集，2:SP
+	Ep      int         `json:"ep"`       // 集数，Type=0时，不使用此参数
+	Src     string      `json:"src"`      // 原文件名
+	AirDate string      `json:"air_date"` // 首映日期
 }
 
 type AnimeTorrent struct {

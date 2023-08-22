@@ -40,7 +40,7 @@ var (
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
-	_ = os.RemoveAll("data")
+	//_ = os.RemoveAll("data")
 	_ = utils.CreateMutiDir(DownloadPath)
 	_ = utils.CreateMutiDir(SavePath)
 	log.Init(&log.Options{
@@ -53,7 +53,7 @@ func TestMain(m *testing.M) {
 		Debug: true,
 	})
 	dirdb.Init(&dirdb.Options{
-		DefaultExt: []string{".a_json", ".s_json"}, // anime, season
+		DefaultExt: []string{".a_json", ".s_json", ".e_json"}, // anime, season
 	})
 	database.Init(&database.Options{
 		DownloaderConf: database.DownloaderConf{
@@ -176,6 +176,32 @@ func TestOnDownloadExistAnime(t *testing.T) {
 	dbManager.OnDownloadComplete([]models.ClientEvent{
 		{Hash: hash2},
 	})
+	time.Sleep(2 * time.Second)
+
+	exist := dbManager.IsExist(&models.AnimeEntity{
+		NameCN: "动画1",
+		Season: 2,
+		Ep: []*models.AnimeEpEntity{
+			{Type: models.AnimeEpNormal, Ep: 1},
+			{Type: models.AnimeEpNormal, Ep: 2},
+			{Type: models.AnimeEpNormal, Ep: 3},
+			{Type: models.AnimeEpNormal, Ep: 4},
+			{Type: models.AnimeEpNormal, Ep: 5},
+		},
+	})
+	assert.Equal(t, exist, true)
+
+	exist = dbManager.IsExist(&models.AnimeEntity{
+		NameCN: "动画1",
+		Season: 2,
+		Ep: []*models.AnimeEpEntity{
+			{Type: models.AnimeEpNormal, Ep: 1},
+			{Type: models.AnimeEpNormal, Ep: 2},
+			{Type: models.AnimeEpNormal, Ep: 3},
+			{Type: models.AnimeEpNormal, Ep: 6},
+		},
+	})
+	assert.Equal(t, exist, false)
 	go func() {
 		time.Sleep(3 * time.Second)
 		cancel()

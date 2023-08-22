@@ -42,7 +42,7 @@ type Database struct {
 	cacheAnimeDBEntity  map[string]*models.AnimeDBEntity
 	cacheSeasonDBEntity map[string]map[int]*models.SeasonDBEntity
 
-	cacheDB map[string]map[int][]*models.EpisodeDBEntity
+	cacheDB map[string]map[int]map[string]*models.EpisodeDBEntity
 	sync.Mutex
 	dirMutex sync.Mutex // 事务控制
 }
@@ -60,7 +60,7 @@ func NewDatabase(cache api.Cacher, rename api.Renamer) (*Database, error) {
 
 	m.cacheAnimeDBEntity = make(map[string]*models.AnimeDBEntity)
 	m.cacheSeasonDBEntity = make(map[string]map[int]*models.SeasonDBEntity)
-	m.cacheDB = make(map[string]map[int][]*models.EpisodeDBEntity)
+	m.cacheDB = make(map[string]map[int]map[string]*models.EpisodeDBEntity)
 
 	err := m.Scan()
 	if err != nil {
