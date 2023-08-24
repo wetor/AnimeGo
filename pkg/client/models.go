@@ -13,7 +13,7 @@ type AddOptions struct {
 	Category    string
 	Tag         string
 	SeedingTime int    // 分钟
-	Rename      string // 保存名字
+	Name        string // 保存名字
 }
 
 type DeleteOptions struct {

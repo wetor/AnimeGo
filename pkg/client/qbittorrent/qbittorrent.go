@@ -196,7 +196,7 @@ func (c *QBittorrent) Add(opt *client.AddOptions) error {
 		Category:         &opt.Category,
 		Tags:             opt.Tag,
 		SeedingTimeLimit: &opt.SeedingTime,
-		Rename:           &opt.Rename,
+		Rename:           &opt.Name,
 	}
 	if len(opt.File) > 0 {
 		_, err = c.client.AddNewTorrent(context.Background(), &qbapi.AddNewTorrentReq{

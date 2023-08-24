@@ -40,7 +40,7 @@ var (
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
-	//_ = os.RemoveAll("data")
+	_ = os.RemoveAll("data")
 	_ = utils.CreateMutiDir(DownloadPath)
 	_ = utils.CreateMutiDir(SavePath)
 	log.Init(&log.Options{
@@ -83,7 +83,7 @@ func TestMain(m *testing.M) {
 	m.Run()
 	db.Close()
 	_ = log.Close()
-	//_ = os.RemoveAll("data")
+	_ = os.RemoveAll("data")
 	fmt.Println("end")
 }
 func initTest() (*sync.WaitGroup, func()) {

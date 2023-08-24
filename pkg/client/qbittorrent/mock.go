@@ -166,10 +166,10 @@ func (m *ClientMock) Add(opt *client.AddOptions) error {
 		return errors.New(ErrorAddFailed)
 	}
 
-	m.Name2item[opt.Rename] = &client.TorrentItem{
-		ContentPath: opt.Rename,
-		Hash:        m.Name2hash[opt.Rename],
-		Name:        opt.Rename,
+	m.Name2item[opt.Name] = &client.TorrentItem{
+		ContentPath: opt.Name,
+		Hash:        m.Name2hash[opt.Name],
+		Name:        opt.Name,
 		Progress:    0.0,
 		State:       QbtDownloading,
 	}

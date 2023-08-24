@@ -162,30 +162,48 @@ func (m *Database) setEpisodeCache(dir string, ep *models.EpisodeDBEntity) {
 	m.cacheDB[ep.Name][ep.Season][ep.Key()] = ep
 }
 
-// getAnimeEntityByHash
+// Add
+//
+//	添加数据到缓存中，根据类型决定缓存Bucket和Key
+//	Step2
+func (m *Database) Add(data any) error {
+	m.Lock()
+	defer m.Unlock()
+
+	switch value := data.(type) {
+	case *models.AnimeEntity:
+		name := value.FullName()
+		hash := value.Hash()
+		m.cache.Put(Name2HashBucket, name, hash, 0)
+		m.cache.Put(Hash2EntityBucket, hash, value, 0)
+	}
+	return nil
+}
+
+// GetAnimeEntity
 //
 //	获取AnimeEntity
 //	从bolt中获取
-func (m *Database) getAnimeEntity(hash string) (*models.AnimeEntity, error) {
-	var name string
-	err := m.cache.Get(Hash2NameBucket, hash, &name)
-	if err != nil {
-		return nil, err
-	}
-	return m.getAnimeEntityByName(name)
-}
-
-// getAnimeEntityByName
-//
-//	获取AnimeEntity，使用name
-//	从bolt中获取
-func (m *Database) getAnimeEntityByName(name string) (*models.AnimeEntity, error) {
+func (m *Database) GetAnimeEntity(hash string) (*models.AnimeEntity, error) {
 	anime := &models.AnimeEntity{}
-	err := m.cache.Get(Name2EntityBucket, name, anime)
+	err := m.cache.Get(Hash2EntityBucket, hash, anime)
 	if err != nil {
 		return nil, err
 	}
 	return anime, nil
+}
+
+// GetAnimeEntityByName
+//
+//	获取AnimeEntity，使用name
+//	从bolt中获取
+func (m *Database) GetAnimeEntityByName(name string) (*models.AnimeEntity, error) {
+	var hash string
+	err := m.cache.Get(Name2HashBucket, name, &hash)
+	if err != nil {
+		return nil, err
+	}
+	return m.GetAnimeEntity(hash)
 }
 
 // getAnimeDBEntityByDir

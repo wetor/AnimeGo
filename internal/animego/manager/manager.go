@@ -151,17 +151,17 @@ func (m *Manager) download(anime *models.AnimeEntity) {
 		Category:    Conf.Category,
 		Tag:         utils.Tag(Conf.Tag, anime.AirDate, anime.Ep[0].Ep),
 		SeedingTime: Conf.SeedingTimeMinute,
-		Rename:      name,
+		Name:        name,
 	})
 	if err != nil {
 		m.addError(err)
 		return
 	}
-	m.cache.Put(Hash2NameBucket, anime.Torrent.Hash, name, 0)
+	m.cache.Put(Hash2NameBucket, anime.Hash(), name, 0)
 	m.cache.Put(Name2EntityBucket, name, anime, 0)
 
 	status := &models.DownloadStatus{
-		Hash:     anime.Torrent.Hash,
+		Hash:     anime.Hash(),
 		State:    downloader.StateAdding,
 		ExpireAt: utils.Unix() + AddingExpireSecond,
 	}

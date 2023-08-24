@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/wetor/AnimeGo/internal/animego/database"
 	"os"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/wetor/AnimeGo/internal/animego/downloader"
-	"github.com/wetor/AnimeGo/internal/animego/manager"
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/pkg/client"
 	"github.com/wetor/AnimeGo/pkg/client/qbittorrent"
@@ -40,12 +40,15 @@ func TestMain(m *testing.M) {
 	})
 
 	qbt = &qbittorrent.ClientMock{}
-	mgr = &manager.ManagerMock{}
+	mgr = &database.DatabaseMock{}
 	wg := sync.WaitGroup{}
 	downloader.Init(&downloader.Options{
-		RefreshSecond: 1,
-		Category:      "AnimeGoTest",
-		WG:            &wg,
+		RefreshSecond:          1,
+		Category:               "AnimeGoTest",
+		WG:                     &wg,
+		AllowDuplicateDownload: false,
+		SeedingTimeMinute:      0,
+		Tag:                    "",
 	})
 	dmgr = downloader.NewManager(qbt, mgr)
 
@@ -94,7 +97,7 @@ func TestManager_UpdateList(t *testing.T) {
 	fullname := "test[第1季][第1集]"
 	qbt.MockAddName(fullname, hash, []string{"test/S1/E1.mp4"})
 	err := dmgr.Add(hash, &client.AddOptions{
-		Rename: fullname,
+		Name: fullname,
 	})
 	if err != nil {
 		panic(err)

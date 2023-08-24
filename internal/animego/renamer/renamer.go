@@ -76,7 +76,9 @@ func (m *Manager) SetDownloadState(keys []string, state models.TorrentState) err
 	for _, key := range keys {
 		t, ok := m.tasks[key]
 		if !ok {
-			return errors.WithStack(exceptions.ErrRename{Src: key, Message: "任务不存在"})
+			log.Warnf("重命名任务不存在，可能已经完成: %s", key)
+			continue
+			// return errors.WithStack(exceptions.ErrRename{Src: key, Message: "任务不存在"})
 		}
 		if !t.Enable {
 			continue
@@ -398,6 +400,7 @@ func (m *Manager) Update(ctx context.Context) (err error) {
 		}
 	}
 
+	// 自动回收task。当一个taskGroup均已完成或均未启用，将会被删除
 	var deleteIndex []int
 	for i, taskGroup := range m.taskGroups {
 		if state, exist := m.isComplete(taskGroup.Keys); exist && state == AllRenameStateComplete {

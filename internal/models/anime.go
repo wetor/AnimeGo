@@ -68,6 +68,13 @@ func (a *AnimeEntity) AnimeName() string {
 	return a.NameCN
 }
 
+func (a *AnimeEntity) Hash() string {
+	if a.Torrent != nil {
+		return a.Torrent.Hash
+	}
+	return ""
+}
+
 func (a *AnimeEntity) EpKeys() []string {
 	result := make([]string, len(a.Ep))
 	for i := range a.Ep {
@@ -89,7 +96,7 @@ func (a *AnimeEntity) EpKeyByEp(ep int) string {
 
 func (a *AnimeEntity) FullName() string {
 	if a.Flag&AnimeFlagEpParseFailed > 0 {
-		return fmt.Sprintf("%s[第%d季][第-集][%s]", a.NameCN, a.Season, a.Torrent.Hash)
+		return fmt.Sprintf("%s[第%d季][第-集][%s]", a.NameCN, a.Season, a.Hash())
 	}
 	if len(a.Ep) == 1 {
 		return fmt.Sprintf("%s[第%d季][第%d集]", a.NameCN, a.Season, a.Ep[0].Ep)

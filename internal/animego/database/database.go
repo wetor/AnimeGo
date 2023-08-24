@@ -19,8 +19,8 @@ import (
 )
 
 const (
-	Name2EntityBucket = "name2entity"
-	Hash2NameBucket   = "hash2name"
+	Hash2EntityBucket = "hash2entity"
+	Name2HashBucket   = "name2hash"
 
 	AnimeDBName  = "anime.a_json"
 	SeasonDBName = "anime.s_json"
@@ -55,8 +55,8 @@ func NewDatabase(cache api.Cacher, rename api.Renamer) (*Database, error) {
 		dir2name:      make(map[string]string),
 		hash2filename: make(map[string][]string),
 	}
-	m.cache.Add(Name2EntityBucket)
-	m.cache.Add(Hash2NameBucket)
+	m.cache.Add(Hash2EntityBucket)
+	m.cache.Add(Name2HashBucket)
 
 	m.cacheAnimeDBEntity = make(map[string]*models.AnimeDBEntity)
 	m.cacheSeasonDBEntity = make(map[string]map[int]*models.SeasonDBEntity)
@@ -123,17 +123,16 @@ func (m *Database) OnDownloadError(events []models.ClientEvent) {
 func (m *Database) handleDownloadStart(hash string) error {
 	event := "OnDownloadStart"
 	// 获取缓存中的anime信息
-	anime, err := m.getAnimeEntity(hash)
+	anime, err := m.GetAnimeEntity(hash)
 	if err != nil {
 		return errors.Wrapf(err, "处理事件失败: %s", event)
 	}
-	name := anime.AnimeName()
 	epKeys := anime.EpKeys()
 	// 添加重命名任务
 	var renameResult *models.RenameAllResult
 	if !m.rename.HasRenameTask(epKeys) {
 		renameResult, err = m.rename.AddRenameTask(&models.RenameOptions{
-			Name:           name,
+			Name:           anime.FullName(),
 			Entity:         anime,
 			SrcDir:         Conf.DownloadPath,
 			DstDir:         Conf.SavePath,
@@ -141,12 +140,12 @@ func (m *Database) handleDownloadStart(hash string) error {
 			RenameCallback: func(opts *models.RenameResult) {},
 			CompleteCallback: func(_result *models.RenameAllResult) {
 				_name := _result.Name
-				log.Infof("移动完成「%s」", _name)
 				// 写入文件夹数据库
-				_anime, err := m.getAnimeEntityByName(_name)
+				_anime, err := m.GetAnimeEntityByName(_name)
 				if err != nil {
 					log.Warnf("获取信息失败: %s", _name)
 				}
+				log.Infof("移动完成「%s」", _name)
 				err = m.writeAllRenamed(_anime, _result)
 				if err != nil {
 					log.Warnf("写入文件数据库失败: %s", _name)
@@ -176,6 +175,8 @@ func (m *Database) handleDownloadStart(hash string) error {
 		log.Warnf("更新文件数据库失败")
 		return errors.Wrapf(err, "处理事件失败: %s", event)
 	}
+	name := anime.AnimeName()
+
 	m.hash2filename[hash] = renameResult.Filenames()
 
 	m.setAnimeCache(path.Join(Conf.SavePath, renameResult.AnimeDir), &models.AnimeDBEntity{
@@ -227,7 +228,7 @@ func (m *Database) handleDownloadStart(hash string) error {
 func (m *Database) handleDownloadSeeding(hash string) error {
 	event := "OnDownloadSeeding"
 	// 获取缓存中的anime信息
-	anime, err := m.getAnimeEntity(hash)
+	anime, err := m.GetAnimeEntity(hash)
 	if err != nil {
 		return errors.Wrapf(err, "处理事件失败: %s", event)
 	}
@@ -248,7 +249,7 @@ func (m *Database) handleDownloadSeeding(hash string) error {
 func (m *Database) handleDownloadComplete(hash string) error {
 	event := "OnDownloadComplete"
 	// 获取缓存中的anime信息
-	anime, err := m.getAnimeEntity(hash)
+	anime, err := m.GetAnimeEntity(hash)
 	if err != nil {
 		return errors.Wrapf(err, "处理事件失败: %s", event)
 	}
@@ -276,7 +277,7 @@ func (m *Database) writeEpisode(anime *models.AnimeEntity, epIndex int, filename
 			edit = true
 			ep = &models.EpisodeDBEntity{
 				BaseDBEntity: models.BaseDBEntity{
-					Hash:     anime.Torrent.Hash,
+					Hash:     anime.Hash(),
 					Name:     name,
 					CreateAt: utils.Unix(),
 				},
@@ -313,7 +314,7 @@ func (m *Database) writeEpisode(anime *models.AnimeEntity, epIndex int, filename
 		}
 	}
 	if edit {
-		ep.Hash = anime.Torrent.Hash
+		ep.Hash = anime.Hash()
 		err = m.setEpisodeDBEntity(path.Join(Conf.SavePath, filename), ep)
 		if err != nil {
 			return err
@@ -349,7 +350,7 @@ func (m *Database) writeAllRenamed(anime *models.AnimeEntity, renameResult *mode
 		case *exceptions.ErrDatabaseDBNotFound:
 			adb = &models.AnimeDBEntity{
 				BaseDBEntity: models.BaseDBEntity{
-					Hash: anime.Torrent.Hash,
+					Hash: anime.Hash(),
 					Name: name,
 				},
 			}
@@ -384,7 +385,7 @@ func (m *Database) writeAllRenamed(anime *models.AnimeEntity, renameResult *mode
 		return err
 	}
 
-	delete(m.hash2filename, anime.Torrent.Hash)
+	delete(m.hash2filename, anime.Hash())
 	// 处理Episode文件数据库
 	err = m.writeAllEpisode(anime, renameResult.Filenames(), "renamed", true)
 	if err != nil {
@@ -447,23 +448,6 @@ func (m *Database) IsExist(data any) bool {
 		}
 	}
 	return false
-}
-
-// Add
-//
-//	添加数据到缓存中，根据类型决定缓存Bucket和Key
-//	Step2
-func (m *Database) Add(data any) error {
-	m.Lock()
-	defer m.Unlock()
-
-	switch value := data.(type) {
-	case *models.AnimeEntity:
-		name := value.AnimeName()
-		m.cache.Put(Hash2NameBucket, value.Torrent.Hash, name, 0)
-		m.cache.Put(Name2EntityBucket, name, value, 0)
-	}
-	return nil
 }
 
 // scrape

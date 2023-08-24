@@ -13,19 +13,15 @@ import (
 	"github.com/wetor/AnimeGo/pkg/utils"
 )
 
-const (
-	AllowDuplicateDownload = false
-	Tag                    = ""
-	SeedingTimeMinute      = 0
-)
-
 type Manager struct {
 	client   api.Client
 	database api.Database
 	notifier api.ClientNotifier
 
+	cache map[string]*models.AnimeEntity
 	// 保存上一次状态，检查状态是否改变
-	stateList map[string]*ItemState
+	hash2stateList map[string]*ItemState
+	name2hash      map[string]string
 
 	errs     []error
 	errMutex sync.Mutex
@@ -34,10 +30,12 @@ type Manager struct {
 
 func NewManager(client api.Client, notifier api.ClientNotifier) *Manager {
 	return &Manager{
-		client:    client,
-		notifier:  notifier,
-		stateList: make(map[string]*ItemState, 0),
-		errs:      make([]error, 0),
+		client:         client,
+		notifier:       notifier,
+		cache:          make(map[string]*models.AnimeEntity),
+		hash2stateList: make(map[string]*ItemState),
+		name2hash:      make(map[string]string),
+		errs:           make([]error, 0),
 	}
 }
 
@@ -142,6 +140,14 @@ func (m *Manager) notify(oldNotifyState, newNotifyState NotifyState, event []mod
 			break
 		}
 		m.notifier.OnDownloadComplete(event)
+		m.Lock()
+		defer m.Unlock()
+		for _, e := range event {
+			err := m.delete(e.Hash, false)
+			if err != nil {
+				return err
+			}
+		}
 	case NotifyOnStop:
 		if oldNotifyState == NotifyOnStop {
 			break
@@ -168,22 +174,23 @@ func (m *Manager) Download(anime *models.AnimeEntity) error {
 		}
 	}
 	log.Infof("添加下载「%s」", name)
-	err := m.database.Add(anime)
-	if err != nil {
-		return errors.Wrap(err, "添加下载项失败")
-	}
-	err = m.Add(anime.Torrent.Hash, &client.AddOptions{
+	err := m.Add(anime.Hash(), &client.AddOptions{
 		Url:         anime.Torrent.Url,
 		File:        anime.Torrent.File,
 		SavePath:    m.client.Config().DownloadPath,
 		Category:    Category,
 		Tag:         utils.Tag(Tag, anime.AirDate, anime.Ep[0].Ep),
 		SeedingTime: SeedingTimeMinute,
-		Rename:      name,
+		Name:        name,
 	})
 	if err != nil {
 		return errors.Wrap(err, "添加下载项失败")
 	}
+	err = m.database.Add(anime)
+	if err != nil {
+		return errors.Wrap(err, "添加下载项失败")
+	}
+	m.cache[anime.Hash()] = anime
 	return nil
 }
 
@@ -192,10 +199,14 @@ func (m *Manager) Add(hash string, opt *client.AddOptions) error {
 	defer ReInitWG.Done()
 	m.Lock()
 	defer m.Unlock()
-
-	if _, has := m.stateList[hash]; has {
-		log.Infof("发现正在下载「%s」", opt.Rename)
-		return exceptions.ErrClientExistItem{Client: m.client.Name(), Name: opt.Rename}
+	name := opt.Name
+	if _, has := m.hash2stateList[hash]; has {
+		log.Infof("发现正在下载「%s」", name)
+		return exceptions.ErrClientExistItem{Client: m.client.Name(), Name: name}
+	}
+	if _, has := m.name2hash[name]; has {
+		log.Infof("发现正在下载「%s」", name)
+		return exceptions.ErrClientExistItem{Client: m.client.Name(), Name: name}
 	}
 	// 添加下载项
 	err := m.client.Add(opt)
@@ -203,9 +214,30 @@ func (m *Manager) Add(hash string, opt *client.AddOptions) error {
 		return err
 	}
 
-	m.stateList[hash] = &ItemState{
+	m.hash2stateList[hash] = &ItemState{
 		Torrent: StateAdding,
 		Notify:  NotifyOnNone,
+		Name:    name,
+	}
+	m.name2hash[name] = hash
+	return nil
+}
+
+func (m *Manager) delete(hash string, deleteItem bool) error {
+	if deleteItem {
+		// 删除下载项
+		err := m.client.Delete(&client.DeleteOptions{
+			Hash:       []string{hash},
+			DeleteFile: true,
+		})
+		if err != nil {
+			return err
+		}
+	}
+	delete(m.cache, hash)
+	if state, ok := m.hash2stateList[hash]; ok {
+		delete(m.name2hash, state.Name)
+		delete(m.hash2stateList, hash)
 	}
 	return nil
 }
@@ -213,17 +245,7 @@ func (m *Manager) Add(hash string, opt *client.AddOptions) error {
 func (m *Manager) Delete(hash string) error {
 	m.Lock()
 	defer m.Unlock()
-
-	// 删除下载项
-	err := m.client.Delete(&client.DeleteOptions{
-		Hash:       []string{hash},
-		DeleteFile: true,
-	})
-	if err != nil {
-		return err
-	}
-	delete(m.stateList, hash)
-	return nil
+	return m.delete(hash, true)
 }
 
 func (m *Manager) UpdateList() {
@@ -242,12 +264,13 @@ func (m *Manager) UpdateList() {
 
 	for _, item := range items {
 		state := StateMap(item.State)
-		itemState, ok := m.stateList[item.Hash]
+		itemState, ok := m.hash2stateList[item.Hash]
 		if !ok {
 			// 没有记录状态，可能重启，从最初状态开始计算
 			itemState = &ItemState{
 				Torrent: StateAdding,
 				Notify:  NotifyOnStart,
+				Name:    item.Name,
 			}
 		}
 		if state != itemState.Torrent {
@@ -264,7 +287,8 @@ func (m *Manager) UpdateList() {
 			itemState.Notify = notify
 			itemState.Torrent = state
 		}
-		m.stateList[item.Hash] = itemState
+		m.hash2stateList[item.Hash] = itemState
+		m.name2hash[item.Name] = item.Hash
 	}
 }
 
