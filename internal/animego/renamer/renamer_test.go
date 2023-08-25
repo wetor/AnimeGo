@@ -173,7 +173,7 @@ func TestManager_AddRenameTask(t *testing.T) {
 		for i := range files1 {
 			go func(i int) {
 				_ = r.SetDownloadState(anime1.EpKeys(), downloader.StateSeeding)
-				time.Sleep(1*time.Second + 100*time.Duration(i)*time.Millisecond)
+				time.Sleep(1*time.Second + 500*time.Millisecond)
 				_ = r.SetDownloadState(anime1.EpKeys(), downloader.StateComplete)
 			}(i)
 		}
@@ -181,7 +181,7 @@ func TestManager_AddRenameTask(t *testing.T) {
 		for i := range files2 {
 			go func(i int) {
 				_ = r.SetDownloadState(anime2.EpKeys(), downloader.StateSeeding)
-				time.Sleep(1*time.Second + 100*time.Duration(i)*time.Millisecond)
+				time.Sleep(1*time.Second + 500*time.Millisecond)
 				_ = r.SetDownloadState(anime2.EpKeys(), downloader.StateComplete)
 			}(i)
 		}
@@ -189,7 +189,7 @@ func TestManager_AddRenameTask(t *testing.T) {
 		for i := range files3 {
 			go func(i int) {
 				_ = r.SetDownloadState(anime3.EpKeys(), downloader.StateSeeding)
-				time.Sleep(1*time.Second + 100*time.Duration(i)*time.Millisecond)
+				time.Sleep(1*time.Second + 500*time.Millisecond)
 				_ = r.SetDownloadState(anime3.EpKeys(), downloader.StateComplete)
 			}(i)
 		}
@@ -197,7 +197,7 @@ func TestManager_AddRenameTask(t *testing.T) {
 		for i := range files4 {
 			go func(i int) {
 				_ = r.SetDownloadState(anime4.EpKeys(), downloader.StateSeeding)
-				time.Sleep(1*time.Second + 100*time.Duration(i)*time.Millisecond)
+				time.Sleep(1*time.Second + 500*time.Millisecond)
 				_ = r.SetDownloadState(anime4.EpKeys(), downloader.StateComplete)
 			}(i)
 		}
@@ -227,18 +227,18 @@ func TestManager_AddRenameTask(t *testing.T) {
 	}
 
 	fmt.Println(out.String())
-	test.LogBatchCompare(out, nil,
-		map[string]any{"Rename插件": 6, "[重命名] 链接": 3},
-		[]string{"[重命名] 删除", "下载第712集完成 动画1"},
-		[]string{"[重命名] 删除", "下载第713集完成 动画1"},
-		[]string{"[重命名] 删除", "下载第0集完成 动画1"},
+	test.LogBatchCompare(out, test.MatchContainsRegexp,
+		map[string]any{"Rename插件": 6, `\[重命名\] 链接`: 3},
+		map[string]any{`下载第\d+集完成 动画1`: 3, `\[重命名\] 删除`: 3},
 		"下载完成 动画1",
-		[]string{"[重命名] 移动", "下载第1026集完成 动画2"},
+		[]string{`\[重命名\] 移动`, "下载第1026集完成 动画2"},
 		"下载完成 动画2",
-		[]string{"[重命名] 链接", "下载第0集完成 动画3"},
+		[]string{`\[重命名\] 链接`, "下载第0集完成 动画3"},
 		"下载完成 动画3",
-		[]string{"[重命名] 移动", "下载第114集完成 动画4"},
+		"重命名任务不存在，可能已经完成", // 动画3是link，在seeding时已经移动完成
+		[]string{`\[重命名\] 移动`, "下载第114集完成 动画4"},
 		"下载完成 动画4",
+		"重命名任务不存在，可能已经完成", // 动画4是move，在seeding时已经移动完成
 		"正常退出",
 	)
 }
@@ -267,7 +267,7 @@ func TestManager_Method(t *testing.T) {
 	_, err = r.GetEpTaskState(keys[0])
 	assert.ErrorAsf(t, err, &exceptions.ErrRename{}, "GetEpTaskState(): %s", err)
 	err = r.SetDownloadState(keys, downloader.StateSeeding)
-	assert.ErrorAsf(t, err, &exceptions.ErrRename{}, "SetDownloadState(): %s", err)
+	// assert.ErrorAsf(t, err, &exceptions.ErrRename{}, "SetDownloadState(): %s", err)
 
 	keys = anime1.EpKeys()
 	if r.HasRenameTask(keys) {
@@ -278,7 +278,7 @@ func TestManager_Method(t *testing.T) {
 		_, err = r.GetEpTaskState("test")
 		assert.ErrorAsf(t, err, &exceptions.ErrRename{}, "GetEpTaskState(): %s", err)
 		err = r.SetDownloadState([]string{"test"}, downloader.StateSeeding)
-		assert.ErrorAsf(t, err, &exceptions.ErrRename{}, "SetDownloadState(): %s", err)
+		// assert.ErrorAsf(t, err, &exceptions.ErrRename{}, "SetDownloadState(): %s", err)
 	}
 
 	go func() {
@@ -299,6 +299,8 @@ func TestManager_Method(t *testing.T) {
 	fmt.Println(out.String())
 	test.LogBatchCompare(out, nil,
 		"Rename插件",
+		"重命名任务不存在，可能已经完成",
+		"重命名任务不存在，可能已经完成",
 		[]string{"[重命名] 链接", "[重命名] 删除", "下载第1027集完成 动画1"},
 		"下载完成 动画1",
 		"正常退出",

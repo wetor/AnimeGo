@@ -27,6 +27,10 @@ const (
 	EpisodeDBFmt = "%s.e_json"
 )
 
+type Callback struct {
+	Renamed func(data any) error
+}
+
 type AnimeDir struct {
 	Dir       string
 	SeasonDir map[int]string
@@ -35,6 +39,7 @@ type AnimeDir struct {
 type Database struct {
 	cache         api.Cacher
 	rename        api.Renamer
+	callback      *Callback
 	name2dir      map[string]*AnimeDir // anime name -> anime dir&season dir
 	dir2name      map[string]string    // anime dir/season dir -> anime name
 	hash2filename map[string][]string  // hash -> dst filenames
@@ -47,26 +52,35 @@ type Database struct {
 	dirMutex sync.Mutex // 事务控制
 }
 
-func NewDatabase(cache api.Cacher, rename api.Renamer) (*Database, error) {
+func NewDatabase(cache api.Cacher, rename api.Renamer, callback *Callback) (*Database, error) {
 	m := &Database{
-		cache:         cache,
-		rename:        rename,
-		name2dir:      make(map[string]*AnimeDir),
-		dir2name:      make(map[string]string),
-		hash2filename: make(map[string][]string),
+		cache:    cache,
+		rename:   rename,
+		callback: callback,
 	}
 	m.cache.Add(Hash2EntityBucket)
 	m.cache.Add(Name2HashBucket)
-
-	m.cacheAnimeDBEntity = make(map[string]*models.AnimeDBEntity)
-	m.cacheSeasonDBEntity = make(map[string]map[int]*models.SeasonDBEntity)
-	m.cacheDB = make(map[string]map[int]map[string]*models.EpisodeDBEntity)
-
+	m.Init()
 	err := m.Scan()
 	if err != nil {
 		return nil, err
 	}
 	return m, nil
+}
+
+func (m *Database) Init() {
+	m.Lock()
+	defer m.Unlock()
+	m.dirMutex.Lock()
+	defer m.dirMutex.Unlock()
+
+	m.name2dir = make(map[string]*AnimeDir)
+	m.dir2name = make(map[string]string)
+	m.hash2filename = make(map[string][]string)
+
+	m.cacheAnimeDBEntity = make(map[string]*models.AnimeDBEntity)
+	m.cacheSeasonDBEntity = make(map[string]map[int]*models.SeasonDBEntity)
+	m.cacheDB = make(map[string]map[int]map[string]*models.EpisodeDBEntity)
 }
 
 // OnDownloadStart 开始下载事件，重启后首次也会执行
@@ -162,6 +176,10 @@ func (m *Database) handleDownloadStart(hash string) error {
 						log.Warnf("刮削失败: %s", _name)
 					}
 				}
+				err = m.callback.Renamed(_anime.Hash())
+				if err != nil {
+					log.Warnf("删除下载项失败: %s", _name)
+				}
 			},
 		})
 		if err != nil {
@@ -195,21 +213,21 @@ func (m *Database) handleDownloadStart(hash string) error {
 	// 是否启动重命名任务
 	eps, err := m.getEpisodeDBEntityList(name, anime.Season)
 	if err != nil {
-		switch err.(type) {
-		case *exceptions.ErrDatabaseDBNotFound:
+		if exceptions.IsNotFound(err) {
 			eps = make([]*models.EpisodeDBEntity, 0)
-		default:
+		} else {
 			return err
 		}
 	}
-	enableEpsSet := make(map[string]struct{})
-	for _, key := range epKeys {
-		enableEpsSet[key] = struct{}{}
+	enableEpsSet := make(map[string]int)
+	for i, key := range epKeys {
+		enableEpsSet[key] = i
 	}
 	// 剔除已经重命名完成的ep
 	for _, ep := range eps {
 		key := anime.EpKeyByEp(ep.Ep)
-		if _, ok := enableEpsSet[key]; ok && ep.Renamed {
+		if idx, ok := enableEpsSet[key]; ok && ep.Renamed {
+			log.Infof("发现部分已下载，跳过此部分重命名: %v", path.Join(Conf.DownloadPath, anime.Ep[idx].Src))
 			delete(enableEpsSet, key)
 		}
 	}
@@ -272,8 +290,7 @@ func (m *Database) writeEpisode(anime *models.AnimeEntity, epIndex int, filename
 	edit := false
 	ep, err := m.getEpisodeDBEntity(name, anime.Season, anime.Ep[epIndex].Ep, anime.Ep[epIndex].Type)
 	if err != nil {
-		switch err.(type) {
-		case *exceptions.ErrDatabaseDBNotFound:
+		if exceptions.IsNotFound(err) {
 			edit = true
 			ep = &models.EpisodeDBEntity{
 				BaseDBEntity: models.BaseDBEntity{
@@ -286,7 +303,7 @@ func (m *Database) writeEpisode(anime *models.AnimeEntity, epIndex int, filename
 				Type:    anime.Ep[epIndex].Type,
 				Ep:      anime.Ep[epIndex].Ep,
 			}
-		default:
+		} else {
 			return err
 		}
 	}
@@ -346,15 +363,14 @@ func (m *Database) writeAllRenamed(anime *models.AnimeEntity, renameResult *mode
 	// 获取Anime文件数据库
 	adb, err := m.getAnimeDBEntityByDir(dir)
 	if err != nil {
-		switch err.(type) {
-		case *exceptions.ErrDatabaseDBNotFound:
+		if exceptions.IsNotFound(err) {
 			adb = &models.AnimeDBEntity{
 				BaseDBEntity: models.BaseDBEntity{
 					Hash: anime.Hash(),
 					Name: name,
 				},
 			}
-		default:
+		} else {
 			return err
 		}
 	}
@@ -368,14 +384,13 @@ func (m *Database) writeAllRenamed(anime *models.AnimeEntity, renameResult *mode
 	seasonDir := path.Join(Conf.SavePath, renameResult.SeasonDir)
 	season, err := m.getSeasonDBEntityByDir(seasonDir, anime.Season)
 	if err != nil {
-		switch err.(type) {
-		case *exceptions.ErrDatabaseDBNotFound:
+		if exceptions.IsNotFound(err) {
 			season = &models.SeasonDBEntity{
 				BaseDBEntity: adb.BaseDBEntity,
 				Season:       anime.Season,
 			}
 			season.CreateAt = now
-		default:
+		} else {
 			return err
 		}
 	}
@@ -425,10 +440,9 @@ func (m *Database) IsExist(data any) bool {
 		// 是否启动重命名任务
 		eps, err := m.getEpisodeDBEntityList(name, value.Season)
 		if err != nil {
-			switch err.(type) {
-			case *exceptions.ErrDatabaseDBNotFound:
+			if exceptions.IsNotFound(err) {
 				eps = make([]*models.EpisodeDBEntity, 0)
-			default:
+			} else {
 				log.DebugErr(err)
 				return false
 			}

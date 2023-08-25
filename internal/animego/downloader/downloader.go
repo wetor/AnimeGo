@@ -2,8 +2,9 @@ package downloader
 
 import (
 	"context"
-	"github.com/pkg/errors"
 	"sync"
+
+	"github.com/pkg/errors"
 
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/exceptions"
@@ -28,15 +29,21 @@ type Manager struct {
 	sync.Mutex
 }
 
-func NewManager(client api.Client, notifier api.ClientNotifier) *Manager {
-	return &Manager{
-		client:         client,
-		notifier:       notifier,
-		cache:          make(map[string]*models.AnimeEntity),
-		hash2stateList: make(map[string]*ItemState),
-		name2hash:      make(map[string]string),
-		errs:           make([]error, 0),
+func NewManager(client api.Client, notifier api.ClientNotifier, database api.Database) *Manager {
+	m := &Manager{
+		client:   client,
+		notifier: notifier,
+		database: database,
 	}
+	m.Init()
+	return m
+}
+
+func (m *Manager) Init() {
+	m.cache = make(map[string]*models.AnimeEntity)
+	m.hash2stateList = make(map[string]*ItemState)
+	m.name2hash = make(map[string]string)
+	m.errs = make([]error, 0)
 }
 
 func (m *Manager) sleep(ctx context.Context) {
@@ -51,25 +58,28 @@ func (m *Manager) addError(err error) {
 
 func (m *Manager) transition(oldTorrentState, newTorrentState models.TorrentState) NotifyState {
 	log.Debugf("torrent %v -> %v", oldTorrentState, newTorrentState)
-	result := NotifyOnNone
 	if newTorrentState == StateError {
 		// error
 		return NotifyOnError
 	}
 
+	result := NotifyOnInit
 	switch oldTorrentState {
+	case StateInit:
+		// init -> start
+		result = NotifyOnStart
 	case StateAdding:
 		switch newTorrentState {
 		case StateDownloading:
 			// start -> download
-			result = NotifyOnStart
+			result = NotifyOnDownload
 		case StateSeeding:
 			// start -> seed
-			// 非常规
+			// 做种状态下重启后
 			result = NotifyOnSeeding
 		case StateComplete:
 			// start -> complete
-			// 非常规
+			// 完成状态下重启后
 			result = NotifyOnComplete
 		}
 	case StateDownloading:
@@ -101,7 +111,7 @@ func (m *Manager) transition(oldTorrentState, newTorrentState models.TorrentStat
 		switch newTorrentState {
 		case StateDownloading:
 			// error -> download
-			result = NotifyOnStart
+			result = NotifyOnDownload
 		case StateSeeding:
 			// error -> seed
 			result = NotifyOnSeeding
@@ -115,7 +125,7 @@ func (m *Manager) transition(oldTorrentState, newTorrentState models.TorrentStat
 
 func (m *Manager) notify(oldNotifyState, newNotifyState NotifyState, event []models.ClientEvent) error {
 	log.Debugf("notify %v -> %v", oldNotifyState, newNotifyState)
-	if newNotifyState == NotifyOnNone {
+	if newNotifyState == NotifyOnInit {
 		return nil
 	}
 	switch newNotifyState {
@@ -140,14 +150,6 @@ func (m *Manager) notify(oldNotifyState, newNotifyState NotifyState, event []mod
 			break
 		}
 		m.notifier.OnDownloadComplete(event)
-		m.Lock()
-		defer m.Unlock()
-		for _, e := range event {
-			err := m.delete(e.Hash, false)
-			if err != nil {
-				return err
-			}
-		}
 	case NotifyOnStop:
 		if oldNotifyState == NotifyOnStop {
 			break
@@ -215,8 +217,8 @@ func (m *Manager) Add(hash string, opt *client.AddOptions) error {
 	}
 
 	m.hash2stateList[hash] = &ItemState{
-		Torrent: StateAdding,
-		Notify:  NotifyOnNone,
+		Torrent: StateInit,
+		Notify:  NotifyOnInit,
 		Name:    name,
 	}
 	m.name2hash[name] = hash
@@ -225,6 +227,7 @@ func (m *Manager) Add(hash string, opt *client.AddOptions) error {
 
 func (m *Manager) delete(hash string, deleteItem bool) error {
 	if deleteItem {
+		log.Debugf("删除下载项：%v", hash)
 		// 删除下载项
 		err := m.client.Delete(&client.DeleteOptions{
 			Hash:       []string{hash},
@@ -233,6 +236,8 @@ func (m *Manager) delete(hash string, deleteItem bool) error {
 		if err != nil {
 			return err
 		}
+	} else {
+		log.Debugf("删除缓存：%v", hash)
 	}
 	delete(m.cache, hash)
 	if state, ok := m.hash2stateList[hash]; ok {
@@ -268,8 +273,8 @@ func (m *Manager) UpdateList() {
 		if !ok {
 			// 没有记录状态，可能重启，从最初状态开始计算
 			itemState = &ItemState{
-				Torrent: StateAdding,
-				Notify:  NotifyOnStart,
+				Torrent: StateInit,
+				Notify:  NotifyOnInit,
 				Name:    item.Name,
 			}
 		}

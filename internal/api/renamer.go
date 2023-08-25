@@ -3,6 +3,7 @@ package api
 import "github.com/wetor/AnimeGo/internal/models"
 
 type Renamer interface {
+	Init()
 	AddRenameTask(*models.RenameOptions) (*models.RenameAllResult, error)
 	HasRenameTask(keys []string) bool
 	EnableTask(keys []string) error

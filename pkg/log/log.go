@@ -31,6 +31,7 @@ type Options struct {
 func Init(opts *Options) {
 	debug = opts.Debug
 	out = opts.Out
+	file = opts.File
 	dir := path.Dir(file)
 	_, err := os.Stat(dir)
 	if err != nil {

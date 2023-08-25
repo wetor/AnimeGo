@@ -10,6 +10,10 @@ func (e ErrDatabaseDirNotFound) Error() string {
 	return fmt.Sprintf("数据文件夹未找到: %s", e.Dir)
 }
 
+func (e ErrDatabaseDirNotFound) NotFound() bool {
+	return true
+}
+
 type ErrDatabaseDBNotFound struct {
 	Name   string
 	Season int
@@ -24,6 +28,10 @@ func (e ErrDatabaseDBNotFound) Error() string {
 	} else {
 		return fmt.Sprintf("数据未找到: %s", e.Name)
 	}
+}
+
+func (e ErrDatabaseDBNotFound) NotFound() bool {
+	return true
 }
 
 type ErrDatabaseEpisodeExist struct {

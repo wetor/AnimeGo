@@ -24,6 +24,7 @@ type Type2 struct {
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
+	_ = os.MkdirAll("data", os.ModePerm)
 	m.Run()
 	_ = os.RemoveAll("data")
 	fmt.Println("end")

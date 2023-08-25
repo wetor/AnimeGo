@@ -65,11 +65,16 @@ type Manager struct {
 }
 
 func NewManager(plugin api.RenamerPlugin) *Manager {
-	return &Manager{
-		plugin:     plugin,
-		tasks:      make(map[string]*RenameTask),
-		taskGroups: make([]*RenameTaskGroup, 0),
+	m := &Manager{
+		plugin: plugin,
 	}
+	m.Init()
+	return m
+}
+
+func (m *Manager) Init() {
+	m.tasks = make(map[string]*RenameTask)
+	m.taskGroups = make([]*RenameTaskGroup, 0)
 }
 
 func (m *Manager) SetDownloadState(keys []string, state models.TorrentState) error {

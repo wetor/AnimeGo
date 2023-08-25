@@ -1,6 +1,7 @@
 package rss_test
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"testing"
@@ -29,6 +30,10 @@ func TestMain(m *testing.M) {
 
 	test.HookGetWriter(testdata, nil)
 	defer test.UnHook()
+
+	raw, _ := test.GetData("feed", "Mikan.xml")
+	raw = bytes.Replace(raw, []byte("\r\n"), []byte("\n"), -1)
+	_ = os.WriteFile(test.GetDataPath("feed", "Mikan.xml"), raw, os.ModePerm)
 
 	m.Run()
 	_ = log.Close()
@@ -60,6 +65,7 @@ func TestRss_Parse(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
+
 	tests := []struct {
 		name       string
 		fields     fields

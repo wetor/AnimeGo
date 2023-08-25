@@ -1,1 +1,8 @@
-{"path":"testdata/test/t.json","id":5000,"info":{"id":10000,"path":"testdata/test/t.json"}}
+{
+  "path": "testdata/test/t.json",
+  "id": 5000,
+  "info": {
+    "id": 10000,
+    "path": "testdata/test/t.json"
+  }
+}

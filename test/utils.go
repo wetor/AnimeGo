@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"reflect"
+	"regexp"
 	"strings"
 )
 
@@ -17,6 +18,19 @@ const (
 )
 
 type MatchFunc func(line, match string) bool
+
+var (
+	MatchContainsRegexp MatchFunc = func(line, match string) bool {
+		res := strings.Contains(line, match)
+		if !res {
+			m, err := regexp.MatchString(match, line)
+			if err == nil {
+				res = m
+			}
+		}
+		return res
+	}
+)
 
 type Range struct {
 	Min, Max int
@@ -143,7 +157,7 @@ func parseRange(lines []string, index int, pattern map[string]any, match MatchFu
 		switch val := v.(type) {
 		case int:
 			if count != val {
-				panic(fmt.Sprintf("\"%v\" not match in \n\t%v\n", val,
+				panic(fmt.Sprintf("\"%v(%v)\" not match in \n\t%v\n", k, v,
 					strings.Join(lines[startLineIndex:endLineIndex], "\n\t")))
 			}
 		case *Range:

@@ -25,13 +25,14 @@ const (
 var defaultUpdateList = func(m *ClientMock) {
 	for _, item := range m.Name2item {
 		if item.State == QbtDownloading {
-			item.Progress += 0.25
-			if item.Progress >= 0.5 {
+			item.Progress += 0.5
+			if item.Progress >= 1.005 {
+				item.Progress = 0
 				item.State = QbtUploading
 			}
 		} else if item.State == QbtUploading {
-			item.Progress += 0.25
-			if item.Progress >= 1 {
+			item.Progress += 0.5
+			if item.Progress >= 1.005 {
 				item.State = QbtCheckingUP
 			}
 		}
