@@ -126,6 +126,9 @@ func (m *Database) setAnimeCache(dir string, anime *models.AnimeDBEntity) {
 		}
 	}
 	m.name2dir[anime.Name].Dir = dir
+	if a, ok := m.cacheAnimeDBEntity[anime.Name]; ok {
+		anime.CreateAt = a.CreateAt
+	}
 	m.cacheAnimeDBEntity[anime.Name] = anime
 }
 
@@ -140,6 +143,9 @@ func (m *Database) setSeasonCache(dir string, season *models.SeasonDBEntity) {
 	m.name2dir[season.Name].SeasonDir[season.Season] = dir
 	if _, ok := m.cacheSeasonDBEntity[season.Name]; !ok {
 		m.cacheSeasonDBEntity[season.Name] = make(map[int]*models.SeasonDBEntity)
+	}
+	if s, ok := m.cacheSeasonDBEntity[season.Name][season.Season]; ok {
+		season.CreateAt = s.CreateAt
 	}
 	m.cacheSeasonDBEntity[season.Name][season.Season] = season
 }
@@ -176,6 +182,27 @@ func (m *Database) Add(data any) error {
 		hash := value.Hash()
 		m.cache.Put(Name2HashBucket, name, hash, 0)
 		m.cache.Put(Hash2EntityBucket, hash, value, 0)
+	}
+	return nil
+}
+
+// Delete
+//
+//	删除缓存
+func (m *Database) Delete(data any) error {
+	m.Lock()
+	defer m.Unlock()
+
+	switch value := data.(type) {
+	case string:
+		err := m.cache.Delete(Name2HashBucket, value)
+		if err != nil {
+			return err
+		}
+		err = m.cache.Delete(Hash2EntityBucket, value)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }

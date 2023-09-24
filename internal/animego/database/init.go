@@ -1,6 +1,17 @@
 package database
 
-import "sync"
+import (
+	"path"
+	"sync"
+
+	"github.com/wetor/AnimeGo/pkg/dirdb"
+)
+
+const (
+	AnimeDBName  = "anime.a_json"
+	SeasonDBName = "anime.s_json"
+	EpisodeDBFmt = "%s.e_json"
+)
 
 var (
 	ReInitWG sync.WaitGroup
@@ -24,6 +35,9 @@ type Options struct {
 
 func Init(opts *Options) {
 	Conf = opts.DownloaderConf
+	dirdb.Init(&dirdb.Options{
+		DefaultExt: []string{path.Ext(AnimeDBName), path.Ext(SeasonDBName), path.Ext(EpisodeDBFmt)}, // anime, season
+	})
 }
 
 func ReInit(opts *Options) {

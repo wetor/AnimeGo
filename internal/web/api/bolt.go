@@ -138,8 +138,12 @@ func (a *Api) BoltDelete(c *gin.Context) {
 		c.JSON(webModels.Fail("参数错误，只能删除 bolt 数据库中的数据"))
 		return
 	}
-	a.downloaderManagerCacheDeleter.DeleteCache(request.Key)
-	err := db.Delete(request.Bucket, request.Key)
+	err := a.databaseCacheDeleter.Delete(request.Key)
+	if err != nil {
+		c.JSON(webModels.Fail("删除失败，" + err.Error()))
+		return
+	}
+	err = db.Delete(request.Bucket, request.Key)
 	if err != nil {
 		c.JSON(webModels.Fail("删除失败，" + err.Error()))
 		return

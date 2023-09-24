@@ -25,12 +25,13 @@ var (
 	ctx = context.Background()
 )
 
-type ManagerMock struct {
+type DownloaderMock struct {
 }
 
-func (m *ManagerMock) Download(anime any) {
+func (m *DownloaderMock) Download(anime *models.AnimeEntity) error {
 	d, _ := json.Marshal(anime)
 	fmt.Println(string(d))
+	return nil
 }
 
 type ParserMock struct {
@@ -80,7 +81,7 @@ func TestMain(m *testing.M) {
 		DelaySecond: 1,
 	})
 
-	mgr = filter.NewManager(&ManagerMock{}, &ParserMock{})
+	mgr = filter.NewManager(&DownloaderMock{}, &ParserMock{})
 	mgr.Add(&models.Plugin{
 		Enable: true,
 		Type:   "py",

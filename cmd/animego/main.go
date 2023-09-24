@@ -18,9 +18,10 @@ import (
 	anidataThemoviedb "github.com/wetor/AnimeGo/internal/animego/anidata/themoviedb"
 	"github.com/wetor/AnimeGo/internal/animego/anisource"
 	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
+	"github.com/wetor/AnimeGo/internal/animego/database"
+	"github.com/wetor/AnimeGo/internal/animego/downloader"
 	feedPlugin "github.com/wetor/AnimeGo/internal/animego/feed/plugin"
 	"github.com/wetor/AnimeGo/internal/animego/filter"
-	"github.com/wetor/AnimeGo/internal/animego/manager"
 	"github.com/wetor/AnimeGo/internal/animego/parser"
 	parserPlugin "github.com/wetor/AnimeGo/internal/animego/parser/plugin"
 	"github.com/wetor/AnimeGo/internal/animego/renamer"
@@ -212,9 +213,9 @@ func Main() {
 	renameSrv.Start(ctx)
 
 	// ===============================================================================================================
-	// 初始化manager配置
-	manager.Init(&manager.Options{
-		DownloaderConf: manager.DownloaderConf{
+	// 初始化database配置
+	database.Init(&database.Options{
+		DownloaderConf: database.DownloaderConf{
 			UpdateDelaySecond:      config.UpdateDelaySecond,
 			DownloadPath:           xpath.P(config.DownloadPath),
 			SavePath:               xpath.P(config.SavePath),
@@ -224,12 +225,48 @@ func Main() {
 			SeedingTimeMinute:      config.Download.SeedingTimeMinute,
 			Rename:                 config.Advanced.Download.Rename,
 		},
-		WG: &WG,
 	})
-	// 初始化manager
-	managerSrv := manager.NewManager(qbittorrentSrv, bolt, renameSrv)
-	// 启动manager
-	managerSrv.Start(ctx)
+	downloadCallback := &database.Callback{}
+	databaseSrv, err := database.NewDatabase(bolt, renameSrv, downloadCallback)
+	if err != nil {
+		panic(err)
+	}
+
+	// ===============================================================================================================
+	// 初始化downloader配置
+	downloader.Init(&downloader.Options{
+		RefreshSecond:          config.UpdateDelaySecond,
+		Category:               config.Category,
+		Tag:                    config.Tag,
+		AllowDuplicateDownload: config.Download.AllowDuplicateDownload,
+		SeedingTimeMinute:      config.Download.SeedingTimeMinute,
+		WG:                     &WG,
+	})
+	// 初始化downloader
+	downloaderSrv := downloader.NewManager(qbittorrentSrv, databaseSrv, databaseSrv)
+	downloadCallback.Renamed = func(data any) error {
+		return downloaderSrv.Delete(data.(string))
+	}
+	// 启动downloader
+	downloaderSrv.Start(ctx)
+
+	//manager.Init(&manager.Options{
+	//	DownloaderConf: manager.DownloaderConf{
+	//		UpdateDelaySecond:      config.UpdateDelaySecond,
+	//		DownloadPath:           xpath.P(config.DownloadPath),
+	//		SavePath:               xpath.P(config.SavePath),
+	//		Category:               config.Category,
+	//		Tag:                    config.Tag,
+	//		AllowDuplicateDownload: config.Download.AllowDuplicateDownload,
+	//		SeedingTimeMinute:      config.Download.SeedingTimeMinute,
+	//		Rename:                 config.Advanced.Download.Rename,
+	//	},
+	//	WG: &WG,
+	//})
+	//// 初始化manager
+	//managerSrv := manager.NewManager(qbittorrentSrv, bolt, renameSrv)
+	//// 启动manager
+	//managerSrv.Start(ctx)
 	// ===============================================================================================================
 	// 初始化parser配置
 	parser.Init(&parser.Options{
@@ -254,7 +291,7 @@ func Main() {
 		DelaySecond: config.Advanced.Feed.DelaySecond,
 	})
 	// 初始化filter
-	filterSrv := filter.NewManager(managerSrv, parserSrv)
+	filterSrv := filter.NewManager(downloaderSrv, parserSrv)
 	for _, p := range configs.ConvertPluginInfo(config.Plugin.Filter) {
 		filterSrv.Add(&p)
 	}
@@ -291,14 +328,14 @@ func Main() {
 		// 初始化Web API
 		web.Init(&web.Options{
 			ApiOptions: &webapi.Options{
-				Ctx:                           ctx,
-				AccessKey:                     config.WebApi.AccessKey,
-				Cache:                         bolt,
-				Config:                        config,
-				BangumiCache:                  bangumiCache,
-				BangumiCacheLock:              &BangumiCacheMutex,
-				FilterManager:                 filterSrv,
-				DownloaderManagerCacheDeleter: managerSrv,
+				Ctx:                  ctx,
+				AccessKey:            config.WebApi.AccessKey,
+				Cache:                bolt,
+				Config:               config,
+				BangumiCache:         bangumiCache,
+				BangumiCacheLock:     &BangumiCacheMutex,
+				FilterManager:        filterSrv,
+				DatabaseCacheDeleter: databaseSrv,
 			},
 			WebSocketOptions: &websocket.Options{
 				WG:     &WG,

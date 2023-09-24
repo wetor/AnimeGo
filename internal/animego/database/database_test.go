@@ -343,10 +343,10 @@ func TestOnDownloadExistAnime(t *testing.T) {
 
 }
 
-// TestOnDownloadRestart
+// TestOnDownloadRestartOnSeed
 //
-//	下载过程中重启
-func TestOnDownloadRestart(t *testing.T) {
+//	做种过程中重启
+func TestOnDownloadRestartOnSeed(t *testing.T) {
 	out.Reset()
 	wg, cancel := initTest(true)
 
@@ -426,6 +426,64 @@ func TestOnDownloadRestart(t *testing.T) {
 			{Type: models.AnimeEpNormal, Ep: 1},
 			{Type: models.AnimeEpNormal, Ep: 2},
 			{Type: models.AnimeEpNormal, Ep: 3},
+		},
+	})
+	assert.Equal(t, exist, true)
+
+}
+
+// TestOnDownloadStep
+//
+//	分步下载
+func TestOnDownloadStep(t *testing.T) {
+	out.Reset()
+	wg, cancel := initTest(true)
+
+	// 下载 1
+	hash := AddItem("动画1", 2, []int{1})
+	dbManager.OnDownloadStart([]models.ClientEvent{
+		{Hash: hash},
+	})
+	dbManager.OnDownloadSeeding([]models.ClientEvent{
+		{Hash: hash},
+	})
+	time.Sleep(1*time.Second + 500*time.Millisecond)
+	dbManager.OnDownloadComplete([]models.ClientEvent{
+		{Hash: hash},
+	})
+
+	time.Sleep(1 * time.Second)
+	cancel()
+	wg.Wait()
+
+	fmt.Println(out.String())
+	out.Reset()
+
+	wg, cancel = initTest(false)
+	// 下载 2
+	hash = AddItem("动画1", 2, []int{2})
+	dbManager.OnDownloadStart([]models.ClientEvent{
+		{Hash: hash},
+	})
+	dbManager.OnDownloadSeeding([]models.ClientEvent{
+		{Hash: hash},
+	})
+	time.Sleep(1*time.Second + 500*time.Millisecond)
+	dbManager.OnDownloadComplete([]models.ClientEvent{
+		{Hash: hash},
+	})
+
+	time.Sleep(1 * time.Second)
+	cancel()
+	wg.Wait()
+	fmt.Println(out.String())
+
+	exist := dbManager.IsExist(&models.AnimeEntity{
+		NameCN: "动画1",
+		Season: 2,
+		Ep: []*models.AnimeEpEntity{
+			{Type: models.AnimeEpNormal, Ep: 1},
+			{Type: models.AnimeEpNormal, Ep: 2},
 		},
 	})
 	assert.Equal(t, exist, true)

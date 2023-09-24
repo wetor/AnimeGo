@@ -26,9 +26,9 @@ func (m *MockFilter) Update(ctx context.Context, items []*models.FeedItem, b, c 
 	return nil
 }
 
-type MockManager struct{}
+type MockDatabase struct{}
 
-func (m *MockManager) DeleteCache(fullname string) {}
+func (m *MockDatabase) Delete(data any) error { return nil }
 
 var (
 	ctx = context.Background()
@@ -57,14 +57,14 @@ func TestMain(m *testing.M) {
 
 	web.Init(&web.Options{
 		ApiOptions: &webapi.Options{
-			Ctx:                           ctx,
-			AccessKey:                     "animego123",
-			Cache:                         bolt,
-			Config:                        config,
-			BangumiCache:                  bangumiCache,
-			BangumiCacheLock:              &BangumiCacheMutex,
-			FilterManager:                 &MockFilter{},
-			DownloaderManagerCacheDeleter: &MockManager{},
+			Ctx:                  ctx,
+			AccessKey:            "animego123",
+			Cache:                bolt,
+			Config:               config,
+			BangumiCache:         bangumiCache,
+			BangumiCacheLock:     &BangumiCacheMutex,
+			FilterManager:        &MockFilter{},
+			DatabaseCacheDeleter: &MockDatabase{},
 		},
 		WebSocketOptions: &websocket.Options{
 			Notify: notify,
