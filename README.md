@@ -25,12 +25,7 @@
 - 然后 [安装MikanTool Tampermonkey插件](https://greasyfork.org/zh-CN/scripts/449596) ，需要浏览器中已安装Tampermonkey（油猴插件）  
 - 具体过滤设置根据油猴插件面板的要求进行  
 
-### 1 首次启动：释放资源
-```shell
-./AnimeGo
-```
-
-### 1.1 升级后首次启动：升级配置、释放资源
+### 1 首次启动：释放资源、升级配置
 ```shell
 ./AnimeGo
 ```
@@ -44,8 +39,8 @@
 - `setting.download_path`: 下载器下载保存位置。临时位置，移动后将会删除
 - `setting.save_path`: 重命名后移动到位置。此时将会改名
 - `plugin.feed`中的`builtin_mikan_rss.py`插件 : 可选，内置自动订阅插件
-  - `vars.__url`: 订阅地址，如Mikan的rss订阅地址
-  - `vars.__cron`: 订阅时间，Cron格式，参考[Feed订阅插件帮助](assets/plugin/feed/README.md)
+  - `vars.url`: 订阅地址，如Mikan的rss订阅地址
+  - `vars.cron`: 订阅时间，Cron格式，参考[Feed订阅插件帮助](assets/plugin/feed/README.md)
 - 其余配置项根据需求修改
 
 ### 3 启动程序
@@ -87,13 +82,44 @@
   - [ ] ...
 - [ ] Web界面支持
 - [ ] 模块化与高级自定义功能支持
-  - [ ] 独立的订阅支持
+  - [x] 独立的订阅支持
   - [x] 独立下载控制
+  - [x] 自定义订阅、过滤、解析和重命名插件
+  - [x] 自定义定时任务
   - [ ] ...
 
 ## 开发日志
 
-## v0.9.2
+### v0.10.0 预发布
+- 全新的下载管理机制
+  - 新的downloader和database管理器
+  - 使用文件记录和标记剧集下载进度，更为准确
+  - 使用监听下载器状态变化通知机制，优化性能
+  - 优化rename流程，适配新的管理机制
+  - 移除旧的manager管理器
+
+### v0.9.5
+- 新的下载webapi 
+- 修复重启后检查已下载内容的错误提示
+
+### v0.9.4
+- 修复mikan_tool的bug 
+- 设置docker时区
+
+### v0.9.3
+- 重构renamer流程
+- 更改error处理方式，使用标准错误处理
+- 自动构建并发布docker
+- 自动生成swagger
+- 本地bangumi Archive数据异常时请求网页api
+- 修复解析tmdb的season信息失败时，解析title的逻辑
+- 移除filter插件返回parse标题结果的功能 
+- 优化AniData代码，增加接口 
+- 优化anisource解析，支持传入已有内容
+- 完善re模块
+- 补充和完善单测
+
+### v0.9.2
 - **配置文件版本号为`1.5.1`**
 - 优化webapi
 - 支持websocket
@@ -102,12 +128,12 @@
 - 补充单测
 - 支持数据源重定向
 
-## v0.9.1
+### v0.9.1
 - 修复tmdb解析失败时流程结束的问题
 - 优化代码
 - py支持format方法
 
-## v0.9.0
+### v0.9.0
 - **配置文件版本号为`1.5.0`**
 - 支持多内容torrent解析下载
   - 优化下载管理器流程
