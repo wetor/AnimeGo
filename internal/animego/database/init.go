@@ -19,7 +19,7 @@ var (
 )
 
 type DownloaderConf struct {
-	UpdateDelaySecond      int
+	RefreshSecond          int
 	DownloadPath           string
 	SavePath               string
 	Category               string

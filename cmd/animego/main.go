@@ -196,8 +196,8 @@ func Main() {
 	// ===============================================================================================================
 	// 初始化renamer配置
 	renamer.Init(&renamer.Options{
-		WG:                &WG,
-		UpdateDelaySecond: config.UpdateDelaySecond,
+		WG:            &WG,
+		RefreshSecond: config.RefreshSecond,
 	})
 	// 第一个启用的rename插件
 	var rename api.RenamerPlugin
@@ -216,7 +216,7 @@ func Main() {
 	// 初始化database配置
 	database.Init(&database.Options{
 		DownloaderConf: database.DownloaderConf{
-			UpdateDelaySecond:      config.UpdateDelaySecond,
+			RefreshSecond:          config.RefreshSecond,
 			DownloadPath:           xpath.P(config.DownloadPath),
 			SavePath:               xpath.P(config.SavePath),
 			Category:               config.Category,
@@ -235,7 +235,7 @@ func Main() {
 	// ===============================================================================================================
 	// 初始化downloader配置
 	downloader.Init(&downloader.Options{
-		RefreshSecond:          config.UpdateDelaySecond,
+		RefreshSecond:          config.RefreshSecond,
 		Category:               config.Category,
 		Tag:                    config.Tag,
 		AllowDuplicateDownload: config.Download.AllowDuplicateDownload,
@@ -250,23 +250,6 @@ func Main() {
 	// 启动downloader
 	downloaderSrv.Start(ctx)
 
-	//manager.Init(&manager.Options{
-	//	DownloaderConf: manager.DownloaderConf{
-	//		UpdateDelaySecond:      config.UpdateDelaySecond,
-	//		DownloadPath:           xpath.P(config.DownloadPath),
-	//		SavePath:               xpath.P(config.SavePath),
-	//		Category:               config.Category,
-	//		Tag:                    config.Tag,
-	//		AllowDuplicateDownload: config.Download.AllowDuplicateDownload,
-	//		SeedingTimeMinute:      config.Download.SeedingTimeMinute,
-	//		Rename:                 config.Advanced.Download.Rename,
-	//	},
-	//	WG: &WG,
-	//})
-	//// 初始化manager
-	//managerSrv := manager.NewManager(qbittorrentSrv, bolt, renameSrv)
-	//// 启动manager
-	//managerSrv.Start(ctx)
 	// ===============================================================================================================
 	// 初始化parser配置
 	parser.Init(&parser.Options{

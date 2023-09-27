@@ -1,4 +1,4 @@
-package v_151
+package v_152
 
 type Config struct {
 	Version  string `yaml:"version" json:"version"`
@@ -26,9 +26,10 @@ type Plugin struct {
 type Setting struct {
 	Client struct {
 		QBittorrent struct {
-			Url      string `yaml:"url" json:"url"`
-			Username string `yaml:"username" json:"username"`
-			Password string `yaml:"password" json:"password"`
+			Url          string `yaml:"url" json:"url"`
+			Username     string `yaml:"username" json:"username"`
+			Password     string `yaml:"password" json:"password"`
+			DownloadPath string `yaml:"download_path" json:"download_path"`
 		} `yaml:"qbittorrent" json:"qbittorrent"`
 	} `yaml:"client" json:"client"`
 	DownloadPath string `yaml:"download_path" json:"download_path"`
@@ -52,6 +53,12 @@ type Setting struct {
 
 type Advanced struct {
 	UpdateDelaySecond int `yaml:"update_delay_second" json:"update_delay_second"`
+
+	Redirect struct {
+		Mikan      string `yaml:"mikan" json:"mikan"`
+		Bangumi    string `yaml:"bangumi" json:"bangumi"`
+		Themoviedb string `yaml:"themoviedb" json:"themoviedb"`
+	} `yaml:"redirect" json:"redirect"`
 
 	Request struct {
 		TimeoutSecond   int `yaml:"timeout_second" json:"timeout_second"`

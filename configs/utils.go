@@ -3,11 +3,15 @@ package configs
 import (
 	"fmt"
 	"log"
+	"os"
+	"path"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/jinzhu/copier"
 	"github.com/pkg/errors"
+	encoder "github.com/wetor/AnimeGo/third_party/yaml-encoder"
 
 	"github.com/wetor/AnimeGo/internal/models"
 )
@@ -67,5 +71,38 @@ func Env2Config(env *Environment, conf *Config, prefix string) error {
 		}
 	}
 
+	return nil
+}
+
+func encodeConfig(conf any) ([]byte, error) {
+	defaultSettingComment()
+	defaultAdvancedComment()
+	yml := encoder.NewEncoder(conf,
+		encoder.WithComments(encoder.CommentsOnHead),
+		encoder.WithCommentsMap(configComment),
+	)
+	content, err := yml.Encode()
+	if err != nil {
+		return nil, err
+	}
+	return content, nil
+}
+
+func BackupConfig(file string, version string) error {
+	dir, name := path.Split(file)
+	ext := path.Ext(name)
+	name = strings.TrimSuffix(name, ext)
+	timeStr := time.Now().Format("20060102150405")
+	name = fmt.Sprintf("%s-%s-%s%s", name, version, timeStr, ext)
+	oldFile, err := os.ReadFile(file)
+	if err != nil {
+		return err
+	}
+	out := path.Join(dir, name)
+	err = os.WriteFile(out, oldFile, 0644)
+	if err != nil {
+		return err
+	}
+	log.Printf("备份原配置文件到：'%s'\n", out)
 	return nil
 }

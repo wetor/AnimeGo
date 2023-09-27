@@ -425,7 +425,7 @@ func (m *Manager) Update(ctx context.Context) (err error) {
 }
 
 func (m *Manager) sleep(ctx context.Context) {
-	utils.Sleep(UpdateDelaySecond, ctx)
+	utils.Sleep(RefreshSecond, ctx)
 }
 
 func (m *Manager) Start(ctx context.Context) {

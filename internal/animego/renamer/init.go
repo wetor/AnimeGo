@@ -3,19 +3,19 @@ package renamer
 import "sync"
 
 var (
-	WG                *sync.WaitGroup
-	UpdateDelaySecond int
-	ReInitWG          sync.WaitGroup
+	WG            *sync.WaitGroup
+	RefreshSecond int
+	ReInitWG      sync.WaitGroup
 )
 
 type Options struct {
-	WG                *sync.WaitGroup
-	UpdateDelaySecond int
+	WG            *sync.WaitGroup
+	RefreshSecond int
 }
 
 func Init(opts *Options) {
 	WG = opts.WG
-	UpdateDelaySecond = opts.UpdateDelaySecond
+	RefreshSecond = opts.RefreshSecond
 }
 
 func ReInit(opts *Options) {

@@ -7,8 +7,8 @@ const (
 )
 
 func (c *Config) Check() {
-	if c.Advanced.UpdateDelaySecond < UpdateDelaySecondMin {
+	if c.Advanced.RefreshSecond < UpdateDelaySecondMin {
 		log.Warnf("配置项advanced.update_delay_second值范围错误: %v, 已修改为: %v", UpdateDelaySecondMin)
-		c.Advanced.UpdateDelaySecond = UpdateDelaySecondMin
+		c.Advanced.RefreshSecond = UpdateDelaySecondMin
 	}
 }

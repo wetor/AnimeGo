@@ -73,8 +73,8 @@ func TestMain(m *testing.M) {
 		},
 	})
 	renamer.Init(&renamer.Options{
-		WG:                &wg,
-		UpdateDelaySecond: 1,
+		WG:            &wg,
+		RefreshSecond: 1,
 	})
 	renamePlugin = renamerPlugin.NewRenamePlugin(&models.Plugin{
 		Enable: true,

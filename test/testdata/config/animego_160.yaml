@@ -1,0 +1,148 @@
+# 配置文件版本
+version: 1.6.0
+# 常规设置
+setting:
+    # 下载客户端设置
+    client:
+        # qBittorrent客户端
+        qbittorrent:
+            # 地址. 环境变量ANIMEGO_QBT_URL
+            url: http://127.0.0.1:8080
+            # 用户名. 环境变量ANIMEGO_QBT_USERNAME
+            username: admin
+            # 密码. 环境变量ANIMEGO_QBT_PASSWORD
+            password: adminadmin
+            # 下载文件夹. 环境变量ANIMEGO_QBT_DOWNLOAD_PATH
+            download_path: download/incomplete
+    # 下载文件夹. 环境变量ANIMEGO_DOWNLOAD_PATH. 下载器的下载文件夹
+    download_path: download/incomplete
+    # 保存文件夹. 环境变量ANIMEGO_SAVE_PATH. 下载完成后，重命名并移动到的文件夹
+    save_path: download/anime
+    # 数据文件夹. 环境变量ANIMEGO_DATA_PATH. 用于保存数据库、插件等数据
+    data_path: data
+    # 分类名. 环境变量ANIMEGO_CATEGORY. 仅qBittorrent有效
+    category: AnimeGo
+    # 标签表达式. 环境变量ANIMEGO_TAG. 仅qBittorrent有效，可用通配符列表：
+    #   {year} int 番剧更新年
+    #   {quarter} int 番剧季度月号，取值为[4, 7, 10, 1]分别对应[春, 夏, 秋, 冬]季番剧
+    #   {quarter_index} int 番剧季度序号，取值为[1, 2, 3, 4]分别对应春(4月)、夏(7月)、秋(10月)、冬(1月)季番剧
+    #   {quarter_name} string 番剧季度名，取值为[春, 夏, 秋, 冬]
+    #   {ep} int 番剧当前剧集序号，从1开始
+    #   {week} int 番剧更新星期数，取值为[1, 2, 3, 4, 5, 6, 7]
+    #   {week_name} string 番剧更新星期名，取值为[星期一, 星期二, 星期三, 星期四, 星期五, 星期六, 星期日]
+    tag: '{year}年{quarter}月新番'
+    # WebApi设置
+    webapi:
+        # 请求秘钥. 环境变量ANIMEGO_WEB_ACCESS_KEY. 为空则不需要验证
+        access_key: animego123
+        # 域名. 环境变量ANIMEGO_WEB_HOST
+        host: localhost
+        # 端口. 环境变量ANIMEGO_WEB_PORT
+        port: 7991
+    # 代理设置. 开启后AnimeGo所有的网络请求都会使用代理
+    proxy:
+        # 启用. 环境变量ANIMEGO_PROXY_URL不为空则启用，否则禁用
+        enable: true
+        # 代理链接. 环境变量ANIMEGO_PROXY_URL
+        url: http://127.0.0.1:7890
+    # 秘钥设置
+    key:
+        # TheMovieDB的APIkey. 环境变量ANIMEGO_THEMOVIEDB_KEY. 可以自行申请链接（需注册）：https://www.themoviedb.org/settings/api?language=zh-CN
+        # 以下为wetor的个人APIkey，仅用于AnimeGo使用
+        themoviedb: d3d8430aefee6c19520d0f7da145daf5
+# 插件设置. 按顺序依次执行启用的插件
+# 列表类型，每一项需要有以下参数：
+#   enable: 启用
+#   type: 插件类型，目前仅支持 'python'(py) 和 'builtin' 插件类型。builtin为内置插件
+#   file: 插件文件，相对于 'data/plugin' 文件夹的路径，或内置插件名
+#   args: [可空]插件额外参数，字典类型，会覆盖同名参数
+#   vars: [可空]插件全局变量，字典类型，如果变量名前缀或后缀不是'__'将会自动补充，即在插件中变量名前后缀始终为'__'，
+#     会覆盖插件脚本中同名变量，具体变量和作用参考订阅插件文档
+plugin:
+    # 订阅. 解析订阅链接
+    feed:
+        - enable: false
+          type: builtin
+          file: builtin_mikan_rss.py
+          vars:
+            cron: 0 0/20 * * * ?
+            name: Mikan
+            url: ""
+    # 解析器. 解析项目标题
+    parser:
+        - enable: true
+          type: builtin
+          file: builtin_parser.py
+    # 过滤器插件. 用来筛选符合条件的项目进行解析下载
+    filter:
+        - enable: true
+          type: py
+          file: filter/mikan_tool.py
+    # 定时任务. 定时执行脚本
+    schedule: []
+    # 重命名. 下载完成后重命名规则
+    rename:
+        - enable: true
+          type: builtin
+          file: builtin_rename.py
+# 高级设置
+advanced:
+    # 刷新间隔时间. 下载器列表和重命名任务刷新间隔时间。默认为10，最小值为2
+    refresh_second: 10
+    # 域名重定向
+    redirect:
+        # 默认mikanani.me
+        mikan: ""
+        # 默认api.bgm.tv
+        bangumi: ""
+        # 默认api.themoviedb.org
+        themoviedb: ""
+    # 网络请求设置
+    request:
+        # 请求超时时间
+        timeout_second: 5
+        # 额外重试次数
+        retry_num: 3
+        # 重试间隔等待时间
+        retry_wait_second: 5
+    # 下载设置
+    download:
+        # 允许重复下载
+        allow_duplicate_download: false
+        # 做种时间
+        seeding_time_minute: 1
+        # 重命名方式. 下载状态顺序为: 创建下载项->下载->下载完成->做种->做种完成
+        # 可选值为: ['link', 'link_delete', 'move', 'wait_move']
+        #   link: 使用硬链接方式，下载完成后触发。不影响做种
+        #   link_delete: 使用硬链接方式，下载完成后触发。不影响做种，做种完成后删除原文件
+        #   move: 使用移动方式，下载完成后触发。无法做种
+        #   wait_move: 使用移动方式，做种完成后触发
+        rename: link_delete
+    # 订阅设置
+    feed:
+        # 订阅解析间隔时间
+        delay_second: 2
+    # 解析季度默认值. 使用tmdb解析季度失败时，同类型默认值按优先级执行。数值越大，优先级越高
+    default:
+        # 跳过当前项. tmdb解析季度失败时，跳过当前项。优先级3
+        tmdb_fail_skip: false
+        # 文件名解析季度. tmdb解析季度失败时，从文件名中获取季度信息。优先级2
+        tmdb_fail_use_title_season: true
+        # 使用第一季. tmdb解析季度失败时，默认使用第一季。优先级1
+        tmdb_fail_use_first_season: true
+    # 下载客户端设置
+    client:
+        # 连接超时时间
+        connect_timeout_second: 5
+        # 连接失败重试次数
+        retry_connect_num: 10
+        # 检查连接状态间隔时间
+        check_time_second: 30
+    # 缓存设置
+    cache:
+        # Mikan缓存时间. 默认7*24小时(7天)。主要为mikan-id与bangumi-id的映射关系
+        mikan_cache_hour: 168
+        # Bangumi缓存时间. 默认3*24小时(3天)。主要为bangumi-id与详细信息的映射
+        bangumi_cache_hour: 72
+        # Themoviedb缓存时间. 默认14*24小时(14天)。主要为tmdb-id与季度信息的映射
+        themoviedb_cache_hour: 336

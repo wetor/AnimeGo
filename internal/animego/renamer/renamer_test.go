@@ -51,8 +51,8 @@ func TestMain(m *testing.M) {
 	})
 	wg := sync.WaitGroup{}
 	renamer.Init(&renamer.Options{
-		WG:                &wg,
-		UpdateDelaySecond: 1,
+		WG:            &wg,
+		RefreshSecond: 1,
 	})
 	p := renamerPlugin.NewRenamePlugin(&models.Plugin{
 		Enable: true,

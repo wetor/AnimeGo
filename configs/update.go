@@ -6,7 +6,6 @@ import (
 	"os"
 	"path"
 	"strings"
-	"time"
 
 	"github.com/jinzhu/copier"
 	"gopkg.in/yaml.v3"
@@ -19,9 +18,14 @@ import (
 	"github.com/wetor/AnimeGo/configs/version/v_141"
 	"github.com/wetor/AnimeGo/configs/version/v_150"
 	"github.com/wetor/AnimeGo/configs/version/v_151"
+	"github.com/wetor/AnimeGo/configs/version/v_152"
+	"github.com/wetor/AnimeGo/internal/animego/database"
 	"github.com/wetor/AnimeGo/internal/constant"
+	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/pkg/cache"
+	"github.com/wetor/AnimeGo/pkg/dirdb"
 	"github.com/wetor/AnimeGo/pkg/utils"
-	encoder "github.com/wetor/AnimeGo/third_party/yaml-encoder"
+	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
 type ConfigOnlyVersion struct {
@@ -44,6 +48,7 @@ var (
 		"1.5.0",
 		"1.5.1",
 		"1.5.2",
+		"1.6.0",
 	}
 	ConfigVersion = versions[len(versions)-1] // 当前配置文件版本
 
@@ -86,6 +91,11 @@ var (
 			Name:       versions[7],
 			Desc:       "新增下载器独立下载路径设置",
 			UpdateFunc: update_151_152,
+		},
+		{
+			Name:       versions[8],
+			Desc:       "更改字段名，数据库迁移",
+			UpdateFunc: update_152_160,
 		},
 	}
 )
@@ -429,7 +439,6 @@ func update_150_151(file string) {
 	}
 	// 强制写入
 	assets.WritePlugins(assets.Dir, path.Join(newConfig.DataPath, assets.Dir), false)
-
 }
 
 func update_151_152(file string) {
@@ -443,7 +452,7 @@ func update_151_152(file string) {
 		log.Fatal("配置文件加载错误：", err)
 	}
 
-	newConfig := DefaultConfig()
+	newConfig := &v_152.Config{}
 	err = copier.Copy(newConfig, oldConfig)
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
@@ -463,38 +472,108 @@ func update_151_152(file string) {
 	}
 	// 强制写入
 	assets.WritePlugins(assets.Dir, path.Join(newConfig.DataPath, assets.Dir), false)
-
 }
 
-func encodeConfig(conf any) ([]byte, error) {
-	defaultSettingComment()
-	defaultAdvancedComment()
-	yml := encoder.NewEncoder(conf,
-		encoder.WithComments(encoder.CommentsOnHead),
-		encoder.WithCommentsMap(configComment),
-	)
-	content, err := yml.Encode()
+func update_152_160(file string) {
+	data, err := os.ReadFile(file)
 	if err != nil {
-		return nil, err
+		log.Fatal("配置文件加载错误：", err)
 	}
-	return content, nil
+	oldConfig := &v_152.Config{}
+	err = yaml.Unmarshal(data, oldConfig)
+	if err != nil {
+		log.Fatal("配置文件加载错误：", err)
+	}
+
+	newConfig := DefaultConfig()
+	err = copier.Copy(newConfig, oldConfig)
+	if err != nil {
+		log.Fatal("配置文件升级失败：", err)
+	}
+	newConfig.Version = "1.6.0"
+	constant.Init(&constant.Options{
+		DataPath: newConfig.DataPath,
+	})
+	log.Println("[变动] 配置项(advanced.update_delay_second) 变更为 advanced.refresh_second")
+	newConfig.Advanced.RefreshSecond = oldConfig.Advanced.UpdateDelaySecond
+
+	content, err := encodeConfig(newConfig)
+	if err != nil {
+		log.Fatal("配置文件升级失败：", err)
+	}
+	err = os.WriteFile(file, content, 0644)
+	if err != nil {
+		log.Fatal("配置文件升级失败：", err)
+	}
+	// 强制写入
+	assets.WritePlugins(assets.Dir, path.Join(newConfig.DataPath, assets.Dir), false)
+
+	log.Println("--------------------------------")
+	log.Println("[数据迁移] 数据库部分迁移到文件标记")
+
+	bolt2dirdb(constant.CacheFile, xpath.P(newConfig.Setting.SavePath))
 }
 
-func BackupConfig(file string, version string) error {
-	dir, name := path.Split(file)
-	ext := path.Ext(name)
-	name = strings.TrimSuffix(name, ext)
-	timeStr := time.Now().Format("20060102150405")
-	name = fmt.Sprintf("%s-%s-%s%s", name, version, timeStr, ext)
-	oldFile, err := os.ReadFile(file)
+func bolt2dirdb(boltPath, savePath string) {
+	if !utils.IsExist(boltPath) {
+		return
+	}
+	bolt := cache.NewBolt()
+	bolt.Open(boltPath)
+	defer bolt.Close()
+
+	keys := bolt.ListKey("name2status")
+	for _, key := range keys {
+
+		status := models.DownloadStatus{}
+		_ = bolt.Get("name2status", key, &status)
+		entity := models.AnimeEntity{}
+		_ = bolt.Get("name2entity", key, &entity)
+
+		base := models.BaseDBEntity{
+			Hash:     status.Hash,
+			Name:     key,
+			CreateAt: utils.Unix(),
+			UpdateAt: utils.Unix(),
+		}
+		if len(status.Path) > 0 {
+			animePath := xpath.Root(status.Path[0])
+			_ = write(path.Join(savePath, animePath, database.AnimeDBName), models.AnimeDBEntity{
+				BaseDBEntity: base,
+			})
+		}
+		for i, f := range status.Path {
+			file := path.Join(savePath, f)
+			if utils.IsExist(file) {
+				filename := fmt.Sprintf(database.EpisodeDBFmt, strings.TrimSuffix(f, path.Ext(f)))
+				_ = write(path.Join(savePath, filename), models.EpisodeDBEntity{
+					BaseDBEntity: base,
+					StateDB: models.StateDB{
+						Seeded:     true,
+						Downloaded: true,
+						Renamed:    true,
+						Scraped:    true,
+					},
+					Season: entity.Season,
+					Ep:     entity.Ep[i].Ep,
+					Type:   entity.Ep[i].Type,
+				})
+			}
+		}
+	}
+}
+
+func write(file string, data any) error {
+	f := dirdb.NewFile(file)
+	err := f.Open()
 	if err != nil {
 		return err
 	}
-	out := path.Join(dir, name)
-	err = os.WriteFile(out, oldFile, 0644)
+	defer f.Close()
+	err = f.DB.Marshal(data)
 	if err != nil {
 		return err
 	}
-	log.Printf("备份原配置文件到：'%s'\n", out)
+	log.Printf("write %s: %+v\n", file, data)
 	return nil
 }

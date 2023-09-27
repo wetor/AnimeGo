@@ -52,7 +52,7 @@ type Setting struct {
 }
 
 type Advanced struct {
-	UpdateDelaySecond int `yaml:"update_delay_second" json:"update_delay_second" attr:"更新状态等待时间" comment_key:"update_delay_second_help"`
+	RefreshSecond int `yaml:"refresh_second" json:"refresh_second" attr:"刷新间隔时间" comment_key:"refresh_second_help"`
 
 	Redirect struct {
 		Mikan      string `yaml:"mikan" json:"mikan" attr:"默认mikanani.me"`
