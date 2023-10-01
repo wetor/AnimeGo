@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	epTitleRegx  = regexp.MustCompile(`(.*|\[.*])( -? \d+|\[\d+]|\[\d+.?[vV]\d{1}]|[第]\d+[话話集]|\[\d+.?END])(.*)`)
+	epTitleRegx  = regexp.MustCompile(`(.*|\[.*])( -? \d+|\[\d+]|\[\d+.?[vV]\d]|第\d+[话話集]|\[第?\d+[话話集]]|\[\d+.?END]|[Ee][Pp]?\d+)(.*)`)
 	epNumberRegx = regexp.MustCompile(`\d+`)
 )
 
