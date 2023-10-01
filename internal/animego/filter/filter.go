@@ -58,8 +58,9 @@ func (m *Manager) Update(ctx context.Context, items []*models.FeedItem,
 		log.Infof("获取「%s」信息开始...", item.Name)
 		anime, err := m.parser.Parse(&models.ParseOptions{
 			Title:              item.Name,
-			TorrentUrl:         item.Download,
-			MikanUrl:           item.Url,
+			TorrentUrl:         item.TorrentUrl,
+			MikanUrl:           item.MikanUrl,
+			BangumiID:          item.BangumiID,
 			AnimeParseOverride: item.ParseOverride,
 		})
 		if err != nil {

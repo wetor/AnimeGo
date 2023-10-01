@@ -17,6 +17,7 @@ import (
 	anidataMikan "github.com/wetor/AnimeGo/internal/animego/anidata/mikan"
 	anidataThemoviedb "github.com/wetor/AnimeGo/internal/animego/anidata/themoviedb"
 	"github.com/wetor/AnimeGo/internal/animego/anisource"
+	"github.com/wetor/AnimeGo/internal/animego/anisource/bangumi"
 	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
 	"github.com/wetor/AnimeGo/internal/animego/database"
 	"github.com/wetor/AnimeGo/internal/animego/downloader"
@@ -266,7 +267,9 @@ func Main() {
 		}
 	}
 	// 初始化parser
-	parserSrv := parser.NewManager(parse, &mikan.Mikan{ThemoviedbKey: config.Setting.Key.Themoviedb})
+	bgmSource := bangumi.NewBangumiSource(config.Setting.Key.Themoviedb)
+	mikanSource := mikan.NewMikanSource(bgmSource)
+	parserSrv := parser.NewManager(parse, mikanSource, bgmSource)
 
 	// ===============================================================================================================
 	// 初始化filter配置

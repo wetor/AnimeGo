@@ -313,7 +313,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "添加下载项到AnimeGo",
+                "description": "添加下载项到AnimeGo\n支持mikan和bangumi两种源，必要的参数分别为mikan_url和bangumi_id\n可选参数name，能够再torrent内文件名异常时解析使用",
                 "consumes": [
                     "application/json"
                 ],

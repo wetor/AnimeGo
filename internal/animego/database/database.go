@@ -82,6 +82,7 @@ func (m *Database) Init() {
 // OnDownloadStart 开始下载事件，重启后首次也会执行
 //
 //	Step 3
+//	必须经过的流程
 func (m *Database) OnDownloadStart(events []models.ClientEvent) {
 	m.Lock()
 	defer m.Unlock()
@@ -104,6 +105,10 @@ func (m *Database) OnDownloadStop(events []models.ClientEvent) {
 	log.Infof("OnDownloadStop %v", events)
 }
 
+// OnDownloadSeeding 做种事件，重启后首次也会执行
+//
+//	Step 4
+//	必须经过的流程
 func (m *Database) OnDownloadSeeding(events []models.ClientEvent) {
 	log.Infof("OnDownloadSeeding %v", events)
 	for _, event := range events {
@@ -115,6 +120,10 @@ func (m *Database) OnDownloadSeeding(events []models.ClientEvent) {
 	}
 }
 
+// OnDownloadComplete 完成事件，重启后首次也会执行
+//
+//	Step 5
+//	必须经过的流程
 func (m *Database) OnDownloadComplete(events []models.ClientEvent) {
 	log.Infof("OnDownloadComplete %v", events)
 	for _, event := range events {

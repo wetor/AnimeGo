@@ -142,7 +142,7 @@ type GetApplicationPreferencesRsp struct {
 	MaxActiveTorrents                  int                    `json:"max_active_torrents"`                   //Maximum number of active simultaneous downloads and uploads
 	MaxActiveUploads                   int                    `json:"max_active_uploads"`                    //Maximum number of active simultaneous uploads
 	DontCountSlowTorrents              bool                   `json:"dont_count_slow_torrents"`              //If true torrents w/o any activity (stalled ones) will not be counted towards max_active_* limits; see dont_count_slow_torrents for more information
-	SlowTorrentDlRateThreshold         int                    `json:"slow_torrent_dl_rate_threshold"`        //Download rate in KiB/s for a torrent to be considered "slow"
+	SlowTorrentDlRateThreshold         int                    `json:"slow_torrent_dl_rate_threshold"`        //TorrentUrl rate in KiB/s for a torrent to be considered "slow"
 	SlowTorrentUlRateThreshold         int                    `json:"slow_torrent_ul_rate_threshold"`        //Upload rate in KiB/s for a torrent to be considered "slow"
 	SlowTorrentInactiveTimer           int                    `json:"slow_torrent_inactive_timer"`           //Seconds a torrent should be inactive before considered "slow"
 	MaxRatioEnabled                    bool                   `json:"max_ratio_enabled"`                     //True if share ratio limit is enabled
@@ -296,7 +296,7 @@ type SetApplicationPreferencesReq struct {
 	MaxActiveTorrents                  *int                   `json:"max_active_torrents,omitempty"`                   //Maximum number of active simultaneous downloads and uploads
 	MaxActiveUploads                   *int                   `json:"max_active_uploads,omitempty"`                    //Maximum number of active simultaneous uploads
 	DontCountSlowTorrents              *bool                  `json:"dont_count_slow_torrents,omitempty"`              //If true torrents w/o any activity (stalled ones) will not be counted towards max_active_* limits; see dont_count_slow_torrents for more information
-	SlowTorrentDlRateThreshold         *int                   `json:"slow_torrent_dl_rate_threshold,omitempty"`        //Download rate in KiB/s for a torrent to be considered "slow"
+	SlowTorrentDlRateThreshold         *int                   `json:"slow_torrent_dl_rate_threshold,omitempty"`        //TorrentUrl rate in KiB/s for a torrent to be considered "slow"
 	SlowTorrentUlRateThreshold         *int                   `json:"slow_torrent_ul_rate_threshold,omitempty"`        //Upload rate in KiB/s for a torrent to be considered "slow"
 	SlowTorrentInactiveTimer           *int                   `json:"slow_torrent_inactive_timer,omitempty"`           //Seconds a torrent should be inactive before considered "slow"
 	MaxRatioEnabled                    *bool                  `json:"max_ratio_enabled,omitempty"`                     //True if share ratio limit is enabled
@@ -516,7 +516,7 @@ type GlobalTransferInfo struct {
 	DlInfoData       int    `json:"dl_info_data"`      //Data downloaded this session (bytes)
 	UpInfoSpeed      int    `json:"up_info_speed"`     //Global upload rate (bytes/s)
 	UpInfoData       int    `json:"up_info_data"`      //Data uploaded this session (bytes)
-	DlRateLimit      int    `json:"dl_rate_limit"`     //Download rate limit (bytes/s)
+	DlRateLimit      int    `json:"dl_rate_limit"`     //TorrentUrl rate limit (bytes/s)
 	UpRateLimit      int    `json:"up_rate_limit"`     //Upload rate limit (bytes/s)
 	DhtNodes         int    `json:"dht_nodes"`         //DHT nodes connected to
 	ConnectionStatus string `json:"connection_status"` //Connection status. See possible values here below
@@ -626,7 +626,7 @@ type GetTorrentTrackersReq struct {
 	Hash string `json:"hash"`
 }
 
-//Note: tier should be integer, but in some trackers, it returns empty string
+// Note: tier should be integer, but in some trackers, it returns empty string
 type TorrentTrackerItem struct {
 	Url           string      `json:"url"`            //Tracker url
 	Status        int         `json:"status"`         //Tracker status. See the table below for possible values
@@ -756,7 +756,7 @@ type ReannounceTorrentsRsp struct {
 }
 
 type AddTorrentMeta struct {
-	Savepath           *string  `json:"savepath"`           //Download folder
+	Savepath           *string  `json:"savepath"`           //TorrentUrl folder
 	Cookie             *string  `json:"cookie"`             //Cookie sent to download the .torrent file
 	Category           *string  `json:"category"`           //Category for the torrent
 	Tags               string   `json:"tags"`               //Tags for the torrent, split by ','

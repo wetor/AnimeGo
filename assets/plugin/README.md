@@ -131,11 +131,11 @@ result = core.parse_mikan_rss(xml_data)
 # result = [
 #     {
 #         "date": "2023-02-15",
-#         "download": "https://mikanani.me/Download/20230215/301289d8fcde1751a26f55b4dc156da7f9ca1a6f.torrent",
+#         "torrent_url": "https://mikanani.me/Download/20230215/301289d8fcde1751a26f55b4dc156da7f9ca1a6f.torrent",
 #         "length": 237083040,
 #         "name": "[OPFans枫雪动漫][ONE PIECE 海贼王][第1051话][周日版][720p][MP4]",
 #         "type": "application/x-bittorrent",
-#         "url": "https://mikanani.me/Home/Episode/301289d8fcde1751a26f55b4dc156da7f9ca1a6f"
+#         "mikan_url": "https://mikanani.me/Home/Episode/301289d8fcde1751a26f55b4dc156da7f9ca1a6f"
 #     },
 #     {...},
 # ]

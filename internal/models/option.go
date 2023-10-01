@@ -36,13 +36,14 @@ func (o AnimeParseOverride) OverrideThemoviedb() bool {
 }
 
 type AnimeParseOptions struct {
-	MikanUrl string // Mikan url
+	Input any // Mikan url
 	*AnimeParseOverride
 }
 
 type ParseOptions struct {
-	Title      string
-	TorrentUrl string
-	MikanUrl   string
+	Title      string // 可选
+	TorrentUrl string // 必要
+	MikanUrl   string // 和BangumiID二选一
+	BangumiID  int    // 和BangumiID二选一，优先
 	*AnimeParseOverride
 }

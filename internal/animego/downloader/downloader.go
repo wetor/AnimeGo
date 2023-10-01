@@ -56,18 +56,19 @@ func (m *Manager) addError(err error) {
 	m.errMutex.Unlock()
 }
 
-func (m *Manager) transition(oldTorrentState, newTorrentState models.TorrentState) NotifyState {
-	log.Debugf("torrent %v -> %v", oldTorrentState, newTorrentState)
+func (m *Manager) transition(oldTorrentState, newTorrentState models.TorrentState) (models.TorrentState, NotifyState) {
 	if newTorrentState == StateError {
 		// error
-		return NotifyOnError
+		return newTorrentState, NotifyOnError
 	}
 
+	state := newTorrentState
 	result := NotifyOnInit
 	switch oldTorrentState {
 	case StateInit:
 		// init -> start
 		result = NotifyOnStart
+		state = StateAdding
 	case StateAdding:
 		switch newTorrentState {
 		case StateDownloading:
@@ -79,8 +80,9 @@ func (m *Manager) transition(oldTorrentState, newTorrentState models.TorrentStat
 			result = NotifyOnSeeding
 		case StateComplete:
 			// start -> complete
-			// 完成状态下重启后
-			result = NotifyOnComplete
+			// 完成状态下重启后，需要先经过seeding
+			result = NotifyOnSeeding
+			state = StateSeeding
 		}
 	case StateDownloading:
 		switch newTorrentState {
@@ -93,7 +95,9 @@ func (m *Manager) transition(oldTorrentState, newTorrentState models.TorrentStat
 			result = NotifyOnSeeding
 		case StateComplete:
 			// download -> complete
-			result = NotifyOnComplete
+			// 跳过了seeding，需要先经过seeding
+			result = NotifyOnSeeding
+			state = StateSeeding
 		}
 	case StateSeeding:
 		switch newTorrentState {
@@ -120,7 +124,8 @@ func (m *Manager) transition(oldTorrentState, newTorrentState models.TorrentStat
 			result = NotifyOnComplete
 		}
 	}
-	return result
+	log.Debugf("torrent %v -> %v", oldTorrentState, state)
+	return state, result
 }
 
 func (m *Manager) notify(oldNotifyState, newNotifyState NotifyState, event []models.ClientEvent) error {
@@ -280,7 +285,7 @@ func (m *Manager) UpdateList() {
 		}
 		if state != itemState.Torrent {
 			// 发送通知
-			notify := m.transition(itemState.Torrent, state)
+			state, notify := m.transition(itemState.Torrent, state)
 			err = m.notify(itemState.Notify, notify, []models.ClientEvent{
 				{Hash: item.Hash},
 			})

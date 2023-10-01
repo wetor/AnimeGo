@@ -297,3 +297,5 @@ func TestManager_ReStartOnSeed(t *testing.T) {
 		assert.FileExists(t, f)
 	}
 }
+
+// TODO: 补充单测: 各种状态下重启

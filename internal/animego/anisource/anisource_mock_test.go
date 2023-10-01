@@ -1,11 +1,11 @@
-package mikan_test
+package anisource_test
 
 import (
 	"github.com/pkg/errors"
+	"github.com/wetor/AnimeGo/internal/animego/anisource"
 
 	"github.com/wetor/AnimeGo/internal/animego/anidata/bangumi"
 	"github.com/wetor/AnimeGo/internal/animego/anidata/mikan"
-	"github.com/wetor/AnimeGo/internal/animego/anisource"
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 )

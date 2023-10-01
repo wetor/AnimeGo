@@ -96,7 +96,7 @@ func TestMain(m *testing.M) {
 		Type:   "builtin",
 		File:   "builtin_parser.py",
 	}, true)
-	mgr = parser.NewManager(p, &AniSourceMock{})
+	mgr = parser.NewManager(p, &AniSourceMock{}, &AniSourceMock{})
 
 	m.Run()
 
@@ -139,6 +139,26 @@ func TestManager_Parse(t *testing.T) {
 			},
 		},
 		{
+			name: "success_bangumi",
+			args: args{
+				opts: &models.ParseOptions{
+					Title:      "success",
+					TorrentUrl: "success",
+					MikanUrl:   "success",
+					BangumiID:  366165,
+				},
+			},
+			wantEntity: &models.AnimeEntity{ID: 366165, ThemoviedbID: 155942, MikanID: 2922, Name: "便利屋斎藤さん、異世界に行く", NameCN: "万事屋斋藤、到异世界", Season: 1, Eps: 12, AirDate: "2023-01-08",
+				Ep: []*models.AnimeEpEntity{
+					{Type: models.AnimeEpNormal, Ep: 10, Src: "514/[orion origin] Benriya Saitou-san, Isekai ni Iku [10] [1080p] [H265 AAC] [CHT].mp4"},
+				},
+				Torrent: &models.AnimeTorrent{
+					Hash: "success",
+					Url:  "success",
+				},
+			},
+		},
+		{
 			name: "ep_unknown",
 			args: args{
 				opts: &models.ParseOptions{
@@ -168,7 +188,7 @@ func TestManager_Parse(t *testing.T) {
 				},
 			},
 			wantErr:    &exceptions.ErrMikanParseHTML{},
-			wantErrStr: "解析anisource失败，结束此流程: 解析Mikan信息失败: 解析 MikanUrl 失败，解析网页错误",
+			wantErrStr: "解析anisource失败，结束此流程: 解析Mikan信息失败: 解析 Input 失败，解析网页错误",
 		},
 		{
 			name: "err_torrent",

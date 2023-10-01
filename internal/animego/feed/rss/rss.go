@@ -4,11 +4,12 @@ package rss
 
 import (
 	"bytes"
-	"github.com/pkg/errors"
-	"github.com/wetor/AnimeGo/internal/exceptions"
 	"os"
 	"regexp"
 	"strconv"
+
+	"github.com/pkg/errors"
+	"github.com/wetor/AnimeGo/internal/exceptions"
 
 	"github.com/mmcdole/gofeed"
 
@@ -92,12 +93,12 @@ func (f *Rss) Parse() (items []*models.FeedItem, err error) {
 			date = dateMatch[1]
 		}
 		items = append(items, &models.FeedItem{
-			Url:      item.Link,
-			Name:     item.Title,
-			Date:     date,
-			Type:     item.Enclosures[0].Type,
-			Download: item.Enclosures[0].URL,
-			Length:   length,
+			MikanUrl:   item.Link,
+			Name:       item.Title,
+			Date:       date,
+			Type:       item.Enclosures[0].Type,
+			TorrentUrl: item.Enclosures[0].URL,
+			Length:     length,
 		})
 	}
 	return items, nil

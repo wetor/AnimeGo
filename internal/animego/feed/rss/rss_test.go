@@ -95,12 +95,12 @@ func TestRss_Parse(t *testing.T) {
 			},
 			wantItems: []*models.FeedItem{
 				{
-					Url:      "https://mikanani.me/Home/Episode/2076477d6a119fae9ad882ecc5fd697c1afaee75",
-					Name:     "万事屋斋藤先生转生异世界",
-					Date:     "2023-01-23",
-					Type:     "application/x-bittorrent",
-					Download: "https://mikanani.me/Download/20230123/2076477d6a119fae9ad882ecc5fd697c1afaee75.torrent",
-					Length:   int64(0),
+					MikanUrl:   "https://mikanani.me/Home/Episode/2076477d6a119fae9ad882ecc5fd697c1afaee75",
+					Name:       "万事屋斋藤先生转生异世界",
+					Date:       "2023-01-23",
+					Type:       "application/x-bittorrent",
+					TorrentUrl: "https://mikanani.me/Download/20230123/2076477d6a119fae9ad882ecc5fd697c1afaee75.torrent",
+					Length:     int64(0),
 				},
 			},
 		},

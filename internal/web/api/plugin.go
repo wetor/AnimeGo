@@ -46,7 +46,7 @@ func (a *Api) Rss(c *gin.Context) {
 		}
 		selectItems := make([]*models.FeedItem, 0, len(request.EpLinks))
 		for _, item := range items {
-			if _, has := set[item.Url]; has {
+			if _, has := set[item.MikanUrl]; has {
 				selectItems = append(selectItems, item)
 			}
 		}
