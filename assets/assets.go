@@ -4,6 +4,8 @@ import (
 	"embed"
 	"log"
 	"os"
+	"path"
+	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -43,7 +45,7 @@ func loadBuiltinPlugin(src string) {
 		panic(err)
 	}
 	for _, file := range files {
-		srcPath := xpath.Join(src, file.Name())
+		srcPath := path.Join(src, file.Name())
 		if file.IsDir() {
 			loadBuiltinPlugin(srcPath)
 			continue
@@ -88,14 +90,14 @@ func WritePlugins(src, dst string, skip bool) {
 
 	for _, file := range files {
 		writeFile := true
-		srcPath := xpath.Join(src, file.Name())
-		dstPath := xpath.Join(dst, file.Name())
+		srcPath := path.Join(src, file.Name())
+		dstPath := path.Join(dst, file.Name())
 		if file.IsDir() {
 			WritePlugins(srcPath, dstPath, skip)
 			continue
 		}
 		if strings.HasPrefix(file.Name(), BuiltinPrefix) {
-			dstPath = xpath.Join(dst, strings.TrimPrefix(file.Name(), BuiltinPrefix+"_"))
+			dstPath = path.Join(dst, strings.TrimPrefix(file.Name(), BuiltinPrefix+"_"))
 		}
 		fileContent, err := Plugin.ReadFile(srcPath)
 
@@ -108,7 +110,7 @@ func WritePlugins(src, dst string, skip bool) {
 		if writeFile {
 			// Hash不一致则替换
 			if utils.MD5File(dstPath) != utils.MD5(fileContent) {
-				log.Printf("文件 [%s] 改变，重新写入。", xpath.Base(dstPath))
+				log.Printf("文件 [%s] 改变，重新写入。", filepath.Base(dstPath))
 				if err := os.WriteFile(dstPath, fileContent, os.ModePerm); err != nil {
 					panic(err)
 				}
@@ -119,7 +121,7 @@ func WritePlugins(src, dst string, skip bool) {
 
 func TestPluginPath() string {
 	_, currFile, _, _ := runtime.Caller(0)
-	dir := xpath.Dir(currFile)
-	pluginDir := xpath.Join(dir, "plugin")
+	dir := path.Dir(xpath.P(currFile))
+	pluginDir := path.Join(dir, "plugin")
 	return pluginDir
 }

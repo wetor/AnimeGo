@@ -1,14 +1,14 @@
-package manager_test
+package qbittorrent
 
 import (
 	"context"
 	"os"
+	"path"
 	"sync"
 
 	"github.com/pkg/errors"
-	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/pkg/client"
 	"github.com/wetor/AnimeGo/pkg/utils"
-	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
 const (
@@ -23,38 +23,45 @@ const (
 )
 
 var defaultUpdateList = func(m *ClientMock) {
-	for _, item := range m.name2item {
+	for _, item := range m.Name2item {
 		if item.State == QbtDownloading {
-			item.Progress += 0.25
-			if item.Progress >= 0.5 {
+			item.Progress += 0.5
+			if item.Progress >= 1.005 {
+				item.Progress = 0
 				item.State = QbtUploading
 			}
 		} else if item.State == QbtUploading {
-			item.Progress += 0.25
-			if item.Progress >= 1 {
+			item.Progress += 0.5
+			if item.Progress >= 1.005 {
 				item.State = QbtCheckingUP
 			}
 		}
 	}
 }
 
+type ClientMockOptions struct {
+	DownloadPath string
+	UpdateList   func(m *ClientMock)
+}
+
 type ClientMock struct {
-	name2item  map[string]*models.TorrentItem
-	name2hash  map[string]string
-	hash2name  map[string]string
-	updateList func(m *ClientMock)
-	errorFlag  map[string]struct{}
+	Name2item map[string]*client.TorrentItem
+	Name2hash map[string]string
+	Hash2name map[string]string
+	errorFlag map[string]struct{}
+	Conf      ClientMockOptions
 	sync.Mutex
 }
 
-func (m *ClientMock) MockInit(updateList func(m *ClientMock)) {
-	m.name2item = make(map[string]*models.TorrentItem)
-	m.name2hash = make(map[string]string)
-	m.hash2name = make(map[string]string)
-	if updateList == nil {
-		updateList = defaultUpdateList
+func (m *ClientMock) MockInit(opts ClientMockOptions) {
+	m.Conf = opts
+
+	m.Name2item = make(map[string]*client.TorrentItem)
+	m.Name2hash = make(map[string]string)
+	m.Hash2name = make(map[string]string)
+	if m.Conf.UpdateList == nil {
+		m.Conf.UpdateList = defaultUpdateList
 	}
-	m.updateList = updateList
 	m.errorFlag = make(map[string]struct{})
 }
 
@@ -74,7 +81,7 @@ func (m *ClientMock) MockGetError(name string) bool {
 }
 
 func (m *ClientMock) MockSetUpdateList(updateList func(m *ClientMock)) {
-	m.updateList = updateList
+	m.Conf.UpdateList = updateList
 }
 
 func (m *ClientMock) MockAddName(name, hash string, src []string) {
@@ -85,25 +92,29 @@ func (m *ClientMock) MockAddName(name, hash string, src []string) {
 		return
 	}
 
-	m.name2hash[name] = hash
-	m.hash2name[hash] = name
+	m.Name2hash[name] = hash
+	m.Hash2name[hash] = name
 
-	err := utils.CreateMutiDir(xpath.Join(DownloadPath, xpath.Dir(src[0])))
+	err := utils.CreateMutiDir(path.Join(m.Conf.DownloadPath, path.Dir(src[0])))
 	if err != nil {
 		panic(err)
 	}
 	for _, s := range src {
-		err = os.WriteFile(xpath.Join(DownloadPath, s), []byte{}, os.ModePerm)
+		err = os.WriteFile(path.Join(m.Conf.DownloadPath, s), []byte{}, os.ModePerm)
 		if err != nil {
 			panic(err)
 		}
 	}
 }
 
-func (m *ClientMock) Config() *models.ClientConfig {
-	return &models.ClientConfig{
-		DownloadPath: DownloadPath,
+func (m *ClientMock) Config() *client.Config {
+	return &client.Config{
+		DownloadPath: m.Conf.DownloadPath,
 	}
+}
+
+func (m *ClientMock) Name() string {
+	return "MockClient"
 }
 
 func (m *ClientMock) Connected() bool {
@@ -116,7 +127,7 @@ func (m *ClientMock) Connected() bool {
 func (m *ClientMock) update() {
 	m.Lock()
 	defer m.Unlock()
-	m.updateList(m)
+	m.Conf.UpdateList(m)
 }
 
 func (m *ClientMock) Start(ctx context.Context) {
@@ -133,7 +144,7 @@ func (m *ClientMock) Start(ctx context.Context) {
 	}()
 }
 
-func (m *ClientMock) List(opt *models.ClientListOptions) ([]*models.TorrentItem, error) {
+func (m *ClientMock) List(opt *client.ListOptions) ([]*client.TorrentItem, error) {
 	m.Lock()
 	defer m.Unlock()
 
@@ -141,14 +152,14 @@ func (m *ClientMock) List(opt *models.ClientListOptions) ([]*models.TorrentItem,
 		return nil, errors.New(ErrorListFailed)
 	}
 
-	list := make([]*models.TorrentItem, 0, len(m.name2item))
-	for _, item := range m.name2item {
+	list := make([]*client.TorrentItem, 0, len(m.Name2item))
+	for _, item := range m.Name2item {
 		list = append(list, item)
 	}
 	return list, nil
 }
 
-func (m *ClientMock) Add(opt *models.ClientAddOptions) error {
+func (m *ClientMock) Add(opt *client.AddOptions) error {
 	m.Lock()
 	defer m.Unlock()
 
@@ -156,17 +167,17 @@ func (m *ClientMock) Add(opt *models.ClientAddOptions) error {
 		return errors.New(ErrorAddFailed)
 	}
 
-	m.name2item[opt.Rename] = &models.TorrentItem{
-		ContentPath: opt.Rename,
-		Hash:        m.name2hash[opt.Rename],
-		Name:        opt.Rename,
+	m.Name2item[opt.Name] = &client.TorrentItem{
+		ContentPath: opt.Name,
+		Hash:        m.Name2hash[opt.Name],
+		Name:        opt.Name,
 		Progress:    0.0,
 		State:       QbtDownloading,
 	}
 	return nil
 }
 
-func (m *ClientMock) Delete(opt *models.ClientDeleteOptions) error {
+func (m *ClientMock) Delete(opt *client.DeleteOptions) error {
 	m.Lock()
 	defer m.Unlock()
 
@@ -175,10 +186,10 @@ func (m *ClientMock) Delete(opt *models.ClientDeleteOptions) error {
 	}
 
 	for _, hash := range opt.Hash {
-		name := m.hash2name[hash]
-		delete(m.name2item, name)
-		delete(m.name2hash, name)
-		delete(m.hash2name, hash)
+		name := m.Hash2name[hash]
+		delete(m.Name2item, name)
+		delete(m.Name2hash, name)
+		delete(m.Hash2name, hash)
 	}
 	return nil
 }

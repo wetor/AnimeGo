@@ -17,37 +17,37 @@ import (
 )
 
 type Options struct {
-	Ctx                           context.Context
-	AccessKey                     string
-	Cache                         api.Cacher
-	Config                        *configs.Config
-	BangumiCache                  api.CacheGetter
-	BangumiCacheLock              *sync.Mutex
-	FilterManager                 api.FilterManager
-	DownloaderManagerCacheDeleter api.DownloaderManagerCacheDeleter
+	Ctx                  context.Context
+	AccessKey            string
+	Cache                api.Cacher
+	Config               *configs.Config
+	BangumiCache         api.CacheGetter
+	BangumiCacheLock     *sync.Mutex
+	FilterManager        api.FilterManager
+	DatabaseCacheDeleter api.DatabaseCacheDeleter
 }
 
 type Api struct {
-	ctx                           context.Context
-	accessKey                     string
-	cache                         api.Cacher
-	config                        *configs.Config
-	bangumiCache                  api.CacheGetter
-	bangumiCacheLock              *sync.Mutex
-	filterManager                 api.FilterManager
-	downloaderManagerCacheDeleter api.DownloaderManagerCacheDeleter
+	ctx                  context.Context
+	accessKey            string
+	cache                api.Cacher
+	config               *configs.Config
+	bangumiCache         api.CacheGetter
+	bangumiCacheLock     *sync.Mutex
+	filterManager        api.FilterManager
+	databaseCacheDeleter api.DatabaseCacheDeleter
 }
 
 func NewApi(opts *Options) *Api {
 	return &Api{
-		ctx:                           opts.Ctx,
-		accessKey:                     opts.AccessKey,
-		cache:                         opts.Cache,
-		config:                        opts.Config,
-		bangumiCache:                  opts.BangumiCache,
-		bangumiCacheLock:              opts.BangumiCacheLock,
-		filterManager:                 opts.FilterManager,
-		downloaderManagerCacheDeleter: opts.DownloaderManagerCacheDeleter,
+		ctx:                  opts.Ctx,
+		accessKey:            opts.AccessKey,
+		cache:                opts.Cache,
+		config:               opts.Config,
+		bangumiCache:         opts.BangumiCache,
+		bangumiCacheLock:     opts.BangumiCacheLock,
+		filterManager:        opts.FilterManager,
+		databaseCacheDeleter: opts.DatabaseCacheDeleter,
 	}
 }
 

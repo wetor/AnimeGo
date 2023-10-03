@@ -14,6 +14,8 @@ import (
 //
 //	@Summary		添加下载项
 //	@Description	添加下载项到AnimeGo
+//	@Description	支持mikan和bangumi两种源，必要的参数分别为mikan_url和bangumi_id
+//	@Description	可选参数name，能够再torrent内文件名异常时解析使用
 //	@Tags			manager
 //	@Accept			json
 //	@Produce		json
@@ -21,7 +23,7 @@ import (
 //	@Success		200		{object}	webModels.Response
 //	@Failure		300		{object}	webModels.Response
 //	@Security		ApiKeyAuth
-//	@Router			/api/manager [post]
+//	@Router			/api/download/manager [post]
 func (a *Api) AddItems(c *gin.Context) {
 	var request webModels.AddItemsRequest
 	if !a.checkRequest(c, &request) {
@@ -32,22 +34,35 @@ func (a *Api) AddItems(c *gin.Context) {
 	items := make([]*models.FeedItem, 0, len(request.Data))
 	for _, data := range request.Data {
 		item := &models.FeedItem{
-			Download: data.Torrent,
+			TorrentUrl: data.Torrent,
 		}
 		switch source {
 		case "mikan":
-			if name, ok := data.Info["name"]; ok {
-				item.Name = name.(string)
-			} else {
-				c.JSON(webModels.Fail(source + " 源缺少 info.name 参数"))
-				return
-			}
 			if url, ok := data.Info["url"]; ok {
-				item.Url = url.(string)
-			} else {
-				c.JSON(webModels.Fail(source + " 源缺少 info.url 参数"))
+				item.MikanUrl = url.(string)
+			}
+			if url, ok := data.Info["mikan_url"]; ok {
+				item.MikanUrl = url.(string)
+			}
+			if len(item.MikanUrl) == 0 {
+				c.JSON(webModels.Fail(source + " 源缺少 info.mikan_url 或 info.url 参数"))
 				return
 			}
+		case "bangumi":
+			if bangumiID, ok := data.Info["bangumi_id"]; ok {
+				switch id := bangumiID.(type) {
+				case float64:
+					item.BangumiID = int(id)
+				}
+				item.BangumiID = int(bangumiID.(float64))
+			} else {
+				c.JSON(webModels.Fail(source + " 源缺少 info.bangumi_id 参数"))
+				return
+			}
+		}
+
+		if name, ok := data.Info["name"]; ok {
+			item.Name = name.(string)
 		}
 		items = append(items, item)
 	}

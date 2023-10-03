@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path"
 	"sync"
 	"time"
 
@@ -16,12 +17,12 @@ import (
 	anidataMikan "github.com/wetor/AnimeGo/internal/animego/anidata/mikan"
 	anidataThemoviedb "github.com/wetor/AnimeGo/internal/animego/anidata/themoviedb"
 	"github.com/wetor/AnimeGo/internal/animego/anisource"
+	"github.com/wetor/AnimeGo/internal/animego/anisource/bangumi"
 	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
+	"github.com/wetor/AnimeGo/internal/animego/database"
 	"github.com/wetor/AnimeGo/internal/animego/downloader"
-	"github.com/wetor/AnimeGo/internal/animego/downloader/qbittorrent"
 	feedPlugin "github.com/wetor/AnimeGo/internal/animego/feed/plugin"
 	"github.com/wetor/AnimeGo/internal/animego/filter"
-	"github.com/wetor/AnimeGo/internal/animego/manager"
 	"github.com/wetor/AnimeGo/internal/animego/parser"
 	parserPlugin "github.com/wetor/AnimeGo/internal/animego/parser/plugin"
 	"github.com/wetor/AnimeGo/internal/animego/renamer"
@@ -37,6 +38,7 @@ import (
 	_ "github.com/wetor/AnimeGo/internal/web/docs"
 	"github.com/wetor/AnimeGo/internal/web/websocket"
 	"github.com/wetor/AnimeGo/pkg/cache"
+	"github.com/wetor/AnimeGo/pkg/client/qbittorrent"
 	pkgLog "github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/request"
 	"github.com/wetor/AnimeGo/pkg/torrent"
@@ -113,14 +115,14 @@ func Main() {
 	// 载入配置文件
 	config := configs.Load(configFile)
 	constant.Init(&constant.Options{
-		DataPath: config.DataPath,
+		DataPath: xpath.P(config.DataPath),
 	})
 	// 创建子文件夹
 	config.InitDir()
 	// 检查参数限制
 	config.Check()
 	// 释放资源
-	assets.WritePlugins(assets.Dir, xpath.Join(config.DataPath, assets.Dir), true)
+	assets.WritePlugins(assets.Dir, path.Join(xpath.P(config.DataPath), assets.Dir), true)
 
 	// ===============================================================================================================
 	// 初始化日志
@@ -162,18 +164,15 @@ func Main() {
 
 	// ===============================================================================================================
 	// 初始化并连接下载器
-	downloader.Init(&downloader.Options{
+	qbittorrentSrv := qbittorrent.NewQBittorrent(&qbittorrent.Options{
+		Url:                  config.Setting.Client.QBittorrent.Url,
+		Username:             config.Setting.Client.QBittorrent.Username,
+		Password:             config.Setting.Client.QBittorrent.Password,
+		DownloadPath:         config.Setting.Client.QBittorrent.DownloadPath,
 		ConnectTimeoutSecond: config.Advanced.Client.ConnectTimeoutSecond,
 		CheckTimeSecond:      config.Advanced.Client.CheckTimeSecond,
 		RetryConnectNum:      config.Advanced.Client.RetryConnectNum,
 		WG:                   &WG,
-	})
-	qbtConf := config.Setting.Client.QBittorrent
-	qbittorrentSrv := qbittorrent.NewQBittorrent(&qbittorrent.Options{
-		Url:          qbtConf.Url,
-		Username:     qbtConf.Username,
-		Password:     qbtConf.Password,
-		DownloadPath: qbtConf.DownloadPath,
 	})
 	qbittorrentSrv.Start(ctx)
 
@@ -198,8 +197,8 @@ func Main() {
 	// ===============================================================================================================
 	// 初始化renamer配置
 	renamer.Init(&renamer.Options{
-		WG:                &WG,
-		UpdateDelaySecond: config.UpdateDelaySecond,
+		WG:            &WG,
+		RefreshSecond: config.RefreshSecond,
 	})
 	// 第一个启用的rename插件
 	var rename api.RenamerPlugin
@@ -215,24 +214,43 @@ func Main() {
 	renameSrv.Start(ctx)
 
 	// ===============================================================================================================
-	// 初始化manager配置
-	manager.Init(&manager.Options{
-		Downloader: manager.Downloader{
-			UpdateDelaySecond:      config.UpdateDelaySecond,
-			DownloadPath:           config.DownloadPath,
-			SavePath:               config.SavePath,
+	// 初始化database配置
+	database.Init(&database.Options{
+		DownloaderConf: database.DownloaderConf{
+			RefreshSecond:          config.RefreshSecond,
+			DownloadPath:           xpath.P(config.DownloadPath),
+			SavePath:               xpath.P(config.SavePath),
 			Category:               config.Category,
 			Tag:                    config.Tag,
 			AllowDuplicateDownload: config.Download.AllowDuplicateDownload,
 			SeedingTimeMinute:      config.Download.SeedingTimeMinute,
 			Rename:                 config.Advanced.Download.Rename,
 		},
-		WG: &WG,
 	})
-	// 初始化manager
-	managerSrv := manager.NewManager(qbittorrentSrv, bolt, renameSrv)
-	// 启动manager
-	managerSrv.Start(ctx)
+	downloadCallback := &database.Callback{}
+	databaseSrv, err := database.NewDatabase(bolt, renameSrv, downloadCallback)
+	if err != nil {
+		panic(err)
+	}
+
+	// ===============================================================================================================
+	// 初始化downloader配置
+	downloader.Init(&downloader.Options{
+		RefreshSecond:          config.RefreshSecond,
+		Category:               config.Category,
+		Tag:                    config.Tag,
+		AllowDuplicateDownload: config.Download.AllowDuplicateDownload,
+		SeedingTimeMinute:      config.Download.SeedingTimeMinute,
+		WG:                     &WG,
+	})
+	// 初始化downloader
+	downloaderSrv := downloader.NewManager(qbittorrentSrv, databaseSrv, databaseSrv)
+	downloadCallback.Renamed = func(data any) error {
+		return downloaderSrv.Delete(data.(string))
+	}
+	// 启动downloader
+	downloaderSrv.Start(ctx)
+
 	// ===============================================================================================================
 	// 初始化parser配置
 	parser.Init(&parser.Options{
@@ -249,7 +267,9 @@ func Main() {
 		}
 	}
 	// 初始化parser
-	parserSrv := parser.NewManager(parse, &mikan.Mikan{ThemoviedbKey: config.Setting.Key.Themoviedb})
+	bgmSource := bangumi.NewBangumiSource(config.Setting.Key.Themoviedb)
+	mikanSource := mikan.NewMikanSource(bgmSource)
+	parserSrv := parser.NewManager(parse, mikanSource, bgmSource)
 
 	// ===============================================================================================================
 	// 初始化filter配置
@@ -257,7 +277,7 @@ func Main() {
 		DelaySecond: config.Advanced.Feed.DelaySecond,
 	})
 	// 初始化filter
-	filterSrv := filter.NewManager(managerSrv, parserSrv)
+	filterSrv := filter.NewManager(downloaderSrv, parserSrv)
 	for _, p := range configs.ConvertPluginInfo(config.Plugin.Filter) {
 		filterSrv.Add(&p)
 	}
@@ -294,14 +314,14 @@ func Main() {
 		// 初始化Web API
 		web.Init(&web.Options{
 			ApiOptions: &webapi.Options{
-				Ctx:                           ctx,
-				AccessKey:                     config.WebApi.AccessKey,
-				Cache:                         bolt,
-				Config:                        config,
-				BangumiCache:                  bangumiCache,
-				BangumiCacheLock:              &BangumiCacheMutex,
-				FilterManager:                 filterSrv,
-				DownloaderManagerCacheDeleter: managerSrv,
+				Ctx:                  ctx,
+				AccessKey:            config.WebApi.AccessKey,
+				Cache:                bolt,
+				Config:               config,
+				BangumiCache:         bangumiCache,
+				BangumiCacheLock:     &BangumiCacheMutex,
+				FilterManager:        filterSrv,
+				DatabaseCacheDeleter: databaseSrv,
 			},
 			WebSocketOptions: &websocket.Options{
 				WG:     &WG,

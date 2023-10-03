@@ -34,17 +34,19 @@ type AnimeEntity struct {
 	Torrent      *AnimeTorrent    `json:"torrent"`
 }
 
+type AnimeEpType int8
+
 const (
-	AnimeEpUnknown int8 = iota
+	AnimeEpUnknown AnimeEpType = iota
 	AnimeEpNormal
 	AnimeEpSpecial
 )
 
 type AnimeEpEntity struct {
-	Type    int8   `json:"type"`     // ep类型。0:未知，1:正常剧集，2:SP
-	Ep      int    `json:"ep"`       // 集数，Type=0时，不使用此参数
-	Src     string `json:"src"`      // 原文件名
-	AirDate string `json:"air_date"` // 首映日期
+	Type    AnimeEpType `json:"type"`     // ep类型。0:未知，1:正常剧集，2:SP
+	Ep      int         `json:"ep"`       // 集数，Type=0时，不使用此参数
+	Src     string      `json:"src"`      // 原文件名
+	AirDate string      `json:"air_date"` // 首映日期
 }
 
 type AnimeTorrent struct {
@@ -62,9 +64,42 @@ func (a *AnimeEntity) Default() {
 	}
 }
 
+func (a *AnimeEntity) AnimeName() string {
+	return a.NameCN
+}
+
+func (a *AnimeEntity) Hash() string {
+	if a.Torrent != nil {
+		return a.Torrent.Hash
+	}
+	return ""
+}
+
+func (a *AnimeEntity) EpKeys() []string {
+	result := make([]string, len(a.Ep))
+	for i := range a.Ep {
+		result[i] = a.EpKey(i)
+	}
+	return result
+}
+
+func (a *AnimeEntity) EpKey(index int) string {
+	switch a.Ep[index].Type {
+	case AnimeEpUnknown:
+		return fmt.Sprintf("key-%v-S%v-%v", a.NameCN, a.Season, a.Ep[index].Src)
+	case AnimeEpSpecial:
+		return fmt.Sprintf("key-%v-S%v-SP%v", a.NameCN, a.Season, a.Ep[index].Ep)
+	}
+	return a.EpKeyByEp(a.Ep[index].Ep)
+}
+
+func (a *AnimeEntity) EpKeyByEp(ep int) string {
+	return fmt.Sprintf("key-%v-S%v-E%v", a.NameCN, a.Season, ep)
+}
+
 func (a *AnimeEntity) FullName() string {
 	if a.Flag&AnimeFlagEpParseFailed > 0 {
-		return fmt.Sprintf("%s[第%d季][第-集][%s]", a.NameCN, a.Season, a.Torrent.Hash)
+		return fmt.Sprintf("%s[第%d季][第-集][%s]", a.NameCN, a.Season, a.Hash())
 	}
 	if len(a.Ep) == 1 {
 		return fmt.Sprintf("%s[第%d季][第%d集]", a.NameCN, a.Season, a.Ep[0].Ep)

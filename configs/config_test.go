@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/wetor/AnimeGo/configs"
+	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/utils"
 	"github.com/wetor/AnimeGo/test"
 )
@@ -15,7 +16,11 @@ const testdata = "config"
 
 func TestMain(m *testing.M) {
 	_ = utils.CreateMutiDir("data")
+	log.Init(&log.Options{
+		File: "data/log.log",
+	})
 	m.Run()
+	log.Close()
 	_ = os.RemoveAll("data")
 }
 
@@ -93,6 +98,15 @@ func TestUpdateConfig_152(t *testing.T) {
 	configs.UpdateConfig("data/animego.yaml", false)
 
 	EqualFile(t, "data/animego.yaml", test.GetDataPath(testdata, "animego_152.yaml"))
+}
+
+func TestUpdateConfig_160(t *testing.T) {
+	configs.ConfigVersion = "1.6.0"
+	file, _ := test.GetData(testdata, "animego_152.yaml")
+	_ = os.WriteFile("data/animego.yaml", file, 0666)
+	configs.UpdateConfig("data/animego.yaml", false)
+
+	EqualFile(t, "data/animego.yaml", test.GetDataPath(testdata, "animego_160.yaml"))
 }
 
 func TestInitEnvConfig(t *testing.T) {

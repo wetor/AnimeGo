@@ -2,7 +2,7 @@ package constant
 
 import (
 	"github.com/wetor/AnimeGo/assets"
-	"github.com/wetor/AnimeGo/pkg/xpath"
+	"path"
 )
 
 const FilePerm = 0644
@@ -53,15 +53,15 @@ type Options struct {
 func Init(opts *Options) {
 	dataPath = opts.DataPath
 
-	CachePath = xpath.Join(dataPath, "cache")
-	CacheFile = xpath.Join(CachePath, "bolt.db")
-	BangumiCacheFile = xpath.Join(CachePath, "bolt_sub.db")
+	CachePath = path.Join(dataPath, "cache")
+	CacheFile = path.Join(CachePath, "bolt.db")
+	BangumiCacheFile = path.Join(CachePath, "bolt_sub.db")
 
-	LogPath = xpath.Join(dataPath, "log")
-	LogFile = xpath.Join(LogPath, "animego.log")
+	LogPath = path.Join(dataPath, "log")
+	LogFile = path.Join(LogPath, "animego.log")
 
-	PluginPath = xpath.Join(dataPath, "plugin")
-	TempPath = xpath.Join(dataPath, "temp")
+	PluginPath = path.Join(dataPath, "plugin")
+	TempPath = path.Join(dataPath, "temp")
 
-	WebPath = xpath.Join(dataPath, "web")
+	WebPath = path.Join(dataPath, "web")
 }

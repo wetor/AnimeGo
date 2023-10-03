@@ -1,10 +1,11 @@
-package mikan_test
+package anisource_test
 
 import (
 	"fmt"
 	"io"
 	"net/url"
 	"os"
+	"path"
 	"sync"
 	"testing"
 
@@ -14,6 +15,7 @@ import (
 	"github.com/wetor/AnimeGo/assets"
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/internal/animego/anisource"
+	"github.com/wetor/AnimeGo/internal/animego/anisource/bangumi"
 	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
@@ -29,7 +31,7 @@ import (
 
 func HookGetWriter(uri string, w io.Writer) error {
 	log.Infof("Mock HTTP GET %s", uri)
-	id := xpath.Base(uri)
+	id := path.Base(xpath.P(uri))
 	jsonData, err := test.GetData("mikan", id)
 	if err != nil {
 		return err
@@ -49,7 +51,7 @@ func HookGet(uri string, body interface{}) error {
 	}
 	id := u.Query().Get("with_text_query")
 	if len(id) == 0 {
-		id = xpath.Base(u.Path)
+		id = path.Base(xpath.P(u.Path))
 	}
 
 	p := test.GetDataPath("themoviedb", id)
@@ -131,7 +133,7 @@ func TestMikan_Parse(t *testing.T) {
 			name: "海贼王",
 			args: args{
 				opts: &models.AnimeParseOptions{
-					MikanUrl: "https://mikanani.me/Home/Episode/18b60d48a72c603b421468aade7fdd0868ff2f2f",
+					Input: "https://mikanani.me/Home/Episode/18b60d48a72c603b421468aade7fdd0868ff2f2f",
 				},
 				name: "OPFans枫雪动漫][ONE PIECE 海贼王][第1029话][1080p][周日版][MP4][简体] [299.5MB]",
 			},
@@ -141,7 +143,7 @@ func TestMikan_Parse(t *testing.T) {
 			name: "欢迎来到实力至上主义的教室 第二季",
 			args: args{
 				opts: &models.AnimeParseOptions{
-					MikanUrl: "https://mikanani.me/Home/Episode/8849c25e05d6e2623b5333bc78d3a489a9b1cc59",
+					Input: "https://mikanani.me/Home/Episode/8849c25e05d6e2623b5333bc78d3a489a9b1cc59",
 				},
 				name: "[ANi] Classroom of the Elite S2 - 欢迎来到实力至上主义的教室 第二季 - 07 [1080P][Baha][WEB-DL][AAC AVC][CHT][MP4] [254.26 MB]",
 			},
@@ -151,7 +153,7 @@ func TestMikan_Parse(t *testing.T) {
 			name: "想要成为影之实力者",
 			args: args{
 				opts: &models.AnimeParseOptions{
-					MikanUrl: "https://mikanani.me/Home/Episode/dcc28079dfda415cdcdf46159aad0fa94f1a2f11",
+					Input: "https://mikanani.me/Home/Episode/dcc28079dfda415cdcdf46159aad0fa94f1a2f11",
 				},
 				name: "[LoliHouse] 想要成为影之实力者 / 我想成为影之强者 / Kage no Jitsuryokusha ni Naritakute! - 19 [WebRip 1080p HEVC-10bit AAC][简繁内封字幕]",
 			},
@@ -161,7 +163,7 @@ func TestMikan_Parse(t *testing.T) {
 			name: "AnimeParseOverride",
 			args: args{
 				opts: &models.AnimeParseOptions{
-					MikanUrl: "https://mikanani.me/Home/Episode/dcc28079dfda415cdcdf46159aad0fa94f1a2f11",
+					Input: "https://mikanani.me/Home/Episode/dcc28079dfda415cdcdf46159aad0fa94f1a2f11",
 					AnimeParseOverride: &models.AnimeParseOverride{
 						MikanID:      114,
 						BangumiID:    514,
@@ -178,7 +180,7 @@ func TestMikan_Parse(t *testing.T) {
 			wantAnime: &models.AnimeEntity{ID: 514, ThemoviedbID: 1919, MikanID: 114, Name: "AnimeParseOverride", NameCN: "AnimeParseOverrideCN", Season: 1, Eps: 20, AirDate: "2022-10-05"},
 		},
 	}
-	m := mikan.Mikan{}
+	m := mikan.NewMikanSource(bangumi.NewBangumiSource(""))
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			gotAnime, err := m.Parse(tt.args.opts)
@@ -205,7 +207,7 @@ func TestMikan_Parse_Failed(t *testing.T) {
 			name: "err_mikan",
 			args: args{
 				opts: &models.AnimeParseOptions{
-					MikanUrl: "err_mikan",
+					Input: "err_mikan",
 				},
 				name: "err_mikan",
 			},
@@ -217,7 +219,7 @@ func TestMikan_Parse_Failed(t *testing.T) {
 			name: "err_bangumi",
 			args: args{
 				opts: &models.AnimeParseOptions{
-					MikanUrl: "err_bangumi",
+					Input: "err_bangumi",
 				},
 				name: "err_bangumi",
 			},
@@ -229,7 +231,7 @@ func TestMikan_Parse_Failed(t *testing.T) {
 			name: "err_themoviedb_search",
 			args: args{
 				opts: &models.AnimeParseOptions{
-					MikanUrl: "err_themoviedb_search",
+					Input: "err_themoviedb_search",
 				},
 				name: "err_themoviedb_search",
 			},
@@ -241,7 +243,7 @@ func TestMikan_Parse_Failed(t *testing.T) {
 			name: "err_themoviedb_get",
 			args: args{
 				opts: &models.AnimeParseOptions{
-					MikanUrl: "err_themoviedb_get",
+					Input: "err_themoviedb_get",
 				},
 				name: "err_themoviedb_get",
 			},
@@ -250,7 +252,7 @@ func TestMikan_Parse_Failed(t *testing.T) {
 	}
 	Hook()
 	defer UnHook()
-	m := mikan.Mikan{}
+	m := mikan.NewMikanSource(bangumi.NewBangumiSource(""))
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			gotEntity, err := m.Parse(tt.args.opts)

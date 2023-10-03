@@ -2,6 +2,7 @@ package parser
 
 import (
 	"github.com/pkg/errors"
+	"github.com/wetor/AnimeGo/pkg/xpath"
 
 	"github.com/wetor/AnimeGo/internal/animego/parser/utils"
 	"github.com/wetor/AnimeGo/internal/api"
@@ -14,26 +15,40 @@ import (
 const DefaultSeason = 1
 
 type Manager struct {
-	parser    api.ParserPlugin
-	anisource api.AniSource
+	parser  api.ParserPlugin
+	mikan   api.AniSource
+	bangumi api.AniSource
 }
 
-func NewManager(parser api.ParserPlugin, anisource api.AniSource) *Manager {
+func NewManager(parser api.ParserPlugin, mikan api.AniSource, bangumi api.AniSource) *Manager {
 	return &Manager{
-		parser:    parser,
-		anisource: anisource,
+		parser:  parser,
+		mikan:   mikan,
+		bangumi: bangumi,
 	}
 }
 
 func (m *Manager) Parse(opts *models.ParseOptions) (entity *models.AnimeEntity, err error) {
-	// ------------------- 获取mikan信息（bangumi id） -------------------
-	entity, err = m.anisource.Parse(&models.AnimeParseOptions{
-		MikanUrl:           opts.MikanUrl,
-		AnimeParseOverride: opts.AnimeParseOverride,
-	})
-	if err != nil {
-		return nil, errors.Wrap(err, "解析anisource失败，结束此流程")
+	if opts.BangumiID > 0 {
+		// ------------------- 通过bangumi获取信息（bangumi -> tmdb） -------------------
+		entity, err = m.bangumi.Parse(&models.AnimeParseOptions{
+			Input:              opts.BangumiID,
+			AnimeParseOverride: opts.AnimeParseOverride,
+		})
+		if err != nil {
+			return nil, errors.Wrap(err, "解析anisource失败，结束此流程")
+		}
+	} else if len(opts.MikanUrl) > 0 {
+		// ------------------- 通过mikan获取信息（mikan -> bangumi -> tmdb） -------------------
+		entity, err = m.mikan.Parse(&models.AnimeParseOptions{
+			Input:              opts.MikanUrl,
+			AnimeParseOverride: opts.AnimeParseOverride,
+		})
+		if err != nil {
+			return nil, errors.Wrap(err, "解析anisource失败，结束此流程")
+		}
 	}
+
 	// ------------------- 获取并解析torrent信息 -------------------
 	torrentInfo, err := torrent.LoadUri(opts.TorrentUrl)
 	if err != nil {
@@ -52,7 +67,7 @@ func (m *Manager) Parse(opts *models.ParseOptions) (entity *models.AnimeEntity, 
 	for _, t := range torrentInfo.Files {
 		// TODO: 筛选文件
 		epEntity := &models.AnimeEpEntity{
-			Src: t.Path(),
+			Src: xpath.P(t.Path()),
 		}
 		if isSp, sp := utils.ParseSp(t.Name); isSp {
 			epEntity.Type = models.AnimeEpSpecial

@@ -5,7 +5,6 @@ setting:
             url: http://127.0.0.1:8080
             username: admin
             password: adminadmin
-            download_path: ""
     download_path: download/incomplete
     save_path: download/anime
     data_path: data

@@ -2,6 +2,7 @@ package python
 
 import (
 	"os"
+	"path"
 	"strings"
 
 	"github.com/go-python/gpython/py"
@@ -144,8 +145,8 @@ func (p *Python) endExecute() (err error) {
 	}
 	err = p.Set("_get_config", py.MustNewMethod("_get_config", func(self py.Object, args py.Tuple) (py.Object, error) {
 		result := map[string]any{}
-		yamlFile := xpath.Join(p.dir, p.name+".yaml")
-		jsonFile := xpath.Join(p.dir, p.name+".json")
+		yamlFile := path.Join(p.dir, p.name+".yaml")
+		jsonFile := path.Join(p.dir, p.name+".json")
 		if utils.IsExist(yamlFile) {
 			data, err := os.ReadFile(yamlFile)
 			if err != nil {
@@ -215,16 +216,16 @@ func (p *Python) Type() string {
 //	@param file
 func (p *Python) loadPre(file string) (err error) {
 	if xpath.IsAbs(file) {
-		p.file = xpath.Abs(xpath.P(file))
+		p.file = xpath.Abs(file)
 	} else {
-		p.file = xpath.Abs(xpath.Join(plugin.Path, xpath.P(file)))
+		p.file = xpath.Abs(path.Join(plugin.Path, file))
 	}
 	p.file, err = utils.FindScript(p.file, ".py")
 	if err != nil {
 		return errors.Wrap(err, "加载插件失败")
 	}
-	p.dir, p.name = xpath.Split(p.file)
-	p.name = strings.TrimSuffix(p.name, xpath.Ext(p.file))
+	p.dir, p.name = path.Split(p.file)
+	p.name = strings.TrimSuffix(p.name, path.Ext(p.file))
 	return nil
 }
 

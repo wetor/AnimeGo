@@ -97,7 +97,7 @@ def filter_all(args):
             # 1,2,3
             log.debug('==1,2,3.MikanID,SubGroupID.Start==')
             if isNeedGetMikanInfo:
-                mikanInfo = core.parse_mikan(item.url)
+                mikanInfo = core.parse_mikan(item.mikan_url)
                 key1 = 'key_' + str(mikanInfo.id) + '_' + str(mikanInfo.sub_group_id)
                 key2 = str(int(mikanInfo.id))
                 key3 = str(int(mikanInfo.sub_group_id))

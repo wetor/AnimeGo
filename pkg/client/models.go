@@ -1,4 +1,30 @@
-package models
+package client
+
+type ListOptions struct {
+	Status   string
+	Category string
+	Tag      string
+}
+
+type AddOptions struct {
+	Url         string
+	File        string // optional torrent file
+	SavePath    string
+	Category    string
+	Tag         string
+	SeedingTime int    // 分钟
+	Name        string // 保存名字
+}
+
+type DeleteOptions struct {
+	Hash       []string
+	DeleteFile bool
+}
+
+type GetOptions struct {
+	Hash string
+	Item *TorrentItem
+}
 
 type TorrentItem struct {
 	// AddedOn      int     `json:"added_on"`
@@ -48,7 +74,7 @@ type TorrentItem struct {
 	// Upspeed         int    `json:"upspeed"`
 }
 
-type ClientConfig struct {
+type Config struct {
 	ApiUrl       string `json:"api_url"`
 	DownloadPath string `json:"download_path"`
 }

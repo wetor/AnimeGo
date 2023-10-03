@@ -26,10 +26,9 @@ type Plugin struct {
 type Setting struct {
 	Client struct {
 		QBittorrent struct {
-			Url          string `yaml:"url" json:"url"`
-			Username     string `yaml:"username" json:"username"`
-			Password     string `yaml:"password" json:"password"`
-			DownloadPath string `yaml:"download_path" json:"download_path"`
+			Url      string `yaml:"url" json:"url"`
+			Username string `yaml:"username" json:"username"`
+			Password string `yaml:"password" json:"password"`
 		} `yaml:"qbittorrent" json:"qbittorrent"`
 	} `yaml:"client" json:"client"`
 	DownloadPath string `yaml:"download_path" json:"download_path"`

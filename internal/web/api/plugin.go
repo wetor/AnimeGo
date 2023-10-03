@@ -16,7 +16,6 @@ import (
 	webModels "github.com/wetor/AnimeGo/internal/web/models"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/utils"
-	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
 func checkPluginPerm(p string) (read, write, delete bool) {
@@ -33,7 +32,7 @@ func checkPluginPerm(p string) (read, write, delete bool) {
 	if len(dir) == 0 || dir == "/" || dir == "." {
 		isPluginRoot = true
 	}
-	name := xpath.Base(p)
+	name := path.Base(p)
 	// 顶层指定文件夹不可编辑和删除
 	if _, ok := constant.PluginDirComment[name]; ok && isPluginRoot {
 		write = false
@@ -65,15 +64,15 @@ func checkPluginPerm(p string) (read, write, delete bool) {
 //	@Security		ApiKeyAuth
 //	@Router			/api/plugin/manager/dir [get]
 func (a *Api) PluginDirGet(c *gin.Context) {
-	path := c.GetString("path")
+	p := c.GetString("path")
 	isPluginRoot := false
-	if len(path) == 0 || path == "/" || path == "." {
+	if len(p) == 0 || p == "/" || p == "." {
 		isPluginRoot = true
 	}
-	pluginPath := xpath.Join(constant.PluginPath, path)
+	pluginPath := path.Join(constant.PluginPath, p)
 	if !utils.IsDirExist(pluginPath) {
 		log.Warnf("文件夹不存在: " + pluginPath)
-		c.JSON(webModels.Fail("文件夹不存在: " + path))
+		c.JSON(webModels.Fail("文件夹不存在: " + p))
 		return
 	}
 	dirs, err := os.ReadDir(pluginPath)
@@ -98,7 +97,7 @@ func (a *Api) PluginDirGet(c *gin.Context) {
 		if isPluginRoot {
 			file.Comment = constant.PluginDirComment[f.Name()]
 		}
-		file.CanRead, file.CanWrite, file.CanDelete = checkPluginPerm(xpath.Join(path, f.Name()))
+		file.CanRead, file.CanWrite, file.CanDelete = checkPluginPerm(path.Join(p, f.Name()))
 		files = append(files, file)
 	}
 	sort.Slice(files, func(i, j int) bool {
@@ -111,7 +110,7 @@ func (a *Api) PluginDirGet(c *gin.Context) {
 		}
 	})
 	c.JSON(webModels.Succ("获取成功", webModels.DirResponse{
-		Path:  path,
+		Path:  p,
 		Files: files,
 	}))
 }
@@ -129,11 +128,11 @@ func (a *Api) PluginDirGet(c *gin.Context) {
 //	@Security		ApiKeyAuth
 //	@Router			/api/plugin/manager/dir [post]
 func (a *Api) PluginDirPost(c *gin.Context) {
-	path := c.GetString("path")
-	pluginPath := xpath.Join(constant.PluginPath, path)
+	p := c.GetString("path")
+	pluginPath := path.Join(constant.PluginPath, p)
 	if utils.IsDirExist(pluginPath) {
 		log.Warnf("文件夹已存在: " + pluginPath)
-		c.JSON(webModels.Fail("文件夹已存在: " + path))
+		c.JSON(webModels.Fail("文件夹已存在: " + p))
 		return
 	}
 	err := utils.CreateMutiDir(pluginPath)
@@ -158,22 +157,22 @@ func (a *Api) PluginDirPost(c *gin.Context) {
 //	@Security		ApiKeyAuth
 //	@Router			/api/plugin/manager/dir [delete]
 func (a *Api) PluginDirDelete(c *gin.Context) {
-	path := c.GetString("path")
-	pluginFile := xpath.Join(constant.PluginPath, path)
+	p := c.GetString("path")
+	pluginFile := path.Join(constant.PluginPath, p)
 	if !utils.IsDirExist(pluginFile) {
 		log.Warnf("文件夹不存在: " + pluginFile)
-		c.JSON(webModels.Fail("文件夹不存在: " + path))
+		c.JSON(webModels.Fail("文件夹不存在: " + p))
 		return
 	}
-	_, w, d := checkPluginPerm(path)
+	_, w, d := checkPluginPerm(p)
 	if !w || !d {
-		c.JSON(webModels.Fail("禁止删除: " + path))
+		c.JSON(webModels.Fail("禁止删除: " + p))
 		return
 	}
 	err := os.Remove(pluginFile)
 	if err != nil {
 		log.DebugErr(err)
-		c.JSON(webModels.Fail("删除文件夹失败: " + path))
+		c.JSON(webModels.Fail("删除文件夹失败: " + p))
 		return
 	}
 	c.JSON(webModels.Succ("删除文件夹成功"))
@@ -192,22 +191,22 @@ func (a *Api) PluginDirDelete(c *gin.Context) {
 //	@Security		ApiKeyAuth
 //	@Router			/api/plugin/manager/file [get]
 func (a *Api) PluginFileGet(c *gin.Context) {
-	path := c.GetString("path")
-	pluginFile := xpath.Join(constant.PluginPath, path)
+	p := c.GetString("path")
+	pluginFile := path.Join(constant.PluginPath, p)
 	if !utils.IsFileExist(pluginFile) {
 		log.Warnf("文件不存在: " + pluginFile)
-		c.JSON(webModels.Fail("文件不存在: " + path))
+		c.JSON(webModels.Fail("文件不存在: " + p))
 		return
 	}
-	r, _, _ := checkPluginPerm(path)
+	r, _, _ := checkPluginPerm(p)
 	if !r {
-		c.JSON(webModels.Fail("禁止读取: " + path))
+		c.JSON(webModels.Fail("禁止读取: " + p))
 		return
 	}
 	data, err := os.ReadFile(pluginFile)
 	if err != nil {
 		log.DebugErr(err)
-		c.JSON(webModels.Fail("打开文件失败: " + path))
+		c.JSON(webModels.Fail("打开文件失败: " + p))
 		return
 	}
 	c.Writer.Header().Set("Content-Type", "text/plain")
@@ -228,13 +227,13 @@ func (a *Api) PluginFileGet(c *gin.Context) {
 //	@Security		ApiKeyAuth
 //	@Router			/api/plugin/manager/file [post]
 func (a *Api) PluginFilePost(c *gin.Context) {
-	path := c.GetString("path")
-	pluginFile := xpath.Join(constant.PluginPath, path)
+	p := c.GetString("path")
+	pluginFile := path.Join(constant.PluginPath, p)
 	create := !utils.IsFileExist(pluginFile)
 	if !create {
-		_, w, _ := checkPluginPerm(path)
+		_, w, _ := checkPluginPerm(p)
 		if !w {
-			c.JSON(webModels.Fail("禁止编辑: " + path))
+			c.JSON(webModels.Fail("禁止编辑: " + p))
 			return
 		}
 	}
@@ -272,22 +271,22 @@ func (a *Api) PluginFilePost(c *gin.Context) {
 //	@Security		ApiKeyAuth
 //	@Router			/api/plugin/manager/file [delete]
 func (a *Api) PluginFileDelete(c *gin.Context) {
-	path := c.GetString("path")
-	pluginFile := xpath.Join(constant.PluginPath, path)
+	p := c.GetString("path")
+	pluginFile := path.Join(constant.PluginPath, p)
 	if !utils.IsFileExist(pluginFile) {
 		log.Warnf("文件不存在: " + pluginFile)
-		c.JSON(webModels.Fail("文件不存在: " + path))
+		c.JSON(webModels.Fail("文件不存在: " + p))
 		return
 	}
-	_, w, d := checkPluginPerm(path)
+	_, w, d := checkPluginPerm(p)
 	if !w || !d {
-		c.JSON(webModels.Fail("禁止删除: " + path))
+		c.JSON(webModels.Fail("禁止删除: " + p))
 		return
 	}
 	err := os.Remove(pluginFile)
 	if err != nil {
 		log.DebugErr(err)
-		c.JSON(webModels.Fail("删除文件失败: " + path))
+		c.JSON(webModels.Fail("删除文件失败: " + p))
 		return
 	}
 	c.JSON(webModels.Succ("删除文件成功"))
@@ -310,17 +309,17 @@ func (a *Api) PluginRename(c *gin.Context) {
 	if !a.checkRequest(c, &request) {
 		return
 	}
-	path, err := utils.CheckPath(request.Path)
+	p, err := utils.CheckPath(request.Path)
 	if err != nil {
 		log.DebugErr(err)
 		c.JSON(webModels.ErrIpt("路径参数错误"))
 		c.Abort()
 		return
 	}
-	pluginPath := xpath.Join(constant.PluginPath, path)
+	pluginPath := path.Join(constant.PluginPath, p)
 	if !utils.IsExist(pluginPath) {
 		log.Warnf("文件或文件夹不存在: " + pluginPath)
-		c.JSON(webModels.Fail("文件或文件夹不存在: " + path))
+		c.JSON(webModels.Fail("文件或文件夹不存在: " + p))
 		return
 	}
 
@@ -331,15 +330,15 @@ func (a *Api) PluginRename(c *gin.Context) {
 		c.Abort()
 		return
 	}
-	newPluginPath := xpath.Join(constant.PluginPath, newPath)
+	newPluginPath := path.Join(constant.PluginPath, newPath)
 	if utils.IsExist(newPluginPath) {
 		log.Warnf("目标文件或文件夹已存在: " + newPluginPath)
 		c.JSON(webModels.Fail("目标文件或文件夹已存在: " + newPath))
 		return
 	}
-	_, w, _ := checkPluginPerm(path)
+	_, w, _ := checkPluginPerm(p)
 	if !w {
-		c.JSON(webModels.Fail("禁止编辑: " + path))
+		c.JSON(webModels.Fail("禁止编辑: " + p))
 		return
 	}
 
@@ -386,7 +385,7 @@ func (a *Api) PluginConfigPost(c *gin.Context) {
 		return
 	}
 
-	filename := strings.TrimSuffix(file, xpath.Ext(file)) + ".json"
+	filename := strings.TrimSuffix(file, path.Ext(file)) + ".json"
 	err = os.WriteFile(filename, data, constant.FilePerm)
 	if err != nil {
 		log.DebugErr(err)

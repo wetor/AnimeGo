@@ -5,6 +5,7 @@ import (
 
 	filterPlugin "github.com/wetor/AnimeGo/internal/animego/filter/plugin"
 	"github.com/wetor/AnimeGo/internal/api"
+	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/utils"
@@ -57,8 +58,9 @@ func (m *Manager) Update(ctx context.Context, items []*models.FeedItem,
 		log.Infof("获取「%s」信息开始...", item.Name)
 		anime, err := m.parser.Parse(&models.ParseOptions{
 			Title:              item.Name,
-			TorrentUrl:         item.Download,
-			MikanUrl:           item.Url,
+			TorrentUrl:         item.TorrentUrl,
+			MikanUrl:           item.MikanUrl,
+			BangumiID:          item.BangumiID,
 			AnimeParseOverride: item.ParseOverride,
 		})
 		if err != nil {
@@ -67,7 +69,12 @@ func (m *Manager) Update(ctx context.Context, items []*models.FeedItem,
 		}
 		log.Debugf("发送下载项:「%s」", anime.FullName())
 		// 发送需要下载的信息
-		m.manager.Download(anime)
+		err = m.manager.Download(anime)
+		if err != nil {
+			if !exceptions.IsExist(err) {
+				return err
+			}
+		}
 		if !skipDelay {
 			utils.Sleep(DelaySecond, ctx)
 		}

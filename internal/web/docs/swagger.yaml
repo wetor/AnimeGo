@@ -365,11 +365,14 @@ paths:
       summary: 写入配置文件
       tags:
       - config
-  /api/manager:
+  /api/download/manager:
     post:
       consumes:
       - application/json
-      description: 添加下载项到AnimeGo
+      description: |-
+        添加下载项到AnimeGo
+        支持mikan和bangumi两种源，必要的参数分别为mikan_url和bangumi_id
+        可选参数name，能够再torrent内文件名异常时解析使用
       parameters:
       - description: 下载项信息
         in: body

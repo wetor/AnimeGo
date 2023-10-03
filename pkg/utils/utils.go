@@ -7,6 +7,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"os"
+	"path"
 	"reflect"
 	"strings"
 	"time"
@@ -140,6 +141,18 @@ func IsDirExist(path string) bool {
 	return i.IsDir()
 }
 
+func IsExistDir(filepath string) (exist bool, dir bool) {
+	s, err := os.Stat(filepath)
+	exist = true
+	if err != nil {
+		exist = os.IsExist(err)
+	}
+	if exist {
+		dir = s.IsDir()
+	}
+	return
+}
+
 // FileSize 获取文件大小，文件不存返回-1
 func FileSize(path string) int64 {
 	s, err := os.Stat(path) //os.Stat获取文件信息
@@ -193,7 +206,7 @@ func UTCToTimeStr(t1 string) string {
 }
 
 func CreateLink(src, dst string) error {
-	dir := xpath.Dir(dst)
+	dir := path.Dir(dst)
 	if err := CreateMutiDir(dir); err != nil {
 		return err
 	}
@@ -209,7 +222,7 @@ func CreateLink(src, dst string) error {
 }
 
 func Rename(src, dst string) error {
-	dir := xpath.Dir(dst)
+	dir := path.Dir(dst)
 	if err := CreateMutiDir(dir); err != nil {
 		return err
 	}
@@ -252,5 +265,5 @@ func CheckPath(p string) (string, error) {
 	if strings.Contains(p, "../") {
 		return "", errors.New("路径中不允许的字符: ../")
 	}
-	return xpath.Clean(p), nil
+	return path.Clean(p), nil
 }

@@ -25,12 +25,13 @@ var (
 	ctx = context.Background()
 )
 
-type ManagerMock struct {
+type DownloaderMock struct {
 }
 
-func (m *ManagerMock) Download(anime any) {
+func (m *DownloaderMock) Download(anime *models.AnimeEntity) error {
 	d, _ := json.Marshal(anime)
 	fmt.Println(string(d))
+	return nil
 }
 
 type ParserMock struct {
@@ -80,7 +81,7 @@ func TestMain(m *testing.M) {
 		DelaySecond: 1,
 	})
 
-	mgr = filter.NewManager(&ManagerMock{}, &ParserMock{})
+	mgr = filter.NewManager(&DownloaderMock{}, &ParserMock{})
 	mgr.Add(&models.Plugin{
 		Enable: true,
 		Type:   "py",
@@ -113,19 +114,19 @@ func TestManager_Update(t *testing.T) {
 				ctx: ctx,
 				items: []*models.FeedItem{
 					{
-						Url:      "url1",
-						Name:     "[轻之国度字幕组][想要成为影之实力者！/我想成为影之强者！][12][GB][720P][MP4][附小剧场]",
-						Download: "https://mikanani.me/Download/20221223/8b0b9621f7f7b8425ed0f6162d03b92c93db2270.torrent",
+						MikanUrl:   "url1",
+						Name:       "[轻之国度字幕组][想要成为影之实力者！/我想成为影之强者！][12][GB][720P][MP4][附小剧场]",
+						TorrentUrl: "https://mikanani.me/Download/20221223/8b0b9621f7f7b8425ed0f6162d03b92c93db2270.torrent",
 					},
 					{
-						Url:      "url2",
-						Name:     "[轻之国度字幕组][想要成为影之实力者！/我想成为影之强者！][12][GB][720P][MP4][附小剧场]",
-						Download: "magnet:?xt=urn:btih:4c81fc90f8db37eae70a29a82e7abf8d8f1867c2&dn=example+file&tr=udp%3A%2F%2Ftracker.example.com%3A80",
+						MikanUrl:   "url2",
+						Name:       "[轻之国度字幕组][想要成为影之实力者！/我想成为影之强者！][12][GB][720P][MP4][附小剧场]",
+						TorrentUrl: "magnet:?xt=urn:btih:4c81fc90f8db37eae70a29a82e7abf8d8f1867c2&dn=example+file&tr=udp%3A%2F%2Ftracker.example.com%3A80",
 					},
 					{
-						Url:      "https://mikanani.me/Home/Episode/1069f01462c90b1065f4fc5576529422451a90a9",
-						Name:     "[猎户不鸽压制] 万事屋斋藤先生转生异世界 / 斋藤先生无所不能 Benriya Saitou-san, Isekai ni Iku [01-12] [合集] [WebRip 1080p] [简中内嵌] [H265 AAC] [2023年1月番]",
-						Download: "https://mikanani.me/Download/20230328/1069f01462c90b1065f4fc5576529422451a90a9.torrent",
+						MikanUrl:   "https://mikanani.me/Home/Episode/1069f01462c90b1065f4fc5576529422451a90a9",
+						Name:       "[猎户不鸽压制] 万事屋斋藤先生转生异世界 / 斋藤先生无所不能 Benriya Saitou-san, Isekai ni Iku [01-12] [合集] [WebRip 1080p] [简中内嵌] [H265 AAC] [2023年1月番]",
+						TorrentUrl: "https://mikanani.me/Download/20230328/1069f01462c90b1065f4fc5576529422451a90a9.torrent",
 					},
 				},
 				skipFilter: false,
@@ -147,9 +148,9 @@ func TestManager_Update(t *testing.T) {
 				ctx: ctx,
 				items: []*models.FeedItem{
 					{
-						Url:      "err_parse",
-						Name:     "err_parse",
-						Download: "err_parse",
+						MikanUrl:   "err_parse",
+						Name:       "err_parse",
+						TorrentUrl: "err_parse",
 					},
 				},
 				skipFilter: true,
@@ -162,9 +163,9 @@ func TestManager_Update(t *testing.T) {
 				ctx: ctx,
 				items: []*models.FeedItem{
 					{
-						Url:      "delay",
-						Name:     "delay",
-						Download: "delay",
+						MikanUrl:   "delay",
+						Name:       "delay",
+						TorrentUrl: "delay",
 					},
 				},
 				skipFilter: true,

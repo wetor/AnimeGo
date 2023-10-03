@@ -5,6 +5,7 @@ import (
 	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/pkg/utils"
 	"github.com/wetor/AnimeGo/pkg/xpath"
+	"path"
 )
 
 type SelectEpRequest struct {
@@ -25,7 +26,7 @@ func (p PluginRequest) FindFile() (string, error) {
 	if xpath.IsAbs(file) {
 		file = xpath.Abs(xpath.P(file))
 	} else {
-		file = xpath.Abs(xpath.Join(constant.PluginPath, xpath.P(file)))
+		file = xpath.Abs(path.Join(constant.PluginPath, xpath.P(file)))
 	}
 	return utils.FindScript(file, ".py")
 }

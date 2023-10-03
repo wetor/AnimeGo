@@ -64,11 +64,23 @@ func ToObject(goVal any) (py.Object, error) {
 		pyObj = py.NewBool(val)
 	case int8:
 		pyObj = py.Int(val)
+	case uint8:
+		pyObj = py.Int(val)
+	case int16:
+		pyObj = py.Int(val)
+	case uint16:
+		pyObj = py.Int(val)
 	case int:
+		pyObj = py.Int(val)
+	case uint:
 		pyObj = py.Int(val)
 	case int32:
 		pyObj = py.Int(val)
+	case uint32:
+		pyObj = py.Int(val)
 	case int64:
+		pyObj = py.Int(val)
+	case uint64:
 		pyObj = py.Int(val)
 	case float32:
 		pyObj = py.Float(val)
@@ -76,6 +88,8 @@ func ToObject(goVal any) (py.Object, error) {
 		pyObj = py.Float(val)
 	case string:
 		pyObj = py.String(val)
+	case []byte:
+		pyObj = py.Bytes(val)
 	case map[string]any:
 		pyValDict := py.NewStringDictSized(len(val))
 		for key, value := range val {
@@ -89,9 +103,18 @@ func ToObject(goVal any) (py.Object, error) {
 	default:
 		refVal := reflect.ValueOf(goVal)
 		switch refVal.Kind() {
-		case reflect.Array:
-			fallthrough
-		case reflect.Slice:
+		case reflect.Int8, reflect.Uint8, reflect.Int16, reflect.Uint16,
+			reflect.Int32, reflect.Uint32, reflect.Int64, reflect.Uint64,
+			reflect.Int, reflect.Uint:
+			// 派生类型转换
+			pyObj = py.Int(refVal.Int())
+		case reflect.Float32, reflect.Float64:
+			// 派生类型转换
+			pyObj = py.Float(refVal.Float())
+		case reflect.String:
+			// 派生类型转换
+			pyObj = py.String(refVal.String())
+		case reflect.Array, reflect.Slice:
 			l := refVal.Len()
 			pyValList := py.NewListWithCapacity(l)
 			for i := 0; i < l; i++ {
@@ -102,9 +125,7 @@ func ToObject(goVal any) (py.Object, error) {
 				pyValList.Append(obj)
 			}
 			pyObj = pyValList
-		case reflect.Struct:
-			fallthrough
-		case reflect.Pointer:
+		case reflect.Struct, reflect.Pointer:
 			obj, err := StructToObject(goVal)
 			if err != nil {
 				return nil, err

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"os"
+	"path"
 	"runtime/debug"
 	"strings"
 	"time"
@@ -15,7 +16,6 @@ import (
 	"github.com/wetor/AnimeGo/internal/web/models"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/utils"
-	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
 func CheckPath() gin.HandlerFunc {
@@ -107,7 +107,7 @@ func GinLogger(logger *zap.SugaredLogger) gin.HandlerFunc {
 		reqPath := c.Request.URL.Path
 		query := c.Request.URL.RawQuery
 		c.Next()
-		ext := xpath.Ext(reqPath)
+		ext := path.Ext(reqPath)
 		if ext != "" && ext != ".html" {
 			return
 		}

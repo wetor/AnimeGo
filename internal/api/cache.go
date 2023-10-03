@@ -6,8 +6,8 @@ type Cacher interface {
 	CacheGetter
 }
 
-type DownloaderManagerCacheDeleter interface {
-	DeleteCache(fullname string)
+type DatabaseCacheDeleter interface {
+	Delete(data any) error
 }
 
 type CacheOpener interface {

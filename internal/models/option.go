@@ -2,34 +2,6 @@ package models
 
 import "time"
 
-// =========== Client ===========
-
-type ClientListOptions struct {
-	Status   string
-	Category string
-	Tag      string
-}
-
-type ClientAddOptions struct {
-	Url         string
-	File        string // optional torrent file
-	SavePath    string
-	Category    string
-	Tag         string
-	SeedingTime int    // 分钟
-	Rename      string // 保存名字
-}
-
-type ClientDeleteOptions struct {
-	Hash       []string
-	DeleteFile bool
-}
-
-type ClientGetOptions struct {
-	Hash string
-	Item *TorrentItem
-}
-
 // =========== AnimeEntity ===========
 
 type AnimeParseOverride struct {
@@ -64,13 +36,14 @@ func (o AnimeParseOverride) OverrideThemoviedb() bool {
 }
 
 type AnimeParseOptions struct {
-	MikanUrl string // Mikan url
+	Input any // Mikan url
 	*AnimeParseOverride
 }
 
 type ParseOptions struct {
-	Title      string
-	TorrentUrl string
-	MikanUrl   string
+	Title      string // 可选
+	TorrentUrl string // 必要
+	MikanUrl   string // 和BangumiID二选一
+	BangumiID  int    // 和BangumiID二选一，优先
 	*AnimeParseOverride
 }

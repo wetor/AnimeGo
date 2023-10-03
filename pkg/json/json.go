@@ -11,3 +11,7 @@ func Unmarshal(data []byte, v any) error {
 func Marshal(v any) ([]byte, error) {
 	return json.Marshal(v)
 }
+
+func MarshalIndent(v any) ([]byte, error) {
+	return json.MarshalIndent(v, "", "  ")
+}

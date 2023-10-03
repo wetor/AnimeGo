@@ -1,6 +1,7 @@
 package rss_test
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"testing"
@@ -29,6 +30,10 @@ func TestMain(m *testing.M) {
 
 	test.HookGetWriter(testdata, nil)
 	defer test.UnHook()
+
+	raw, _ := test.GetData("feed", "Mikan.xml")
+	raw = bytes.Replace(raw, []byte("\r\n"), []byte("\n"), -1)
+	_ = os.WriteFile(test.GetDataPath("feed", "Mikan.xml"), raw, os.ModePerm)
 
 	m.Run()
 	_ = log.Close()
@@ -60,6 +65,7 @@ func TestRss_Parse(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
+
 	tests := []struct {
 		name       string
 		fields     fields
@@ -89,12 +95,12 @@ func TestRss_Parse(t *testing.T) {
 			},
 			wantItems: []*models.FeedItem{
 				{
-					Url:      "https://mikanani.me/Home/Episode/2076477d6a119fae9ad882ecc5fd697c1afaee75",
-					Name:     "万事屋斋藤先生转生异世界",
-					Date:     "2023-01-23",
-					Type:     "application/x-bittorrent",
-					Download: "https://mikanani.me/Download/20230123/2076477d6a119fae9ad882ecc5fd697c1afaee75.torrent",
-					Length:   int64(0),
+					MikanUrl:   "https://mikanani.me/Home/Episode/2076477d6a119fae9ad882ecc5fd697c1afaee75",
+					Name:       "万事屋斋藤先生转生异世界",
+					Date:       "2023-01-23",
+					Type:       "application/x-bittorrent",
+					TorrentUrl: "https://mikanani.me/Download/20230123/2076477d6a119fae9ad882ecc5fd697c1afaee75.torrent",
+					Length:     int64(0),
 				},
 			},
 		},

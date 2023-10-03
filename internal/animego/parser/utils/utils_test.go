@@ -31,6 +31,20 @@ func TestParse(t *testing.T) {
 			},
 			want: 11,
 		},
+		//{
+		//	name: "3",
+		//	args: args{
+		//		name: "[Nekomoe kissaten] Seijo no Maryoku wa Bannou Desu 06 [WebRip 1080p HEVC-10bit AAC ASSx2].mkv",
+		//	},
+		//	want: 6,
+		//},
+		{
+			name: "5",
+			args: args{
+				name: "[Nekomoe kissaten&LoliHouse] World Dai Star - 11 [WebRip 1080p HEVC-10bit AAC ASSx2].mkv",
+			},
+			want: 11,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

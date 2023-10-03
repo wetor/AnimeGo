@@ -2,6 +2,7 @@ package plugin
 
 import (
 	"github.com/pkg/errors"
+	"path"
 
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
@@ -13,8 +14,8 @@ import (
 )
 
 const (
-	FuncRename     = "rename"
-	VarWriteTVShow = "__write_tvshow__"
+	FuncRename = "rename"
+	VarScrape  = "__scrape__"
 )
 
 type Rename struct {
@@ -35,13 +36,13 @@ func (p *Rename) Rename(anime *models.AnimeEntity, index int, filename string) (
 			{
 				Name:         FuncRename,
 				ParamsSchema: []string{"anime", "filename"},
-				ResultSchema: []string{"error", "filepath", "tvshow_dir,optional"},
+				ResultSchema: []string{"error", "filename", "dir,optional"},
 				DefaultArgs:  p.plugin.Args,
 			},
 		},
 		VarSchema: []*pkgPlugin.VarSchemaOptions{
 			{
-				Name:     VarWriteTVShow,
+				Name:     VarScrape,
 				Nullable: true,
 			},
 		},
@@ -67,31 +68,31 @@ func (p *Rename) Rename(anime *models.AnimeEntity, index int, filename string) (
 		return nil, err
 	}
 
-	val, err := pluginInstance.Get(VarWriteTVShow)
+	val, err := pluginInstance.Get(VarScrape)
 	if err != nil {
 		return nil, err
 	}
-	var tvshow bool
+	scrape := true
 	if val != nil {
-		tvshow, _ = val.(bool)
+		scrape, _ = val.(bool)
 	}
 
 	renameResult := &models.RenameResult{
-		Index: index,
+		Index:  index,
+		Scrape: scrape,
 	}
-	if dst, ok := result["filepath"].(string); ok && len(dst) != 0 {
-		renameResult.Filepath = dst
+	if dst, ok := result["filename"].(string); ok && len(dst) != 0 {
+		renameResult.Filename = dst
 		log.Debugf("[Plugin] Rename插件(%s): %s -> %s", p.plugin.File, filename, dst)
 	}
-	if tvshow {
-		if dir, ok := result["tvshow_dir"].(string); ok {
-			renameResult.TVShowDir = dir
-		} else {
-			renameResult.TVShowDir = xpath.Join(renameResult.Filepath, "../..")
-			if renameResult.TVShowDir == "." {
-				renameResult.TVShowDir = ""
-			}
+	if dir, ok := result["dir"].(string); ok {
+		renameResult.AnimeDir = dir
+	} else {
+		renameResult.AnimeDir = xpath.Root(renameResult.Filename)
+		if renameResult.AnimeDir == "." {
+			renameResult.AnimeDir = ""
 		}
 	}
+	renameResult.SeasonDir = path.Dir(renameResult.Filename)
 	return renameResult, nil
 }

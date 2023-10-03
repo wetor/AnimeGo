@@ -4,10 +4,9 @@
 
 ## 插件设置
 
-### write_tvshow
-全局变量`write_tvshow`，bool类型，可选，默认`True`  
-是否写入Jellyfin的`tvshow.nfo`文件  
-启用后将会写入返回值中`tvshow_dir`所设置路径。如未返回`tvshow_dir`，将写入目标文件路径`filepath`的**上上**层目录
+### scrape
+全局变量`scrape`，bool类型，可选，默认`True`  
+是否重命名完成后进行刮削，如写入`tvshow.nfo`文件
 
 
 ## 入口函数
@@ -42,16 +41,16 @@ args = {
 
 #### 返回值
 `error`: 必要，错误信息，为None则没有错误  
-`filepath`: 必要，重命名后的目标文件路径。最终将会保存到`{save_path}/{filepath}`    
-`tvshow_dir`: 可选，全局变量`write_tvshow`开启后，将会把`tvshow.nfo`文件写到此文件夹中。如为空或文件夹不存在，将会使用`filepath`的**上上**层目录      
+`filename`: 必要，重命名后的目标文件路径。最终将会保存到`{save_path}/{filepath}`    
+`dir`: 可选，动画根目录。如为空或文件夹不存在，将会使用`filename`路径的最顶层路径      
 
 ```python
 def rename(args):
     # ...
     return {
         "error": None,
-        "filepath": "想要成为影之实力者！/S01/E19.mp4",
-        "tvshow_dir": "想要成为影之实力者！"
+        "filename": "想要成为影之实力者！/S01/E19.mp4",
+        "dir": "想要成为影之实力者！"
     }
 ```
 上面的返回值最终将会产生以下文件夹结构：  

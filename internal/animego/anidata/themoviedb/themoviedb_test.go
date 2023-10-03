@@ -2,8 +2,10 @@ package themoviedb_test
 
 import (
 	"fmt"
+	"github.com/wetor/AnimeGo/pkg/xpath"
 	"net/url"
 	"os"
+	"path"
 	"testing"
 
 	"github.com/pkg/errors"
@@ -15,7 +17,6 @@ import (
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/request"
-	"github.com/wetor/AnimeGo/pkg/xpath"
 	"github.com/wetor/AnimeGo/test"
 )
 
@@ -40,7 +41,7 @@ func TestMain(m *testing.M) {
 		}
 		id := u.Query().Get("with_text_query")
 		if len(id) == 0 {
-			id = xpath.Base(u.Path)
+			id = path.Base(xpath.P(u.Path))
 		}
 		return id
 	})

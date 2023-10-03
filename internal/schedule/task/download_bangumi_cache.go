@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"io"
 	"os"
+	"path"
 	"sync"
 	"time"
 
@@ -17,7 +18,6 @@ import (
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/utils"
-	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
 const (
@@ -84,7 +84,7 @@ func (t *BangumiTask) download(url, name string) (string, error) {
 		log.Warnf("%s", err)
 		return "", err
 	}
-	file := xpath.Join(constant.CachePath, name)
+	file := path.Join(constant.CachePath, name)
 	err = os.WriteFile(file, data, constant.FilePerm)
 	if err != nil {
 		log.DebugErr(err)
@@ -105,7 +105,7 @@ func (t *BangumiTask) unzip(filename string) (err error) {
 
 	// 遍历 zr ，将文件写入到磁盘
 	for _, file := range zr.File {
-		path_ := xpath.Join(constant.CachePath, file.Name)
+		path_ := path.Join(constant.CachePath, file.Name)
 
 		// 如果是目录，就创建目录
 		if file.FileInfo().IsDir() {
@@ -160,7 +160,7 @@ func (t *BangumiTask) unzip(filename string) (err error) {
 //	@param opts ...interface{}
 //	  opts[0] bool 是否启动时执行
 func (t *BangumiTask) Run(args models.Object) (err error) {
-	db := xpath.Join(constant.CachePath, SubjectDB)
+	db := path.Join(constant.CachePath, SubjectDB)
 	stat, err := os.Stat(db)
 	// 首次启动时，若
 	// 上次修改时间小于 MinModifyTimeHour 小时，且文件大小大于 MinFileSizeKB kb

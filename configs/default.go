@@ -98,10 +98,7 @@ func defaultPlugin() {
 }
 
 func defaultAdvancedComment() {
-	configComment["update_delay_second_help"] = `每隔这一段时间，都会将下载队列添加到下载项、更新下载进度和重命名已完成下载项
-等待过程是异步的，等待期间不影响操作
-在下载项较多、等待时间过少时会出现请求超时，所以有个最小等待时间为2秒的限制
-默认为10，最小值为2`
+	configComment["refresh_second_help"] = `下载器列表和重命名任务刷新间隔时间。默认为10，最小值为2`
 
 	configComment["rename_help"] = `下载状态顺序为: 创建下载项->下载->下载完成->做种->做种完成
 可选值为: ['link', 'link_delete', 'move', 'wait_move']
@@ -112,7 +109,7 @@ func defaultAdvancedComment() {
 }
 
 func defaultAdvanced() {
-	defaultConfig.Advanced.UpdateDelaySecond = 10
+	defaultConfig.Advanced.RefreshSecond = 10
 
 	defaultConfig.Advanced.Request.TimeoutSecond = 5
 	defaultConfig.Advanced.Request.RetryNum = 3
@@ -128,7 +125,7 @@ func defaultAdvanced() {
 	defaultConfig.Advanced.Default.TMDBFailUseTitleSeason = true
 	defaultConfig.Advanced.Default.TMDBFailUseFirstSeason = true
 
-	defaultConfig.Advanced.Client.ConnectTimeoutSecond = 10
+	defaultConfig.Advanced.Client.ConnectTimeoutSecond = 5
 	defaultConfig.Advanced.Client.RetryConnectNum = 3
 	defaultConfig.Advanced.Client.CheckTimeSecond = 60
 

@@ -27,16 +27,30 @@ const (
 )
 
 const (
-	StateUnknown     models.TorrentState = "unknown"     //未知
-	StateWaiting     models.TorrentState = "waiting"     // 等待
-	StateDownloading models.TorrentState = "downloading" // 下载中
-	StatePausing     models.TorrentState = "pausing"     // 暂停中
-	StateMoving      models.TorrentState = "moving"      // 移动中
-	StateSeeding     models.TorrentState = "seeding"     // 做种中
-	StateComplete    models.TorrentState = "complete"    // 完成下载
-	StateError       models.TorrentState = "error"       // 错误
-	StateNotFound    models.TorrentState = "notfound"    // 不存在
-	StateAdding      models.TorrentState = "adding"      // 添加下载项
+	StateUnknown     models.TorrentState = "unknown"      //未知
+	StateWaiting     models.TorrentState = "waiting"      // 等待
+	StateDownloading models.TorrentState = "downloading"  // 下载中
+	StatePausing     models.TorrentState = "pausing"      // 暂停中
+	StateMoving      models.TorrentState = "moving"       // 移动中
+	StateSeeding     models.TorrentState = "seeding"      // 做种中
+	StateComplete    models.TorrentState = "complete"     // 完成下载
+	StateError       models.TorrentState = "error"        // 错误
+	StateNotFound    models.TorrentState = "notfound"     // 不存在
+	StateAdding      models.TorrentState = "adding"       // 添加下载项
+	StateInit        models.TorrentState = "initializing" // 初始化
+)
+
+type NotifyState int
+
+const (
+	NotifyOnInit     NotifyState = iota // animeGo
+	NotifyOnStart                       // qBittorrent, aria2
+	NotifyOnDownload                    // animeGo
+	NotifyOnPause                       // qBittorrent, aria2
+	NotifyOnStop                        // qBittorrent, aria2
+	NotifyOnSeeding                     // qBittorrent, aria2
+	NotifyOnComplete                    // qBittorrent, aria2
+	NotifyOnError                       // qBittorrent, aria2
 )
 
 // StateMap

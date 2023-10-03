@@ -3,12 +3,11 @@ package log
 import (
 	"io"
 	"os"
+	"path"
 	"sync"
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
-
-	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
 var (
@@ -30,10 +29,10 @@ type Options struct {
 }
 
 func Init(opts *Options) {
-	file = opts.File
 	debug = opts.Debug
 	out = opts.Out
-	dir := xpath.Dir(file)
+	file = opts.File
+	dir := path.Dir(file)
 	_, err := os.Stat(dir)
 	if err != nil {
 		if !os.IsExist(err) {

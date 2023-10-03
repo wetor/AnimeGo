@@ -66,12 +66,13 @@ def parse(args):
     return {
         "items": [
             {
-                "url":      "https://mikanani.me/Home/Episode/134903ffdc03d1e7b2f3440191ac0f18720a9ff0",
-                "name":     "[OPFans枫雪动漫][one_piece 海贼王][1052][1080p]_mkv[周日版]",
-                "date":     "2023-02-19",
-                "type":     "application/x-bittorrent",
-                "download": "https://mikanani.me/Download/20230219/134903ffdc03d1e7b2f3440191ac0f18720a9ff0.torrent",
-                "length":   1503238528
+                "mikan_url":   "https://mikanani.me/Home/Episode/134903ffdc03d1e7b2f3440191ac0f18720a9ff0",
+                "name":        "[OPFans枫雪动漫][one_piece 海贼王][1052][1080p]_mkv[周日版]",
+                "date":        "2023-02-19",
+                "type":        "application/x-bittorrent",
+                "torrent_url": "https://mikanani.me/Download/20230219/134903ffdc03d1e7b2f3440191ac0f18720a9ff0.torrent",
+                "length":      1503238528,
+                "bangumi_id":  0
             },
             {},
             # ...
@@ -79,3 +80,5 @@ def parse(args):
         "error": None
     }
 ```
+其中`torrent_url`为torrent链接，必要。  
+`bangumi_id`和`mikan_url`其中一个有值即可，优先`bangumi_id`
