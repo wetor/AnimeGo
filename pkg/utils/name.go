@@ -1,4 +1,4 @@
-package themoviedb
+package utils
 
 import (
 	"regexp"

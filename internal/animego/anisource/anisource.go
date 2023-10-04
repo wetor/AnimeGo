@@ -18,7 +18,7 @@ var (
 )
 
 type Options struct {
-	*anidata.Options
+	AniDataOptions *anidata.Options
 }
 
 // Init
@@ -29,7 +29,7 @@ func Init(opts *Options) {
 	MikanInstance = nil
 	BangumiInstance = nil
 	ThemoviedbInstance = nil
-	anidata.Init(opts.Options)
+	anidata.Init(opts.AniDataOptions)
 }
 
 func Mikan() api.AniDataParse {

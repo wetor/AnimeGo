@@ -1,15 +1,15 @@
-package themoviedb_test
+package utils_test
 
 import (
 	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/wetor/AnimeGo/internal/animego/anidata/themoviedb"
+	"github.com/wetor/AnimeGo/pkg/utils"
 )
 
 func TestRegxStepOne(t *testing.T) {
-	res := themoviedb.SimilarText("ダンジョンに出会いを求めるのは間違っているだろうか", "ダンジョンに出会いを求めるのは間違っているだろうか IV")
+	res := utils.SimilarText("ダンジョンに出会いを求めるのは間違っているだろうか", "ダンジョンに出会いを求めるのは間違っているだろうか IV")
 	fmt.Println(res)
 }
 
@@ -62,10 +62,10 @@ func TestRegxStep(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Log(tt)
-		has := themoviedb.NameRegxStep[tt.args.step].MatchString(tt.args.str)
+		has := utils.NameRegxStep[tt.args.step].MatchString(tt.args.str)
 		assert.Equal(t, tt.has, has)
 		if has {
-			got := themoviedb.NameRegxStep[tt.args.step].ReplaceAllString(tt.args.str, "")
+			got := utils.NameRegxStep[tt.args.step].ReplaceAllString(tt.args.str, "")
 			assert.Equal(t, tt.want, got)
 		}
 	}

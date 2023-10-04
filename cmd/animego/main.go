@@ -179,7 +179,7 @@ func Main() {
 	// ===============================================================================================================
 	// 初始化anisource配置
 	anisource.Init(&anisource.Options{
-		Options: &anidata.Options{
+		AniDataOptions: &anidata.Options{
 			Cache: bolt,
 			CacheTime: map[string]int64{
 				anidataMikan.Bucket:      int64(config.Advanced.Cache.MikanCacheHour * 60 * 60),

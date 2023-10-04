@@ -6,8 +6,8 @@ type AniDataParse interface {
 }
 
 type AniDataSearch interface {
-	Search(name string) (int, error)
-	SearchCache(name string) (int, error)
+	Search(name string, filters any) (int, error)
+	SearchCache(name string, filters any) (int, error)
 }
 
 type AniDataGet interface {

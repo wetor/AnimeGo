@@ -85,7 +85,7 @@ func TestMain(m *testing.M) {
 	b := cache.NewBolt()
 	b.Open("data/bolt.db")
 	anisource.Init(&anisource.Options{
-		Options: &anidata.Options{
+		AniDataOptions: &anidata.Options{
 			Cache: b,
 			CacheTime: map[string]int64{
 				"mikan":      int64(7 * 24 * 60 * 60),

@@ -4,6 +4,8 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
+	"github.com/wetor/AnimeGo/pkg/utils"
+	"github.com/wetor/AnimeGo/third_party/bangumi/model"
 
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/internal/api"
@@ -15,7 +17,8 @@ import (
 )
 
 const (
-	SubjectBucket = "bangumi_sub"
+	SubjectBucket         = "bangumi_sub"
+	MinSimilar    float64 = 0.75
 )
 
 var (
@@ -28,6 +31,9 @@ var (
 	Bucket  = "bangumi"
 	infoApi = func(id int) string {
 		return fmt.Sprintf("%s/v0/subjects/%d", Host(), id)
+	}
+	searchApi = func(limit, offset int) string {
+		return fmt.Sprintf("%s/v0/search/subjects?limit=%d&offset=%d", Host(), limit, offset)
 	}
 )
 
@@ -85,6 +91,86 @@ func (a *Bangumi) Get(bangumiID int, filters any) (entity any, err error) {
 		return nil, errors.Wrap(err, "获取Bangumi信息失败")
 	}
 	return entity, err
+}
+
+func (a *Bangumi) Search(name string, filters any) (int, error) {
+	entity, err := a.searchAnimeInfo(name)
+	if err != nil {
+		return 0, errors.Wrap(err, "查询BangumiID失败")
+	}
+	return entity.ID, nil
+}
+
+func (a *Bangumi) SearchCache(name string, filters any) (int, error) {
+
+	return 0, nil
+}
+
+func (a *Bangumi) searchAnimeInfo(name string) (entity *Entity, err error) {
+	uri := searchApi(10, 0)
+	resp := res.SearchPaged{}
+	result, err := utils.RemoveNameSuffix(name, func(innerName string) (any, error) {
+		req := res.Req{
+			Keyword: innerName,
+			Sort:    "match",
+			Filter: res.ReqFilter{
+				Type: []model.SubjectType{model.SubjectAnime},
+			},
+		}
+
+		err := request.Post(uri, req, &resp)
+		if err != nil {
+			log.DebugErr(err)
+			//return 0, errors.WithStack(&exceptions.ErrRequest{Name: a.Name()})
+		}
+
+		if resp.Total == 1 {
+			return resp.Data[0], nil
+		} else if resp.Total > 1 {
+			// 筛选与original name完全相同的番剧
+			for _, result := range resp.Data {
+				if result.NameCN == name || result.Name == name {
+					return result, nil
+				}
+			}
+
+			// 按照相似度排序筛选
+			var temp *res.ReponseSubject
+			maxSimilar := float64(0)
+			for _, result := range resp.Data {
+				// 分别对比中文和原名，选取最相似的
+				similarCN := utils.SimilarText(result.NameCN, name)
+				similar := utils.SimilarText(result.Name, name)
+				if similarCN > similar {
+					similar = similarCN
+				}
+				if similar > maxSimilar {
+					maxSimilar = similar
+					temp = result
+				}
+			}
+			if maxSimilar >= MinSimilar {
+				return temp, nil
+			}
+			err = errors.WithStack(&exceptions.ErrAniDataSearch{AniData: a})
+			log.DebugErr(err)
+			return nil, err
+		} else {
+			// 未找到结果
+			return nil, nil
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	sub := result.(*res.ReponseSubject)
+	return &Entity{
+		ID:      int(sub.ID),
+		NameCN:  sub.NameCN,
+		Name:    sub.Name,
+		AirDate: sub.Date,
+	}, nil
+
 }
 
 // parseAnimeInfo

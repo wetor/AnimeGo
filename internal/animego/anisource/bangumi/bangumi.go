@@ -53,7 +53,7 @@ func (m Bangumi) Parse(opts *models.AnimeParseOptions) (anime *models.AnimeEntit
 	if opts.AnimeParseOverride == nil || !opts.OverrideThemoviedb() {
 		log.Debugf("[AniSource] 解析Themoviedb，%s, %s", bgmEntity.Name, bgmEntity.AirDate)
 		t := anisource.Themoviedb(m.ThemoviedbKey)
-		id, err := t.SearchCache(bgmEntity.Name)
+		id, err := t.SearchCache(bgmEntity.Name, nil)
 		if err != nil {
 			return nil, err
 		}

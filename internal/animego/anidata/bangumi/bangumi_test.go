@@ -124,3 +124,72 @@ func TestBangumi_Get_GetCache(t *testing.T) {
 		})
 	}
 }
+
+func TestBangumi_Search_SearchCache(t *testing.T) {
+	t.Skip("跳过Bangumi Search测试")
+	type args struct {
+		name string
+	}
+	tests := []struct {
+		name       string
+		onlyCache  bool
+		args       args
+		wantID     int
+		wantErr    error
+		wantErrStr string
+	}{
+		{
+			name:    "联盟空军航空魔法音乐队 光辉魔女",
+			args:    args{name: "联盟空军航空魔法音乐队 光辉魔女"},
+			wantID:  253047,
+			wantErr: nil,
+		},
+		{
+			name:    "欢迎来到实力至上主义的教室 第二季",
+			args:    args{name: "欢迎来到实力至上主义的教室 第二季"},
+			wantID:  371546,
+			wantErr: nil,
+		},
+		{
+			name:      "CLANNAD",
+			onlyCache: true,
+			args:      args{name: "CLANNAD"},
+			wantID:    51,
+			wantErr:   nil,
+		},
+		{
+			name:       "err_request",
+			args:       args{name: "联盟空军航空魔法音乐队 光辉魔女"},
+			wantID:     0,
+			wantErr:    &exceptions.ErrRequest{},
+			wantErrStr: "获取Bangumi信息失败: 请求 Bangumi 失败",
+		},
+	}
+
+	b := &bangumi.Bangumi{}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gotEntity, err := b.SearchCache(tt.args.name, nil)
+			if tt.wantErr != nil {
+				assert.IsType(t, tt.wantErr, errors.Cause(err))
+				assert.EqualError(t, err, tt.wantErrStr)
+			} else {
+				assert.NoError(t, err)
+				assert.Equalf(t, tt.wantID, gotEntity, "SearchCache(%v)", tt.args.name)
+			}
+		})
+		if tt.onlyCache {
+			continue
+		}
+		t.Run(tt.name, func(t *testing.T) {
+			gotEntity, err := b.Search(tt.args.name, nil)
+			if tt.wantErr != nil {
+				assert.IsType(t, tt.wantErr, errors.Cause(err))
+				assert.EqualError(t, err, tt.wantErrStr)
+			} else {
+				assert.NoError(t, err)
+				assert.Equalf(t, tt.wantID, gotEntity, "Search(%v)", tt.args.name)
+			}
+		})
+	}
+}

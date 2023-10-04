@@ -2,11 +2,12 @@ package themoviedb_test
 
 import (
 	"fmt"
-	"github.com/wetor/AnimeGo/pkg/xpath"
 	"net/url"
 	"os"
 	"path"
 	"testing"
+
+	"github.com/wetor/AnimeGo/pkg/xpath"
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
@@ -143,7 +144,7 @@ func TestThemoviedb_Get_GetCache(t *testing.T) {
 	tmdb := &themoviedb.Themoviedb{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			id, err := tmdb.SearchCache(tt.args.name)
+			id, err := tmdb.SearchCache(tt.args.name, nil)
 			if tt.wantErr1 != nil {
 				assert.IsType(t, tt.wantErr1, errors.Cause(err))
 				assert.EqualError(t, err, tt.wantErr1Str)
@@ -164,7 +165,7 @@ func TestThemoviedb_Get_GetCache(t *testing.T) {
 		})
 
 		t.Run(tt.name, func(t *testing.T) {
-			id, err := tmdb.Search(tt.args.name)
+			id, err := tmdb.Search(tt.args.name, nil)
 			if tt.wantErr1 != nil {
 				assert.IsType(t, tt.wantErr1, errors.Cause(err))
 				assert.EqualError(t, err, tt.wantErr1Str)

@@ -2,6 +2,7 @@ package themoviedb
 
 import (
 	"github.com/pkg/errors"
+	"github.com/wetor/AnimeGo/pkg/utils"
 
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/internal/api"
@@ -55,7 +56,7 @@ func (a *Themoviedb) RegisterCache() {
 	})
 }
 
-func (a *Themoviedb) Search(name string) (int, error) {
+func (a *Themoviedb) Search(name string, filters any) (int, error) {
 	entity, err := a.parseThemoviedbID(name)
 	if err != nil {
 		return 0, errors.Wrap(err, "查询ThemoviedbID失败")
@@ -63,7 +64,7 @@ func (a *Themoviedb) Search(name string) (int, error) {
 	return entity.ID, nil
 }
 
-func (a *Themoviedb) SearchCache(name string) (int, error) {
+func (a *Themoviedb) SearchCache(name string, filters any) (int, error) {
 	if !a.cacheInit {
 		a.RegisterCache()
 	}
@@ -103,7 +104,7 @@ func (a *Themoviedb) GetCache(id int, filters any) (any, error) {
 
 func (a *Themoviedb) parseThemoviedbID(name string) (entity *Entity, err error) {
 	resp := FindResponse{}
-	result, err := RemoveNameSuffix(name, func(innerName string) (any, error) {
+	result, err := utils.RemoveNameSuffix(name, func(innerName string) (any, error) {
 		err := request.Get(idApi(a.Key, innerName), &resp)
 		if err != nil {
 			log.DebugErr(err)
@@ -124,7 +125,7 @@ func (a *Themoviedb) parseThemoviedbID(name string) (entity *Entity, err error) 
 			temp := &Entity{}
 			maxSimilar := float64(0)
 			for _, result := range resp.Result {
-				similar := SimilarText(result.Name, name)
+				similar := utils.SimilarText(result.Name, name)
 				if similar > maxSimilar {
 					maxSimilar = similar
 					temp = result
