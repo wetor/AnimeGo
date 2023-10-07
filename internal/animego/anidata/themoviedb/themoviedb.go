@@ -105,7 +105,7 @@ func (a *Themoviedb) GetCache(id int, filters any) (any, error) {
 func (a *Themoviedb) parseThemoviedbID(name string) (entity *Entity, err error) {
 	resp := FindResponse{}
 	result, err := utils.RemoveNameSuffix(name, func(innerName string) (any, error) {
-		err := request.Get(idApi(a.Key, innerName), &resp)
+		err := request.Get(idApi(a.Key, innerName, false), &resp)
 		if err != nil {
 			log.DebugErr(err)
 			//return 0, errors.WithStack(&exceptions.ErrRequest{Name: a.Name()})
@@ -150,7 +150,7 @@ func (a *Themoviedb) parseThemoviedbID(name string) (entity *Entity, err error) 
 
 func (a *Themoviedb) parseAnimeSeason(tmdbID int, airDate string) (seasonInfo *SeasonInfo, err error) {
 	resp := InfoResponse{}
-	err = request.Get(infoApi(a.Key, tmdbID), &resp)
+	err = request.Get(infoApi(a.Key, tmdbID, false), &resp)
 	if err != nil {
 		log.DebugErr(err)
 		return nil, errors.WithStack(&exceptions.ErrRequest{Name: a.Name()})
