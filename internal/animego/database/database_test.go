@@ -301,9 +301,12 @@ func TestOnDownloadExistAnime(t *testing.T) {
 	test.LogBatchCompare(out, test.MatchContainsRegexp,
 		"OnDownloadStart",
 		map[string]any{`\[Plugin\] Rename插件.*? src_\d.mp4`: 3},
-		map[string]any{`发现部分已下载，跳过此部分重命名: .*?src_\d.mp4`: 3, "OnDownloadSeeding": 1},
-		"OnDownloadComplete",
-		map[string]any{`重命名任务不存在，可能已经完成`: 3},
+		map[string]any{
+			`发现部分已下载，跳过此部分重命名: .*?src_\d.mp4`: 3,
+			"OnDownloadSeeding":  1,
+			"OnDownloadComplete": 1,
+			`重命名任务不存在，可能已经完成`:    3,
+		},
 	)
 	out.Reset()
 	// 结束

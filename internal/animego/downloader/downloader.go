@@ -63,7 +63,7 @@ func (m *Manager) transition(oldTorrentState, newTorrentState models.TorrentStat
 	}
 
 	state := newTorrentState
-	result := NotifyOnInit
+	result := NotifyOnStart
 	switch oldTorrentState {
 	case StateInit:
 		// init -> start

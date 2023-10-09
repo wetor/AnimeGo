@@ -153,14 +153,11 @@ const re_match_doc = `Try to apply the pattern at the start of the string, retur
 func match(self py.Object, args py.Tuple, kwargs py.StringDict) (res py.Object, err error) {
 	var pattern py.Object
 	var String py.Object
-	var flags py.Object
+	var flags py.Object = py.Int(0)
 	kwlist := []string{"pattern", "string", "flags"}
 	err = py.ParseTupleAndKeywords(args, kwargs, "OO|n:match", kwlist, &pattern, &String, &flags)
 	if err != nil {
 		return nil, err
-	}
-	if flags == nil {
-		flags = py.Int(0)
 	}
 	return PatternNew(pattern, flags).match(py.Tuple{String}, py.StringDict{})
 }
@@ -171,14 +168,11 @@ const re_fullmatch_doc = `Try to apply the pattern to all of the string, returni
 func fullmatch(self py.Object, args py.Tuple, kwargs py.StringDict) (res py.Object, err error) {
 	var pattern py.Object
 	var String py.Object
-	var flags py.Object
+	var flags py.Object = py.Int(0)
 	kwlist := []string{"pattern", "string", "flags"}
 	err = py.ParseTupleAndKeywords(args, kwargs, "OO|n:match", kwlist, &pattern, &String, &flags)
 	if err != nil {
 		return nil, err
-	}
-	if flags == nil {
-		flags = py.Int(0)
 	}
 	return PatternNew(pattern, flags).fullmatch(py.Tuple{String}, py.StringDict{})
 }
@@ -189,14 +183,11 @@ const re_search_doc = `Scan through string looking for a match to the pattern, r
 func search(self py.Object, args py.Tuple, kwargs py.StringDict) (res py.Object, err error) {
 	var pattern py.Object
 	var String py.Object
-	var flags py.Object
+	var flags py.Object = py.Int(0)
 	kwlist := []string{"pattern", "string", "flags"}
 	err = py.ParseTupleAndKeywords(args, kwargs, "OO|n:search", kwlist, &pattern, &String, &flags)
 	if err != nil {
 		return nil, err
-	}
-	if flags == nil {
-		flags = py.Int(0)
 	}
 	return PatternNew(pattern, flags).search(py.Tuple{String}, py.StringDict{})
 }
@@ -212,18 +203,12 @@ func sub(self py.Object, args py.Tuple, kwargs py.StringDict) (res py.Object, er
 	var pattern py.Object
 	var repl py.Object
 	var String py.Object
-	var count py.Object
-	var flags py.Object
+	var count py.Object = py.Int(0)
+	var flags py.Object = py.Int(0)
 	kwlist := []string{"pattern", "repl", "string", "count", "flags"}
 	err = py.ParseTupleAndKeywords(args, kwargs, "OOO|nn:sub", kwlist, &pattern, &repl, &String, &count, &flags)
 	if err != nil {
 		return nil, err
-	}
-	if count == nil {
-		count = py.Int(0)
-	}
-	if flags == nil {
-		flags = py.Int(0)
 	}
 	return PatternNew(pattern, flags).sub(py.Tuple{repl, String, count}, py.StringDict{})
 }
@@ -241,18 +226,12 @@ func subn(self py.Object, args py.Tuple, kwargs py.StringDict) (res py.Object, e
 	var pattern py.Object
 	var repl py.Object
 	var String py.Object
-	var count py.Object
-	var flags py.Object
+	var count py.Object = py.Int(0)
+	var flags py.Object = py.Int(0)
 	kwlist := []string{"pattern", "repl", "string", "count", "flags"}
 	err = py.ParseTupleAndKeywords(args, kwargs, "OOO|nn:sub", kwlist, &pattern, &repl, &String, &count, &flags)
 	if err != nil {
 		return nil, err
-	}
-	if count == nil {
-		count = py.Int(0)
-	}
-	if flags == nil {
-		flags = py.Int(0)
 	}
 	return PatternNew(pattern, flags).subn(py.Tuple{repl, String, count}, py.StringDict{})
 }
@@ -268,18 +247,12 @@ const re_split_doc = `Split the source string by the occurrences of the pattern,
 func split(self py.Object, args py.Tuple, kwargs py.StringDict) (res py.Object, err error) {
 	var pattern py.Object
 	var String py.Object
-	var maxSplit py.Object
-	var flags py.Object
+	var maxSplit py.Object = py.Int(0)
+	var flags py.Object = py.Int(0)
 	kwlist := []string{"pattern", "string", "maxsplit", "flags"}
 	err = py.ParseTupleAndKeywords(args, kwargs, "OO|nn:sub", kwlist, &pattern, &String, &maxSplit, &flags)
 	if err != nil {
 		return nil, err
-	}
-	if maxSplit == nil {
-		maxSplit = py.Int(0)
-	}
-	if flags == nil {
-		flags = py.Int(0)
 	}
 	return PatternNew(pattern, flags).split(py.Tuple{String, maxSplit}, py.StringDict{})
 }
@@ -295,14 +268,11 @@ const re_findall_doc = `Return a list of all non-overlapping matches in the stri
 func findall(self py.Object, args py.Tuple, kwargs py.StringDict) (res py.Object, err error) {
 	var pattern py.Object
 	var String py.Object
-	var flags py.Object
+	var flags py.Object = py.Int(0)
 	kwlist := []string{"pattern", "string", "flags"}
 	err = py.ParseTupleAndKeywords(args, kwargs, "OO|n:findall", kwlist, &pattern, &String, &flags)
 	if err != nil {
 		return nil, err
-	}
-	if flags == nil {
-		flags = py.Int(0)
 	}
 	return PatternNew(pattern, flags).findall(py.Tuple{String}, py.StringDict{})
 }
@@ -315,14 +285,11 @@ const re_finditer_doc = `Return an iterator over all non-overlapping matches in 
 func finditer(self py.Object, args py.Tuple, kwargs py.StringDict) (res py.Object, err error) {
 	var pattern py.Object
 	var String py.Object
-	var flags py.Object
+	var flags py.Object = py.Int(0)
 	kwlist := []string{"pattern", "string", "flags"}
 	err = py.ParseTupleAndKeywords(args, kwargs, "OO|n:findall", kwlist, &pattern, &String, &flags)
 	if err != nil {
 		return nil, err
-	}
-	if flags == nil {
-		flags = py.Int(0)
 	}
 	return PatternNew(pattern, flags).finditer(py.Tuple{String}, py.StringDict{})
 }
@@ -331,14 +298,11 @@ const re_compile_doc = `Compile a regular expression pattern, returning a patter
 
 func compile(self py.Object, args py.Tuple, kwargs py.StringDict) (res py.Object, err error) {
 	var pattern py.Object
-	var flags py.Object
+	var flags py.Object = py.Int(0)
 	kwlist := []string{"pattern", "flags"}
 	err = py.ParseTupleAndKeywords(args, kwargs, "O|n:findall", kwlist, &pattern, &flags)
 	if err != nil {
 		return nil, err
-	}
-	if flags == nil {
-		flags = py.Int(0)
 	}
 	return PatternNew(pattern, flags), nil
 }

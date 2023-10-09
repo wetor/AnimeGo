@@ -12,6 +12,7 @@ import (
 )
 
 const (
+	QbtQueuedUP    = "queuedUP"
 	QbtDownloading = "downloading"
 	QbtUploading   = "uploading"
 	QbtCheckingUP  = "checkingUP"
@@ -24,7 +25,8 @@ const (
 
 var defaultUpdateList = func(m *ClientMock) {
 	for _, item := range m.Name2item {
-		if item.State == QbtDownloading {
+		if item.State == QbtDownloading || item.State == QbtQueuedUP {
+			item.State = QbtDownloading
 			item.Progress += 0.5
 			if item.Progress >= 1.005 {
 				item.Progress = 0
@@ -172,7 +174,7 @@ func (m *ClientMock) Add(opt *client.AddOptions) error {
 		Hash:        m.Name2hash[opt.Name],
 		Name:        opt.Name,
 		Progress:    0.0,
-		State:       QbtDownloading,
+		State:       QbtQueuedUP,
 	}
 	return nil
 }

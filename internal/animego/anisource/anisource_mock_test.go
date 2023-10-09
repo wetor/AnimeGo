@@ -72,11 +72,11 @@ func (a *BangumiMock) GetCache(id int, filters any) (any, error) {
 
 type ThemoviedbMock struct{}
 
-func (a *ThemoviedbMock) Search(name string) (int, error) {
+func (a *ThemoviedbMock) Search(name string, filters any) (int, error) {
 	return 0, errors.New("ErrNotImplemented")
 }
 
-func (a *ThemoviedbMock) SearchCache(name string) (int, error) {
+func (a *ThemoviedbMock) SearchCache(name string, filters any) (int, error) {
 	switch name {
 	case "err_themoviedb_search":
 		return 0, &exceptions.ErrRequest{Name: "err_themoviedb_search"}

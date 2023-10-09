@@ -43,6 +43,63 @@ var (
 	out          *bytes.Buffer
 )
 
+var defaultUpdateList = func(m *qbittorrent.ClientMock) {
+	for name, item := range m.Name2item {
+		switch item.State {
+		case qbittorrent.QbtDownloading, qbittorrent.QbtQueuedUP:
+			item.State = qbittorrent.QbtDownloading
+			item.Progress += 0.2
+			if item.Progress >= 1.005 {
+				item.Progress = 0
+				item.State = qbittorrent.QbtUploading
+			} else {
+				log.Debugf("%s: 下载: %v (%s)", name, int((item.Progress+0.005)*100), item.State)
+			}
+		case qbittorrent.QbtUploading:
+			item.Progress += 0.2
+			if item.Progress >= 1.005 {
+				item.State = qbittorrent.QbtCheckingUP
+			} else {
+				log.Debugf("%s: 做种: %v (%s)", name, int((item.Progress+0.005)*100), item.State)
+			}
+		default:
+			log.Debugf("%s: %s", name, item.State)
+		}
+	}
+}
+
+var waitUpdateList = func(m *qbittorrent.ClientMock) {
+	for name, item := range m.Name2item {
+		switch item.State {
+		case qbittorrent.QbtQueuedUP:
+			item.Progress += 0.4
+			if item.Progress >= 1.005 {
+				item.Progress = 0
+				item.State = qbittorrent.QbtDownloading
+			} else {
+				log.Debugf("%s: 等待: %v (%s)", name, int((item.Progress+0.005)*100), item.State)
+			}
+		case qbittorrent.QbtDownloading:
+			item.Progress += 0.2
+			if item.Progress >= 1.005 {
+				item.Progress = 0
+				item.State = qbittorrent.QbtUploading
+			} else {
+				log.Debugf("%s: 下载: %v (%s)", name, int((item.Progress+0.005)*100), item.State)
+			}
+		case qbittorrent.QbtUploading:
+			item.Progress += 0.2
+			if item.Progress >= 1.005 {
+				item.State = qbittorrent.QbtCheckingUP
+			} else {
+				log.Debugf("%s: 做种: %v (%s)", name, int((item.Progress+0.005)*100), item.State)
+			}
+		default:
+			log.Debugf("%s: %s", name, item.State)
+		}
+	}
+}
+
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
 	_ = os.RemoveAll("data")
@@ -92,29 +149,7 @@ func TestMain(m *testing.M) {
 	qbt = &qbittorrent.ClientMock{}
 	qbt.MockInit(qbittorrent.ClientMockOptions{
 		DownloadPath: DownloadPath,
-		UpdateList: func(m *qbittorrent.ClientMock) {
-			for name, item := range m.Name2item {
-				switch item.State {
-				case qbittorrent.QbtDownloading:
-					item.Progress += 0.2
-					if item.Progress >= 1.005 {
-						item.Progress = 0
-						item.State = qbittorrent.QbtUploading
-					} else {
-						log.Debugf("%s: 下载: %v (%s)", name, int((item.Progress+0.005)*100), item.State)
-					}
-				case qbittorrent.QbtUploading:
-					item.Progress += 0.2
-					if item.Progress >= 1.005 {
-						item.State = qbittorrent.QbtCheckingUP
-					} else {
-						log.Debugf("%s: 做种: %v (%s)", name, int((item.Progress+0.005)*100), item.State)
-					}
-				default:
-					log.Debugf("%s: %s", name, item.State)
-				}
-			}
-		},
+		UpdateList:   defaultUpdateList,
 	})
 
 	downloader.Init(&downloader.Options{
@@ -248,7 +283,6 @@ func TestManager_ReStartOnDownload(t *testing.T) {
 		cancel()
 	}()
 	wg.Wait()
-	time.Sleep(1 * time.Second)
 	exist := dbs.IsExist(&models.AnimeEntity{
 		NameCN: "test",
 		Season: 2,
@@ -259,6 +293,7 @@ func TestManager_ReStartOnDownload(t *testing.T) {
 		},
 	})
 	assert.Equal(t, exist, true)
+	time.Sleep(1 * time.Second)
 	for _, f := range file1 {
 		assert.FileExists(t, f)
 	}
@@ -294,6 +329,43 @@ func TestManager_ReStartOnSeed(t *testing.T) {
 	})
 	assert.Equal(t, exist, true)
 	for _, f := range file1 {
+		assert.FileExists(t, f)
+	}
+}
+
+func TestManager_StartWait(t *testing.T) {
+	out.Reset()
+	qbt.MockInit(qbittorrent.ClientMockOptions{
+		DownloadPath: DownloadPath,
+		UpdateList:   waitUpdateList,
+	})
+	wg, cancel := initTest(true)
+
+	go func() {
+		time.Sleep(14 * time.Second)
+		download("test", 2, []int{1, 2, 3})
+		time.Sleep(2 * time.Second)
+		cancel()
+	}()
+	file1, _, _ := download("test", 2, []int{1, 2, 3})
+	file2, _, _ := download("test", 2, []int{1, 2, 4})
+	wg.Wait()
+	time.Sleep(1 * time.Second)
+	exist := dbs.IsExist(&models.AnimeEntity{
+		NameCN: "test",
+		Season: 2,
+		Ep: []*models.AnimeEpEntity{
+			{Type: models.AnimeEpNormal, Ep: 1},
+			{Type: models.AnimeEpNormal, Ep: 2},
+			{Type: models.AnimeEpNormal, Ep: 3},
+			{Type: models.AnimeEpNormal, Ep: 4},
+		},
+	})
+	assert.Equal(t, exist, true)
+	for _, f := range file1 {
+		assert.FileExists(t, f)
+	}
+	for _, f := range file2 {
 		assert.FileExists(t, f)
 	}
 }

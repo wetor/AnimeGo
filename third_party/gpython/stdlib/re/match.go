@@ -152,13 +152,10 @@ const match_start_doc = `start([group=0]) -> int.
     Return index of the start of the substring matched by group.`
 
 func (m *Match) start(args py.Tuple) (py.Object, error) {
-	var index_ py.Object
+	var index_ py.Object = py.Int(0)
 	err := py.UnpackTuple(args, nil, "start", 0, 1, &index_)
 	if err != nil {
 		return nil, err
-	}
-	if index_ == nil {
-		index_ = py.Int(0)
 	}
 	index := int(index_.(py.Int))
 	return py.Int(m.pos + m.index_[index*2]), nil
@@ -168,13 +165,10 @@ const match_end_doc = `end([group=0]) -> int.
     Return index of the end of the substring matched by group.`
 
 func (m *Match) end(args py.Tuple) (py.Object, error) {
-	var index_ py.Object
+	var index_ py.Object = py.Int(0)
 	err := py.UnpackTuple(args, nil, "end", 0, 1, &index_)
 	if err != nil {
 		return nil, err
-	}
-	if index_ == nil {
-		index_ = py.Int(0)
 	}
 	index := int(index_.(py.Int))
 	return py.Int(m.pos + m.index_[index*2+1]), nil
@@ -184,13 +178,10 @@ const match_span_doc = `span([group]) -> tuple.
     For MatchObject m, return the 2-tuple (m.start(group), m.end(group)).`
 
 func (m *Match) span(args py.Tuple) (py.Object, error) {
-	var index_ py.Object
+	var index_ py.Object = py.Int(0)
 	err := py.UnpackTuple(args, nil, "span", 0, 1, &index_)
 	if err != nil {
 		return nil, err
-	}
-	if index_ == nil {
-		index_ = py.Int(0)
 	}
 	index := int(index_.(py.Int))
 	return py.Tuple{py.Int(m.pos + m.index_[index*2]), py.Int(m.pos + m.index_[index*2+1])}, nil
