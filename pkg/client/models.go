@@ -34,7 +34,7 @@ type TorrentItem struct {
 	// Category     string  `json:"category"`
 	// Completed         int     `json:"completed"`
 	// CompletionOn      int     `json:"completion_on"`
-	ContentPath string `json:"content_path"`
+	ContentPath string `json:"content_path"` // 非必要
 	// DlLimit           int    `json:"dl_limit"`
 	// Dlspeed           int    `json:"dlspeed"`
 	// Downloaded        int    `json:"downloaded"`
@@ -47,13 +47,13 @@ type TorrentItem struct {
 	// MagnetUri string `json:"magnet_uri"`
 	// MaxRatio         float64 `json:"max_ratio"`
 	// MaxSeedingTime int    `json:"max_seeding_time"`
-	Name string `json:"name"`
+	Name string `json:"name"` // 非必要
 	// NumComplete      int     `json:"num_complete"`
 	// NumIncomplete    int     `json:"num_incomplete"`
 	// NumLeechs        int     `json:"num_leechs"`
 	// NumSeeds         int     `json:"num_seeds"`
 	// Priority         int     `json:"priority"`
-	Progress float64 `json:"progress"`
+	Progress float64 `json:"progress"` // 非必要
 	// Ratio            float64 `json:"ratio"`
 	// RatioLimit       float64 `json:"ratio_limit"`
 	// SavePath         string  `json:"save_path"`

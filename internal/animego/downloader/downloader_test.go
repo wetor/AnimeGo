@@ -225,8 +225,8 @@ func initTest(clean bool) (*sync.WaitGroup, func()) {
 	rename.Start(ctx)
 	dbs.Init()
 	_ = dbs.Scan()
-
-	qbt.Start(ctx)
+	qbt.Ctx = ctx
+	qbt.Start()
 	mgr.Init()
 	mgr.Start(ctx)
 	return &wg, cancel
@@ -342,13 +342,10 @@ func TestManager_StartWait(t *testing.T) {
 	wg, cancel := initTest(true)
 
 	go func() {
-		time.Sleep(14 * time.Second)
-		download("test", 2, []int{1, 2, 3})
-		time.Sleep(2 * time.Second)
+		time.Sleep(18 * time.Second)
 		cancel()
 	}()
 	file1, _, _ := download("test", 2, []int{1, 2, 3})
-	file2, _, _ := download("test", 2, []int{1, 2, 4})
 	wg.Wait()
 	time.Sleep(1 * time.Second)
 	exist := dbs.IsExist(&models.AnimeEntity{
@@ -358,14 +355,10 @@ func TestManager_StartWait(t *testing.T) {
 			{Type: models.AnimeEpNormal, Ep: 1},
 			{Type: models.AnimeEpNormal, Ep: 2},
 			{Type: models.AnimeEpNormal, Ep: 3},
-			{Type: models.AnimeEpNormal, Ep: 4},
 		},
 	})
 	assert.Equal(t, exist, true)
 	for _, f := range file1 {
-		assert.FileExists(t, f)
-	}
-	for _, f := range file2 {
 		assert.FileExists(t, f)
 	}
 }

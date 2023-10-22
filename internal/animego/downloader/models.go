@@ -1,9 +1,11 @@
 package downloader
 
-import "github.com/wetor/AnimeGo/internal/models"
+import (
+	"github.com/wetor/AnimeGo/pkg/client"
+)
 
 type ItemState struct {
-	Torrent models.TorrentState
+	Torrent client.TorrentState
 	Notify  NotifyState
 	Name    string
 	Info    any // 下载项信息

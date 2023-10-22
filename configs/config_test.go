@@ -21,7 +21,7 @@ func TestMain(m *testing.M) {
 	})
 	m.Run()
 	log.Close()
-	_ = os.RemoveAll("data")
+	//_ = os.RemoveAll("data")
 }
 
 func TestDefaultConfig(t *testing.T) {
@@ -107,6 +107,15 @@ func TestUpdateConfig_160(t *testing.T) {
 	configs.UpdateConfig("data/animego.yaml", false)
 
 	EqualFile(t, "data/animego.yaml", test.GetDataPath(testdata, "animego_160.yaml"))
+}
+
+func TestUpdateConfig_170(t *testing.T) {
+	configs.ConfigVersion = "1.7.0"
+	file, _ := test.GetData(testdata, "animego_160.yaml")
+	_ = os.WriteFile("data/animego.yaml", file, 0666)
+	configs.UpdateConfig("data/animego.yaml", false)
+
+	EqualFile(t, "data/animego.yaml", test.GetDataPath(testdata, "animego_170.yaml"))
 }
 
 func TestInitEnvConfig(t *testing.T) {

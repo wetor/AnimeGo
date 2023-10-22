@@ -6,8 +6,8 @@ import (
 	"sync"
 
 	"github.com/pkg/errors"
+	"github.com/wetor/AnimeGo/pkg/client"
 
-	"github.com/wetor/AnimeGo/internal/animego/downloader"
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
@@ -40,14 +40,14 @@ type RenameTask struct {
 	Src            string // 原名
 	Dst            string
 	Mode           string
-	StateChan      chan models.TorrentState
+	StateChan      chan client.TorrentState
 	RenameCallback models.RenameCallback // 重命名完成后回调
 	Result         *models.RenameResult
 
 	// 读写
 	Enable      bool
 	RenameState int
-	State       models.TorrentState
+	State       client.TorrentState
 	ErrCount    int
 }
 
@@ -77,7 +77,7 @@ func (m *Manager) Init() {
 	m.taskGroups = make([]*RenameTaskGroup, 0)
 }
 
-func (m *Manager) SetDownloadState(keys []string, state models.TorrentState) error {
+func (m *Manager) SetDownloadState(keys []string, state client.TorrentState) error {
 	for _, key := range keys {
 		t, ok := m.tasks[key]
 		if !ok {
@@ -264,7 +264,7 @@ func (m *Manager) AddRenameTask(opt *models.RenameOptions) (renameResult *models
 			Src:            src,
 			Dst:            dst,
 			Mode:           opt.Mode,
-			StateChan:      make(chan models.TorrentState, RenameStateChanCap),
+			StateChan:      make(chan client.TorrentState, RenameStateChanCap),
 			RenameCallback: opt.RenameCallback,
 			Result:         result,
 			RenameState:    RenameStateStart,
@@ -354,7 +354,7 @@ func (m *Manager) Update(ctx context.Context) (err error) {
 		}
 		// 初始状态
 		if task.RenameState == RenameStateStart {
-			if task.State != downloader.StateSeeding && task.State != downloader.StateComplete {
+			if task.State != client.StateSeeding && task.State != client.StateComplete {
 				continue
 			}
 			existSrc := utils.IsExist(task.Src)
@@ -378,7 +378,7 @@ func (m *Manager) Update(ctx context.Context) (err error) {
 		}
 		// 状态一，做种
 		if task.RenameState == RenameStateSeeding {
-			if task.State != downloader.StateSeeding && task.State != downloader.StateComplete {
+			if task.State != client.StateSeeding && task.State != client.StateComplete {
 				continue
 			}
 			err = m.stateSeeding(task)
@@ -388,7 +388,7 @@ func (m *Manager) Update(ctx context.Context) (err error) {
 		}
 		// 状态二，完成
 		if task.RenameState == RenameStateComplete {
-			if task.State != downloader.StateComplete {
+			if task.State != client.StateComplete {
 				continue
 			}
 			err = m.stateComplete(task)

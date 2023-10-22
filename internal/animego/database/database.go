@@ -7,8 +7,8 @@ import (
 	"regexp"
 	"sync"
 
-	"github.com/wetor/AnimeGo/internal/animego/downloader"
 	"github.com/wetor/AnimeGo/internal/exceptions"
+	"github.com/wetor/AnimeGo/pkg/client"
 
 	"github.com/pkg/errors"
 
@@ -255,7 +255,7 @@ func (m *Database) handleDownloadSeeding(hash string) error {
 	if err != nil {
 		return errors.Wrapf(err, "处理事件失败: %s", event)
 	}
-	err = m.rename.SetDownloadState(anime.EpKeys(), downloader.StateSeeding)
+	err = m.rename.SetDownloadState(anime.EpKeys(), client.StateSeeding)
 	if err != nil {
 		return err
 	}
@@ -276,7 +276,7 @@ func (m *Database) handleDownloadComplete(hash string) error {
 	if err != nil {
 		return errors.Wrapf(err, "处理事件失败: %s", event)
 	}
-	err = m.rename.SetDownloadState(anime.EpKeys(), downloader.StateComplete)
+	err = m.rename.SetDownloadState(anime.EpKeys(), client.StateComplete)
 	if err != nil {
 		return err
 	}

@@ -12,11 +12,6 @@ import (
 )
 
 const (
-	QbtQueuedUP    = "queuedUP"
-	QbtDownloading = "downloading"
-	QbtUploading   = "uploading"
-	QbtCheckingUP  = "checkingUP"
-
 	ErrorAddFailed       = "add_failed"
 	ErrorListFailed      = "list_failed"
 	ErrorConnectedFailed = "connected_failed"
@@ -53,6 +48,7 @@ type ClientMock struct {
 	errorFlag map[string]struct{}
 	Conf      ClientMockOptions
 	sync.Mutex
+	Ctx context.Context
 }
 
 func (m *ClientMock) MockInit(opts ClientMockOptions) {
@@ -115,6 +111,34 @@ func (m *ClientMock) Config() *client.Config {
 	}
 }
 
+func (m *ClientMock) State(state string) client.TorrentState {
+	switch state {
+	case QbtAllocating, QbtMetaDL, QbtStalledDL,
+		QbtCheckingDL, QbtCheckingResumeData, QbtQueuedDL,
+		QbtForcedUP, QbtQueuedUP:
+		// 若进度为100，则下载完成
+		return client.StateWaiting
+	case QbtDownloading, QbtForcedDL:
+		return client.StateDownloading
+	case QbtMoving:
+		return client.StateMoving
+	case QbtUploading, QbtStalledUP:
+		// 已下载完成
+		return client.StateSeeding
+	case QbtPausedDL:
+		return client.StatePausing
+	case QbtPausedUP, QbtCheckingUP:
+		// 已下载完成
+		return client.StateComplete
+	case QbtError, QbtMissingFiles:
+		return client.StateError
+	case QbtUnknown:
+		return client.StateUnknown
+	default:
+		return client.StateUnknown
+	}
+}
+
 func (m *ClientMock) Name() string {
 	return "MockClient"
 }
@@ -132,15 +156,15 @@ func (m *ClientMock) update() {
 	m.Conf.UpdateList(m)
 }
 
-func (m *ClientMock) Start(ctx context.Context) {
+func (m *ClientMock) Start() {
 	go func() {
 		for {
 			select {
-			case <-ctx.Done():
+			case <-m.Ctx.Done():
 				return
 			default:
 				m.update()
-				utils.Sleep(1, ctx)
+				utils.Sleep(1, m.Ctx)
 			}
 		}
 	}()

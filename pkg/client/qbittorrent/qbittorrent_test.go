@@ -3,11 +3,12 @@ package qbittorrent_test
 import (
 	"context"
 	"fmt"
-	"github.com/wetor/AnimeGo/pkg/client"
 	"os"
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/wetor/AnimeGo/pkg/client"
 
 	"github.com/wetor/AnimeGo/pkg/client/qbittorrent"
 	"github.com/wetor/AnimeGo/pkg/log"
@@ -31,8 +32,9 @@ func TestMain(m *testing.M) {
 		Password:     "adminadmin",
 		DownloadPath: "/tmp/test",
 		WG:           &wg,
+		Ctx:          context.Background(),
 	})
-	qbt.Start(context.Background())
+	qbt.Start()
 	for i := 0; i < 5 && !qbt.Connected(); i++ {
 		time.Sleep(time.Second)
 	}

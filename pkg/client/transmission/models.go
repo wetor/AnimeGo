@@ -1,4 +1,4 @@
-package qbittorrent
+package transmission
 
 import (
 	"context"

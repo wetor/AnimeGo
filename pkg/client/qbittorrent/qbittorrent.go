@@ -31,6 +31,7 @@ type QBittorrent struct {
 
 	config *Conf
 	WG     *sync.WaitGroup
+	ctx    context.Context
 }
 
 func NewQBittorrent(opts *Options) *QBittorrent {
@@ -46,7 +47,8 @@ func NewQBittorrent(opts *Options) *QBittorrent {
 			CheckTimeSecond:      opts.CheckTimeSecond,
 			RetryConnectNum:      opts.RetryConnectNum,
 		},
-		WG: opts.WG,
+		WG:  opts.WG,
+		ctx: opts.Ctx,
 	}
 	qbt.option = make([]qbapi.Option, 0, 3)
 
@@ -70,6 +72,39 @@ func (c *QBittorrent) Config() *client.Config {
 	}
 }
 
+// State
+//
+//	@Description: 下载器状态转换
+//	@param state string
+//	@return client.TorrentState
+func (c *QBittorrent) State(state string) client.TorrentState {
+	switch state {
+	case QbtAllocating, QbtMetaDL, QbtStalledDL,
+		QbtCheckingDL, QbtCheckingResumeData, QbtQueuedDL,
+		QbtForcedUP, QbtQueuedUP:
+		// 若进度为100，则下载完成
+		return client.StateWaiting
+	case QbtDownloading, QbtForcedDL:
+		return client.StateDownloading
+	case QbtMoving:
+		return client.StateMoving
+	case QbtUploading, QbtStalledUP:
+		// 已下载完成
+		return client.StateSeeding
+	case QbtPausedDL:
+		return client.StatePausing
+	case QbtPausedUP, QbtCheckingUP:
+		// 已下载完成
+		return client.StateComplete
+	case QbtError, QbtMissingFiles:
+		return client.StateError
+	case QbtUnknown:
+		return client.StateUnknown
+	default:
+		return client.StateUnknown
+	}
+}
+
 func (c *QBittorrent) Connected() bool {
 	return c.connected
 }
@@ -89,7 +124,7 @@ func (c *QBittorrent) clientVersion() string {
 //	@Description: 客户端处理下载消息，获取下载进度
 //	@receiver *QBittorrent
 //	@param ctx context.Context
-func (c *QBittorrent) Start(ctx context.Context) {
+func (c *QBittorrent) Start() {
 	c.connectFunc = func() bool {
 		var err error
 		c.client, err = qbapi.NewAPI(c.option...)
@@ -98,7 +133,7 @@ func (c *QBittorrent) Start(ctx context.Context) {
 			log.Warnf("初始化 %s 客户端第%d次，失败", Name, c.retryNum)
 			return false
 		}
-		if err = c.client.Login(ctx); err != nil {
+		if err = c.client.Login(c.ctx); err != nil {
 			log.DebugErr(err)
 			log.Warnf("连接 %s 第%d次，失败", Name, c.retryNum)
 			return false
@@ -111,7 +146,7 @@ func (c *QBittorrent) Start(ctx context.Context) {
 		defer c.WG.Done()
 		for {
 			select {
-			case <-ctx.Done():
+			case <-c.ctx.Done():
 				log.Debugf("正常退出 %s reconnect listen", Name)
 				return
 			case msg := <-c.retryChan:
@@ -136,18 +171,18 @@ func (c *QBittorrent) Start(ctx context.Context) {
 		defer c.WG.Done()
 		for {
 			select {
-			case <-ctx.Done():
+			case <-c.ctx.Done():
 				log.Debugf("正常退出 %s check listen", Name)
 				return
 			default:
 				if c.retryNum == 0 {
 					c.retryChan <- ChanRetryConnect
 					// 检查是否在线，时间长
-					utils.Sleep(c.config.CheckTimeSecond, ctx)
+					utils.Sleep(c.config.CheckTimeSecond, c.ctx)
 				} else if c.retryNum <= c.config.RetryConnectNum {
 					c.retryChan <- ChanRetryConnect
 					// 失败重试，时间短
-					utils.Sleep(c.config.ConnectTimeoutSecond, ctx)
+					utils.Sleep(c.config.ConnectTimeoutSecond, c.ctx)
 				} else {
 					// 超过重试次数，不在频繁重试
 					c.retryNum = 0

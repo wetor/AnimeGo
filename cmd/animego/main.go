@@ -38,7 +38,7 @@ import (
 	_ "github.com/wetor/AnimeGo/internal/web/docs"
 	"github.com/wetor/AnimeGo/internal/web/websocket"
 	"github.com/wetor/AnimeGo/pkg/cache"
-	"github.com/wetor/AnimeGo/pkg/client/qbittorrent"
+	"github.com/wetor/AnimeGo/pkg/client/transmission"
 	pkgLog "github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/request"
 	"github.com/wetor/AnimeGo/pkg/torrent"
@@ -164,7 +164,20 @@ func Main() {
 
 	// ===============================================================================================================
 	// 初始化并连接下载器
-	qbittorrentSrv := qbittorrent.NewQBittorrent(&qbittorrent.Options{
+	//qbittorrentSrv := qbittorrent.NewQBittorrent(&qbittorrent.Options{
+	//	Url:                  config.Setting.Client.QBittorrent.Url,
+	//	Username:             config.Setting.Client.QBittorrent.Username,
+	//	Password:             config.Setting.Client.QBittorrent.Password,
+	//	DownloadPath:         config.Setting.Client.QBittorrent.DownloadPath,
+	//	ConnectTimeoutSecond: config.Advanced.Client.ConnectTimeoutSecond,
+	//	CheckTimeSecond:      config.Advanced.Client.CheckTimeSecond,
+	//	RetryConnectNum:      config.Advanced.Client.RetryConnectNum,
+	//	WG:                   &WG,
+	//	Ctx:                  ctx,
+	//})
+	//qbittorrentSrv.Start()
+
+	transmissionSrv := transmission.NewTransmission(&transmission.Options{
 		Url:                  config.Setting.Client.QBittorrent.Url,
 		Username:             config.Setting.Client.QBittorrent.Username,
 		Password:             config.Setting.Client.QBittorrent.Password,
@@ -173,9 +186,9 @@ func Main() {
 		CheckTimeSecond:      config.Advanced.Client.CheckTimeSecond,
 		RetryConnectNum:      config.Advanced.Client.RetryConnectNum,
 		WG:                   &WG,
+		Ctx:                  ctx,
 	})
-	qbittorrentSrv.Start(ctx)
-
+	transmissionSrv.Start()
 	// ===============================================================================================================
 	// 初始化anisource配置
 	anisource.Init(&anisource.Options{
@@ -244,7 +257,7 @@ func Main() {
 		WG:                     &WG,
 	})
 	// 初始化downloader
-	downloaderSrv := downloader.NewManager(qbittorrentSrv, databaseSrv, databaseSrv)
+	downloaderSrv := downloader.NewManager(transmissionSrv, databaseSrv, databaseSrv)
 	downloadCallback.Renamed = func(data any) error {
 		return downloaderSrv.Delete(data.(string))
 	}
