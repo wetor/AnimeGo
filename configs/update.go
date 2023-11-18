@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/jinzhu/copier"
+	"github.com/wetor/AnimeGo/configs/version/v_160"
 	"gopkg.in/yaml.v3"
 
 	"github.com/wetor/AnimeGo/assets"
@@ -49,6 +50,7 @@ var (
 		"1.5.1",
 		"1.5.2",
 		"1.6.0",
+		"1.6.1",
 	}
 	ConfigVersion = versions[len(versions)-1] // 当前配置文件版本
 
@@ -96,6 +98,11 @@ var (
 			Name:       versions[8],
 			Desc:       "更改字段名，数据库迁移",
 			UpdateFunc: update_152_160,
+		},
+		{
+			Name:       versions[9],
+			Desc:       "更改域名重定向设置，支持设置Mikan的Cookie",
+			UpdateFunc: update_160_161,
 		},
 	}
 )
@@ -485,7 +492,7 @@ func update_152_160(file string) {
 		log.Fatal("配置文件加载错误：", err)
 	}
 
-	newConfig := DefaultConfig()
+	newConfig := &v_160.Config{}
 	err = copier.Copy(newConfig, oldConfig)
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
@@ -561,6 +568,44 @@ func bolt2dirdb(boltPath, savePath string) {
 			}
 		}
 	}
+}
+
+func update_160_161(file string) {
+	data, err := os.ReadFile(file)
+	if err != nil {
+		log.Fatal("配置文件加载错误：", err)
+	}
+	oldConfig := &v_160.Config{}
+	err = yaml.Unmarshal(data, oldConfig)
+	if err != nil {
+		log.Fatal("配置文件加载错误：", err)
+	}
+
+	newConfig := DefaultConfig()
+	err = copier.Copy(newConfig, oldConfig)
+	if err != nil {
+		log.Fatal("配置文件升级失败：", err)
+	}
+	newConfig.Version = "1.6.1"
+
+	log.Println("[变动] 配置项(advanced.redirect.mikan) 变更为 advanced.anidata.mikan.redirect")
+	log.Println("[新增] 配置项(advanced.anidata.mikan.cookie)")
+	newConfig.Advanced.AniData.Mikan.Redirect = oldConfig.Advanced.Redirect.Mikan
+	log.Println("[变动] 配置项(advanced.redirect.bangumi) 变更为 advanced.anidata.bangumi.redirect")
+	newConfig.Advanced.AniData.Bangumi.Redirect = oldConfig.Advanced.Redirect.Bangumi
+	log.Println("[变动] 配置项(advanced.redirect.themoviedb) 变更为 advanced.anidata.themoviedb.redirect")
+	newConfig.Advanced.AniData.Themoviedb.Redirect = oldConfig.Advanced.Redirect.Themoviedb
+
+	content, err := encodeConfig(newConfig)
+	if err != nil {
+		log.Fatal("配置文件升级失败：", err)
+	}
+	err = os.WriteFile(file, content, 0644)
+	if err != nil {
+		log.Fatal("配置文件升级失败：", err)
+	}
+	// 强制写入
+	assets.WritePlugins(assets.Dir, path.Join(newConfig.DataPath, assets.Dir), false)
 }
 
 func write(file string, data any) error {

@@ -54,11 +54,18 @@ type Setting struct {
 type Advanced struct {
 	RefreshSecond int `yaml:"refresh_second" json:"refresh_second" attr:"刷新间隔时间" comment_key:"refresh_second_help"`
 
-	Redirect struct {
-		Mikan      string `yaml:"mikan" json:"mikan" attr:"默认mikanani.me"`
-		Bangumi    string `yaml:"bangumi" json:"bangumi" attr:"默认api.bgm.tv"`
-		Themoviedb string `yaml:"themoviedb" json:"themoviedb" attr:"默认api.themoviedb.org"`
-	} `yaml:"redirect" json:"redirect" attr:"域名重定向"`
+	AniData struct {
+		Mikan struct {
+			Redirect string `yaml:"redirect" json:"redirect" attr:"默认mikanani.me"`
+			Cookie   string `yaml:"cookie" json:"cookie" attr:"mikan的Cookie" comment:"使用登录后的Cookie可以正常下载mikan的被隐藏番剧. 登录状态的Cookie名为'.AspNetCore.Identity.Application'"`
+		} `yaml:"mikan" json:"mikan"`
+		Bangumi struct {
+			Redirect string `yaml:"redirect" json:"redirect" attr:"默认api.bgm.tv"`
+		} `yaml:"bangumi" json:"bangumi"`
+		Themoviedb struct {
+			Redirect string `yaml:"redirect" json:"redirect" attr:"默认api.themoviedb.org"`
+		} `yaml:"themoviedb" json:"themoviedb"`
+	} `yaml:"anidata" json:"anidata" attr:"资源网站设置"`
 
 	Request struct {
 		TimeoutSecond   int `yaml:"timeout_second" json:"timeout_second" attr:"请求超时时间"`

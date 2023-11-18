@@ -16,6 +16,8 @@ var (
 	RedirectMikan      string
 	RedirectBangumi    string
 	RedirectThemoviedb string
+
+	MikanCookie string
 )
 
 type Options struct {
@@ -27,6 +29,8 @@ type Options struct {
 	RedirectMikan      string
 	RedirectBangumi    string
 	RedirectThemoviedb string
+
+	MikanCookie string
 }
 
 func Init(opts *Options) {
@@ -38,4 +42,6 @@ func Init(opts *Options) {
 	RedirectMikan = opts.RedirectMikan
 	RedirectBangumi = opts.RedirectBangumi
 	RedirectThemoviedb = opts.RedirectThemoviedb
+
+	MikanCookie = opts.MikanCookie
 }

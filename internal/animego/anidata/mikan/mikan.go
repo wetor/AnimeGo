@@ -24,6 +24,8 @@ const (
 	IdXPath         = "//a[@class='mikan-rss']"                                 // Mikan番剧id获取XPath
 	GroupXPath      = "//p[@class='bangumi-info']/a[@class='magnet-link-wrap']" // Mikan番剧信息获取group字幕组id和name
 	BangumiUrlXPath = "//p[@class='bangumi-info']/a[contains(@href, 'bgm.tv')]" // Mikan番剧信息中bangumi id获取XPath
+
+	AuthCookie = ".AspNetCore.Identity.Application"
 )
 
 var (
@@ -134,7 +136,13 @@ func (a *Mikan) cacheParseMikanBangumiID(mikanID int) (bangumiID int, err error)
 
 func (a *Mikan) loadHtml(url string) (*html.Node, error) {
 	buf := bytes.NewBuffer(nil)
-	err := request.GetWriter(url, buf)
+	cookie := anidata.MikanCookie
+	if !strings.Contains(cookie, AuthCookie+"=") {
+		cookie = AuthCookie + "=" + cookie
+	}
+	err := request.GetWriter(url, buf, map[string]string{
+		"Cookie": cookie,
+	})
 	if err != nil {
 		log.DebugErr(err)
 		return nil, errors.WithStack(&exceptions.ErrRequest{Name: a.Name()})

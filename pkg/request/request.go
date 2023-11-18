@@ -127,10 +127,14 @@ func GetString(uri string, args ...interface{}) (string, error) {
 	return str, nil
 }
 
-func Get(uri string, body interface{}) error {
+func Get(uri string, body interface{}, args ...interface{}) error {
 	ReInitWG.Add(1)
 	defer ReInitWG.Done()
-	resp, _, errs := request(uri, "GET", nil, nil).EndStruct(body)
+	var header map[string]string = nil
+	if len(args) > 0 {
+		header = args[0].(map[string]string)
+	}
+	resp, _, errs := request(uri, "GET", nil, header).EndStruct(body)
 	err := handleError(resp, errs)
 	if err != nil {
 		return err
@@ -138,10 +142,14 @@ func Get(uri string, body interface{}) error {
 	return nil
 }
 
-func Post(uri string, req interface{}, body interface{}) error {
+func Post(uri string, req interface{}, body interface{}, args ...interface{}) error {
 	ReInitWG.Add(1)
 	defer ReInitWG.Done()
-	resp, _, errs := request(uri, "POST", req, nil).EndStruct(body)
+	var header map[string]string = nil
+	if len(args) > 0 {
+		header = args[0].(map[string]string)
+	}
+	resp, _, errs := request(uri, "POST", req, header).EndStruct(body)
 	err := handleError(resp, errs)
 	if err != nil {
 		return err
@@ -149,10 +157,14 @@ func Post(uri string, req interface{}, body interface{}) error {
 	return nil
 }
 
-func GetFile(uri string, file string) error {
+func GetFile(uri string, file string, args ...interface{}) error {
 	ReInitWG.Add(1)
 	defer ReInitWG.Done()
-	resp, bodyBytes, errs := request(uri, "GET", nil, nil).EndBytes()
+	var header map[string]string = nil
+	if len(args) > 0 {
+		header = args[0].(map[string]string)
+	}
+	resp, bodyBytes, errs := request(uri, "GET", nil, header).EndBytes()
 	err := handleError(resp, errs)
 	if err != nil {
 		return err
@@ -164,10 +176,14 @@ func GetFile(uri string, file string) error {
 	return nil
 }
 
-func GetWriter(uri string, w io.Writer) error {
+func GetWriter(uri string, w io.Writer, args ...interface{}) error {
 	ReInitWG.Add(1)
 	defer ReInitWG.Done()
-	resp, bodyBytes, errs := request(uri, "GET", nil, nil).EndBytes()
+	var header map[string]string = nil
+	if len(args) > 0 {
+		header = args[0].(map[string]string)
+	}
+	resp, bodyBytes, errs := request(uri, "GET", nil, header).EndBytes()
 	err := handleError(resp, errs)
 	if err != nil {
 		return err

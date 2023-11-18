@@ -188,9 +188,10 @@ func Main() {
 			},
 			BangumiCache:       bangumiCache,
 			BangumiCacheLock:   &BangumiCacheMutex,
-			RedirectMikan:      config.Advanced.Redirect.Mikan,
-			RedirectBangumi:    config.Advanced.Redirect.Bangumi,
-			RedirectThemoviedb: config.Advanced.Redirect.Themoviedb,
+			RedirectMikan:      config.Advanced.AniData.Mikan.Redirect,
+			RedirectBangumi:    config.Advanced.AniData.Bangumi.Redirect,
+			RedirectThemoviedb: config.Advanced.AniData.Themoviedb.Redirect,
+			MikanCookie:        config.Advanced.AniData.Mikan.Cookie,
 		},
 	})
 
