@@ -1,33 +1,13 @@
-package plugin_test
+package renamer_test
 
 import (
-	"fmt"
-	"os"
+	renamerPlugin "github.com/wetor/AnimeGo/internal/animego/renamer"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
-	renamerPlugin "github.com/wetor/AnimeGo/internal/animego/renamer/plugin"
 	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/internal/plugin"
-	"github.com/wetor/AnimeGo/pkg/log"
 )
-
-func TestMain(m *testing.M) {
-	fmt.Println("begin")
-	log.Init(&log.Options{
-		File:  "data/log.log",
-		Debug: true,
-	})
-	plugin.Init(&plugin.Options{
-		Path:  "testdata",
-		Debug: true,
-	})
-	m.Run()
-	_ = log.Close()
-	_ = os.RemoveAll("data")
-	fmt.Println("end")
-}
 
 func TestRename_Rename(t *testing.T) {
 	type args struct {

@@ -15,8 +15,6 @@ import (
 	"github.com/wetor/AnimeGo/assets"
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/internal/animego/anisource"
-	"github.com/wetor/AnimeGo/internal/animego/anisource/bangumi"
-	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin"
@@ -180,7 +178,7 @@ func TestMikan_Parse(t *testing.T) {
 			wantAnime: &models.AnimeEntity{ID: 514, ThemoviedbID: 1919, MikanID: 114, Name: "AnimeParseOverride", NameCN: "AnimeParseOverrideCN", Season: 1, Eps: 20, AirDate: "2022-10-05"},
 		},
 	}
-	m := mikan.NewMikanSource(bangumi.NewBangumiSource(""))
+	m := anisource.NewMikanSource(anisource.NewBangumiSource(""))
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			gotAnime, err := m.Parse(tt.args.opts)
@@ -252,7 +250,7 @@ func TestMikan_Parse_Failed(t *testing.T) {
 	}
 	Hook()
 	defer UnHook()
-	m := mikan.NewMikanSource(bangumi.NewBangumiSource(""))
+	m := anisource.NewMikanSource(anisource.NewBangumiSource(""))
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			gotEntity, err := m.Parse(tt.args.opts)

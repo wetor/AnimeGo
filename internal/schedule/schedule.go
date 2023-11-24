@@ -14,7 +14,6 @@ import (
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/logger"
 	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/internal/schedule/task"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/utils"
 )
@@ -156,7 +155,7 @@ func AddScheduleTasks(s *Schedule, plugins []models.Plugin) (err error) {
 		if !p.Enable {
 			continue
 		}
-		t, err := task.NewScheduleTask(&task.ScheduleOptions{
+		t, err := NewScheduleTask(&ScheduleOptions{
 			Plugin: &p,
 		})
 		if err != nil {

@@ -1,28 +1,26 @@
-package plugin_test
+package feed_test
 
 import (
 	"context"
 	"fmt"
+	"github.com/wetor/AnimeGo/assets"
+	feedPlugin "github.com/wetor/AnimeGo/internal/animego/feed"
+	"github.com/wetor/AnimeGo/internal/constant"
+	"github.com/wetor/AnimeGo/internal/plugin"
+	"github.com/wetor/AnimeGo/internal/plugin/lib"
+	"github.com/wetor/AnimeGo/pkg/utils"
+	"github.com/wetor/AnimeGo/test"
+	"github.com/wetor/AnimeGo/third_party/gpython"
 	"net/url"
 	"os"
 	"sync"
 	"testing"
 	"time"
 
-	"github.com/wetor/AnimeGo/assets"
-	feedPlugin "github.com/wetor/AnimeGo/internal/animego/feed/plugin"
-	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/internal/plugin"
-	"github.com/wetor/AnimeGo/internal/plugin/python/lib"
 	"github.com/wetor/AnimeGo/internal/schedule"
 	"github.com/wetor/AnimeGo/pkg/log"
-	"github.com/wetor/AnimeGo/pkg/utils"
-	"github.com/wetor/AnimeGo/test"
-	"github.com/wetor/AnimeGo/third_party/gpython"
 )
-
-const testdata = "feed"
 
 var s *schedule.Schedule
 
@@ -36,7 +34,7 @@ func (m *MockFilterManager) Update(ctx context.Context, items []*models.FeedItem
 	return nil
 }
 
-func TestMain(m *testing.M) {
+func BeforePlugin() {
 	fmt.Println("begin")
 	constant.CachePath = "data"
 	log.Init(&log.Options{
@@ -60,21 +58,27 @@ func TestMain(m *testing.M) {
 	})
 
 	gpython.Init()
-	lib.Init()
+	lib.Init(&lib.Options{
+		Feed: feedPlugin.NewRss(),
+	})
 	_ = utils.CreateMutiDir("data")
 
 	wg := sync.WaitGroup{}
 	s = schedule.NewSchedule(&schedule.Options{
 		WG: &wg,
 	})
-	m.Run()
-	wg.Done()
+}
+
+func After() {
 	_ = log.Close()
 	_ = os.RemoveAll("data")
 	fmt.Println("end")
 }
 
 func TestNewSchedule3_feed(t *testing.T) {
+	BeforePlugin()
+	defer After()
+
 	_ = feedPlugin.AddFeedTasks(s, []models.Plugin{
 		{
 			Enable: true,

@@ -4,7 +4,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/wetor/AnimeGo/pkg/xpath"
 
-	"github.com/wetor/AnimeGo/internal/animego/parser/utils"
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
@@ -69,10 +68,10 @@ func (m *Manager) Parse(opts *models.ParseOptions) (entity *models.AnimeEntity, 
 		epEntity := &models.AnimeEpEntity{
 			Src: xpath.P(t.Path()),
 		}
-		if isSp, sp := utils.ParseSp(t.Name); isSp {
+		if isSp, sp := ParseSp(t.Name); isSp {
 			epEntity.Type = models.AnimeEpSpecial
 			epEntity.Ep = sp
-		} else if ep := utils.ParseEp(t.Name); ep > 0 {
+		} else if ep := ParseEp(t.Name); ep > 0 {
 			epEntity.Type = models.AnimeEpNormal
 			epEntity.Ep = ep
 		} else {

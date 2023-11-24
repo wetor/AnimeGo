@@ -15,7 +15,6 @@ import (
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/internal/animego/anisource"
 	"github.com/wetor/AnimeGo/internal/animego/parser"
-	parserPlugin "github.com/wetor/AnimeGo/internal/animego/parser/plugin"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin"
@@ -91,7 +90,7 @@ func TestMain(m *testing.M) {
 		Proxy: "http://127.0.0.1:7890",
 	})
 
-	p := parserPlugin.NewParserPlugin(&models.Plugin{
+	p := parser.NewParserPlugin(&models.Plugin{
 		Enable: true,
 		Type:   "builtin",
 		File:   "builtin_parser.py",

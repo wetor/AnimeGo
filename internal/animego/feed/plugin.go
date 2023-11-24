@@ -1,4 +1,4 @@
-package plugin
+package feed
 
 import (
 	"context"
@@ -8,7 +8,6 @@ import (
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/schedule"
-	"github.com/wetor/AnimeGo/internal/schedule/task"
 )
 
 func AddFeedTasks(s *schedule.Schedule, plugins []models.Plugin, filterManager api.FilterManager, ctx context.Context) (err error) {
@@ -16,7 +15,7 @@ func AddFeedTasks(s *schedule.Schedule, plugins []models.Plugin, filterManager a
 		if !p.Enable {
 			continue
 		}
-		t, err := task.NewFeedTask(&task.FeedOptions{
+		t, err := schedule.NewFeedTask(&schedule.FeedOptions{
 			Plugin: &p,
 			Callback: func(items []*models.FeedItem) error {
 				return filterManager.Update(ctx, items, false, false)

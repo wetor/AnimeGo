@@ -1,4 +1,4 @@
-package plugin
+package filter
 
 import (
 	"github.com/pkg/errors"

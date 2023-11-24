@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	feedPlugin "github.com/wetor/AnimeGo/internal/animego/feed"
 	"os"
 	"path"
 	"sync"
@@ -17,22 +18,16 @@ import (
 	anidataMikan "github.com/wetor/AnimeGo/internal/animego/anidata/mikan"
 	anidataThemoviedb "github.com/wetor/AnimeGo/internal/animego/anidata/themoviedb"
 	"github.com/wetor/AnimeGo/internal/animego/anisource"
-	"github.com/wetor/AnimeGo/internal/animego/anisource/bangumi"
-	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
 	"github.com/wetor/AnimeGo/internal/animego/database"
 	"github.com/wetor/AnimeGo/internal/animego/downloader"
-	feedPlugin "github.com/wetor/AnimeGo/internal/animego/feed/plugin"
 	"github.com/wetor/AnimeGo/internal/animego/filter"
 	"github.com/wetor/AnimeGo/internal/animego/parser"
-	parserPlugin "github.com/wetor/AnimeGo/internal/animego/parser/plugin"
 	"github.com/wetor/AnimeGo/internal/animego/renamer"
-	renamerPlugin "github.com/wetor/AnimeGo/internal/animego/renamer/plugin"
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/logger"
 	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/internal/schedule"
-	"github.com/wetor/AnimeGo/internal/schedule/task"
 	"github.com/wetor/AnimeGo/internal/web"
 	webapi "github.com/wetor/AnimeGo/internal/web/api"
 	_ "github.com/wetor/AnimeGo/internal/web/docs"
@@ -153,6 +148,7 @@ func Main() {
 	plugin.Init(&plugin.Options{
 		Path:  constant.PluginPath,
 		Debug: debug,
+		Feed:  feedPlugin.NewRss(),
 	})
 	// 载入AnimeGo数据库（缓存）
 	bolt := cache.NewBolt()
@@ -205,7 +201,7 @@ func Main() {
 	var rename api.RenamerPlugin
 	for _, p := range configs.ConvertPluginInfo(config.Plugin.Rename) {
 		if p.Enable {
-			rename = renamerPlugin.NewRenamePlugin(&p)
+			rename = renamer.NewRenamePlugin(&p)
 			break
 		}
 	}
@@ -263,13 +259,13 @@ func Main() {
 	var parse api.ParserPlugin
 	for _, p := range configs.ConvertPluginInfo(config.Plugin.Parser) {
 		if p.Enable {
-			parse = parserPlugin.NewParserPlugin(&p, false)
+			parse = parser.NewParserPlugin(&p, false)
 			break
 		}
 	}
 	// 初始化parser
-	bgmSource := bangumi.NewBangumiSource(config.Setting.Key.Themoviedb)
-	mikanSource := mikan.NewMikanSource(bgmSource)
+	bgmSource := anisource.NewBangumiSource(config.Setting.Key.Themoviedb)
+	mikanSource := anisource.NewMikanSource(bgmSource)
 	parserSrv := parser.NewManager(parse, mikanSource, bgmSource)
 
 	// ===============================================================================================================
@@ -291,7 +287,7 @@ func Main() {
 	err = scheduleSrv.Add(&schedule.AddTaskOptions{
 		Name:     "bangumi",
 		StartRun: true,
-		Task: task.NewBangumiTask(&task.BangumiOptions{
+		Task: schedule.NewBangumiTask(&schedule.BangumiOptions{
 			Cache:      bangumiCache,
 			CacheMutex: &BangumiCacheMutex,
 		}),

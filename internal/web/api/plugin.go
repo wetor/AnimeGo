@@ -3,13 +3,13 @@ package api
 import (
 	"encoding/base64"
 	"fmt"
+	"github.com/wetor/AnimeGo/internal/animego/feed"
 	"os"
 	"path"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/wetor/AnimeGo/internal/animego/feed/rss"
 	"github.com/wetor/AnimeGo/internal/models"
 	webModels "github.com/wetor/AnimeGo/internal/web/models"
 	"github.com/wetor/AnimeGo/pkg/log"
@@ -32,9 +32,9 @@ func (a *Api) Rss(c *gin.Context) {
 	if !a.checkRequest(c, &request) {
 		return
 	}
-	reqRss := rss.NewRss(&rss.Options{Url: request.Rss.Url})
+	reqRss := feed.NewRss()
 
-	items, err := reqRss.Parse()
+	items, err := reqRss.ParseUrl(request.Rss.Url)
 	if err != nil {
 		c.JSON(webModels.Fail(err.Error()))
 		return

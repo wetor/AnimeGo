@@ -1,4 +1,4 @@
-package task
+package schedule
 
 import (
 	"github.com/robfig/cron/v3"

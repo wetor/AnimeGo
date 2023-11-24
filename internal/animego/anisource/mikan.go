@@ -1,8 +1,7 @@
-package mikan
+package anisource
 
 import (
 	"github.com/wetor/AnimeGo/internal/animego/anidata/mikan"
-	"github.com/wetor/AnimeGo/internal/animego/anisource"
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/pkg/log"
@@ -24,7 +23,7 @@ func (m Mikan) Parse(opts *models.AnimeParseOptions) (anime *models.AnimeEntity,
 	// ------------------- 获取bangumiID -------------------
 	if opts.AnimeParseOverride == nil || !opts.OverrideMikan() {
 		log.Debugf("[AniSource] 解析Mikan，%s", opts.Input)
-		entity, err := anisource.Mikan().ParseCache(opts.Input)
+		entity, err := MikanData().ParseCache(opts.Input)
 		if err != nil {
 			return nil, err
 		}

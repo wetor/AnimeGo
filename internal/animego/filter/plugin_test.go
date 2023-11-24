@@ -1,44 +1,24 @@
-package plugin_test
+package filter_test
 
 import (
 	"fmt"
-	"os"
+	mikanRss "github.com/wetor/AnimeGo/internal/animego/feed"
+	filterPlugin "github.com/wetor/AnimeGo/internal/animego/filter"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
 	"github.com/wetor/AnimeGo/assets"
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
-	mikanRss "github.com/wetor/AnimeGo/internal/animego/feed/rss"
-	filterPlugin "github.com/wetor/AnimeGo/internal/animego/filter/plugin"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/pkg/cache"
-	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/test"
 )
 
-const testdata = "filter"
-
-func TestMain(m *testing.M) {
-	fmt.Println("begin")
-	log.Init(&log.Options{
-		File:  "data/log.log",
-		Debug: true,
-	})
-	plugin.Init(&plugin.Options{
-		Path:  test.GetDataPath(testdata, ""),
-		Debug: true,
-	})
-	m.Run()
-	_ = log.Close()
-	_ = os.RemoveAll("data")
-	fmt.Println("end")
-}
-
 func TestPython_Filter(t *testing.T) {
-	rss := mikanRss.NewRss(&mikanRss.Options{File: test.GetDataPath(testdata, "Mikan.xml")})
-	items, _ := rss.Parse()
+	rss := mikanRss.NewRss()
+	items, _ := rss.ParseFile(test.GetDataPath(testdata, "Mikan.xml"))
 	fmt.Println(len(items))
 	p := filterPlugin.NewFilterPlugin(&models.Plugin{
 		Enable: true,
@@ -82,8 +62,9 @@ func TestPython_Filter3(t *testing.T) {
 		Path:  assets.TestPluginPath(),
 		Debug: true,
 	})
-	rss := mikanRss.NewRss(&mikanRss.Options{File: test.GetDataPath(testdata, "Mikan.xml")})
-	items, _ := rss.Parse()
+	rss := mikanRss.NewRss()
+	items, _ := rss.ParseFile(test.GetDataPath(testdata, "Mikan.xml"))
+
 	fmt.Println(len(items))
 	fmt.Println("===========")
 	p := filterPlugin.NewFilterPlugin(&models.Plugin{
@@ -143,8 +124,8 @@ func TestPython_Filter5(t *testing.T) {
 		Path:  assets.TestPluginPath(),
 		Debug: true,
 	})
-	rss := mikanRss.NewRss(&mikanRss.Options{File: test.GetDataPath(testdata, "Mikan.xml")})
-	items, _ := rss.Parse()
+	rss := mikanRss.NewRss()
+	items, _ := rss.ParseFile(test.GetDataPath(testdata, "Mikan.xml"))
 	fmt.Println(len(items))
 	fmt.Println("===========")
 	p := filterPlugin.NewFilterPlugin(&models.Plugin{

@@ -1,4 +1,4 @@
-package plugin
+package parser
 
 import (
 	"github.com/pkg/errors"

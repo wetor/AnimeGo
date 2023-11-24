@@ -1,14 +1,14 @@
-package python_test
+package plugin_test
 
 import (
 	"fmt"
+	mikanRss "github.com/wetor/AnimeGo/internal/animego/feed"
+	"github.com/wetor/AnimeGo/internal/plugin"
 	"os"
 	"testing"
 
 	"github.com/wetor/AnimeGo/assets"
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
-	mikanRss "github.com/wetor/AnimeGo/internal/animego/feed/rss"
-	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/log"
 	pkgPlugin "github.com/wetor/AnimeGo/pkg/plugin"
@@ -35,10 +35,6 @@ func TestMain(m *testing.M) {
 		Cache:        db,
 		BangumiCache: bangumiCache,
 	})
-	plugin.Init(&plugin.Options{
-		Path:  test.GetDataPath(testdata, ""),
-		Debug: true,
-	})
 	m.Run()
 
 	db.Close()
@@ -49,6 +45,10 @@ func TestMain(m *testing.M) {
 }
 
 func TestLib_log(t *testing.T) {
+	plugin.Init(&plugin.Options{
+		Path:  test.GetDataPath(testdata, ""),
+		Debug: true,
+	})
 	p := &python.Python{}
 	p.Load(&pkgPlugin.LoadOptions{
 		File: "test_log.py",
@@ -67,6 +67,10 @@ func TestLib_log(t *testing.T) {
 }
 
 func TestPythonFunction(t *testing.T) {
+	plugin.Init(&plugin.Options{
+		Path:  test.GetDataPath(testdata, ""),
+		Debug: true,
+	})
 	p := &python.Python{}
 	p.Load(&pkgPlugin.LoadOptions{
 		File: "test.py",
@@ -93,6 +97,10 @@ func TestPythonFunction(t *testing.T) {
 }
 
 func TestPythonVariable(t *testing.T) {
+	plugin.Init(&plugin.Options{
+		Path:  test.GetDataPath(testdata, ""),
+		Debug: true,
+	})
 	p := &python.Python{}
 	p.Load(&pkgPlugin.LoadOptions{
 		File: "var.py",
@@ -127,6 +135,10 @@ func TestPythonVariable(t *testing.T) {
 }
 
 func TestPythonJson(t *testing.T) {
+	plugin.Init(&plugin.Options{
+		Path:  test.GetDataPath(testdata, ""),
+		Debug: true,
+	})
 	p := &python.Python{}
 	p.Load(&pkgPlugin.LoadOptions{
 		File: "json.py",
@@ -161,6 +173,10 @@ language:
 }
 
 func TestPythonConfig(t *testing.T) {
+	plugin.Init(&plugin.Options{
+		Path:  test.GetDataPath(testdata, ""),
+		Debug: true,
+	})
 	os.Setenv("ANIMEGO_VERSION", "0.6.8")
 	p := &python.Python{}
 	p.Load(&pkgPlugin.LoadOptions{
@@ -180,6 +196,10 @@ func TestPythonConfig(t *testing.T) {
 }
 
 func TestPythonParseMikan(t *testing.T) {
+	plugin.Init(&plugin.Options{
+		Path:  test.GetDataPath(testdata, ""),
+		Debug: true,
+	})
 	p := &python.Python{}
 	p.Load(&pkgPlugin.LoadOptions{
 		File: "mikan.py",
@@ -201,8 +221,8 @@ func TestPythonMikanTool(t *testing.T) {
 	})
 	os.Setenv("ANIMEGO_VERSION", "0.6.8")
 
-	rss := mikanRss.NewRss(&mikanRss.Options{File: "testdata/Mikan.xml"})
-	items, _ := rss.Parse()
+	rss := mikanRss.NewRss()
+	items, _ := rss.ParseFile("testdata/Mikan.xml")
 	fmt.Println(len(items))
 	fmt.Println("===========")
 

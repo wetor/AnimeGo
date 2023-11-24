@@ -32,21 +32,21 @@ func Init(opts *Options) {
 	anidata.Init(opts.AniDataOptions)
 }
 
-func Mikan() api.AniDataParse {
+func MikanData() api.AniDataParse {
 	if MikanInstance == nil {
 		MikanInstance = &mikan.Mikan{}
 	}
 	return MikanInstance
 }
 
-func Bangumi() api.AniDataGet {
+func BangumiData() api.AniDataGet {
 	if BangumiInstance == nil {
 		BangumiInstance = &bangumi.Bangumi{}
 	}
 	return BangumiInstance
 }
 
-func Themoviedb(key string) api.AniDataSearchGet {
+func ThemoviedbData(key string) api.AniDataSearchGet {
 	if ThemoviedbInstance == nil {
 		ThemoviedbInstance = &themoviedb.Themoviedb{
 			Key: key,

@@ -1,15 +1,15 @@
-package rss_test
+package feed_test
 
 import (
 	"bytes"
 	"fmt"
+	"github.com/wetor/AnimeGo/internal/animego/feed"
 	"os"
 	"testing"
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/wetor/AnimeGo/internal/animego/feed/rss"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/pkg/json"
@@ -20,7 +20,7 @@ import (
 
 const testdata = "feed"
 
-func TestMain(m *testing.M) {
+func BeforeRss() {
 	fmt.Println("begin")
 	_ = utils.CreateMutiDir("data")
 	log.Init(&log.Options{
@@ -34,11 +34,6 @@ func TestMain(m *testing.M) {
 	raw, _ := test.GetData("feed", "Mikan.xml")
 	raw = bytes.Replace(raw, []byte("\r\n"), []byte("\n"), -1)
 	_ = os.WriteFile(test.GetDataPath("feed", "Mikan.xml"), raw, os.ModePerm)
-
-	m.Run()
-	_ = log.Close()
-	_ = os.RemoveAll("data")
-	fmt.Println("end")
 }
 
 func loadItems() []*models.FeedItem {
@@ -55,10 +50,12 @@ func loadItems() []*models.FeedItem {
 }
 
 func TestRss_Parse(t *testing.T) {
+	BeforeRss()
+	defer After()
 	type fields struct {
 		url  string
 		file string
-		raw  string
+		raw  []byte
 	}
 
 	raw, err := test.GetData("feed", "Mikan.xml")
@@ -84,7 +81,7 @@ func TestRss_Parse(t *testing.T) {
 		{
 			name: "mikan_raw",
 			fields: fields{
-				raw: string(raw),
+				raw: raw,
 			},
 			wantItems: loadItems(),
 		},
@@ -135,13 +132,20 @@ func TestRss_Parse(t *testing.T) {
 			wantErrStr: "解析Rss失败",
 		},
 	}
+	r := feed.NewRss()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotItems, err := rss.NewRss(&rss.Options{
-				Url:  tt.fields.url,
-				File: tt.fields.file,
-				Raw:  tt.fields.raw,
-			}).Parse()
+			var gotItems []*models.FeedItem
+			var err error
+			if len(tt.fields.raw) > 0 {
+				gotItems, err = r.Parse(tt.fields.raw)
+			} else if len(tt.fields.file) > 0 {
+				gotItems, err = r.ParseFile(tt.fields.file)
+			} else if len(tt.fields.url) > 0 {
+				gotItems, err = r.ParseUrl(tt.fields.url)
+			} else {
+				gotItems, err = r.ParseFile("")
+			}
 
 			if tt.wantErr != nil {
 				assert.IsType(t, tt.wantErr, errors.Cause(err))

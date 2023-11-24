@@ -1,9 +1,8 @@
-package bangumi
+package anisource
 
 import (
 	"github.com/wetor/AnimeGo/internal/animego/anidata/bangumi"
 	"github.com/wetor/AnimeGo/internal/animego/anidata/themoviedb"
-	"github.com/wetor/AnimeGo/internal/animego/anisource"
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/pkg/log"
@@ -37,7 +36,7 @@ func (m Bangumi) Parse(opts *models.AnimeParseOptions) (anime *models.AnimeEntit
 	// ------------------- 获取bangumi信息 -------------------
 	if opts.AnimeParseOverride == nil || !opts.OverrideBangumi() {
 		log.Debugf("[AniSource] 解析Bangumi，%d", bgmID)
-		entity, err := anisource.Bangumi().GetCache(bgmID, nil)
+		entity, err := BangumiData().GetCache(bgmID, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -52,7 +51,7 @@ func (m Bangumi) Parse(opts *models.AnimeParseOptions) (anime *models.AnimeEntit
 	// ------------------- 获取tmdb信息(季度信息) -------------------
 	if opts.AnimeParseOverride == nil || !opts.OverrideThemoviedb() {
 		log.Debugf("[AniSource] 解析Themoviedb，%s, %s", bgmEntity.Name, bgmEntity.AirDate)
-		t := anisource.Themoviedb(m.ThemoviedbKey)
+		t := ThemoviedbData(m.ThemoviedbKey)
 		id, err := t.SearchCache(bgmEntity.Name, nil)
 		if err != nil {
 			return nil, err

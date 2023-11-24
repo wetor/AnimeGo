@@ -5,5 +5,7 @@ import (
 )
 
 type Feed interface {
-	Parse() ([]*models.FeedItem, error)
+	ParseFile(string) ([]*models.FeedItem, error)
+	ParseUrl(string) ([]*models.FeedItem, error)
+	Parse([]byte) ([]*models.FeedItem, error)
 }

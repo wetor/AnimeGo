@@ -3,6 +3,8 @@ package schedule_test
 import (
 	"context"
 	"fmt"
+	"github.com/wetor/AnimeGo/internal/animego/feed"
+	"github.com/wetor/AnimeGo/internal/plugin/lib"
 	"os"
 	"sync"
 	"testing"
@@ -12,9 +14,7 @@ import (
 	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin"
-	"github.com/wetor/AnimeGo/internal/plugin/python/lib"
 	"github.com/wetor/AnimeGo/internal/schedule"
-	"github.com/wetor/AnimeGo/internal/schedule/task"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/utils"
@@ -40,7 +40,9 @@ func TestMain(m *testing.M) {
 	})
 
 	gpython.Init()
-	lib.Init()
+	lib.Init(&lib.Options{
+		Feed: feed.NewRss(),
+	})
 	_ = utils.CreateMutiDir("data")
 
 	s = schedule.NewSchedule(&schedule.Options{
@@ -61,7 +63,7 @@ func TestNewSchedule(t *testing.T) {
 	s.Add(&schedule.AddTaskOptions{
 		Name:     "bangumi",
 		StartRun: true,
-		Task: task.NewBangumiTask(&task.BangumiOptions{
+		Task: schedule.NewBangumiTask(&schedule.BangumiOptions{
 			Cache:      b,
 			CacheMutex: &mutex,
 		}),
@@ -74,7 +76,7 @@ func TestNewSchedule(t *testing.T) {
 }
 
 func TestNewSchedule2(t *testing.T) {
-	tt, _ := task.NewScheduleTask(&task.ScheduleOptions{
+	tt, _ := schedule.NewScheduleTask(&schedule.ScheduleOptions{
 		Plugin: &models.Plugin{
 			Enable: true,
 			Type:   "python",

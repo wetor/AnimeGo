@@ -3,19 +3,18 @@ package main
 import (
 	"context"
 	"flag"
+	filterPlugin "github.com/wetor/AnimeGo/internal/animego/filter"
+	renamerPlugin "github.com/wetor/AnimeGo/internal/animego/renamer"
 	"os"
 	"path/filepath"
 	"sync"
 	"time"
 
 	"github.com/wetor/AnimeGo/cmd/common"
-	filterPlugin "github.com/wetor/AnimeGo/internal/animego/filter/plugin"
-	renamerPlugin "github.com/wetor/AnimeGo/internal/animego/renamer/plugin"
 	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/internal/schedule"
-	"github.com/wetor/AnimeGo/internal/schedule/task"
 	"github.com/wetor/AnimeGo/pkg/json"
 	"github.com/wetor/AnimeGo/pkg/log"
 )
@@ -97,7 +96,7 @@ func pluginRename(anime *models.AnimeEntity, info *models.Plugin) []*models.Rena
 }
 
 func pluginSchedule(file string, s *schedule.Schedule, info *models.Plugin) {
-	t, _ := task.NewScheduleTask(&task.ScheduleOptions{
+	t, _ := schedule.NewScheduleTask(&schedule.ScheduleOptions{
 		Plugin: info,
 	})
 	s.Add(&schedule.AddTaskOptions{
@@ -108,7 +107,7 @@ func pluginSchedule(file string, s *schedule.Schedule, info *models.Plugin) {
 }
 
 func pluginFeed(file string, s *schedule.Schedule, info *models.Plugin, callback func(items []*models.FeedItem) error) {
-	t, _ := task.NewFeedTask(&task.FeedOptions{
+	t, _ := schedule.NewFeedTask(&schedule.FeedOptions{
 		Plugin:   info,
 		Callback: callback,
 	})

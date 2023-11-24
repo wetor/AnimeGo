@@ -1,32 +1,13 @@
-package plugin_test
+package parser_test
 
 import (
 	"encoding/json"
 	"fmt"
-	"os"
+	parserPlugin "github.com/wetor/AnimeGo/internal/animego/parser"
 	"testing"
 
-	parserPlugin "github.com/wetor/AnimeGo/internal/animego/parser/plugin"
 	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/internal/plugin"
-	"github.com/wetor/AnimeGo/pkg/log"
 )
-
-func TestMain(m *testing.M) {
-	fmt.Println("begin")
-	log.Init(&log.Options{
-		File:  "data/log.log",
-		Debug: true,
-	})
-	plugin.Init(&plugin.Options{
-		Path:  "testdata",
-		Debug: true,
-	})
-	m.Run()
-	_ = log.Close()
-	_ = os.RemoveAll("data")
-	fmt.Println("end")
-}
 
 func TestBuiltinParser_Parse(t *testing.T) {
 	p := parserPlugin.NewParserPlugin(&models.Plugin{

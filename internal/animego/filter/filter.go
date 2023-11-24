@@ -3,7 +3,6 @@ package filter
 import (
 	"context"
 
-	filterPlugin "github.com/wetor/AnimeGo/internal/animego/filter/plugin"
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
@@ -32,7 +31,7 @@ func NewManager(manager api.ManagerDownloader, parser api.ParserManager) *Manage
 }
 
 func (m *Manager) Add(pluginInfo *models.Plugin) {
-	p := filterPlugin.NewFilterPlugin(pluginInfo)
+	p := NewFilterPlugin(pluginInfo)
 	m.filters = append(m.filters, p)
 }
 

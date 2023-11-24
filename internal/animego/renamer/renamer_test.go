@@ -16,7 +16,6 @@ import (
 
 	"github.com/wetor/AnimeGo/internal/animego/downloader"
 	"github.com/wetor/AnimeGo/internal/animego/renamer"
-	renamerPlugin "github.com/wetor/AnimeGo/internal/animego/renamer/plugin"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin"
@@ -54,7 +53,7 @@ func TestMain(m *testing.M) {
 		WG:            &wg,
 		RefreshSecond: 1,
 	})
-	p := renamerPlugin.NewRenamePlugin(&models.Plugin{
+	p := renamer.NewRenamePlugin(&models.Plugin{
 		Enable: true,
 		Type:   "builtin",
 		File:   "builtin_rename.py",

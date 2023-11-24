@@ -7,7 +7,6 @@ import (
 
 	"github.com/wetor/AnimeGo/internal/animego/anidata/mikan"
 	"github.com/wetor/AnimeGo/internal/animego/anisource"
-	"github.com/wetor/AnimeGo/internal/animego/feed/rss"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/pkg/json"
 	"github.com/wetor/AnimeGo/pkg/plugin/python"
@@ -111,7 +110,7 @@ func dumps(self py.Object, args py.Tuple) (py.Object, error) {
 func parseMikan(self py.Object, arg py.Object) (py.Object, error) {
 	var info *mikan.MikanInfo
 	var err error
-	info, err = anisource.Mikan().(*mikan.Mikan).CacheParseMikanInfo(string(arg.(py.String)))
+	info, err = anisource.MikanData().(*mikan.Mikan).CacheParseMikanInfo(string(arg.(py.String)))
 	if err != nil {
 		return nil, errors.Wrap(err, "解析mikan失败")
 	}
@@ -119,7 +118,7 @@ func parseMikan(self py.Object, arg py.Object) (py.Object, error) {
 }
 
 func parseMikanRss(self py.Object, arg py.Object) (py.Object, error) {
-	items, err := rss.NewRss(&rss.Options{Raw: string(arg.(py.String))}).Parse()
+	items, err := Feed.Parse([]byte(arg.(py.String)))
 	if err != nil {
 		return nil, err
 	}

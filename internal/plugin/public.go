@@ -1,10 +1,9 @@
-package public
+package plugin
 
 import (
 	"github.com/wetor/AnimeGo/assets"
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/internal/plugin"
 	pkgPlugin "github.com/wetor/AnimeGo/pkg/plugin"
 	"github.com/wetor/AnimeGo/pkg/utils"
 )
@@ -19,7 +18,7 @@ var (
 
 func ParserName(title string) (ep *models.TitleParsed, err error) {
 	if py == nil {
-		py, err = plugin.LoadPlugin(&plugin.LoadPluginOptions{
+		py, err = LoadPlugin(&LoadPluginOptions{
 			Plugin: &models.Plugin{
 				Type: "builtin",
 				File: assets.BuiltinRawParser,

@@ -15,7 +15,6 @@ import (
 	"github.com/wetor/AnimeGo/internal/animego/database"
 	"github.com/wetor/AnimeGo/internal/animego/downloader"
 	"github.com/wetor/AnimeGo/internal/animego/renamer"
-	renamerPlugin "github.com/wetor/AnimeGo/internal/animego/renamer/plugin"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin"
@@ -38,7 +37,7 @@ var (
 	dbs          *database.Database
 	mgr          *downloader.Manager
 	rename       *renamer.Manager
-	renamePlugin *renamerPlugin.Rename
+	renamePlugin *renamer.Rename
 	db           *cache.Bolt
 	out          *bytes.Buffer
 )
@@ -130,7 +129,7 @@ func TestMain(m *testing.M) {
 		WG:            &wg,
 		RefreshSecond: 1,
 	})
-	renamePlugin = renamerPlugin.NewRenamePlugin(&models.Plugin{
+	renamePlugin = renamer.NewRenamePlugin(&models.Plugin{
 		Enable: true,
 		Type:   "python",
 		File:   "rename/builtin_rename.py",

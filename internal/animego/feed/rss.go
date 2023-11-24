@@ -1,6 +1,6 @@
 // Package rss
 // @Description: 获取并解析rss
-package rss
+package feed
 
 import (
 	"bytes"
@@ -18,54 +18,50 @@ import (
 	"github.com/wetor/AnimeGo/pkg/request"
 )
 
-type Options struct {
-	Url  string
-	File string
-	Raw  string
-}
-
 type Rss struct {
-	url  string
-	file string
-	raw  string
 }
 
-func NewRss(opts *Options) *Rss {
-	return &Rss{
-		url:  opts.Url,
-		file: opts.File,
-		raw:  opts.Raw,
-	}
+func NewRss() *Rss {
+	return &Rss{}
 }
 
-// Parse
-//
-//	@Description: 解析rss
-//	@receiver *Rss
-//	@return items []*models.FeedItem
-func (f *Rss) Parse() (items []*models.FeedItem, err error) {
-	data := bytes.NewBuffer(nil)
-
-	log.Infof("获取Rss数据开始...")
-	if len(f.file) != 0 {
-		file, err := os.ReadFile(f.file)
-		if err != nil {
-			log.DebugErr(err)
-			return nil, errors.WithStack(&exceptions.ErrFeed{Message: "打开Rss文件失败"})
-		}
-		data.Write(file)
-	} else if len(f.raw) != 0 {
-		data.WriteString(f.raw)
-	} else if len(f.url) != 0 {
-		err := request.GetWriter(f.url, data)
-		if err != nil {
-			log.DebugErr(err)
-			return nil, errors.WithStack(&exceptions.ErrRequest{Name: "Rss"})
-		}
-	} else {
+func (r *Rss) ParseFile(f string) (items []*models.FeedItem, err error) {
+	if len(f) == 0 {
 		return nil, errors.WithStack(&exceptions.ErrFeed{Message: "Rss为空"})
 	}
+	data := bytes.NewBuffer(nil)
+	log.Infof("获取Rss数据开始...")
+	file, err := os.ReadFile(f)
+	if err != nil {
+		log.DebugErr(err)
+		return nil, errors.WithStack(&exceptions.ErrFeed{Message: "打开Rss文件失败"})
+	}
+	data.Write(file)
 	log.Infof("获取Rss数据成功！")
+	return r.Parse(data.Bytes())
+}
+
+func (r *Rss) ParseUrl(uri string) (items []*models.FeedItem, err error) {
+	if len(uri) == 0 {
+		return nil, errors.WithStack(&exceptions.ErrFeed{Message: "Rss为空"})
+	}
+	data := bytes.NewBuffer(nil)
+	log.Infof("获取Rss数据开始...")
+	err = request.GetWriter(uri, data)
+	if err != nil {
+		log.DebugErr(err)
+		return nil, errors.WithStack(&exceptions.ErrRequest{Name: "Rss"})
+	}
+	log.Infof("获取Rss数据成功！")
+	return r.Parse(data.Bytes())
+}
+
+func (r *Rss) Parse(raw []byte) (items []*models.FeedItem, err error) {
+	if len(raw) == 0 {
+		return nil, errors.WithStack(&exceptions.ErrFeed{Message: "Rss为空"})
+	}
+	data := bytes.NewBuffer(nil)
+	data.Write(raw)
 
 	fp := gofeed.NewParser()
 	feeds, err := fp.Parse(data)

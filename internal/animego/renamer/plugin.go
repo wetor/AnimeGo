@@ -1,4 +1,4 @@
-package plugin
+package renamer
 
 import (
 	"github.com/pkg/errors"
