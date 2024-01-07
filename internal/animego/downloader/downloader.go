@@ -181,7 +181,7 @@ func (m *Manager) Download(anime *models.AnimeEntity) error {
 		}
 	}
 	log.Infof("添加下载「%s」", name)
-	err := m.Add(anime.Hash(), &client.AddOptions{
+	err := m.add(anime.Hash(), &client.AddOptions{
 		Url:         anime.Torrent.Url,
 		File:        anime.Torrent.File,
 		SavePath:    m.client.Config().DownloadPath,
@@ -201,7 +201,7 @@ func (m *Manager) Download(anime *models.AnimeEntity) error {
 	return nil
 }
 
-func (m *Manager) Add(hash string, opt *client.AddOptions) error {
+func (m *Manager) add(hash string, opt *client.AddOptions) error {
 	ReInitWG.Add(1)
 	defer ReInitWG.Done()
 	m.Lock()
@@ -258,7 +258,7 @@ func (m *Manager) Delete(hash string) error {
 	return m.delete(hash, true)
 }
 
-func (m *Manager) UpdateList() {
+func (m *Manager) updateList() {
 	ReInitWG.Add(1)
 	defer ReInitWG.Done()
 	m.Lock()
@@ -327,7 +327,7 @@ func (m *Manager) Start(ctx context.Context) {
 					exit = true
 					return
 				default:
-					m.UpdateList()
+					m.updateList()
 					m.sleep(ctx)
 				}
 			}()

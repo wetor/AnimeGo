@@ -36,7 +36,7 @@ func NewFeedTask(opts *FeedOptions) (*FeedTask, error) {
 		FuncSchema: []*pkgPlugin.FuncSchemaOptions{
 			{
 				Name:         FuncParse,
-				ParamsSchema: []string{"data"},
+				ParamsSchema: []string{"data", "__retry_count__"},
 				ResultSchema: []string{"error", "items"},
 			},
 		},

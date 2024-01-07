@@ -1,7 +1,6 @@
 package plugin
 
 import (
-	"github.com/wetor/AnimeGo/internal/plugin/lib"
 	"os"
 	"strings"
 
@@ -11,6 +10,7 @@ import (
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/plugin/lib"
 	"github.com/wetor/AnimeGo/pkg/plugin"
 	"github.com/wetor/AnimeGo/pkg/plugin/python"
 	"github.com/wetor/AnimeGo/third_party/gpython"

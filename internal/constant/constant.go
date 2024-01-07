@@ -1,8 +1,9 @@
 package constant
 
 import (
-	"github.com/wetor/AnimeGo/assets"
 	"path"
+
+	"github.com/wetor/AnimeGo/assets"
 )
 
 var (

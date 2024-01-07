@@ -3,23 +3,22 @@ package feed_test
 import (
 	"context"
 	"fmt"
-	"github.com/wetor/AnimeGo/assets"
-	feedPlugin "github.com/wetor/AnimeGo/internal/animego/feed"
-	"github.com/wetor/AnimeGo/internal/constant"
-	"github.com/wetor/AnimeGo/internal/plugin"
-	"github.com/wetor/AnimeGo/internal/plugin/lib"
-	"github.com/wetor/AnimeGo/pkg/utils"
-	"github.com/wetor/AnimeGo/test"
-	"github.com/wetor/AnimeGo/third_party/gpython"
 	"net/url"
 	"os"
 	"sync"
 	"testing"
 	"time"
 
+	"github.com/wetor/AnimeGo/assets"
+	feedPlugin "github.com/wetor/AnimeGo/internal/animego/feed"
+	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/internal/schedule"
 	"github.com/wetor/AnimeGo/pkg/log"
+	"github.com/wetor/AnimeGo/pkg/utils"
+	"github.com/wetor/AnimeGo/test"
+	"github.com/wetor/AnimeGo/third_party/gpython"
 )
 
 var s *schedule.Schedule
@@ -50,17 +49,14 @@ func BeforePlugin() {
 		subId := u.Query().Get("subgroupid")
 		return bgmId + "_" + subId + ".xml"
 	})
-	defer test.UnHook()
 
 	plugin.Init(&plugin.Options{
 		Path:  assets.TestPluginPath(),
 		Debug: true,
+		Feed:  feedPlugin.NewRss(),
 	})
 
 	gpython.Init()
-	lib.Init(&lib.Options{
-		Feed: feedPlugin.NewRss(),
-	})
 	_ = utils.CreateMutiDir("data")
 
 	wg := sync.WaitGroup{}
@@ -70,6 +66,7 @@ func BeforePlugin() {
 }
 
 func After() {
+	test.UnHook()
 	_ = log.Close()
 	_ = os.RemoveAll("data")
 	fmt.Println("end")

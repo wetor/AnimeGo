@@ -3,12 +3,14 @@ package main
 import (
 	"context"
 	"flag"
-	filterPlugin "github.com/wetor/AnimeGo/internal/animego/filter"
-	renamerPlugin "github.com/wetor/AnimeGo/internal/animego/renamer"
 	"os"
 	"path/filepath"
 	"sync"
 	"time"
+
+	feedPlugin "github.com/wetor/AnimeGo/internal/animego/feed"
+	filterPlugin "github.com/wetor/AnimeGo/internal/animego/filter"
+	renamerPlugin "github.com/wetor/AnimeGo/internal/animego/renamer"
 
 	"github.com/wetor/AnimeGo/cmd/common"
 	"github.com/wetor/AnimeGo/internal/constant"
@@ -133,6 +135,7 @@ func Main() {
 	plugin.Init(&plugin.Options{
 		Path:  dir,
 		Debug: pDebug,
+		Feed:  feedPlugin.NewRss(),
 	})
 
 	pluginInfo := &models.Plugin{
