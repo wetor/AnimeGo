@@ -5,8 +5,8 @@ import (
 
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/pkg/torrent"
 	pkgExceptions "github.com/wetor/AnimeGo/pkg/exceptions"
-	"github.com/wetor/AnimeGo/pkg/torrent"
 )
 
 type AniSourceMock struct {

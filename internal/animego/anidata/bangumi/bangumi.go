@@ -4,15 +4,15 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
-	"github.com/wetor/AnimeGo/pkg/utils"
-	"github.com/wetor/AnimeGo/third_party/bangumi/model"
 
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/exceptions"
+	"github.com/wetor/AnimeGo/internal/pkg/request"
 	"github.com/wetor/AnimeGo/pkg/log"
 	mem "github.com/wetor/AnimeGo/pkg/memorizer"
-	"github.com/wetor/AnimeGo/pkg/request"
+	"github.com/wetor/AnimeGo/pkg/utils"
+	"github.com/wetor/AnimeGo/third_party/bangumi/model"
 	"github.com/wetor/AnimeGo/third_party/bangumi/res"
 )
 

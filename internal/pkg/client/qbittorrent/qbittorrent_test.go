@@ -3,17 +3,17 @@ package qbittorrent_test
 import (
 	"context"
 	"fmt"
-	"github.com/wetor/AnimeGo/pkg/client"
 	"os"
 	"sync"
 	"testing"
 	"time"
 
-	"github.com/wetor/AnimeGo/pkg/client/qbittorrent"
+	"github.com/wetor/AnimeGo/internal/pkg/client"
+	qbittorrent2 "github.com/wetor/AnimeGo/internal/pkg/client/qbittorrent"
 	"github.com/wetor/AnimeGo/pkg/log"
 )
 
-var qbt *qbittorrent.QBittorrent
+var qbt *qbittorrent2.QBittorrent
 
 func TestMain(m *testing.M) {
 	fmt.Println("跳过Qbittorrent测试")
@@ -25,7 +25,7 @@ func TestMain(m *testing.M) {
 	})
 	wg := sync.WaitGroup{}
 
-	qbt = qbittorrent.NewQBittorrent(&qbittorrent.Options{
+	qbt = qbittorrent2.NewQBittorrent(&qbittorrent2.Options{
 		Url:          "http://127.0.0.1:8080",
 		Username:     "admin",
 		Password:     "adminadmin",

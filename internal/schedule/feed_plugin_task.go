@@ -10,10 +10,10 @@ import (
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/pkg/request"
 	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/pkg/log"
 	pkgPlugin "github.com/wetor/AnimeGo/pkg/plugin"
-	"github.com/wetor/AnimeGo/pkg/request"
 	"github.com/wetor/AnimeGo/pkg/utils"
 )
 

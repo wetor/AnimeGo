@@ -5,7 +5,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/wetor/AnimeGo/pkg/torrent"
+	"github.com/wetor/AnimeGo/internal/pkg/torrent"
 )
 
 func TestLoadMagnet(t *testing.T) {

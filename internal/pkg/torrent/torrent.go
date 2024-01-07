@@ -11,9 +11,9 @@ import (
 	"github.com/anacrolix/torrent/metainfo"
 	"github.com/pkg/errors"
 
+	"github.com/wetor/AnimeGo/internal/pkg/request"
 	"github.com/wetor/AnimeGo/pkg/exceptions"
 	"github.com/wetor/AnimeGo/pkg/log"
-	"github.com/wetor/AnimeGo/pkg/request"
 	"github.com/wetor/AnimeGo/pkg/utils"
 )
 

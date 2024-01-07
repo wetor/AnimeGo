@@ -12,9 +12,9 @@ import (
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/internal/animego/anidata/bangumi"
 	"github.com/wetor/AnimeGo/internal/exceptions"
+	"github.com/wetor/AnimeGo/internal/pkg/request"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/log"
-	"github.com/wetor/AnimeGo/pkg/request"
 	"github.com/wetor/AnimeGo/pkg/utils"
 	"github.com/wetor/AnimeGo/test"
 )

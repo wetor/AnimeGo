@@ -7,8 +7,8 @@ import (
 
 	"github.com/agiledragon/gomonkey/v2"
 
+	"github.com/wetor/AnimeGo/internal/pkg/request"
 	"github.com/wetor/AnimeGo/pkg/log"
-	"github.com/wetor/AnimeGo/pkg/request"
 )
 
 const (

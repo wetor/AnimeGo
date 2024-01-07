@@ -3,9 +3,7 @@ package utils
 import (
 	"regexp"
 
-	"github.com/pkg/errors"
-
-	"github.com/wetor/AnimeGo/internal/exceptions"
+	"github.com/wetor/AnimeGo/pkg/exceptions"
 	"github.com/wetor/AnimeGo/pkg/log"
 )
 
@@ -49,7 +47,7 @@ func RemoveNameSuffix(name string, fun func(string) (any, error)) (any, error) {
 			}
 		}
 	}
-	return nil, errors.WithStack(&exceptions.ErrThemoviedbSearchName{})
+	return nil, &exceptions.ErrRemoveNameSuffix{}
 }
 
 // SimilarText

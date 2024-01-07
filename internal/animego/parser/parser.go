@@ -2,13 +2,13 @@ package parser
 
 import (
 	"github.com/pkg/errors"
-	"github.com/wetor/AnimeGo/pkg/xpath"
 
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/pkg/torrent"
 	"github.com/wetor/AnimeGo/pkg/log"
-	"github.com/wetor/AnimeGo/pkg/torrent"
+	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
 const DefaultSeason = 1

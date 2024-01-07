@@ -7,17 +7,16 @@ import (
 	"path"
 	"testing"
 
-	"github.com/wetor/AnimeGo/pkg/xpath"
-
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/internal/animego/anidata/themoviedb"
 	"github.com/wetor/AnimeGo/internal/exceptions"
+	"github.com/wetor/AnimeGo/internal/pkg/request"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/log"
-	"github.com/wetor/AnimeGo/pkg/request"
+	"github.com/wetor/AnimeGo/pkg/xpath"
 	"github.com/wetor/AnimeGo/test"
 )
 

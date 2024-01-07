@@ -15,9 +15,9 @@ import (
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/exceptions"
+	"github.com/wetor/AnimeGo/internal/pkg/request"
 	"github.com/wetor/AnimeGo/pkg/log"
 	mem "github.com/wetor/AnimeGo/pkg/memorizer"
-	"github.com/wetor/AnimeGo/pkg/request"
 )
 
 const (

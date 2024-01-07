@@ -7,7 +7,7 @@ import (
 	"sync"
 
 	"github.com/pkg/errors"
-	"github.com/wetor/AnimeGo/pkg/client"
+	"github.com/wetor/AnimeGo/internal/pkg/client"
 	"github.com/wetor/AnimeGo/pkg/utils"
 )
 

@@ -2,14 +2,14 @@ package themoviedb
 
 import (
 	"github.com/pkg/errors"
-	"github.com/wetor/AnimeGo/pkg/utils"
 
 	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/exceptions"
+	"github.com/wetor/AnimeGo/internal/pkg/request"
 	"github.com/wetor/AnimeGo/pkg/log"
 	mem "github.com/wetor/AnimeGo/pkg/memorizer"
-	"github.com/wetor/AnimeGo/pkg/request"
+	"github.com/wetor/AnimeGo/pkg/utils"
 )
 
 var (
@@ -143,7 +143,11 @@ func (a *Themoviedb) parseThemoviedbID(name string) (entity *Entity, err error) 
 		}
 	})
 	if err != nil {
-		return nil, err
+		if exceptions.IsParseFailed(err) {
+			return nil, &exceptions.ErrThemoviedbSearchName{}
+		} else {
+			return nil, err
+		}
 	}
 	return result.(*Entity), nil
 }

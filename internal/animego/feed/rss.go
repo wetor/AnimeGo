@@ -8,14 +8,13 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/pkg/errors"
-	"github.com/wetor/AnimeGo/internal/exceptions"
-
 	"github.com/mmcdole/gofeed"
+	"github.com/pkg/errors"
 
+	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/pkg/request"
 	"github.com/wetor/AnimeGo/pkg/log"
-	"github.com/wetor/AnimeGo/pkg/request"
 )
 
 type Rss struct {

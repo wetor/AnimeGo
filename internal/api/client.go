@@ -2,7 +2,8 @@ package api
 
 import (
 	"context"
-	"github.com/wetor/AnimeGo/pkg/client"
+
+	"github.com/wetor/AnimeGo/internal/pkg/client"
 )
 
 type Client interface {

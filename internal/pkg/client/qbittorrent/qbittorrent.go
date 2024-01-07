@@ -8,8 +8,8 @@ import (
 	"github.com/jinzhu/copier"
 	"github.com/pkg/errors"
 
-	"github.com/wetor/AnimeGo/pkg/client"
-	"github.com/wetor/AnimeGo/pkg/exceptions"
+	"github.com/wetor/AnimeGo/internal/exceptions"
+	"github.com/wetor/AnimeGo/internal/pkg/client"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/utils"
 	"github.com/wetor/AnimeGo/third_party/qbapi"

@@ -9,7 +9,7 @@ import (
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/pkg/client"
+	"github.com/wetor/AnimeGo/internal/pkg/client"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/utils"
 )

@@ -27,3 +27,16 @@ func IsNotFound(err error) bool {
 	}
 	return false
 }
+
+type ParseFailedError interface {
+	ParseFailed() bool
+}
+
+func IsParseFailed(err error) bool {
+	if e, ok := err.(ParseFailedError); ok && e.ParseFailed() {
+		return true
+	} else if e, ok = errors.Cause(err).(ParseFailedError); ok && e.ParseFailed() {
+		return true
+	}
+	return false
+}
