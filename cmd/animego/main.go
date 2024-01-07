@@ -295,6 +295,17 @@ func Main() {
 	if err != nil {
 		panic(err)
 	}
+	err = scheduleSrv.Add(&schedule.AddTaskOptions{
+		Name:     "database",
+		StartRun: false,
+		Task: schedule.NewRefreshTask(&schedule.RefreshOptions{
+			Database: databaseSrv,
+			Cron:     config.Advanced.Database.RefreshDatabaseCron,
+		}),
+	})
+	if err != nil {
+		panic(err)
+	}
 	err = schedule.AddScheduleTasks(scheduleSrv, configs.ConvertPluginInfo(config.Plugin.Schedule))
 	if err != nil {
 		panic(err)

@@ -131,6 +131,8 @@ func defaultAdvanced() {
 	defaultConfig.Advanced.Cache.MikanCacheHour = 7 * 24
 	defaultConfig.Advanced.Cache.BangumiCacheHour = 3 * 24
 	defaultConfig.Advanced.Cache.ThemoviedbCacheHour = 14 * 24
+
+	defaultConfig.Advanced.Database.RefreshDatabaseCron = "0 0 6 * * *" // 每天6点
 }
 
 func defaultAll() {

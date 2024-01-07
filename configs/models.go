@@ -100,6 +100,10 @@ type Advanced struct {
 		BangumiCacheHour    int `yaml:"bangumi_cache_hour" json:"bangumi_cache_hour" attr:"Bangumi缓存时间" comment:"默认3*24小时(3天)。主要为bangumi-id与详细信息的映射"`
 		ThemoviedbCacheHour int `yaml:"themoviedb_cache_hour" json:"themoviedb_cache_hour" attr:"Themoviedb缓存时间" comment:"默认14*24小时(14天)。主要为tmdb-id与季度信息的映射"`
 	} `yaml:"cache" json:"cache" attr:"缓存设置"`
+
+	Database struct {
+		RefreshDatabaseCron string `yaml:"refresh_database_cron" json:"refresh_database_cron" attr:"定时刷新数据库"`
+	} `yaml:"database" json:"database" attr:"数据库设置"`
 }
 
 type Environment struct {

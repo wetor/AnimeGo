@@ -118,6 +118,15 @@ func TestUpdateConfig_161(t *testing.T) {
 	EqualFile(t, "data/animego.yaml", test.GetDataPath(testdata, "animego_161.yaml"))
 }
 
+func TestUpdateConfig_162(t *testing.T) {
+	configs.ConfigVersion = "1.6.2"
+	file, _ := test.GetData(testdata, "animego_161.yaml")
+	_ = os.WriteFile("data/animego.yaml", file, 0666)
+	configs.UpdateConfig("data/animego.yaml", false)
+
+	EqualFile(t, "data/animego.yaml", test.GetDataPath(testdata, "animego_162.yaml"))
+}
+
 func TestInitEnvConfig(t *testing.T) {
 	_ = os.Setenv("ANIMEGO_QBT_URL", "http://127.0.0.1:18080")
 	_ = os.Setenv("ANIMEGO_QBT_DOWNLOAD_PATH", "7766/download")

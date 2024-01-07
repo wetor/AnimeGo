@@ -2,7 +2,6 @@ package schedule
 
 import (
 	"context"
-	"github.com/wetor/AnimeGo/pkg/xpath"
 	"path"
 	"strings"
 	"sync"
@@ -16,11 +15,13 @@ import (
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/utils"
+	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
 const (
-	RetryNum  = 3 // 失败重试次数
-	RetryWait = 1 // 失败重试等待时间，秒
+	RetryCountVar = "__retry_count__"
+	RetryNum      = 3 // 失败重试次数
+	RetryWait     = 3 // 失败重试等待时间，秒
 )
 
 type TaskInfo struct {
@@ -84,6 +85,7 @@ func (s *Schedule) Add(opts *AddTaskOptions) (err error) {
 		TaskRun: func(args models.Object) {
 			log.Infof("[定时任务] %s 开始执行", opts.Task.Name())
 			for i := 0; i < RetryNum; i++ {
+				args[RetryCountVar] = i
 				err := opts.Task.Run(args)
 				if err != nil {
 					log.DebugErr(err)
