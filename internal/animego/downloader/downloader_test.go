@@ -149,6 +149,7 @@ func TestMain(m *testing.M) {
 	qbt.MockInit(qbittorrent.ClientMockOptions{
 		DownloadPath: DownloadPath,
 		UpdateList:   defaultUpdateList,
+		Ctx:          context.Background(),
 	})
 
 	downloader.Init(&downloader.Options{
@@ -156,7 +157,6 @@ func TestMain(m *testing.M) {
 		Category:               "AnimeGoTest",
 		WG:                     &wg,
 		AllowDuplicateDownload: false,
-		SeedingTimeMinute:      0,
 		Tag:                    "",
 	})
 	mgr = downloader.NewManager(qbt, dbs, dbs)
@@ -225,7 +225,7 @@ func initTest(clean bool) (*sync.WaitGroup, func()) {
 	dbs.Init()
 	_ = dbs.Scan()
 
-	qbt.Start(ctx)
+	qbt.Start()
 	mgr.Init()
 	mgr.Start(ctx)
 	return &wg, cancel
@@ -337,6 +337,7 @@ func TestManager_StartWait(t *testing.T) {
 	qbt.MockInit(qbittorrent.ClientMockOptions{
 		DownloadPath: DownloadPath,
 		UpdateList:   waitUpdateList,
+		Ctx:          context.Background(),
 	})
 	wg, cancel := initTest(true)
 

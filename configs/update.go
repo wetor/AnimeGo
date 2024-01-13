@@ -21,6 +21,7 @@ import (
 	"github.com/wetor/AnimeGo/configs/version/v_152"
 	"github.com/wetor/AnimeGo/configs/version/v_160"
 	"github.com/wetor/AnimeGo/configs/version/v_161"
+	"github.com/wetor/AnimeGo/configs/version/v_162"
 	"github.com/wetor/AnimeGo/internal/animego/database"
 	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/models"
@@ -53,6 +54,7 @@ var (
 		"1.6.0",
 		"1.6.1",
 		"1.6.2",
+		"1.7.0",
 	}
 	ConfigVersion = versions[len(versions)-1] // 当前配置文件版本
 
@@ -110,6 +112,11 @@ var (
 			Name:       versions[10],
 			Desc:       "新增Database设置",
 			UpdateFunc: update_161_162,
+		},
+		{
+			Name:       versions[11],
+			Desc:       "更改下载器配置，新增Transmission客户端支持",
+			UpdateFunc: update_162_170,
 		},
 	}
 )
@@ -625,14 +632,54 @@ func update_161_162(file string) {
 		log.Fatal("配置文件加载错误：", err)
 	}
 
-	newConfig := DefaultConfig()
+	newConfig := &v_162.Config{}
 	err = copier.Copy(newConfig, oldConfig)
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
 	}
 	newConfig.Version = "1.6.2"
 
-	log.Println("[新增] 配置项(advanced.databse.refresh_database_cron)")
+	log.Println("[新增] 配置项(advanced.database.refresh_database_cron)")
+	newConfig.Advanced.Database.RefreshDatabaseCron = "0 0 6 * * *"
+
+	content, err := encodeConfig(newConfig)
+	if err != nil {
+		log.Fatal("配置文件升级失败：", err)
+	}
+	err = os.WriteFile(file, content, 0644)
+	if err != nil {
+		log.Fatal("配置文件升级失败：", err)
+	}
+	// 强制写入
+	assets.WritePlugins(assets.Dir, path.Join(newConfig.DataPath, assets.Dir), false)
+}
+
+func update_162_170(file string) {
+	data, err := os.ReadFile(file)
+	if err != nil {
+		log.Fatal("配置文件加载错误：", err)
+	}
+	oldConfig := &v_162.Config{}
+	err = yaml.Unmarshal(data, oldConfig)
+	if err != nil {
+		log.Fatal("配置文件加载错误：", err)
+	}
+
+	newConfig := DefaultConfig()
+	err = copier.Copy(newConfig, oldConfig)
+	if err != nil {
+		log.Fatal("配置文件升级失败：", err)
+	}
+	newConfig.Version = "1.7.0"
+
+	log.Println("[新增] 配置项(setting.client.client)")
+	log.Println("[变动] 配置项(setting.client.qbittorrent) 变更为 setting.client")
+	newConfig.Setting.Client.Client = "QBittorrent"
+	newConfig.Setting.Client.Username = oldConfig.Setting.Client.QBittorrent.Username
+	newConfig.Setting.Client.Password = oldConfig.Setting.Client.QBittorrent.Password
+	newConfig.Setting.Client.Url = oldConfig.Setting.Client.QBittorrent.Url
+	log.Println("[变动] 配置项(advanced.download.seeding_time_minute) 变更为 advanced.client.seeding_time_minute")
+	newConfig.Advanced.Client.SeedingTimeMinute = oldConfig.Advanced.Download.SeedingTimeMinute
 
 	content, err := encodeConfig(newConfig)
 	if err != nil {

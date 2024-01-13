@@ -13,7 +13,7 @@ var (
 )
 
 func defaultSettingComment() {
-	configComment["tag_help"] = `仅qBittorrent有效，可用通配符列表：
+	configComment["tag_help"] = `可用通配符列表：
   {year} int 番剧更新年
   {quarter} int 番剧季度月号，取值为[4, 7, 10, 1]分别对应[春, 夏, 秋, 冬]季番剧
   {quarter_index} int 番剧季度序号，取值为[1, 2, 3, 4]分别对应春(4月)、夏(7月)、秋(10月)、冬(1月)季番剧
@@ -24,18 +24,23 @@ func defaultSettingComment() {
 
 	configComment["themoviedb_key"] = `可以自行申请链接（需注册）：https://www.themoviedb.org/settings/api?language=zh-CN
 以下为wetor的个人APIkey，仅用于AnimeGo使用`
+
+	configComment["seeding_key"] = `默认为0，根据客户端不同，有不同作用：
+  QBittorrent: 0不做种，-1无限做种，其他值为做种分钟限制
+  Transmission: 0为使用客户端设置，-1无限做种，其他值为做种空闲分钟限制`
+
 }
 
 func defaultSetting() {
-
-	defaultConfig.Setting.Client.QBittorrent.Url = "http://localhost:8080"
-	defaultConfig.Setting.Client.QBittorrent.Username = "admin"
-	defaultConfig.Setting.Client.QBittorrent.Password = "adminadmin"
-	defaultConfig.Setting.Client.QBittorrent.DownloadPath = "./download/incomplete"
+	defaultConfig.Setting.Client.Client = "QBittorrent"
+	defaultConfig.Setting.Client.Url = "http://localhost:8080"
+	defaultConfig.Setting.Client.Username = "admin"
+	defaultConfig.Setting.Client.Password = "adminadmin"
+	defaultConfig.Setting.Client.DownloadPath = "./download/incomplete"
 
 	defaultConfig.Setting.DataPath = "./data"
 	defaultConfig.Setting.SavePath = "./download/anime"
-	defaultConfig.Setting.DownloadPath = defaultConfig.Setting.Client.QBittorrent.DownloadPath
+	defaultConfig.Setting.DownloadPath = defaultConfig.Setting.Client.DownloadPath
 
 	defaultConfig.Setting.Category = "AnimeGo"
 	defaultConfig.Setting.Tag = "{year}年{quarter}月新番"
@@ -115,7 +120,6 @@ func defaultAdvanced() {
 	defaultConfig.Advanced.Request.RetryWaitSecond = 5
 
 	defaultConfig.Advanced.Download.AllowDuplicateDownload = false
-	defaultConfig.Advanced.Download.SeedingTimeMinute = 0
 	defaultConfig.Advanced.Download.Rename = "wait_move"
 
 	defaultConfig.Advanced.Feed.DelaySecond = 5
@@ -124,6 +128,7 @@ func defaultAdvanced() {
 	defaultConfig.Advanced.Default.TMDBFailUseTitleSeason = true
 	defaultConfig.Advanced.Default.TMDBFailUseFirstSeason = true
 
+	defaultConfig.Advanced.Client.SeedingTimeMinute = 0
 	defaultConfig.Advanced.Client.ConnectTimeoutSecond = 5
 	defaultConfig.Advanced.Client.RetryConnectNum = 3
 	defaultConfig.Advanced.Client.CheckTimeSecond = 60

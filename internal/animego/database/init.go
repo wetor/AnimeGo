@@ -19,14 +19,12 @@ var (
 )
 
 type DownloaderConf struct {
-	RefreshSecond          int
-	DownloadPath           string
-	SavePath               string
-	Category               string
-	Tag                    string
-	AllowDuplicateDownload bool
-	SeedingTimeMinute      int
-	Rename                 string
+	RefreshSecond int
+	DownloadPath  string
+	SavePath      string
+	Category      string
+	Tag           string
+	Rename        string
 }
 
 type Options struct {

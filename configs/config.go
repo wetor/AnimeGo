@@ -69,6 +69,7 @@ func (c *Config) InitDir() {
 	c.Setting.DataPath = xpath.Abs(c.Setting.DataPath)
 	c.Setting.DownloadPath = xpath.Abs(c.Setting.DownloadPath)
 	c.Setting.SavePath = xpath.Abs(c.Setting.SavePath)
+	c.Setting.Client.DownloadPath = xpath.Abs(c.Setting.Client.DownloadPath)
 }
 
 func (c *Config) Proxy() string {

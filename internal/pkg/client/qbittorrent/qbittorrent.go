@@ -2,7 +2,6 @@ package qbittorrent
 
 import (
 	"context"
-	"sync"
 	"time"
 
 	"github.com/jinzhu/copier"
@@ -16,8 +15,7 @@ import (
 )
 
 const (
-	Name             = "qBittorrent"
-	ChanRetryConnect = 1 // 重连消息
+	Name = "qBittorrent"
 )
 
 type QBittorrent struct {
@@ -27,36 +25,39 @@ type QBittorrent struct {
 	retryNum    int // 重试次数
 
 	connected bool
+	auth      *client.AuthOptions
 	client    *qbapi.QBAPI
-
-	config *Conf
-	WG     *sync.WaitGroup
 }
 
-func NewQBittorrent(opts *Options) *QBittorrent {
-	opts.Default()
-	qbt := &QBittorrent{
+func NewQBittorrent(opt *client.AuthOptions) *QBittorrent {
+	c := &QBittorrent{
 		retryChan: make(chan int, 1),
-		config: &Conf{
-			Url:                  opts.Url,
-			Username:             opts.Username,
-			Password:             opts.Password,
-			DownloadPath:         opts.DownloadPath,
-			ConnectTimeoutSecond: opts.ConnectTimeoutSecond,
-			CheckTimeSecond:      opts.CheckTimeSecond,
-			RetryConnectNum:      opts.RetryConnectNum,
-		},
-		WG: opts.WG,
+		retryNum:  1,
+		connected: false,
+		auth:      opt,
 	}
-	qbt.option = make([]qbapi.Option, 0, 3)
+	c.option = make([]qbapi.Option, 0, 3)
+	c.option = append(c.option, qbapi.WithAuth(c.auth.Username, c.auth.Password))
+	c.option = append(c.option, qbapi.WithHost(c.auth.Url))
+	c.option = append(c.option, qbapi.WithTimeout(time.Duration(client.ConnectTimeoutSecond)*time.Second))
 
-	qbt.option = append(qbt.option, qbapi.WithAuth(opts.Username, opts.Password))
-	qbt.option = append(qbt.option, qbapi.WithHost(opts.Url))
-	qbt.option = append(qbt.option, qbapi.WithTimeout(time.Duration(opts.ConnectTimeoutSecond)*time.Second))
-	qbt.retryNum = 1
-	qbt.connected = false
-	qbt.retryChan <- ChanRetryConnect
-	return qbt
+	c.connectFunc = func() bool {
+		var err error
+		c.client, err = qbapi.NewAPI(c.option...)
+		if err != nil {
+			log.DebugErr(err)
+			log.Warnf("初始化 %s 客户端第%d次，失败", Name, c.retryNum)
+			return false
+		}
+		if err = c.client.Login(client.Ctx); err != nil {
+			log.DebugErr(err)
+			log.Warnf("连接 %s 第%d次，失败", Name, c.retryNum)
+			return false
+		}
+		return true
+	}
+	c.retryChan <- client.ChanRetryConnect
+	return c
 }
 
 func (c *QBittorrent) Name() string {
@@ -65,8 +66,41 @@ func (c *QBittorrent) Name() string {
 
 func (c *QBittorrent) Config() *client.Config {
 	return &client.Config{
-		ApiUrl:       c.config.Url,
-		DownloadPath: c.config.DownloadPath,
+		ApiUrl:       c.auth.Url,
+		DownloadPath: client.DownloadPath,
+	}
+}
+
+// State
+//
+//	@Description: 下载器状态转换
+//	@param state string
+//	@return client.TorrentState
+func (c *QBittorrent) State(state string) client.TorrentState {
+	switch state {
+	case QbtAllocating, QbtMetaDL, QbtStalledDL,
+		QbtCheckingDL, QbtCheckingResumeData, QbtQueuedDL,
+		QbtForcedUP, QbtQueuedUP:
+		// 若进度为100，则下载完成
+		return client.StateWaiting
+	case QbtDownloading, QbtForcedDL:
+		return client.StateDownloading
+	case QbtMoving:
+		return client.StateMoving
+	case QbtUploading, QbtStalledUP:
+		// 已下载完成
+		return client.StateSeeding
+	case QbtPausedDL:
+		return client.StatePausing
+	case QbtPausedUP, QbtCheckingUP:
+		// 已下载完成
+		return client.StateComplete
+	case QbtError, QbtMissingFiles:
+		return client.StateError
+	case QbtUnknown:
+		return client.StateUnknown
+	default:
+		return client.StateUnknown
 	}
 }
 
@@ -88,35 +122,18 @@ func (c *QBittorrent) clientVersion() string {
 //	@Description: 客户端在线监听、登录重试
 //	@Description: 客户端处理下载消息，获取下载进度
 //	@receiver *QBittorrent
-//	@param ctx context.Context
-func (c *QBittorrent) Start(ctx context.Context) {
-	c.connectFunc = func() bool {
-		var err error
-		c.client, err = qbapi.NewAPI(c.option...)
-		if err != nil {
-			log.DebugErr(err)
-			log.Warnf("初始化 %s 客户端第%d次，失败", Name, c.retryNum)
-			return false
-		}
-		if err = c.client.Login(ctx); err != nil {
-			log.DebugErr(err)
-			log.Warnf("连接 %s 第%d次，失败", Name, c.retryNum)
-			return false
-		}
-		// c.Init()
-		return true
-	}
-	c.WG.Add(1)
+func (c *QBittorrent) Start() {
+	client.WG.Add(1)
 	go func() {
-		defer c.WG.Done()
+		defer client.WG.Done()
 		for {
 			select {
-			case <-ctx.Done():
+			case <-client.Ctx.Done():
 				log.Debugf("正常退出 %s reconnect listen", Name)
 				return
 			case msg := <-c.retryChan:
 				c.connected = true
-				if msg == ChanRetryConnect && (c.client == nil || len(c.clientVersion()) == 0) {
+				if msg == client.ChanRetryConnect && (c.client == nil || len(c.clientVersion()) == 0) {
 					if ok := c.connectFunc(); !ok {
 						c.retryNum++
 						c.connected = false
@@ -131,23 +148,23 @@ func (c *QBittorrent) Start(ctx context.Context) {
 			}
 		}
 	}()
-	c.WG.Add(1)
+	client.WG.Add(1)
 	go func() {
-		defer c.WG.Done()
+		defer client.WG.Done()
 		for {
 			select {
-			case <-ctx.Done():
+			case <-client.Ctx.Done():
 				log.Debugf("正常退出 %s check listen", Name)
 				return
 			default:
 				if c.retryNum == 0 {
-					c.retryChan <- ChanRetryConnect
+					c.retryChan <- client.ChanRetryConnect
 					// 检查是否在线，时间长
-					utils.Sleep(c.config.CheckTimeSecond, ctx)
-				} else if c.retryNum <= c.config.RetryConnectNum {
-					c.retryChan <- ChanRetryConnect
+					utils.Sleep(client.CheckTimeSecond, client.Ctx)
+				} else if c.retryNum <= client.RetryConnectNum {
+					c.retryChan <- client.ChanRetryConnect
 					// 失败重试，时间短
-					utils.Sleep(c.config.ConnectTimeoutSecond, ctx)
+					utils.Sleep(client.ConnectTimeoutSecond, client.Ctx)
 				} else {
 					// 超过重试次数，不在频繁重试
 					c.retryNum = 0
@@ -195,7 +212,7 @@ func (c *QBittorrent) Add(opt *client.AddOptions) error {
 		Savepath:         &opt.SavePath,
 		Category:         &opt.Category,
 		Tags:             opt.Tag,
-		SeedingTimeLimit: &opt.SeedingTime,
+		SeedingTimeLimit: &client.SeedingTimeMinute,
 		Rename:           &opt.Name,
 	}
 	if len(opt.File) > 0 {

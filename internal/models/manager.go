@@ -1,10 +1,12 @@
 package models
 
+import "github.com/wetor/AnimeGo/internal/pkg/client"
+
 type DownloadStatus struct {
-	Hash     string       `json:"hash"`
-	State    TorrentState `json:"state"`
-	Path     []string     `json:"path"`      // 文件存储相对路径
-	ExpireAt int64        `json:"expire_at"` // 过期时间
+	Hash     string              `json:"hash"`
+	State    client.TorrentState `json:"state"`
+	Path     []string            `json:"path"`      // 文件存储相对路径
+	ExpireAt int64               `json:"expire_at"` // 过期时间
 
 	Init       bool `json:"init"`       // 是否初始化
 	Renamed    bool `json:"renamed"`    // 是否已重命名/移动

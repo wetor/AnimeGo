@@ -56,8 +56,8 @@ func (m *Manager) addError(err error) {
 	m.errMutex.Unlock()
 }
 
-func (m *Manager) transition(oldTorrentState, newTorrentState models.TorrentState) (models.TorrentState, NotifyState) {
-	if newTorrentState == StateError {
+func (m *Manager) transition(oldTorrentState, newTorrentState client.TorrentState) (client.TorrentState, NotifyState) {
+	if newTorrentState == client.StateError {
 		// error
 		return newTorrentState, NotifyOnError
 	}
@@ -65,61 +65,61 @@ func (m *Manager) transition(oldTorrentState, newTorrentState models.TorrentStat
 	state := newTorrentState
 	result := NotifyOnStart
 	switch oldTorrentState {
-	case StateInit:
+	case client.StateInit:
 		// init -> start
 		result = NotifyOnStart
-		state = StateAdding
-	case StateAdding:
+		state = client.StateAdding
+	case client.StateAdding:
 		switch newTorrentState {
-		case StateDownloading:
+		case client.StateDownloading:
 			// start -> download
 			result = NotifyOnDownload
-		case StateSeeding:
+		case client.StateSeeding:
 			// start -> seed
 			// 做种状态下重启后
 			result = NotifyOnSeeding
-		case StateComplete:
+		case client.StateComplete:
 			// start -> complete
 			// 完成状态下重启后，需要先经过seeding
 			result = NotifyOnSeeding
-			state = StateSeeding
+			state = client.StateSeeding
 		}
-	case StateDownloading:
+	case client.StateDownloading:
 		switch newTorrentState {
-		case StateDownloading:
+		case client.StateDownloading:
 			// download -> download
 			// 刷新进度
 			result = NotifyOnDownload
-		case StateSeeding:
+		case client.StateSeeding:
 			// download -> seed
 			result = NotifyOnSeeding
-		case StateComplete:
+		case client.StateComplete:
 			// download -> complete
 			// 跳过了seeding，需要先经过seeding
 			result = NotifyOnSeeding
-			state = StateSeeding
+			state = client.StateSeeding
 		}
-	case StateSeeding:
+	case client.StateSeeding:
 		switch newTorrentState {
-		case StateSeeding:
+		case client.StateSeeding:
 			// seed -> seed
 			result = NotifyOnSeeding
-		case StateComplete:
+		case client.StateComplete:
 			// seed -> complete
 			result = NotifyOnComplete
 		}
-	case StateComplete:
+	case client.StateComplete:
 		// complete
 		result = NotifyOnComplete
-	case StateError:
+	case client.StateError:
 		switch newTorrentState {
-		case StateDownloading:
+		case client.StateDownloading:
 			// error -> download
 			result = NotifyOnDownload
-		case StateSeeding:
+		case client.StateSeeding:
 			// error -> seed
 			result = NotifyOnSeeding
-		case StateComplete:
+		case client.StateComplete:
 			// error -> complete
 			result = NotifyOnComplete
 		}
@@ -182,13 +182,12 @@ func (m *Manager) Download(anime *models.AnimeEntity) error {
 	}
 	log.Infof("添加下载「%s」", name)
 	err := m.add(anime.Hash(), &client.AddOptions{
-		Url:         anime.Torrent.Url,
-		File:        anime.Torrent.File,
-		SavePath:    m.client.Config().DownloadPath,
-		Category:    Category,
-		Tag:         utils.Tag(Tag, anime.AirDate, anime.Ep[0].Ep),
-		SeedingTime: SeedingTimeMinute,
-		Name:        name,
+		Url:      anime.Torrent.Url,
+		File:     anime.Torrent.File,
+		SavePath: m.client.Config().DownloadPath,
+		Category: Category,
+		Tag:      utils.Tag(Tag, anime.AirDate, anime.Ep[0].Ep),
+		Name:     name,
 	})
 	if err != nil {
 		return errors.Wrap(err, "添加下载项失败")
@@ -222,7 +221,7 @@ func (m *Manager) add(hash string, opt *client.AddOptions) error {
 	}
 
 	m.hash2stateList[hash] = &ItemState{
-		Torrent: StateInit,
+		Torrent: client.StateInit,
 		Notify:  NotifyOnInit,
 		Name:    name,
 	}
@@ -273,12 +272,12 @@ func (m *Manager) updateList() {
 	}
 
 	for _, item := range items {
-		state := StateMap(item.State)
+		state := m.client.State(item.State)
 		itemState, ok := m.hash2stateList[item.Hash]
 		if !ok {
 			// 没有记录状态，可能重启，从最初状态开始计算
 			itemState = &ItemState{
-				Torrent: StateInit,
+				Torrent: client.StateInit,
 				Notify:  NotifyOnInit,
 				Name:    item.Name,
 			}

@@ -25,17 +25,16 @@ type Plugin struct {
 
 type Setting struct {
 	Client struct {
-		QBittorrent struct {
-			Url          string `yaml:"url" json:"url" attr:"地址" comment:"环境变量ANIMEGO_QBT_URL"`
-			Username     string `yaml:"username" json:"username" attr:"用户名" comment:"环境变量ANIMEGO_QBT_USERNAME"`
-			Password     string `yaml:"password" json:"password" attr:"密码" comment:"环境变量ANIMEGO_QBT_PASSWORD"`
-			DownloadPath string `yaml:"download_path" json:"download_path" attr:"下载文件夹" comment:"环境变量ANIMEGO_QBT_DOWNLOAD_PATH"`
-		} `yaml:"qbittorrent" json:"qbittorrent" attr:"qBittorrent客户端"`
+		Client       string `yaml:"client" json:"client" attr:"客户端" comment:"环境变量ANIMEGO_CLIENT. 可选[QBittorrent, Transmission]，不区分大小写"`
+		Url          string `yaml:"url" json:"url" attr:"地址" comment:"环境变量ANIMEGO_CLIENT_URL"`
+		Username     string `yaml:"username" json:"username" attr:"用户名" comment:"环境变量ANIMEGO_CLIENT_USERNAME"`
+		Password     string `yaml:"password" json:"password" attr:"密码" comment:"环境变量ANIMEGO_CLIENT_PASSWORD"`
+		DownloadPath string `yaml:"download_path" json:"download_path" attr:"下载文件夹" comment:"环境变量ANIMEGO_CLIENT_DOWNLOAD_PATH"`
 	} `yaml:"client" json:"client" attr:"下载客户端设置"`
 	DownloadPath string `yaml:"download_path" json:"download_path" attr:"下载文件夹" comment:"环境变量ANIMEGO_DOWNLOAD_PATH. 下载器的下载文件夹"`
 	SavePath     string `yaml:"save_path" json:"save_path" attr:"保存文件夹" comment:"环境变量ANIMEGO_SAVE_PATH. 下载完成后，重命名并移动到的文件夹"`
 	DataPath     string `yaml:"data_path" json:"data_path" attr:"数据文件夹" comment:"环境变量ANIMEGO_DATA_PATH. 用于保存数据库、插件等数据"`
-	Category     string `yaml:"category" json:"category" attr:"分类名" comment:"环境变量ANIMEGO_CATEGORY. 仅qBittorrent有效"`
+	Category     string `yaml:"category" json:"category" attr:"分类名" comment:"环境变量ANIMEGO_CATEGORY"`
 	Tag          string `yaml:"tag" json:"tag" attr:"标签表达式" comment:"环境变量ANIMEGO_TAG" comment_key:"tag_help"`
 	WebApi       struct {
 		AccessKey string `yaml:"access_key" json:"access_key" attr:"请求秘钥" comment:"环境变量ANIMEGO_WEB_ACCESS_KEY. 为空则不需要验证"`
@@ -75,7 +74,6 @@ type Advanced struct {
 
 	Download struct {
 		AllowDuplicateDownload bool   `yaml:"allow_duplicate_download" json:"allow_duplicate_download" attr:"允许重复下载"`
-		SeedingTimeMinute      int    `yaml:"seeding_time_minute" json:"seeding_time_minute" attr:"做种时间"`
 		Rename                 string `yaml:"rename" json:"rename" attr:"重命名方式" comment_key:"rename_help"`
 	} `yaml:"download" json:"download" attr:"下载设置"`
 
@@ -90,6 +88,7 @@ type Advanced struct {
 	} `yaml:"default" json:"default" attr:"解析季度默认值" comment:"使用tmdb解析季度失败时，同类型默认值按优先级执行。数值越大，优先级越高"`
 
 	Client struct {
+		SeedingTimeMinute    int `yaml:"seeding_time_minute" json:"seeding_time_minute" attr:"做种时间" comment_key:"seeding_key"`
 		ConnectTimeoutSecond int `yaml:"connect_timeout_second" json:"connect_timeout_second" attr:"连接超时时间"`
 		RetryConnectNum      int `yaml:"retry_connect_num" json:"retry_connect_num" attr:"连接失败重试次数"`
 		CheckTimeSecond      int `yaml:"check_time_second" json:"check_time_second" attr:"检查连接状态间隔时间"`
@@ -107,10 +106,11 @@ type Advanced struct {
 }
 
 type Environment struct {
-	QbtUrl          *string `env:"QBT_URL" val:"Setting.Client.QBittorrent.Url"`
-	QbtUsername     *string `env:"QBT_USERNAME" val:"Setting.Client.QBittorrent.Username"`
-	QbtPassword     *string `env:"QBT_PASSWORD" val:"Setting.Client.QBittorrent.Password"`
-	QbtDownloadPath *string `env:"QBT_DOWNLOAD_PATH" val:"Setting.Client.QBittorrent.DownloadPath"`
+	Client             *string `env:"CLIENT" val:"Setting.Client.Client"`
+	ClientUrl          *string `env:"CLIENT_URL" val:"Setting.Client.Url"`
+	ClientUsername     *string `env:"CLIENT_USERNAME" val:"Setting.Client.Username"`
+	ClientPassword     *string `env:"CLIENT_PASSWORD" val:"Setting.Client.Password"`
+	ClientDownloadPath *string `env:"CLIENT_DOWNLOAD_PATH" val:"Setting.Client.DownloadPath"`
 
 	DownloadPath *string `env:"DOWNLOAD_PATH" val:"Setting.DownloadPath"`
 	SavePath     *string `env:"SAVE_PATH" val:"Setting.SavePath"`

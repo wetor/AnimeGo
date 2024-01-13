@@ -1,6 +1,9 @@
 package api
 
-import "github.com/wetor/AnimeGo/internal/models"
+import (
+	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/pkg/client"
+)
 
 type Renamer interface {
 	Init()
@@ -8,7 +11,7 @@ type Renamer interface {
 	HasRenameTask(keys []string) bool
 	EnableTask(keys []string) error
 	DeleteTask(keys []string)
-	SetDownloadState(keys []string, state models.TorrentState) error
+	SetDownloadState(keys []string, state client.TorrentState) error
 	GetEpTaskState(key string) (int, error)
 	GetRenameTaskState(keys []string) (int, error)
 }

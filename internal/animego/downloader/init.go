@@ -7,7 +7,6 @@ var (
 	Category               string
 	Tag                    string
 	AllowDuplicateDownload bool
-	SeedingTimeMinute      int
 	WG                     *sync.WaitGroup
 	ReInitWG               sync.WaitGroup
 )
@@ -17,7 +16,6 @@ type Options struct {
 	Category               string
 	Tag                    string
 	AllowDuplicateDownload bool
-	SeedingTimeMinute      int
 	WG                     *sync.WaitGroup
 }
 
@@ -26,7 +24,6 @@ func Init(opts *Options) {
 	Category = opts.Category
 	Tag = opts.Tag
 	AllowDuplicateDownload = opts.AllowDuplicateDownload
-	SeedingTimeMinute = opts.SeedingTimeMinute
 	WG = opts.WG
 }
 
@@ -36,5 +33,4 @@ func ReInit(opts *Options) {
 	Category = opts.Category
 	Tag = opts.Tag
 	AllowDuplicateDownload = opts.AllowDuplicateDownload
-	SeedingTimeMinute = opts.SeedingTimeMinute
 }
