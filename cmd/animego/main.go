@@ -6,42 +6,40 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"strings"
 	"sync"
 	"time"
+
+	"github.com/wetor/AnimeGo/pkg/cache"
+	"github.com/wetor/AnimeGo/pkg/log"
+	"github.com/wetor/AnimeGo/pkg/utils"
+	"github.com/wetor/AnimeGo/pkg/xpath"
+
+	"github.com/wetor/AnimeGo/internal/web"
+	webapi "github.com/wetor/AnimeGo/internal/web/api"
+	_ "github.com/wetor/AnimeGo/internal/web/docs"
+	"github.com/wetor/AnimeGo/internal/web/websocket"
 
 	"github.com/wetor/AnimeGo/assets"
 	"github.com/wetor/AnimeGo/cmd/common"
 	"github.com/wetor/AnimeGo/configs"
-	"github.com/wetor/AnimeGo/internal/animego/anidata"
-	anidataBangumi "github.com/wetor/AnimeGo/internal/animego/anidata/bangumi"
-	anidataMikan "github.com/wetor/AnimeGo/internal/animego/anidata/mikan"
-	anidataThemoviedb "github.com/wetor/AnimeGo/internal/animego/anidata/themoviedb"
-	"github.com/wetor/AnimeGo/internal/animego/anisource"
+	"github.com/wetor/AnimeGo/internal/animego/anisource/bangumi"
+	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
+	"github.com/wetor/AnimeGo/internal/animego/anisource/themoviedb"
 	"github.com/wetor/AnimeGo/internal/animego/database"
 	"github.com/wetor/AnimeGo/internal/animego/downloader"
-	feedPlugin "github.com/wetor/AnimeGo/internal/animego/feed"
+	"github.com/wetor/AnimeGo/internal/animego/feed"
 	"github.com/wetor/AnimeGo/internal/animego/filter"
 	"github.com/wetor/AnimeGo/internal/animego/parser"
 	"github.com/wetor/AnimeGo/internal/animego/renamer"
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/logger"
-	"github.com/wetor/AnimeGo/internal/pkg/client"
-	"github.com/wetor/AnimeGo/internal/pkg/client/qbittorrent"
-	"github.com/wetor/AnimeGo/internal/pkg/client/transmission"
+	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/pkg/request"
 	"github.com/wetor/AnimeGo/internal/pkg/torrent"
 	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/internal/schedule"
-	"github.com/wetor/AnimeGo/internal/web"
-	webapi "github.com/wetor/AnimeGo/internal/web/api"
-	_ "github.com/wetor/AnimeGo/internal/web/docs"
-	"github.com/wetor/AnimeGo/internal/web/websocket"
-	"github.com/wetor/AnimeGo/pkg/cache"
-	pkgLog "github.com/wetor/AnimeGo/pkg/log"
-	"github.com/wetor/AnimeGo/pkg/utils"
-	"github.com/wetor/AnimeGo/pkg/xpath"
+	"github.com/wetor/AnimeGo/internal/wire"
 )
 
 const (
@@ -54,9 +52,6 @@ var (
 	debug        bool
 	webapiEnable bool
 	backupConfig bool
-
-	WG                sync.WaitGroup
-	BangumiCacheMutex sync.Mutex
 )
 
 func main() {
@@ -89,7 +84,7 @@ func main() {
 }
 
 func doExit() {
-	pkgLog.Infof("正在退出...")
+	log.Infof("正在退出...")
 	cancel()
 	go func() {
 		time.Sleep(5 * time.Second)
@@ -99,6 +94,9 @@ func doExit() {
 
 func Main() {
 	var err error
+	var wg sync.WaitGroup
+	var bangumiCacheMutex sync.Mutex
+
 	configFile = xpath.Abs(configFile)
 	// 初始化默认配置、升级配置
 	if utils.IsExist(configFile) {
@@ -129,7 +127,7 @@ func Main() {
 		File:    constant.LogFile,
 		Debug:   debug,
 		Context: ctx,
-		WG:      &WG,
+		WG:      &wg,
 		Out:     out,
 	})
 
@@ -147,12 +145,6 @@ func Main() {
 		TempPath: constant.TempPath,
 	})
 	// ===============================================================================================================
-	// 初始化插件 gpython
-	plugin.Init(&plugin.Options{
-		Path:  constant.PluginPath,
-		Debug: debug,
-		Feed:  feedPlugin.NewRss(),
-	})
 	// 载入AnimeGo数据库（缓存）
 	bolt := cache.NewBolt()
 	bolt.Open(constant.CacheFile)
@@ -161,58 +153,59 @@ func Main() {
 	bangumiCache := cache.NewBolt()
 	bangumiCache.Open(constant.BangumiCacheFile)
 
+	bgmOpts := &bangumi.Options{
+		Cache:            bolt,
+		CacheTime:        int64(config.Advanced.Cache.BangumiCacheHour * 60 * 60),
+		BangumiCache:     bangumiCache,
+		BangumiCacheLock: &bangumiCacheMutex,
+		Host:             config.Advanced.AniData.Bangumi.Redirect,
+	}
+	mikanOpts := &mikan.Options{
+		Cache:     bolt,
+		CacheTime: int64(config.Advanced.Cache.MikanCacheHour * 60 * 60),
+		Cookie:    config.Advanced.AniData.Mikan.Cookie,
+		Host:      config.Advanced.AniData.Mikan.Redirect,
+	}
+	tmdbOpts := &themoviedb.Options{
+		Cache:     bolt,
+		CacheTime: int64(config.Advanced.Cache.ThemoviedbCacheHour * 60 * 60),
+		Key:       config.Setting.Key.Themoviedb,
+		Host:      config.Advanced.AniData.Themoviedb.Redirect,
+	}
+	bgmSource := wire.GetBangumi(bgmOpts, tmdbOpts)
+	mikanSource := wire.GetMikan(mikanOpts, bgmOpts, tmdbOpts)
+	// ===============================================================================================================
+	// 初始化插件 gpython
+	plugin.Init(&plugin.Options{
+		Path:  constant.PluginPath,
+		Debug: debug,
+		Feed:  feed.NewRss(),
+		Mikan: wire.GetMikanData(mikanOpts),
+	})
+
 	// ===============================================================================================================
 	// 初始化并连接下载器
-	client.Init(&client.Options{
+	clientOpts := &models.ClientOptions{
+		WG:  &wg,
+		Ctx: ctx,
+
+		Url:      config.Setting.Client.Url,
+		Username: config.Setting.Client.Username,
+		Password: config.Setting.Client.Password,
+
 		DownloadPath:         config.Setting.Client.DownloadPath,
 		SeedingTimeMinute:    config.Advanced.Client.SeedingTimeMinute,
 		ConnectTimeoutSecond: config.Advanced.Client.ConnectTimeoutSecond,
 		CheckTimeSecond:      config.Advanced.Client.CheckTimeSecond,
 		RetryConnectNum:      config.Advanced.Client.RetryConnectNum,
-		WG:                   &WG,
-		Ctx:                  ctx,
-	})
-	// TODO: 客户端初始化方式
-	var clientSrv api.Client
-	switch strings.ToLower(config.Setting.Client.Client) {
-	case "qbittorrent":
-		clientSrv = qbittorrent.NewQBittorrent(&client.AuthOptions{
-			Url:      config.Setting.Client.Url,
-			Username: config.Setting.Client.Username,
-			Password: config.Setting.Client.Password,
-		})
-	case "transmission":
-		clientSrv = transmission.NewTransmission(&client.AuthOptions{
-			Url:      config.Setting.Client.Url,
-			Username: config.Setting.Client.Username,
-			Password: config.Setting.Client.Password,
-		})
 	}
+	clientSrv := wire.GetClient(config.Setting.Client.Client, clientOpts)
 	clientSrv.Start()
-
-	// ===============================================================================================================
-	// 初始化anisource配置
-	anisource.Init(&anisource.Options{
-		AniDataOptions: &anidata.Options{
-			Cache: bolt,
-			CacheTime: map[string]int64{
-				anidataMikan.Bucket:      int64(config.Advanced.Cache.MikanCacheHour * 60 * 60),
-				anidataBangumi.Bucket:    int64(config.Advanced.Cache.BangumiCacheHour * 60 * 60),
-				anidataThemoviedb.Bucket: int64(config.Advanced.Cache.ThemoviedbCacheHour * 60 * 60),
-			},
-			BangumiCache:       bangumiCache,
-			BangumiCacheLock:   &BangumiCacheMutex,
-			RedirectMikan:      config.Advanced.AniData.Mikan.Redirect,
-			RedirectBangumi:    config.Advanced.AniData.Bangumi.Redirect,
-			RedirectThemoviedb: config.Advanced.AniData.Themoviedb.Redirect,
-			MikanCookie:        config.Advanced.AniData.Mikan.Cookie,
-		},
-	})
 
 	// ===============================================================================================================
 	// 初始化renamer配置
 	renamer.Init(&renamer.Options{
-		WG:            &WG,
+		WG:            &wg,
 		RefreshSecond: config.RefreshSecond,
 	})
 	// 第一个启用的rename插件
@@ -253,7 +246,7 @@ func Main() {
 		Category:               config.Category,
 		Tag:                    config.Tag,
 		AllowDuplicateDownload: config.Download.AllowDuplicateDownload,
-		WG:                     &WG,
+		WG:                     &wg,
 	})
 	// 初始化downloader
 	downloaderSrv := downloader.NewManager(clientSrv, databaseSrv, databaseSrv)
@@ -279,8 +272,6 @@ func Main() {
 		}
 	}
 	// 初始化parser
-	bgmSource := anisource.NewBangumiSource(config.Setting.Key.Themoviedb)
-	mikanSource := anisource.NewMikanSource(bgmSource)
 	parserSrv := parser.NewManager(parse, mikanSource, bgmSource)
 
 	// ===============================================================================================================
@@ -296,7 +287,7 @@ func Main() {
 	// ===============================================================================================================
 	// 初始化定时任务
 	scheduleSrv := schedule.NewSchedule(&schedule.Options{
-		WG: &WG,
+		WG: &wg,
 	})
 	// 添加定时任务
 	err = scheduleSrv.Add(&schedule.AddTaskOptions{
@@ -304,7 +295,7 @@ func Main() {
 		StartRun: true,
 		Task: schedule.NewBangumiTask(&schedule.BangumiOptions{
 			Cache:      bangumiCache,
-			CacheMutex: &BangumiCacheMutex,
+			CacheMutex: &bangumiCacheMutex,
 		}),
 	})
 	if err != nil {
@@ -325,7 +316,7 @@ func Main() {
 	if err != nil {
 		panic(err)
 	}
-	err = feedPlugin.AddFeedTasks(scheduleSrv, configs.ConvertPluginInfo(config.Plugin.Feed), filterSrv, ctx)
+	err = feed.AddFeedTasks(scheduleSrv, configs.ConvertPluginInfo(config.Plugin.Feed), filterSrv, ctx)
 	if err != nil {
 		panic(err)
 	}
@@ -342,17 +333,17 @@ func Main() {
 				Cache:                bolt,
 				Config:               config,
 				BangumiCache:         bangumiCache,
-				BangumiCacheLock:     &BangumiCacheMutex,
+				BangumiCacheLock:     &bangumiCacheMutex,
 				FilterManager:        filterSrv,
 				DatabaseCacheDeleter: databaseSrv,
 			},
 			WebSocketOptions: &websocket.Options{
-				WG:     &WG,
+				WG:     &wg,
 				Notify: notify,
 			},
 			Host:  config.WebApi.Host,
 			Port:  config.WebApi.Port,
-			WG:    &WG,
+			WG:    &wg,
 			Debug: debug,
 		})
 		// 启动Web API
@@ -360,5 +351,5 @@ func Main() {
 	}
 
 	// 等待程序运行结束
-	WG.Wait()
+	wg.Wait()
 }

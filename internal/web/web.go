@@ -16,6 +16,11 @@ func Run(ctx context.Context) {
 	WG.Add(1)
 	go func() {
 		defer WG.Done()
+		if Debug {
+			gin.SetMode(gin.DebugMode)
+		} else {
+			gin.SetMode(gin.ReleaseMode)
+		}
 		r := gin.New()
 		r.Use(Cors())                     // 跨域中间件
 		r.Use(GinLogger(log.GetLogger())) // 日志中间件
@@ -29,10 +34,7 @@ func Run(ctx context.Context) {
 			}
 		})) // 错误处理中间件
 		if Debug {
-			gin.SetMode(gin.DebugMode)
 			InitSwagger(r)
-		} else {
-			gin.SetMode(gin.ReleaseMode)
 		}
 		InitRouter(r)
 		InitStatic(r)

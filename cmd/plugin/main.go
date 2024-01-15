@@ -8,11 +8,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/wetor/AnimeGo/cmd/common"
 	feedPlugin "github.com/wetor/AnimeGo/internal/animego/feed"
 	filterPlugin "github.com/wetor/AnimeGo/internal/animego/filter"
 	renamerPlugin "github.com/wetor/AnimeGo/internal/animego/renamer"
-
-	"github.com/wetor/AnimeGo/cmd/common"
 	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin"
@@ -98,7 +97,7 @@ func pluginRename(anime *models.AnimeEntity, info *models.Plugin) []*models.Rena
 }
 
 func pluginSchedule(file string, s *schedule.Schedule, info *models.Plugin) {
-	t, _ := schedule.NewScheduleTask(&schedule.ScheduleOptions{
+	t, _ := schedule.NewScheduleTask(&schedule.PluginOptions{
 		Plugin: info,
 	})
 	s.Add(&schedule.AddTaskOptions{

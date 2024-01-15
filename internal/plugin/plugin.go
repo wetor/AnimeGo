@@ -20,13 +20,15 @@ type Options struct {
 	Path  string
 	Debug bool
 
-	Feed api.Feed
+	Feed  api.Feed
+	Mikan api.MikanInfo
 }
 
 func Init(opts *Options) {
 	gpython.Init()
 	lib.Init(&lib.Options{
-		Feed: opts.Feed,
+		Feed:  opts.Feed,
+		Mikan: opts.Mikan,
 	})
 	plugin.Init(&plugin.Options{
 		Path:  opts.Path,

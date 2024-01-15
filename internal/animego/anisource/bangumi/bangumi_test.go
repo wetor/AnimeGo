@@ -9,10 +9,10 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/wetor/AnimeGo/internal/animego/anidata"
-	"github.com/wetor/AnimeGo/internal/animego/anidata/bangumi"
+	"github.com/wetor/AnimeGo/internal/animego/anisource/bangumi"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/pkg/request"
+	"github.com/wetor/AnimeGo/internal/wire"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/utils"
@@ -20,6 +20,10 @@ import (
 )
 
 const testdata = "bangumi"
+
+var (
+	bangumiInst *bangumi.Bangumi
+)
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
@@ -40,12 +44,11 @@ func TestMain(m *testing.M) {
 
 	bangumiCache := cache.NewBolt(true)
 	bangumiCache.Open(test.GetDataPath("", "bolt_sub.bolt"))
-	anidata.Init(&anidata.Options{
+	bangumiInst = wire.GetBangumiData(&bangumi.Options{
 		Cache:            db,
 		BangumiCache:     bangumiCache,
 		BangumiCacheLock: &mutex,
 	})
-
 	m.Run()
 
 	db.Close()
@@ -97,10 +100,9 @@ func TestBangumi_Get_GetCache(t *testing.T) {
 		},
 	}
 
-	b := &bangumi.Bangumi{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotEntity, err := b.GetCache(tt.args.bangumiID, nil)
+			gotEntity, err := bangumiInst.GetCache(tt.args.bangumiID, nil)
 			if tt.wantErr != nil {
 				assert.IsType(t, tt.wantErr, errors.Cause(err))
 				assert.EqualError(t, err, tt.wantErrStr)
@@ -113,7 +115,7 @@ func TestBangumi_Get_GetCache(t *testing.T) {
 			continue
 		}
 		t.Run(tt.name, func(t *testing.T) {
-			gotEntity, err := b.Get(tt.args.bangumiID, nil)
+			gotEntity, err := bangumiInst.Get(tt.args.bangumiID, nil)
 			if tt.wantErr != nil {
 				assert.IsType(t, tt.wantErr, errors.Cause(err))
 				assert.EqualError(t, err, tt.wantErrStr)
@@ -166,10 +168,9 @@ func TestBangumi_Search_SearchCache(t *testing.T) {
 		},
 	}
 
-	b := &bangumi.Bangumi{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotEntity, err := b.SearchCache(tt.args.name, nil)
+			gotEntity, err := bangumiInst.SearchCache(tt.args.name, nil)
 			if tt.wantErr != nil {
 				assert.IsType(t, tt.wantErr, errors.Cause(err))
 				assert.EqualError(t, err, tt.wantErrStr)
@@ -182,7 +183,7 @@ func TestBangumi_Search_SearchCache(t *testing.T) {
 			continue
 		}
 		t.Run(tt.name, func(t *testing.T) {
-			gotEntity, err := b.Search(tt.args.name, nil)
+			gotEntity, err := bangumiInst.Search(tt.args.name, nil)
 			if tt.wantErr != nil {
 				assert.IsType(t, tt.wantErr, errors.Cause(err))
 				assert.EqualError(t, err, tt.wantErrStr)

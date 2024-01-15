@@ -2,10 +2,10 @@ package anisource_test
 
 import (
 	"github.com/pkg/errors"
-	"github.com/wetor/AnimeGo/internal/animego/anisource"
 
-	"github.com/wetor/AnimeGo/internal/animego/anidata/bangumi"
-	"github.com/wetor/AnimeGo/internal/animego/anidata/mikan"
+	"github.com/wetor/AnimeGo/internal/animego/anisource"
+	"github.com/wetor/AnimeGo/internal/animego/anisource/bangumi"
+	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 )
@@ -41,6 +41,14 @@ func (a *MikanMock) ParseCache(options any) (any, error) {
 }
 
 type BangumiMock struct{}
+
+func (a *BangumiMock) Search(name string, filters any) (int, error) {
+	return 0, nil
+}
+
+func (a *BangumiMock) SearchCache(name string, filters any) (int, error) {
+	return 0, nil
+}
 
 func (a *BangumiMock) Get(id int, filters any) (any, error) {
 	return nil, errors.New("ErrNotImplemented")
@@ -98,26 +106,7 @@ func (a *ThemoviedbMock) GetCache(id int, filters any) (any, error) {
 	return nil, errors.New("ErrNotImplemented")
 }
 
-func Mikan() api.AniDataParse {
-	return &MikanMock{}
-}
-
-func Bangumi() api.AniDataGet {
-	return &BangumiMock{}
-}
-
-func Themoviedb(key string) api.AniDataSearchGet {
-	return &ThemoviedbMock{}
-}
-
-func Hook() {
-	anisource.MikanInstance = Mikan()
-	anisource.BangumiInstance = Bangumi()
-	anisource.ThemoviedbInstance = Themoviedb("")
-}
-
-func UnHook() {
-	anisource.MikanInstance = nil
-	anisource.BangumiInstance = nil
-	anisource.ThemoviedbInstance = nil
+func MikanSourceMock() api.AniSource {
+	bgmSource := anisource.NewBangumiSourceInterface(&BangumiMock{}, &ThemoviedbMock{})
+	return anisource.NewMikanSourceInterface(&MikanMock{}, bgmSource)
 }

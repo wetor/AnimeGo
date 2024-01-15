@@ -4,11 +4,13 @@ import "github.com/wetor/AnimeGo/internal/api"
 
 var isInit = false
 var (
-	Feed api.Feed
+	Feed  api.Feed
+	Mikan api.MikanInfo
 )
 
 type Options struct {
-	Feed api.Feed
+	Feed  api.Feed
+	Mikan api.MikanInfo
 }
 
 func Init(opts *Options) {
@@ -16,6 +18,7 @@ func Init(opts *Options) {
 		InitLog()
 		InitAnimeGo()
 		isInit = true
-		Feed = opts.Feed
 	}
+	Feed = opts.Feed
+	Mikan = opts.Mikan
 }

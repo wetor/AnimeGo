@@ -7,7 +7,9 @@ import (
 	"sync"
 
 	"github.com/pkg/errors"
-	"github.com/wetor/AnimeGo/internal/pkg/client"
+
+	"github.com/wetor/AnimeGo/internal/constant"
+	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/pkg/utils"
 )
 
@@ -43,7 +45,7 @@ type ClientMockOptions struct {
 }
 
 type ClientMock struct {
-	Name2item map[string]*client.TorrentItem
+	Name2item map[string]*models.TorrentItem
 	Name2hash map[string]string
 	Hash2name map[string]string
 	errorFlag map[string]struct{}
@@ -55,7 +57,7 @@ type ClientMock struct {
 func (m *ClientMock) MockInit(opts ClientMockOptions) {
 	m.Conf = opts
 
-	m.Name2item = make(map[string]*client.TorrentItem)
+	m.Name2item = make(map[string]*models.TorrentItem)
 	m.Name2hash = make(map[string]string)
 	m.Hash2name = make(map[string]string)
 	if m.Conf.UpdateList == nil {
@@ -107,8 +109,8 @@ func (m *ClientMock) MockAddName(name, hash string, src []string) {
 	}
 }
 
-func (m *ClientMock) Config() *client.Config {
-	return &client.Config{
+func (m *ClientMock) Config() *models.Config {
+	return &models.Config{
 		DownloadPath: m.Conf.DownloadPath,
 	}
 }
@@ -117,31 +119,31 @@ func (m *ClientMock) Name() string {
 	return "MockClient"
 }
 
-func (m *ClientMock) State(state string) client.TorrentState {
+func (m *ClientMock) State(state string) constant.TorrentState {
 	switch state {
 	case QbtAllocating, QbtMetaDL, QbtStalledDL,
 		QbtCheckingDL, QbtCheckingResumeData, QbtQueuedDL,
 		QbtForcedUP, QbtQueuedUP:
 		// 若进度为100，则下载完成
-		return client.StateWaiting
+		return constant.StateWaiting
 	case QbtDownloading, QbtForcedDL:
-		return client.StateDownloading
+		return constant.StateDownloading
 	case QbtMoving:
-		return client.StateMoving
+		return constant.StateMoving
 	case QbtUploading, QbtStalledUP:
 		// 已下载完成
-		return client.StateSeeding
+		return constant.StateSeeding
 	case QbtPausedDL:
-		return client.StatePausing
+		return constant.StatePausing
 	case QbtPausedUP, QbtCheckingUP:
 		// 已下载完成
-		return client.StateComplete
+		return constant.StateComplete
 	case QbtError, QbtMissingFiles:
-		return client.StateError
+		return constant.StateError
 	case QbtUnknown:
-		return client.StateUnknown
+		return constant.StateUnknown
 	default:
-		return client.StateUnknown
+		return constant.StateUnknown
 	}
 }
 
@@ -172,7 +174,7 @@ func (m *ClientMock) Start() {
 	}()
 }
 
-func (m *ClientMock) List(opt *client.ListOptions) ([]*client.TorrentItem, error) {
+func (m *ClientMock) List(opt *models.ListOptions) ([]*models.TorrentItem, error) {
 	m.Lock()
 	defer m.Unlock()
 
@@ -180,14 +182,14 @@ func (m *ClientMock) List(opt *client.ListOptions) ([]*client.TorrentItem, error
 		return nil, errors.New(ErrorListFailed)
 	}
 
-	list := make([]*client.TorrentItem, 0, len(m.Name2item))
+	list := make([]*models.TorrentItem, 0, len(m.Name2item))
 	for _, item := range m.Name2item {
 		list = append(list, item)
 	}
 	return list, nil
 }
 
-func (m *ClientMock) Add(opt *client.AddOptions) error {
+func (m *ClientMock) Add(opt *models.AddOptions) error {
 	m.Lock()
 	defer m.Unlock()
 
@@ -195,7 +197,7 @@ func (m *ClientMock) Add(opt *client.AddOptions) error {
 		return errors.New(ErrorAddFailed)
 	}
 
-	m.Name2item[opt.Name] = &client.TorrentItem{
+	m.Name2item[opt.Name] = &models.TorrentItem{
 		ContentPath: opt.Name,
 		Hash:        m.Name2hash[opt.Name],
 		Name:        opt.Name,
@@ -205,7 +207,7 @@ func (m *ClientMock) Add(opt *client.AddOptions) error {
 	return nil
 }
 
-func (m *ClientMock) Delete(opt *client.DeleteOptions) error {
+func (m *ClientMock) Delete(opt *models.DeleteOptions) error {
 	m.Lock()
 	defer m.Unlock()
 

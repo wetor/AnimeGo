@@ -13,18 +13,25 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/wetor/AnimeGo/assets"
-	"github.com/wetor/AnimeGo/internal/animego/anidata"
-	"github.com/wetor/AnimeGo/internal/animego/anisource"
+	"github.com/wetor/AnimeGo/internal/animego/anisource/bangumi"
+	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
+	"github.com/wetor/AnimeGo/internal/animego/anisource/themoviedb"
+	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/pkg/request"
 	"github.com/wetor/AnimeGo/internal/plugin"
+	"github.com/wetor/AnimeGo/internal/wire"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/json"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/utils"
 	"github.com/wetor/AnimeGo/pkg/xpath"
 	"github.com/wetor/AnimeGo/test"
+)
+
+var (
+	mikanSource api.AniSource
 )
 
 func HookGetWriter(uri string, w io.Writer) error {
@@ -77,34 +84,25 @@ func TestMain(m *testing.M) {
 		Debug: true,
 	})
 
-	test.Hook(request.GetWriter, HookGetWriter)
-	test.Hook(request.Get, HookGet)
-	defer test.UnHook()
 	b := cache.NewBolt()
 	b.Open("data/bolt.db")
-	anisource.Init(&anisource.Options{
-		AniDataOptions: &anidata.Options{
-			Cache: b,
-			CacheTime: map[string]int64{
-				"mikan":      int64(7 * 24 * 60 * 60),
-				"bangumi":    int64(3 * 24 * 60 * 60),
-				"themoviedb": int64(14 * 24 * 60 * 60),
-			},
-		},
-	})
 
 	bangumiCache := cache.NewBolt(true)
 	bangumiCache.Open(test.GetDataPath("", "bolt_sub.bolt"))
 	bangumiCache.Add("bangumi_sub")
 	mutex := sync.Mutex{}
-	anidata.Init(&anidata.Options{
+
+	mikanSource = wire.GetMikan(&mikan.Options{
+		Cache:     b,
+		CacheTime: int64(7 * 24 * 60 * 60),
+	}, &bangumi.Options{
 		Cache:            b,
+		CacheTime:        int64(7 * 24 * 60 * 60),
 		BangumiCache:     bangumiCache,
 		BangumiCacheLock: &mutex,
-	})
-
-	request.Init(&request.Options{
-		Proxy: "http://127.0.0.1:7890",
+	}, &themoviedb.Options{
+		Cache:     b,
+		CacheTime: int64(7 * 24 * 60 * 60),
 	})
 	m.Run()
 	b.Close()
@@ -178,10 +176,13 @@ func TestMikan_Parse(t *testing.T) {
 			wantAnime: &models.AnimeEntity{ID: 514, ThemoviedbID: 1919, MikanID: 114, Name: "AnimeParseOverride", NameCN: "AnimeParseOverrideCN", Season: 1, Eps: 20, AirDate: "2022-10-05"},
 		},
 	}
-	m := anisource.NewMikanSource(anisource.NewBangumiSource(""))
+
+	test.Hook(request.GetWriter, HookGetWriter)
+	test.Hook(request.Get, HookGet)
+	defer test.UnHook()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotAnime, err := m.Parse(tt.args.opts)
+			gotAnime, err := mikanSource.Parse(tt.args.opts)
 			assert.NoError(t, err)
 			assert.Equalf(t, tt.wantAnime, gotAnime, "Parse(%v)", tt.args.opts)
 		})
@@ -248,12 +249,14 @@ func TestMikan_Parse_Failed(t *testing.T) {
 			wantAnime: &models.AnimeEntity{ID: 1919, ThemoviedbID: 666, MikanID: 1919, Name: "err_themoviedb_get", NameCN: "err_themoviedb_get", Season: 0, Ep: nil, Eps: 2, AirDate: "1919-05-14"},
 		},
 	}
-	Hook()
-	defer UnHook()
-	m := anisource.NewMikanSource(anisource.NewBangumiSource(""))
+	save := mikanSource
+	mikanSource = MikanSourceMock()
+	defer func() {
+		mikanSource = save
+	}()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotEntity, err := m.Parse(tt.args.opts)
+			gotEntity, err := mikanSource.Parse(tt.args.opts)
 			if tt.wantErr != nil {
 				assert.IsType(t, tt.wantErr, errors.Cause(err))
 				assert.EqualError(t, err, tt.wantErrStr)

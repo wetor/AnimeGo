@@ -13,17 +13,17 @@ import (
 	pkgPlugin "github.com/wetor/AnimeGo/pkg/plugin"
 )
 
-type ScheduleTask struct {
+type PluginTask struct {
 	parser *cron.Parser
 	plugin api.Plugin
 	args   models.Object
 }
 
-type ScheduleOptions struct {
+type PluginOptions struct {
 	*models.Plugin
 }
 
-func NewScheduleTask(opts *ScheduleOptions) (*ScheduleTask, error) {
+func NewScheduleTask(opts *PluginOptions) (*PluginTask, error) {
 	p, err := plugin.LoadPlugin(&plugin.LoadPluginOptions{
 		Plugin:    opts.Plugin,
 		EntryFunc: FuncRun,
@@ -46,14 +46,14 @@ func NewScheduleTask(opts *ScheduleOptions) (*ScheduleTask, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &ScheduleTask{
+	return &PluginTask{
 		parser: &SecondParser,
 		plugin: p,
 		args:   opts.Args,
 	}, nil
 }
 
-func (t *ScheduleTask) Name() string {
+func (t *PluginTask) Name() string {
 	name, err := t.plugin.Get(VarName)
 	if err != nil {
 		log.Warnf("%s", err)
@@ -65,7 +65,7 @@ func (t *ScheduleTask) Name() string {
 	return fmt.Sprintf("%v(%s-Plugin)", name, t.plugin.Type())
 }
 
-func (t *ScheduleTask) Cron() string {
+func (t *PluginTask) Cron() string {
 	cronStr, err := t.plugin.Get(VarCron)
 	if err != nil {
 		log.Warnf("%s", err)
@@ -73,7 +73,7 @@ func (t *ScheduleTask) Cron() string {
 	return cronStr.(string)
 }
 
-func (t *ScheduleTask) SetVars(vars models.Object) {
+func (t *PluginTask) SetVars(vars models.Object) {
 	for k, v := range vars {
 		err := t.plugin.Set(k, v)
 		if err != nil {
@@ -82,7 +82,7 @@ func (t *ScheduleTask) SetVars(vars models.Object) {
 	}
 }
 
-func (t *ScheduleTask) NextTime() time.Time {
+func (t *PluginTask) NextTime() time.Time {
 	next, err := t.parser.Parse(t.Cron())
 	if err != nil {
 		log.DebugErr(err)
@@ -90,7 +90,7 @@ func (t *ScheduleTask) NextTime() time.Time {
 	return next.Next(time.Now())
 }
 
-func (t *ScheduleTask) Run(args models.Object) (err error) {
+func (t *PluginTask) Run(args models.Object) (err error) {
 	for k, v := range t.args {
 		if _, ok := args[k]; !ok {
 			args[k] = v

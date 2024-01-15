@@ -7,9 +7,9 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/wetor/AnimeGo/internal/api"
+	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/internal/pkg/client"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/utils"
 )
@@ -56,8 +56,8 @@ func (m *Manager) addError(err error) {
 	m.errMutex.Unlock()
 }
 
-func (m *Manager) transition(oldTorrentState, newTorrentState client.TorrentState) (client.TorrentState, NotifyState) {
-	if newTorrentState == client.StateError {
+func (m *Manager) transition(oldTorrentState, newTorrentState constant.TorrentState) (constant.TorrentState, NotifyState) {
+	if newTorrentState == constant.StateError {
 		// error
 		return newTorrentState, NotifyOnError
 	}
@@ -65,61 +65,61 @@ func (m *Manager) transition(oldTorrentState, newTorrentState client.TorrentStat
 	state := newTorrentState
 	result := NotifyOnStart
 	switch oldTorrentState {
-	case client.StateInit:
+	case constant.StateInit:
 		// init -> start
 		result = NotifyOnStart
-		state = client.StateAdding
-	case client.StateAdding:
+		state = constant.StateAdding
+	case constant.StateAdding:
 		switch newTorrentState {
-		case client.StateDownloading:
+		case constant.StateDownloading:
 			// start -> download
 			result = NotifyOnDownload
-		case client.StateSeeding:
+		case constant.StateSeeding:
 			// start -> seed
 			// 做种状态下重启后
 			result = NotifyOnSeeding
-		case client.StateComplete:
+		case constant.StateComplete:
 			// start -> complete
 			// 完成状态下重启后，需要先经过seeding
 			result = NotifyOnSeeding
-			state = client.StateSeeding
+			state = constant.StateSeeding
 		}
-	case client.StateDownloading:
+	case constant.StateDownloading:
 		switch newTorrentState {
-		case client.StateDownloading:
+		case constant.StateDownloading:
 			// download -> download
 			// 刷新进度
 			result = NotifyOnDownload
-		case client.StateSeeding:
+		case constant.StateSeeding:
 			// download -> seed
 			result = NotifyOnSeeding
-		case client.StateComplete:
+		case constant.StateComplete:
 			// download -> complete
 			// 跳过了seeding，需要先经过seeding
 			result = NotifyOnSeeding
-			state = client.StateSeeding
+			state = constant.StateSeeding
 		}
-	case client.StateSeeding:
+	case constant.StateSeeding:
 		switch newTorrentState {
-		case client.StateSeeding:
+		case constant.StateSeeding:
 			// seed -> seed
 			result = NotifyOnSeeding
-		case client.StateComplete:
+		case constant.StateComplete:
 			// seed -> complete
 			result = NotifyOnComplete
 		}
-	case client.StateComplete:
+	case constant.StateComplete:
 		// complete
 		result = NotifyOnComplete
-	case client.StateError:
+	case constant.StateError:
 		switch newTorrentState {
-		case client.StateDownloading:
+		case constant.StateDownloading:
 			// error -> download
 			result = NotifyOnDownload
-		case client.StateSeeding:
+		case constant.StateSeeding:
 			// error -> seed
 			result = NotifyOnSeeding
-		case client.StateComplete:
+		case constant.StateComplete:
 			// error -> complete
 			result = NotifyOnComplete
 		}
@@ -181,7 +181,7 @@ func (m *Manager) Download(anime *models.AnimeEntity) error {
 		}
 	}
 	log.Infof("添加下载「%s」", name)
-	err := m.add(anime.Hash(), &client.AddOptions{
+	err := m.add(anime.Hash(), &models.AddOptions{
 		Url:      anime.Torrent.Url,
 		File:     anime.Torrent.File,
 		SavePath: m.client.Config().DownloadPath,
@@ -200,7 +200,7 @@ func (m *Manager) Download(anime *models.AnimeEntity) error {
 	return nil
 }
 
-func (m *Manager) add(hash string, opt *client.AddOptions) error {
+func (m *Manager) add(hash string, opt *models.AddOptions) error {
 	ReInitWG.Add(1)
 	defer ReInitWG.Done()
 	m.Lock()
@@ -221,7 +221,7 @@ func (m *Manager) add(hash string, opt *client.AddOptions) error {
 	}
 
 	m.hash2stateList[hash] = &ItemState{
-		Torrent: client.StateInit,
+		Torrent: constant.StateInit,
 		Notify:  NotifyOnInit,
 		Name:    name,
 	}
@@ -233,7 +233,7 @@ func (m *Manager) delete(hash string, deleteItem bool) error {
 	if deleteItem {
 		log.Debugf("删除下载项：%v", hash)
 		// 删除下载项
-		err := m.client.Delete(&client.DeleteOptions{
+		err := m.client.Delete(&models.DeleteOptions{
 			Hash:       []string{hash},
 			DeleteFile: true,
 		})
@@ -263,7 +263,7 @@ func (m *Manager) updateList() {
 	m.Lock()
 	defer m.Unlock()
 
-	items, err := m.client.List(&client.ListOptions{
+	items, err := m.client.List(&models.ListOptions{
 		Category: Category,
 	})
 	if err != nil {
@@ -277,7 +277,7 @@ func (m *Manager) updateList() {
 		if !ok {
 			// 没有记录状态，可能重启，从最初状态开始计算
 			itemState = &ItemState{
-				Torrent: client.StateInit,
+				Torrent: constant.StateInit,
 				Notify:  NotifyOnInit,
 				Name:    item.Name,
 			}

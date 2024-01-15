@@ -5,8 +5,6 @@ import (
 	"github.com/pkg/errors"
 	"gopkg.in/yaml.v3"
 
-	"github.com/wetor/AnimeGo/internal/animego/anidata/mikan"
-	"github.com/wetor/AnimeGo/internal/animego/anisource"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/pkg/json"
 	"github.com/wetor/AnimeGo/pkg/plugin/python"
@@ -108,9 +106,7 @@ func dumps(self py.Object, args py.Tuple) (py.Object, error) {
 }
 
 func parseMikan(self py.Object, arg py.Object) (py.Object, error) {
-	var info *mikan.MikanInfo
-	var err error
-	info, err = anisource.MikanData().(*mikan.Mikan).CacheParseMikanInfo(string(arg.(py.String)))
+	info, err := Mikan.CacheParseMikanInfo(string(arg.(py.String)))
 	if err != nil {
 		return nil, errors.Wrap(err, "解析mikan失败")
 	}

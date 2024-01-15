@@ -1,8 +1,13 @@
 package themoviedb
 
+import mem "github.com/wetor/AnimeGo/pkg/memorizer"
+
 type Options struct {
-	name    string
-	airDate string
+	Cache     mem.Memorizer
+	CacheTime int64
+
+	Host string
+	Key  string
 }
 
 type Entity struct {

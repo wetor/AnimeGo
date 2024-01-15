@@ -1,20 +1,35 @@
 package anisource
 
 import (
-	"github.com/wetor/AnimeGo/internal/animego/anidata/bangumi"
-	"github.com/wetor/AnimeGo/internal/animego/anidata/themoviedb"
+	"github.com/google/wire"
+
+	"github.com/wetor/AnimeGo/internal/animego/anisource/bangumi"
+	"github.com/wetor/AnimeGo/internal/animego/anisource/themoviedb"
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/pkg/log"
 )
 
+var BangumiSet = wire.NewSet(
+	NewBangumiSource,
+)
+
 type Bangumi struct {
-	ThemoviedbKey string
+	aniData    api.AniDataSearchGet
+	themoviedb api.AniDataSearchGet
 }
 
-func NewBangumiSource(tmdbKey string) api.AniSource {
-	return Bangumi{
-		ThemoviedbKey: tmdbKey,
+func NewBangumiSourceInterface(aniData api.AniDataSearchGet, themoviedb api.AniDataSearchGet) *Bangumi {
+	return &Bangumi{
+		aniData:    aniData,
+		themoviedb: themoviedb,
+	}
+}
+
+func NewBangumiSource(aniData *bangumi.Bangumi, themoviedb *themoviedb.Themoviedb) *Bangumi {
+	return &Bangumi{
+		aniData:    aniData,
+		themoviedb: themoviedb,
 	}
 }
 
@@ -36,7 +51,7 @@ func (m Bangumi) Parse(opts *models.AnimeParseOptions) (anime *models.AnimeEntit
 	// ------------------- 获取bangumi信息 -------------------
 	if opts.AnimeParseOverride == nil || !opts.OverrideBangumi() {
 		log.Debugf("[AniSource] 解析Bangumi，%d", bgmID)
-		entity, err := BangumiData().GetCache(bgmID, nil)
+		entity, err := m.aniData.GetCache(bgmID, nil)
 		if err != nil {
 			return nil, err
 		}
@@ -51,13 +66,12 @@ func (m Bangumi) Parse(opts *models.AnimeParseOptions) (anime *models.AnimeEntit
 	// ------------------- 获取tmdb信息(季度信息) -------------------
 	if opts.AnimeParseOverride == nil || !opts.OverrideThemoviedb() {
 		log.Debugf("[AniSource] 解析Themoviedb，%s, %s", bgmEntity.Name, bgmEntity.AirDate)
-		t := ThemoviedbData(m.ThemoviedbKey)
-		id, err := t.SearchCache(bgmEntity.Name, nil)
+		id, err := m.themoviedb.SearchCache(bgmEntity.Name, nil)
 		if err != nil {
 			return nil, err
 		}
 		tmdbID = id
-		entity, err := t.GetCache(id, bgmEntity.AirDate)
+		entity, err := m.themoviedb.GetCache(id, bgmEntity.AirDate)
 		if err != nil {
 			log.Warnf("[AniSource] 解析Themoviedb获取番剧季度信息失败")
 		} else {

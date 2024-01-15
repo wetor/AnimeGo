@@ -2,10 +2,8 @@ package bangumi
 
 import (
 	"fmt"
-
+	"github.com/google/wire"
 	"github.com/pkg/errors"
-
-	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/pkg/request"
@@ -22,24 +20,36 @@ const (
 )
 
 var (
-	Host = func() string {
-		if len(anidata.RedirectBangumi) > 0 {
-			return anidata.RedirectBangumi
+	Host = func(host string) string {
+		if len(host) > 0 {
+			return host
 		}
 		return "https://api.bgm.tv"
 	}
 	Bucket  = "bangumi"
-	infoApi = func(id int) string {
-		return fmt.Sprintf("%s/v0/subjects/%d", Host(), id)
+	infoApi = func(host string, id int) string {
+		return fmt.Sprintf("%s/v0/subjects/%d", Host(host), id)
 	}
-	searchApi = func(limit, offset int) string {
-		return fmt.Sprintf("%s/v0/search/subjects?limit=%d&offset=%d", Host(), limit, offset)
+	searchApi = func(host string, limit, offset int) string {
+		return fmt.Sprintf("%s/v0/search/subjects?limit=%d&offset=%d", Host(host), limit, offset)
 	}
+)
+
+var Set = wire.NewSet(
+	NewBangumi,
 )
 
 type Bangumi struct {
 	cacheInit           bool
 	cacheParseAnimeInfo mem.Func
+
+	*Options
+}
+
+func NewBangumi(opts *Options) *Bangumi {
+	return &Bangumi{
+		Options: opts,
+	}
 }
 
 func (a *Bangumi) Name() string {
@@ -48,7 +58,7 @@ func (a *Bangumi) Name() string {
 
 func (a *Bangumi) RegisterCache() {
 	a.cacheInit = true
-	a.cacheParseAnimeInfo = mem.Memorized(Bucket, anidata.Cache, func(params *mem.Params, results *mem.Results) error {
+	a.cacheParseAnimeInfo = mem.Memorized(Bucket, a.Cache, func(params *mem.Params, results *mem.Results) error {
 		entity, err := a.parseAnimeInfo(params.Get("bangumiID").(int))
 		if err != nil {
 			return err
@@ -70,7 +80,7 @@ func (a *Bangumi) GetCache(bangumiID int, filters any) (entity any, err error) {
 
 	results := mem.NewResults("entity", &Entity{})
 	err = a.cacheParseAnimeInfo(mem.NewParams("bangumiID", bangumiID).
-		TTL(anidata.CacheTime[Bucket]), results)
+		TTL(a.CacheTime), results)
 	if err != nil {
 		return nil, errors.Wrap(err, "获取Bangumi信息失败")
 	}
@@ -107,7 +117,7 @@ func (a *Bangumi) SearchCache(name string, filters any) (int, error) {
 }
 
 func (a *Bangumi) searchAnimeInfo(name string) (entity *Entity, err error) {
-	uri := searchApi(10, 0)
+	uri := searchApi(a.Host, 10, 0)
 	resp := res.SearchPaged{}
 	result, err := utils.RemoveNameSuffix(name, func(innerName string) (any, error) {
 		req := res.Req{
@@ -180,7 +190,7 @@ func (a *Bangumi) searchAnimeInfo(name string) (entity *Entity, err error) {
 //	@param bangumiID int
 //	@return entity *Entity
 func (a *Bangumi) parseAnimeInfo(bangumiID int) (entity *Entity, err error) {
-	uri := infoApi(bangumiID)
+	uri := infoApi(a.Host, bangumiID)
 	resp := res.SubjectV0{}
 	err = request.Get(uri, &resp)
 	if err != nil {
@@ -206,9 +216,9 @@ func (a *Bangumi) parseAnimeInfo(bangumiID int) (entity *Entity, err error) {
 
 func (a *Bangumi) loadAnimeInfo(bangumiID int) (entity *Entity, err error) {
 	entity = &Entity{}
-	anidata.BangumiCacheLock.Lock()
-	defer anidata.BangumiCacheLock.Unlock()
-	err = anidata.BangumiCache.Get(SubjectBucket, bangumiID, entity)
+	a.BangumiCacheLock.Lock()
+	defer a.BangumiCacheLock.Unlock()
+	err = a.BangumiCache.Get(SubjectBucket, bangumiID, entity)
 	if err != nil {
 		// log.DebugErr(err)
 		return nil, err

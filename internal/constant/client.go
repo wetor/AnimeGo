@@ -1,4 +1,4 @@
-package client
+package constant
 
 type TorrentState string
 

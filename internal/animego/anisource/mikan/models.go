@@ -1,5 +1,17 @@
 package mikan
 
+import (
+	mem "github.com/wetor/AnimeGo/pkg/memorizer"
+)
+
+type Options struct {
+	Cache     mem.Memorizer
+	CacheTime int64
+
+	Host   string
+	Cookie string
+}
+
 type Entity struct {
 	MikanID   int `json:"mikan_id"`
 	BangumiID int `json:"bangumi_id"`
