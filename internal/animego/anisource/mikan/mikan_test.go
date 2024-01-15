@@ -2,14 +2,14 @@ package mikan_test
 
 import (
 	"fmt"
+	"github.com/wetor/AnimeGo/internal/wire"
 	"os"
 	"testing"
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/wetor/AnimeGo/internal/animego/anidata"
-	"github.com/wetor/AnimeGo/internal/animego/anidata/mikan"
+	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/log"
@@ -17,6 +17,10 @@ import (
 )
 
 const testdata = "mikan"
+
+var (
+	mikanInst *mikan.Mikan
+)
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
@@ -29,8 +33,10 @@ func TestMain(m *testing.M) {
 
 	db := cache.NewBolt()
 	db.Open("data/bolt.db")
-	anidata.Init(&anidata.Options{Cache: db})
 
+	mikanInst = wire.GetMikanData(&mikan.Options{
+		Cache: db,
+	})
 	m.Run()
 
 	db.Close()
@@ -106,10 +112,9 @@ func TestMikan_Parse_ParseCache(t *testing.T) {
 			wantErrStr: "解析Mikan BangumiID失败: 解析 BangumiID 失败，解析网页错误",
 		},
 	}
-	m := &mikan.Mikan{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gotEntity, err := m.ParseCache(tt.args.url)
+			gotEntity, err := mikanInst.ParseCache(tt.args.url)
 			if tt.wantErr != nil {
 				assert.IsType(t, tt.wantErr, errors.Cause(err))
 				assert.EqualError(t, err, tt.wantErrStr)
@@ -120,7 +125,7 @@ func TestMikan_Parse_ParseCache(t *testing.T) {
 		})
 
 		t.Run(tt.name, func(t *testing.T) {
-			gotEntity, err := m.Parse(tt.args.url)
+			gotEntity, err := mikanInst.Parse(tt.args.url)
 			if tt.wantErr != nil {
 				assert.IsType(t, tt.wantErr, errors.Cause(err))
 				assert.EqualError(t, err, tt.wantErrStr)

@@ -1,9 +1,8 @@
 package themoviedb
 
 import (
+	"github.com/google/wire"
 	"github.com/pkg/errors"
-
-	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/pkg/request"
@@ -13,9 +12,9 @@ import (
 )
 
 var (
-	Host = func() string {
-		if len(anidata.RedirectThemoviedb) > 0 {
-			return anidata.RedirectThemoviedb
+	Host = func(host string) string {
+		if len(host) > 0 {
+			return host
 		}
 		return "https://api.themoviedb.org"
 	}
@@ -25,10 +24,21 @@ var (
 )
 
 type Themoviedb struct {
-	Key                    string
 	cacheInit              bool
 	cacheParseThemoviedbID mem.Func
 	cacheParseAnimeSeason  mem.Func
+
+	*Options
+}
+
+var Set = wire.NewSet(
+	NewThemoviedb,
+)
+
+func NewThemoviedb(opts *Options) *Themoviedb {
+	return &Themoviedb{
+		Options: opts,
+	}
 }
 
 func (a *Themoviedb) Name() string {
@@ -37,23 +47,25 @@ func (a *Themoviedb) Name() string {
 
 func (a *Themoviedb) RegisterCache() {
 	a.cacheInit = true
-	a.cacheParseThemoviedbID = mem.Memorized(Bucket, anidata.Cache, func(params *mem.Params, results *mem.Results) error {
-		entity, err := a.parseThemoviedbID(params.Get("name").(string))
-		if err != nil {
-			return err
-		}
-		results.Set("entity", entity)
-		return nil
-	})
+	a.cacheParseThemoviedbID = mem.Memorized(Bucket, a.Cache.(mem.Memorizer),
+		func(params *mem.Params, results *mem.Results) error {
+			entity, err := a.parseThemoviedbID(params.Get("name").(string))
+			if err != nil {
+				return err
+			}
+			results.Set("entity", entity)
+			return nil
+		})
 
-	a.cacheParseAnimeSeason = mem.Memorized(Bucket, anidata.Cache, func(params *mem.Params, results *mem.Results) error {
-		seasonInfo, err := a.parseAnimeSeason(params.Get("tmdbID").(int), params.Get("airDate").(string))
-		if err != nil {
-			return err
-		}
-		results.Set("seasonInfo", seasonInfo)
-		return nil
-	})
+	a.cacheParseAnimeSeason = mem.Memorized(Bucket, a.Cache.(mem.Memorizer),
+		func(params *mem.Params, results *mem.Results) error {
+			seasonInfo, err := a.parseAnimeSeason(params.Get("tmdbID").(int), params.Get("airDate").(string))
+			if err != nil {
+				return err
+			}
+			results.Set("seasonInfo", seasonInfo)
+			return nil
+		})
 }
 
 func (a *Themoviedb) Search(name string, filters any) (int, error) {
@@ -70,7 +82,7 @@ func (a *Themoviedb) SearchCache(name string, filters any) (int, error) {
 	}
 	results := mem.NewResults("entity", &Entity{})
 	err := a.cacheParseThemoviedbID(mem.NewParams("name", name).
-		TTL(anidata.CacheTime[Bucket]), results)
+		TTL(a.CacheTime), results)
 	if err != nil {
 		return 0, errors.Wrap(err, "查询ThemoviedbID失败")
 	}
@@ -94,7 +106,7 @@ func (a *Themoviedb) GetCache(id int, filters any) (any, error) {
 	airDate := filters.(string)
 	results := mem.NewResults("seasonInfo", &SeasonInfo{})
 	err := a.cacheParseAnimeSeason(mem.NewParams("tmdbID", id, "airDate", airDate).
-		TTL(anidata.CacheTime[Bucket]), results)
+		TTL(a.CacheTime), results)
 	if err != nil {
 		return nil, errors.Wrap(err, "获取Themoviedb信息失败")
 	}
@@ -105,7 +117,7 @@ func (a *Themoviedb) GetCache(id int, filters any) (any, error) {
 func (a *Themoviedb) parseThemoviedbID(name string) (entity *Entity, err error) {
 	resp := FindResponse{}
 	result, err := utils.RemoveNameSuffix(name, func(innerName string) (any, error) {
-		err := request.Get(idApi(a.Key, innerName, false), &resp)
+		err := request.Get(idApi(a.Host, a.Key, innerName, false), &resp)
 		if err != nil {
 			log.DebugErr(err)
 			//return 0, errors.WithStack(&exceptions.ErrRequest{Name: a.Name()})
@@ -154,7 +166,7 @@ func (a *Themoviedb) parseThemoviedbID(name string) (entity *Entity, err error) 
 
 func (a *Themoviedb) parseAnimeSeason(tmdbID int, airDate string) (seasonInfo *SeasonInfo, err error) {
 	resp := InfoResponse{}
-	err = request.Get(infoApi(a.Key, tmdbID, false), &resp)
+	err = request.Get(infoApi(a.Host, a.Key, tmdbID, false), &resp)
 	if err != nil {
 		log.DebugErr(err)
 		return nil, errors.WithStack(&exceptions.ErrRequest{Name: a.Name()})

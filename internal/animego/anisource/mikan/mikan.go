@@ -9,10 +9,10 @@ import (
 	"strings"
 
 	"github.com/antchfx/htmlquery"
+	"github.com/google/wire"
 	"github.com/pkg/errors"
 	"golang.org/x/net/html"
 
-	"github.com/wetor/AnimeGo/internal/animego/anidata"
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/pkg/request"
@@ -29,19 +29,31 @@ const (
 )
 
 var (
-	Host = func() string {
-		if len(anidata.RedirectMikan) > 0 {
-			return anidata.RedirectMikan
+	Host = func(host string) string {
+		if len(host) > 0 {
+			return host
 		}
 		return "https://mikanani.me"
 	}
 	Bucket = "mikan"
 )
 
+var Set = wire.NewSet(
+	NewMikan,
+)
+
 type Mikan struct {
 	cacheInit                   bool
 	cacheParseMikanInfoVar      mem.Func
 	cacheParseMikanBangumiIDVar mem.Func
+
+	*Options
+}
+
+func NewMikan(opts *Options) *Mikan {
+	return &Mikan{
+		Options: opts,
+	}
 }
 
 func (a *Mikan) Name() string {
@@ -50,7 +62,7 @@ func (a *Mikan) Name() string {
 
 func (a *Mikan) RegisterCache() {
 	a.cacheInit = true
-	a.cacheParseMikanInfoVar = mem.Memorized(Bucket, anidata.Cache, func(params *mem.Params, results *mem.Results) error {
+	a.cacheParseMikanInfoVar = mem.Memorized(Bucket, a.Cache, func(params *mem.Params, results *mem.Results) error {
 		mikan, err := a.parseMikanInfo(params.Get("mikanUrl").(string))
 		if err != nil {
 			return err
@@ -59,7 +71,7 @@ func (a *Mikan) RegisterCache() {
 		return nil
 	})
 
-	a.cacheParseMikanBangumiIDVar = mem.Memorized(Bucket, anidata.Cache, func(params *mem.Params, results *mem.Results) error {
+	a.cacheParseMikanBangumiIDVar = mem.Memorized(Bucket, a.Cache, func(params *mem.Params, results *mem.Results) error {
 		bangumiID, err := a.parseMikanBangumiID(params.Get("mikanID").(int))
 		if err != nil {
 			return err
@@ -74,12 +86,12 @@ func (a *Mikan) ParseCache(url any) (entity any, err error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "解析Mikan信息失败")
 	}
-	bangumiID, err := a.cacheParseMikanBangumiID(mikan.ID)
+	bangumiID, err := a.cacheParseMikanBangumiID(mikan.(*MikanInfo).ID)
 	if err != nil {
 		return nil, errors.Wrap(err, "解析Mikan BangumiID失败")
 	}
 	return &Entity{
-		MikanID:   mikan.ID,
+		MikanID:   mikan.(*MikanInfo).ID,
 		BangumiID: bangumiID,
 	}, nil
 }
@@ -106,13 +118,13 @@ func (a *Mikan) Parse(url any) (entity any, err error) {
 	}, nil
 }
 
-func (a *Mikan) CacheParseMikanInfo(url string) (mikanInfo *MikanInfo, err error) {
+func (a *Mikan) CacheParseMikanInfo(url string) (mikanInfo any, err error) {
 	if !a.cacheInit {
 		a.RegisterCache()
 	}
 	results := mem.NewResults("mikanInfo", &MikanInfo{})
 	err = a.cacheParseMikanInfoVar(mem.NewParams("mikanUrl", url).
-		TTL(anidata.CacheTime[Bucket]), results)
+		TTL(a.CacheTime), results)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +138,7 @@ func (a *Mikan) cacheParseMikanBangumiID(mikanID int) (bangumiID int, err error)
 	}
 	results := mem.NewResults("bangumiID", 0)
 	err = a.cacheParseMikanBangumiIDVar(mem.NewParams("mikanID", mikanID).
-		TTL(anidata.CacheTime[Bucket]), results)
+		TTL(a.CacheTime), results)
 	if err != nil {
 		return 0, err
 	}
@@ -136,7 +148,7 @@ func (a *Mikan) cacheParseMikanBangumiID(mikanID int) (bangumiID int, err error)
 
 func (a *Mikan) loadHtml(url string) (*html.Node, error) {
 	buf := bytes.NewBuffer(nil)
-	cookie := anidata.MikanCookie
+	cookie := a.Cookie
 	if !strings.Contains(cookie, AuthCookie+"=") {
 		cookie = AuthCookie + "=" + cookie
 	}
@@ -215,7 +227,7 @@ func (a *Mikan) parseMikanInfo(mikanUrl string) (mikan *MikanInfo, err error) {
 //	@paraa *MikanID int
 //	@return bangumiID int
 func (a *Mikan) parseMikanBangumiID(mikanID int) (bangumiID int, err error) {
-	url_ := fmt.Sprintf("%s/Home/bangumi/%d", Host(), mikanID)
+	url_ := fmt.Sprintf("%s/Home/bangumi/%d", Host(a.Host), mikanID)
 	doc, err := a.loadHtml(url_)
 	if err != nil {
 		return 0, err

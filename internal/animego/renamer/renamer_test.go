@@ -14,9 +14,9 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/wetor/AnimeGo/internal/animego/renamer"
+	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/internal/pkg/client"
 	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/utils"
@@ -171,33 +171,33 @@ func TestManager_AddRenameTask(t *testing.T) {
 	go func() {
 		for i := range files1 {
 			go func(i int) {
-				_ = r.SetDownloadState(anime1.EpKeys(), client.StateSeeding)
+				_ = r.SetDownloadState(anime1.EpKeys(), constant.StateSeeding)
 				time.Sleep(1*time.Second + 500*time.Millisecond)
-				_ = r.SetDownloadState(anime1.EpKeys(), client.StateComplete)
+				_ = r.SetDownloadState(anime1.EpKeys(), constant.StateComplete)
 			}(i)
 		}
 		time.Sleep(3 * time.Second)
 		for i := range files2 {
 			go func(i int) {
-				_ = r.SetDownloadState(anime2.EpKeys(), client.StateSeeding)
+				_ = r.SetDownloadState(anime2.EpKeys(), constant.StateSeeding)
 				time.Sleep(1*time.Second + 500*time.Millisecond)
-				_ = r.SetDownloadState(anime2.EpKeys(), client.StateComplete)
+				_ = r.SetDownloadState(anime2.EpKeys(), constant.StateComplete)
 			}(i)
 		}
 		time.Sleep(3 * time.Second)
 		for i := range files3 {
 			go func(i int) {
-				_ = r.SetDownloadState(anime3.EpKeys(), client.StateSeeding)
+				_ = r.SetDownloadState(anime3.EpKeys(), constant.StateSeeding)
 				time.Sleep(1*time.Second + 500*time.Millisecond)
-				_ = r.SetDownloadState(anime3.EpKeys(), client.StateComplete)
+				_ = r.SetDownloadState(anime3.EpKeys(), constant.StateComplete)
 			}(i)
 		}
 		time.Sleep(3 * time.Second)
 		for i := range files4 {
 			go func(i int) {
-				_ = r.SetDownloadState(anime4.EpKeys(), client.StateSeeding)
+				_ = r.SetDownloadState(anime4.EpKeys(), constant.StateSeeding)
 				time.Sleep(1*time.Second + 500*time.Millisecond)
-				_ = r.SetDownloadState(anime4.EpKeys(), client.StateComplete)
+				_ = r.SetDownloadState(anime4.EpKeys(), constant.StateComplete)
 			}(i)
 		}
 	}()
@@ -265,7 +265,7 @@ func TestManager_Method(t *testing.T) {
 	assert.ErrorAsf(t, err, &exceptions.ErrRename{}, "GetRenameTaskState(): %s", err)
 	_, err = r.GetEpTaskState(keys[0])
 	assert.ErrorAsf(t, err, &exceptions.ErrRename{}, "GetEpTaskState(): %s", err)
-	err = r.SetDownloadState(keys, client.StateSeeding)
+	err = r.SetDownloadState(keys, constant.StateSeeding)
 	// assert.ErrorAsf(t, err, &exceptions.ErrRename{}, "SetDownloadState(): %s", err)
 
 	keys = anime1.EpKeys()
@@ -276,13 +276,13 @@ func TestManager_Method(t *testing.T) {
 		assert.NoError(t, err)
 		_, err = r.GetEpTaskState("test")
 		assert.ErrorAsf(t, err, &exceptions.ErrRename{}, "GetEpTaskState(): %s", err)
-		err = r.SetDownloadState([]string{"test"}, client.StateSeeding)
+		err = r.SetDownloadState([]string{"test"}, constant.StateSeeding)
 		// assert.ErrorAsf(t, err, &exceptions.ErrRename{}, "SetDownloadState(): %s", err)
 	}
 
 	go func() {
-		_ = r.SetDownloadState(keys, client.StateSeeding)
-		_ = r.SetDownloadState(keys, client.StateComplete)
+		_ = r.SetDownloadState(keys, constant.StateSeeding)
+		_ = r.SetDownloadState(keys, constant.StateComplete)
 	}()
 
 	go func() {
@@ -342,15 +342,15 @@ func TestManager_LinkErr(t *testing.T) {
 	go func() {
 		for i := range files1 {
 			go func(i int) {
-				_ = r.SetDownloadState(anime1.EpKeys(), client.StateSeeding)
-				_ = r.SetDownloadState(anime1.EpKeys(), client.StateComplete)
+				_ = r.SetDownloadState(anime1.EpKeys(), constant.StateSeeding)
+				_ = r.SetDownloadState(anime1.EpKeys(), constant.StateComplete)
 			}(i)
 		}
 		time.Sleep(7 * time.Second)
 		for i := range files2 {
 			go func(i int) {
-				_ = r.SetDownloadState(anime2.EpKeys(), client.StateSeeding)
-				_ = r.SetDownloadState(anime2.EpKeys(), client.StateComplete)
+				_ = r.SetDownloadState(anime2.EpKeys(), constant.StateSeeding)
+				_ = r.SetDownloadState(anime2.EpKeys(), constant.StateComplete)
 			}(i)
 		}
 	}()
@@ -412,15 +412,15 @@ func TestManager_MoveErr(t *testing.T) {
 	go func() {
 		for i := range files1 {
 			go func(i int) {
-				_ = r.SetDownloadState(anime1.EpKeys(), client.StateSeeding)
-				_ = r.SetDownloadState(anime1.EpKeys(), client.StateComplete)
+				_ = r.SetDownloadState(anime1.EpKeys(), constant.StateSeeding)
+				_ = r.SetDownloadState(anime1.EpKeys(), constant.StateComplete)
 			}(i)
 		}
 		time.Sleep(7 * time.Second)
 		for i := range files2 {
 			go func(i int) {
-				_ = r.SetDownloadState(anime2.EpKeys(), client.StateSeeding)
-				_ = r.SetDownloadState(anime2.EpKeys(), client.StateComplete)
+				_ = r.SetDownloadState(anime2.EpKeys(), constant.StateSeeding)
+				_ = r.SetDownloadState(anime2.EpKeys(), constant.StateComplete)
 			}(i)
 		}
 	}()
@@ -471,8 +471,8 @@ func TestManager_LinkDeleteErr(t *testing.T) {
 	go func() {
 		for i := range files1 {
 			go func(i int) {
-				_ = r.SetDownloadState(anime1.EpKeys(), client.StateSeeding)
-				_ = r.SetDownloadState(anime1.EpKeys(), client.StateComplete)
+				_ = r.SetDownloadState(anime1.EpKeys(), constant.StateSeeding)
+				_ = r.SetDownloadState(anime1.EpKeys(), constant.StateComplete)
 			}(i)
 		}
 	}()
@@ -495,8 +495,8 @@ func TestManager_LinkDeleteErr(t *testing.T) {
 	go func() {
 		for i := range files1 {
 			go func(i int) {
-				_ = r.SetDownloadState(anime1.EpKeys(), client.StateSeeding)
-				_ = r.SetDownloadState(anime1.EpKeys(), client.StateComplete)
+				_ = r.SetDownloadState(anime1.EpKeys(), constant.StateSeeding)
+				_ = r.SetDownloadState(anime1.EpKeys(), constant.StateComplete)
 			}(i)
 		}
 	}()
@@ -519,8 +519,8 @@ func TestManager_LinkDeleteErr(t *testing.T) {
 	go func() {
 		for i := range files1 {
 			go func(i int) {
-				_ = r.SetDownloadState(anime1.EpKeys(), client.StateSeeding)
-				_ = r.SetDownloadState(anime1.EpKeys(), client.StateComplete)
+				_ = r.SetDownloadState(anime1.EpKeys(), constant.StateSeeding)
+				_ = r.SetDownloadState(anime1.EpKeys(), constant.StateComplete)
 			}(i)
 		}
 	}()
@@ -575,8 +575,8 @@ func TestManager_NotFileErr(t *testing.T) {
 	go func() {
 		for i := range files1 {
 			go func(i int) {
-				_ = r.SetDownloadState(anime1.EpKeys(), client.StateSeeding)
-				_ = r.SetDownloadState(anime1.EpKeys(), client.StateComplete)
+				_ = r.SetDownloadState(anime1.EpKeys(), constant.StateSeeding)
+				_ = r.SetDownloadState(anime1.EpKeys(), constant.StateComplete)
 			}(i)
 		}
 	}()
@@ -620,8 +620,8 @@ func TestManager_OtherErr(t *testing.T) {
 	go func() {
 		for i := range files1 {
 			go func(i int) {
-				_ = r.SetDownloadState(anime1.EpKeys(), client.StateSeeding)
-				_ = r.SetDownloadState(anime1.EpKeys(), client.StateComplete)
+				_ = r.SetDownloadState(anime1.EpKeys(), constant.StateSeeding)
+				_ = r.SetDownloadState(anime1.EpKeys(), constant.StateComplete)
 			}(i)
 		}
 	}()

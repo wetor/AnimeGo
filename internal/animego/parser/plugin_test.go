@@ -3,9 +3,9 @@ package parser_test
 import (
 	"encoding/json"
 	"fmt"
-	parserPlugin "github.com/wetor/AnimeGo/internal/animego/parser"
 	"testing"
 
+	parserPlugin "github.com/wetor/AnimeGo/internal/animego/parser"
 	"github.com/wetor/AnimeGo/internal/models"
 )
 

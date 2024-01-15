@@ -2,14 +2,15 @@ package filter_test
 
 import (
 	"fmt"
-	mikanRss "github.com/wetor/AnimeGo/internal/animego/feed"
-	filterPlugin "github.com/wetor/AnimeGo/internal/animego/filter"
+	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
+	"github.com/wetor/AnimeGo/internal/wire"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
 	"github.com/wetor/AnimeGo/assets"
-	"github.com/wetor/AnimeGo/internal/animego/anidata"
+	mikanRss "github.com/wetor/AnimeGo/internal/animego/feed"
+	filterPlugin "github.com/wetor/AnimeGo/internal/animego/filter"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/pkg/cache"
@@ -113,16 +114,13 @@ func TestPython_Filter4(t *testing.T) {
 func TestPython_Filter5(t *testing.T) {
 	db := cache.NewBolt()
 	db.Open("data/bolt.db")
-	bangumiCache := cache.NewBolt(true)
-	bangumiCache.Open(test.GetDataPath("", "bolt_sub.bolt"))
-	anidata.Init(&anidata.Options{
-		Cache:        db,
-		BangumiCache: bangumiCache,
-	})
 
 	plugin.Init(&plugin.Options{
 		Path:  assets.TestPluginPath(),
 		Debug: true,
+		Mikan: wire.GetMikanData(&mikan.Options{
+			Cache: db,
+		}),
 	})
 	rss := mikanRss.NewRss()
 	items, _ := rss.ParseFile(test.GetDataPath(testdata, "Mikan.xml"))
@@ -138,6 +136,5 @@ func TestPython_Filter5(t *testing.T) {
 	for _, r := range result {
 		fmt.Println(r.Name)
 	}
-	bangumiCache.Close()
 	db.Close()
 }

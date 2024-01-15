@@ -2,13 +2,14 @@ package plugin_test
 
 import (
 	"fmt"
-	mikanRss "github.com/wetor/AnimeGo/internal/animego/feed"
-	"github.com/wetor/AnimeGo/internal/plugin"
 	"os"
 	"testing"
 
 	"github.com/wetor/AnimeGo/assets"
-	"github.com/wetor/AnimeGo/internal/animego/anidata"
+	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
+	mikanRss "github.com/wetor/AnimeGo/internal/animego/feed"
+	"github.com/wetor/AnimeGo/internal/plugin"
+	"github.com/wetor/AnimeGo/internal/wire"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/log"
 	pkgPlugin "github.com/wetor/AnimeGo/pkg/plugin"
@@ -18,27 +19,23 @@ import (
 
 const testdata = "python"
 
+var mikanInst *mikan.Mikan
+
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
 	log.Init(&log.Options{
 		File:  "data/log.log",
 		Debug: true,
 	})
-	test.HookGetWriter(testdata, nil)
-	defer test.UnHook()
 
 	db := cache.NewBolt()
 	db.Open("data/bolt.db")
-	bangumiCache := cache.NewBolt(true)
-	bangumiCache.Open(test.GetDataPath("", "bolt_sub.bolt"))
-	anidata.Init(&anidata.Options{
-		Cache:        db,
-		BangumiCache: bangumiCache,
+	mikanInst = wire.GetMikanData(&mikan.Options{
+		Cache: db,
 	})
 	m.Run()
 
 	db.Close()
-	bangumiCache.Close()
 	_ = log.Close()
 	_ = os.RemoveAll("data")
 	fmt.Println("end")
@@ -196,9 +193,12 @@ func TestPythonConfig(t *testing.T) {
 }
 
 func TestPythonParseMikan(t *testing.T) {
+	test.HookGetWriter(testdata, nil)
+	defer test.UnHook()
 	plugin.Init(&plugin.Options{
 		Path:  test.GetDataPath(testdata, ""),
 		Debug: true,
+		Mikan: mikanInst,
 	})
 	p := &python.Python{}
 	p.Load(&pkgPlugin.LoadOptions{
@@ -218,6 +218,7 @@ func TestPythonMikanTool(t *testing.T) {
 	plugin.Init(&plugin.Options{
 		Path:  assets.TestPluginPath(),
 		Debug: true,
+		Mikan: mikanInst,
 	})
 	os.Setenv("ANIMEGO_VERSION", "0.6.8")
 

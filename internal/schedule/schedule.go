@@ -157,7 +157,7 @@ func AddScheduleTasks(s *Schedule, plugins []models.Plugin) (err error) {
 		if !p.Enable {
 			continue
 		}
-		t, err := NewScheduleTask(&ScheduleOptions{
+		t, err := NewScheduleTask(&PluginOptions{
 			Plugin: &p,
 		})
 		if err != nil {

@@ -2,6 +2,7 @@ package themoviedb_test
 
 import (
 	"fmt"
+	"github.com/wetor/AnimeGo/internal/wire"
 	"net/url"
 	"os"
 	"path"
@@ -10,8 +11,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/wetor/AnimeGo/internal/animego/anidata"
-	"github.com/wetor/AnimeGo/internal/animego/anidata/themoviedb"
+	"github.com/wetor/AnimeGo/internal/animego/anisource/themoviedb"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/pkg/request"
 	"github.com/wetor/AnimeGo/pkg/cache"
@@ -22,6 +22,10 @@ import (
 
 const testdata = "themoviedb"
 
+var (
+	tmdbInst *themoviedb.Themoviedb
+)
+
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
 	log.Init(&log.Options{
@@ -30,7 +34,9 @@ func TestMain(m *testing.M) {
 	})
 	db := cache.NewBolt()
 	db.Open("data/bolt.db")
-	anidata.Init(&anidata.Options{Cache: db})
+	tmdbInst = wire.GetThemoviedbData(&themoviedb.Options{
+		Cache: db,
+	})
 	request.Init(&request.Options{
 		Debug: true,
 	})
@@ -140,10 +146,9 @@ func TestThemoviedb_Get_GetCache(t *testing.T) {
 			wantErr2Str: "获取Themoviedb信息失败: 匹配季度信息失败，此番剧可能未开播",
 		},
 	}
-	tmdb := &themoviedb.Themoviedb{}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			id, err := tmdb.SearchCache(tt.args.name, nil)
+			id, err := tmdbInst.SearchCache(tt.args.name, nil)
 			if tt.wantErr1 != nil {
 				assert.IsType(t, tt.wantErr1, errors.Cause(err))
 				assert.EqualError(t, err, tt.wantErr1Str)
@@ -153,7 +158,7 @@ func TestThemoviedb_Get_GetCache(t *testing.T) {
 				assert.Equalf(t, tt.wantID, id, "SearchCache(%v)", tt.args.name)
 			}
 
-			gotSeasonInfo, err := tmdb.GetCache(id, tt.args.airDate)
+			gotSeasonInfo, err := tmdbInst.GetCache(id, tt.args.airDate)
 			if tt.wantErr2 != nil {
 				assert.IsType(t, tt.wantErr2, errors.Cause(err))
 				assert.EqualError(t, err, tt.wantErr2Str)
@@ -164,7 +169,7 @@ func TestThemoviedb_Get_GetCache(t *testing.T) {
 		})
 
 		t.Run(tt.name, func(t *testing.T) {
-			id, err := tmdb.Search(tt.args.name, nil)
+			id, err := tmdbInst.Search(tt.args.name, nil)
 			if tt.wantErr1 != nil {
 				assert.IsType(t, tt.wantErr1, errors.Cause(err))
 				assert.EqualError(t, err, tt.wantErr1Str)
@@ -174,7 +179,7 @@ func TestThemoviedb_Get_GetCache(t *testing.T) {
 				assert.Equalf(t, tt.wantID, id, "Search(%v)", tt.args.name)
 			}
 
-			gotSeasonInfo, err := tmdb.Get(id, tt.args.airDate)
+			gotSeasonInfo, err := tmdbInst.Get(id, tt.args.airDate)
 			if tt.wantErr2 != nil {
 				assert.IsType(t, tt.wantErr2, errors.Cause(err))
 				assert.EqualError(t, err, tt.wantErr2Str)

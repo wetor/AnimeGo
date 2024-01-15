@@ -5,21 +5,19 @@ import (
 	"net/url"
 	"os"
 	"path"
-	"sync"
 	"testing"
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/wetor/AnimeGo/assets"
-	"github.com/wetor/AnimeGo/internal/animego/anidata"
-	"github.com/wetor/AnimeGo/internal/animego/anisource"
+	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
 	"github.com/wetor/AnimeGo/internal/animego/parser"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/internal/pkg/request"
 	"github.com/wetor/AnimeGo/internal/pkg/torrent"
 	"github.com/wetor/AnimeGo/internal/plugin"
+	"github.com/wetor/AnimeGo/internal/wire"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	pkgExceptions "github.com/wetor/AnimeGo/pkg/exceptions"
 	"github.com/wetor/AnimeGo/pkg/log"
@@ -55,39 +53,22 @@ func TestMain(m *testing.M) {
 	})
 	test.Hook(torrent.LoadUri, HookLoadUri)
 	defer test.UnHook()
-	plugin.Init(&plugin.Options{
-		Path:  assets.TestPluginPath(),
-		Debug: true,
-	})
 
 	b := cache.NewBolt()
 	b.Open("data/bolt.db")
-	anisource.Init(&anisource.Options{
-		AniDataOptions: &anidata.Options{
-			Cache: b,
-			CacheTime: map[string]int64{
-				"mikan":      int64(7 * 24 * 60 * 60),
-				"bangumi":    int64(3 * 24 * 60 * 60),
-				"themoviedb": int64(14 * 24 * 60 * 60),
-			},
-		},
+	plugin.Init(&plugin.Options{
+		Path:  assets.TestPluginPath(),
+		Debug: true,
+		Mikan: wire.GetMikanData(&mikan.Options{
+			Cache:     b,
+			CacheTime: int64(7 * 24 * 60 * 60),
+		}),
 	})
+
 	parser.Init(&parser.Options{
 		TMDBFailSkip:           false,
 		TMDBFailUseTitleSeason: true,
 		TMDBFailUseFirstSeason: true,
-	})
-	bangumiCache := cache.NewBolt(true)
-	bangumiCache.Open(test.GetDataPath("", "bolt_sub.bolt"))
-	bangumiCache.Add("bangumi_sub")
-	mutex := sync.Mutex{}
-	anidata.Init(&anidata.Options{
-		Cache:            b,
-		BangumiCache:     bangumiCache,
-		BangumiCacheLock: &mutex,
-	})
-	request.Init(&request.Options{
-		Proxy: "http://127.0.0.1:7890",
 	})
 
 	p := parser.NewParserPlugin(&models.Plugin{
@@ -100,7 +81,6 @@ func TestMain(m *testing.M) {
 	m.Run()
 
 	b.Close()
-	bangumiCache.Close()
 	_ = log.Close()
 	_ = os.RemoveAll("data")
 	fmt.Println("end")

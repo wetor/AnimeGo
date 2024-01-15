@@ -1,19 +1,34 @@
 package anisource
 
 import (
-	"github.com/wetor/AnimeGo/internal/animego/anidata/mikan"
+	"github.com/google/wire"
+
+	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/pkg/log"
 )
 
+var MikanSet = wire.NewSet(
+	NewMikanSource,
+)
+
 type Mikan struct {
 	bangumiSource api.AniSource
+	aniData       api.AniDataParse
 }
 
-func NewMikanSource(bangumiSource api.AniSource) api.AniSource {
+func NewMikanSourceInterface(aniData api.AniDataParse, bangumiSource api.AniSource) *Mikan {
 	return &Mikan{
 		bangumiSource: bangumiSource,
+		aniData:       aniData,
+	}
+}
+
+func NewMikanSource(aniData *mikan.Mikan, bangumiSource *Bangumi) *Mikan {
+	return &Mikan{
+		bangumiSource: bangumiSource,
+		aniData:       aniData,
 	}
 }
 
@@ -23,7 +38,7 @@ func (m Mikan) Parse(opts *models.AnimeParseOptions) (anime *models.AnimeEntity,
 	// ------------------- 获取bangumiID -------------------
 	if opts.AnimeParseOverride == nil || !opts.OverrideMikan() {
 		log.Debugf("[AniSource] 解析Mikan，%s", opts.Input)
-		entity, err := MikanData().ParseCache(opts.Input)
+		entity, err := m.aniData.ParseCache(opts.Input)
 		if err != nil {
 			return nil, err
 		}

@@ -6,12 +6,15 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/google/wire"
 	"github.com/hekmon/transmissionrpc/v3"
 	"github.com/pkg/errors"
 	"golang.org/x/exp/slices"
 
+	"github.com/wetor/AnimeGo/internal/api"
+	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/exceptions"
-	"github.com/wetor/AnimeGo/internal/pkg/client"
+	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/utils"
 )
@@ -20,27 +23,33 @@ const (
 	Name = "Transmission"
 )
 
+var Set = wire.NewSet(
+	NewTransmission,
+	wire.Bind(new(api.Client), new(*Transmission)),
+)
+
 type Transmission struct {
 	connectFunc func() bool
 	retryChan   chan int
 	retryNum    int // 重试次数
 
 	connected bool
-	auth      *client.AuthOptions
 	client    *transmissionrpc.Client
 	endpoint  *url.URL
+
+	*models.ClientOptions
 }
 
-func NewTransmission(opt *client.AuthOptions) *Transmission {
+func NewTransmission(opts *models.ClientOptions) *Transmission {
 	c := &Transmission{
-		retryChan: make(chan int, 1),
-		retryNum:  1,
-		connected: false,
-		auth:      opt,
+		retryChan:     make(chan int, 1),
+		retryNum:      1,
+		connected:     false,
+		ClientOptions: opts,
 	}
-	u, _ := url.Parse(c.auth.Url)
+	u, _ := url.Parse(c.Url)
 	c.endpoint, _ = url.Parse(fmt.Sprintf("%s://%s:%s@%s/transmission/rpc",
-		u.Scheme, c.auth.Username, c.auth.Password, u.Host))
+		u.Scheme, c.Username, c.Password, u.Host))
 	c.connectFunc = func() bool {
 		var err error
 		c.client, err = transmissionrpc.New(c.endpoint, nil)
@@ -49,7 +58,7 @@ func NewTransmission(opt *client.AuthOptions) *Transmission {
 			log.Warnf("初始化 %s 客户端第%d次，失败", Name, c.retryNum)
 			return false
 		}
-		ok, _, miniVersion, err := c.client.RPCVersion(client.Ctx)
+		ok, _, miniVersion, err := c.client.RPCVersion(c.Ctx)
 		if err != nil {
 			log.DebugErr(err)
 			log.Warnf("连接 %s 第%d次，失败", Name, c.retryNum)
@@ -62,7 +71,7 @@ func NewTransmission(opt *client.AuthOptions) *Transmission {
 		}
 		return true
 	}
-	c.retryChan <- client.ChanRetryConnect
+	c.retryChan <- constant.ChanRetryConnect
 	return c
 }
 
@@ -70,10 +79,10 @@ func (c *Transmission) Name() string {
 	return Name
 }
 
-func (c *Transmission) Config() *client.Config {
-	return &client.Config{
-		ApiUrl:       c.auth.Url,
-		DownloadPath: client.DownloadPath,
+func (c *Transmission) Config() *models.Config {
+	return &models.Config{
+		ApiUrl:       c.Url,
+		DownloadPath: c.DownloadPath,
 	}
 }
 
@@ -82,26 +91,26 @@ func (c *Transmission) Config() *client.Config {
 //	@Description: 下载器状态转换
 //	@param state string
 //	@return client.TorrentState
-func (c *Transmission) State(state string) client.TorrentState {
+func (c *Transmission) State(state string) constant.TorrentState {
 	switch state {
 	case TorrentStatusCheckWait, TorrentStatusCheck,
 		TorrentStatusDownloadWait, TorrentStatusSeedWait:
 		// 若进度为100，则下载完成
-		return client.StateWaiting
+		return constant.StateWaiting
 	case TorrentStatusDownload:
-		return client.StateDownloading
+		return constant.StateDownloading
 	case TorrentStatusSeed:
 		// 已下载完成
-		return client.StateSeeding
+		return constant.StateSeeding
 	case TorrentStatusStopped:
-		return client.StatePausing
+		return constant.StatePausing
 	case TorrentStatusComplete:
 		// 已下载完成
-		return client.StateComplete
+		return constant.StateComplete
 	case TorrentStatusIsolated:
-		return client.StateError
+		return constant.StateError
 	default:
-		return client.StateUnknown
+		return constant.StateUnknown
 	}
 }
 
@@ -110,7 +119,7 @@ func (c *Transmission) Connected() bool {
 }
 
 func (c *Transmission) clientVersion() string {
-	ok, version, _, err := c.client.RPCVersion(client.Ctx)
+	ok, version, _, err := c.client.RPCVersion(c.Ctx)
 	if err != nil || !ok {
 		return ""
 	}
@@ -124,17 +133,17 @@ func (c *Transmission) clientVersion() string {
 //	@Description: 客户端处理下载消息，获取下载进度
 //	@receiver *QBittorrent
 func (c *Transmission) Start() {
-	client.WG.Add(1)
+	c.WG.Add(1)
 	go func() {
-		defer client.WG.Done()
+		defer c.WG.Done()
 		for {
 			select {
-			case <-client.Ctx.Done():
+			case <-c.Ctx.Done():
 				log.Debugf("正常退出 %s reconnect listen", Name)
 				return
 			case msg := <-c.retryChan:
 				c.connected = true
-				if msg == client.ChanRetryConnect && (c.client == nil || len(c.clientVersion()) == 0) {
+				if msg == constant.ChanRetryConnect && (c.client == nil || len(c.clientVersion()) == 0) {
 					if ok := c.connectFunc(); !ok {
 						c.retryNum++
 						c.connected = false
@@ -149,23 +158,23 @@ func (c *Transmission) Start() {
 			}
 		}
 	}()
-	client.WG.Add(1)
+	c.WG.Add(1)
 	go func() {
-		defer client.WG.Done()
+		defer c.WG.Done()
 		for {
 			select {
-			case <-client.Ctx.Done():
+			case <-c.Ctx.Done():
 				log.Debugf("正常退出 %s check listen", Name)
 				return
 			default:
 				if c.retryNum == 0 {
-					c.retryChan <- client.ChanRetryConnect
+					c.retryChan <- constant.ChanRetryConnect
 					// 检查是否在线，时间长
-					utils.Sleep(client.CheckTimeSecond, client.Ctx)
-				} else if c.retryNum <= client.RetryConnectNum {
-					c.retryChan <- client.ChanRetryConnect
+					utils.Sleep(c.CheckTimeSecond, c.Ctx)
+				} else if c.retryNum <= c.RetryConnectNum {
+					c.retryChan <- constant.ChanRetryConnect
 					// 失败重试，时间短
-					utils.Sleep(client.ConnectTimeoutSecond, client.Ctx)
+					utils.Sleep(c.ConnectTimeoutSecond, c.Ctx)
 				} else {
 					// 超过重试次数，不在频繁重试
 					c.retryNum = 0
@@ -175,16 +184,16 @@ func (c *Transmission) Start() {
 	}()
 }
 
-func (c *Transmission) List(opt *client.ListOptions) ([]*client.TorrentItem, error) {
+func (c *Transmission) List(opt *models.ListOptions) ([]*models.TorrentItem, error) {
 	if !c.connected {
 		return nil, errors.WithStack(&exceptions.ErrClientNoConnected{Client: Name})
 	}
-	torrents, err := c.client.TorrentGetAll(client.Ctx)
+	torrents, err := c.client.TorrentGetAll(c.Ctx)
 	if err != nil {
 		log.DebugErr(err)
 		return nil, errors.WithStack(&exceptions.ErrClient{Client: Name, Message: "获取列表失败"})
 	}
-	items := make([]*client.TorrentItem, 0, len(torrents))
+	items := make([]*models.TorrentItem, 0, len(torrents))
 
 	for _, torrent := range torrents {
 		if len(opt.Category) > 0 && *torrent.Group != opt.Category {
@@ -201,7 +210,7 @@ func (c *Transmission) List(opt *client.ListOptions) ([]*client.TorrentItem, err
 		if len(opt.Status) > 0 && status != opt.Status {
 			continue
 		}
-		items = append(items, &client.TorrentItem{
+		items = append(items, &models.TorrentItem{
 			Hash:     *torrent.HashString,
 			State:    status,
 			Progress: *torrent.PercentDone,
@@ -210,7 +219,7 @@ func (c *Transmission) List(opt *client.ListOptions) ([]*client.TorrentItem, err
 	return items, nil
 }
 
-func (c *Transmission) Add(opt *client.AddOptions) error {
+func (c *Transmission) Add(opt *models.AddOptions) error {
 	if !c.connected {
 		return errors.WithStack(&exceptions.ErrClientNoConnected{Client: Name})
 	}
@@ -227,20 +236,20 @@ func (c *Transmission) Add(opt *client.AddOptions) error {
 	} else {
 		payload.Filename = &opt.Url
 	}
-	torrent, err := c.client.TorrentAdd(client.Ctx, payload)
+	torrent, err := c.client.TorrentAdd(c.Ctx, payload)
 	if err != nil {
 		log.DebugErr(err)
 		return errors.WithStack(&exceptions.ErrClient{Client: Name, Message: "添加下载项失败"})
 	}
 	mode := IdleModeGlobal
-	if client.SeedingTimeMinute > 0 {
+	if c.SeedingTimeMinute > 0 {
 		mode = IdleModeSingle // 空闲指定时间后停止做种
-	} else if client.SeedingTimeMinute < 0 {
+	} else if c.SeedingTimeMinute < 0 {
 		mode = IdleModeUnlimited // 始终做种
 	}
-	seedTime := time.Duration(client.SeedingTimeMinute) * time.Minute
+	seedTime := time.Duration(c.SeedingTimeMinute) * time.Minute
 
-	err = c.client.TorrentSet(client.Ctx, transmissionrpc.TorrentSetPayload{
+	err = c.client.TorrentSet(c.Ctx, transmissionrpc.TorrentSetPayload{
 		IDs:           []int64{*torrent.ID},
 		Group:         &opt.Category,
 		SeedIdleMode:  &mode,
@@ -249,7 +258,7 @@ func (c *Transmission) Add(opt *client.AddOptions) error {
 	if err != nil {
 		log.DebugErr(err)
 		// 设置状态失败，删除下载
-		_ = c.client.TorrentRemove(client.Ctx, transmissionrpc.TorrentRemovePayload{
+		_ = c.client.TorrentRemove(c.Ctx, transmissionrpc.TorrentRemovePayload{
 			IDs:             []int64{*torrent.ID},
 			DeleteLocalData: true,
 		})
@@ -258,11 +267,11 @@ func (c *Transmission) Add(opt *client.AddOptions) error {
 	return nil
 }
 
-func (c *Transmission) Delete(opt *client.DeleteOptions) error {
+func (c *Transmission) Delete(opt *models.DeleteOptions) error {
 	if !c.connected {
 		return errors.WithStack(&exceptions.ErrClientNoConnected{Client: Name})
 	}
-	torrents, err := c.client.TorrentGetHashes(client.Ctx, []string{"id"}, opt.Hash)
+	torrents, err := c.client.TorrentGetHashes(c.Ctx, []string{"id"}, opt.Hash)
 	if err != nil {
 		log.DebugErr(err)
 		return errors.WithStack(&exceptions.ErrClient{Client: Name, Message: "删除下载项失败"})
@@ -271,7 +280,7 @@ func (c *Transmission) Delete(opt *client.DeleteOptions) error {
 	for _, torrent := range torrents {
 		ids = append(ids, *torrent.ID)
 	}
-	err = c.client.TorrentRemove(client.Ctx, transmissionrpc.TorrentRemovePayload{
+	err = c.client.TorrentRemove(c.Ctx, transmissionrpc.TorrentRemovePayload{
 		IDs:             ids,
 		DeleteLocalData: opt.DeleteFile,
 	})

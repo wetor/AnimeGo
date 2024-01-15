@@ -3,17 +3,17 @@ package schedule_test
 import (
 	"context"
 	"fmt"
-	"github.com/wetor/AnimeGo/internal/animego/feed"
-	"github.com/wetor/AnimeGo/internal/plugin/lib"
 	"os"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/wetor/AnimeGo/assets"
+	"github.com/wetor/AnimeGo/internal/animego/feed"
 	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin"
+	"github.com/wetor/AnimeGo/internal/plugin/lib"
 	"github.com/wetor/AnimeGo/internal/schedule"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/log"
@@ -76,7 +76,7 @@ func TestNewSchedule(t *testing.T) {
 }
 
 func TestNewSchedule2(t *testing.T) {
-	tt, _ := schedule.NewScheduleTask(&schedule.ScheduleOptions{
+	tt, _ := schedule.NewScheduleTask(&schedule.PluginOptions{
 		Plugin: &models.Plugin{
 			Enable: true,
 			Type:   "python",

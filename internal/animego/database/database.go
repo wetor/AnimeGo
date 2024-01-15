@@ -10,9 +10,9 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/wetor/AnimeGo/internal/api"
+	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
-	"github.com/wetor/AnimeGo/internal/pkg/client"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/utils"
 )
@@ -254,7 +254,7 @@ func (m *Database) handleDownloadSeeding(hash string) error {
 	if err != nil {
 		return errors.Wrapf(err, "处理事件失败: %s", event)
 	}
-	err = m.rename.SetDownloadState(anime.EpKeys(), client.StateSeeding)
+	err = m.rename.SetDownloadState(anime.EpKeys(), constant.StateSeeding)
 	if err != nil {
 		return err
 	}
@@ -275,7 +275,7 @@ func (m *Database) handleDownloadComplete(hash string) error {
 	if err != nil {
 		return errors.Wrapf(err, "处理事件失败: %s", event)
 	}
-	err = m.rename.SetDownloadState(anime.EpKeys(), client.StateComplete)
+	err = m.rename.SetDownloadState(anime.EpKeys(), constant.StateComplete)
 	if err != nil {
 		return err
 	}
