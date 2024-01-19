@@ -24,11 +24,6 @@ func defaultSettingComment() {
 
 	configComment["themoviedb_key"] = `可以自行申请链接（需注册）：https://www.themoviedb.org/settings/api?language=zh-CN
 以下为wetor的个人APIkey，仅用于AnimeGo使用`
-
-	configComment["seeding_key"] = `默认为0，根据客户端不同，有不同作用：
-  QBittorrent: 0不做种，-1无限做种，其他值为做种分钟限制
-  Transmission: 0为使用客户端设置，-1无限做种，其他值为做种空闲分钟限制`
-
 }
 
 func defaultSetting() {

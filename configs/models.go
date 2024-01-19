@@ -88,7 +88,7 @@ type Advanced struct {
 	} `yaml:"default" json:"default" attr:"解析季度默认值" comment:"使用tmdb解析季度失败时，同类型默认值按优先级执行。数值越大，优先级越高"`
 
 	Client struct {
-		SeedingTimeMinute    int `yaml:"seeding_time_minute" json:"seeding_time_minute" attr:"做种时间" comment_key:"seeding_key"`
+		SeedingTimeMinute    int `yaml:"seeding_time_minute" json:"seeding_time_minute" attr:"做种时间" comment:"0不做种，-1无限做种，其他值为做种具体分钟限制"`
 		ConnectTimeoutSecond int `yaml:"connect_timeout_second" json:"connect_timeout_second" attr:"连接超时时间"`
 		RetryConnectNum      int `yaml:"retry_connect_num" json:"retry_connect_num" attr:"连接失败重试次数"`
 		CheckTimeSecond      int `yaml:"check_time_second" json:"check_time_second" attr:"检查连接状态间隔时间"`

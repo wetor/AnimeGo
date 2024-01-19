@@ -135,9 +135,7 @@ advanced:
         tmdb_fail_use_first_season: true
     # 下载客户端设置
     client:
-        # 做种时间. 默认为0，根据客户端不同，有不同作用：
-        #   QBittorrent: 0不做种，-1无限做种，其他值为做种分钟限制
-        #   Transmission: 0为使用客户端设置，-1无限做种，其他值为做种空闲分钟限制
+        # 做种时间. 0不做种，-1无限做种，其他值为做种具体分钟限制
         seeding_time_minute: 1
         # 连接超时时间
         connect_timeout_second: 5
