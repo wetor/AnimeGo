@@ -26,3 +26,8 @@ const (
 	IdleModeSingle                 // override the global settings, seeding until a certain idle time
 	IdleModeUnlimited              // override the global settings, seeding regardless of activity
 )
+
+const (
+	TimerRetryCount   = 3
+	TimerUpdateSecond = 5
+)

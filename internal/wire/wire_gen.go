@@ -59,8 +59,8 @@ func GetBangumi(bgmOpts *bangumi.Options, tmdbOpts *themoviedb.Options) *anisour
 
 // Injectors from client.go:
 
-func GetClient(name string, opts *models.ClientOptions) api.Client {
-	apiClient := client.NewClient(name, opts)
+func GetClient(name string, opts *models.ClientOptions, cache api.Cacher) api.Client {
+	apiClient := client.NewClient(name, opts, cache)
 	return apiClient
 }
 
@@ -69,8 +69,8 @@ func GetQBittorrent(opts *models.ClientOptions) *qbittorrent.QBittorrent {
 	return qBittorrent
 }
 
-func GetTransmission(opts *models.ClientOptions) *transmission.Transmission {
-	transmissionTransmission := transmission.NewTransmission(opts)
+func GetTransmission(opts *models.ClientOptions, cache api.Cacher) *transmission.Transmission {
+	transmissionTransmission := transmission.NewTransmission(opts, cache)
 	return transmissionTransmission
 }
 

@@ -15,13 +15,13 @@ var Set = wire.NewSet(
 	NewClient,
 )
 
-func NewClient(name string, opts *models.ClientOptions) api.Client {
+func NewClient(name string, opts *models.ClientOptions, cache api.Cacher) api.Client {
 	var c api.Client
 	switch strings.ToLower(name) {
 	case "qbittorrent":
 		c = qbittorrent.NewQBittorrent(opts)
 	case "transmission":
-		c = transmission.NewTransmission(opts)
+		c = transmission.NewTransmission(opts, cache)
 	}
 	return c
 }

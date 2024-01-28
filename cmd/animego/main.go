@@ -203,7 +203,7 @@ func Main() {
 		CheckTimeSecond:      config.Advanced.Client.CheckTimeSecond,
 		RetryConnectNum:      config.Advanced.Client.RetryConnectNum,
 	}
-	clientSrv := wire.GetClient(config.Setting.Client.Client, clientOpts)
+	clientSrv := wire.GetClient(config.Setting.Client.Client, clientOpts, bolt)
 	clientSrv.Start()
 
 	// ===============================================================================================================

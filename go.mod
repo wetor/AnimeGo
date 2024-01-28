@@ -9,6 +9,7 @@ require (
 	github.com/caarlos0/env/v9 v9.0.0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-python/gpython v0.2.0
+	github.com/google/uuid v1.5.0
 	github.com/google/wire v0.5.0
 	github.com/gorilla/websocket v1.5.0
 	github.com/hekmon/transmissionrpc/v3 v3.0.0

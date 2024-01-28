@@ -12,7 +12,7 @@ import (
 	"github.com/wetor/AnimeGo/internal/models"
 )
 
-func GetClient(name string, opts *models.ClientOptions) api.Client {
+func GetClient(name string, opts *models.ClientOptions, cache api.Cacher) api.Client {
 	wire.Build(
 		client.Set,
 	)
@@ -26,7 +26,7 @@ func GetQBittorrent(opts *models.ClientOptions) *qbittorrent.QBittorrent {
 	return nil
 }
 
-func GetTransmission(opts *models.ClientOptions) *transmission.Transmission {
+func GetTransmission(opts *models.ClientOptions, cache api.Cacher) *transmission.Transmission {
 	wire.Build(
 		transmission.Set,
 	)

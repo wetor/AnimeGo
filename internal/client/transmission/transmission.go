@@ -15,6 +15,7 @@ import (
 	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/pkg/timer"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/utils"
 )
@@ -37,16 +38,25 @@ type Transmission struct {
 	client    *transmissionrpc.Client
 	endpoint  *url.URL
 
+	seedTimer *timer.Timer
+
 	*models.ClientOptions
 }
 
-func NewTransmission(opts *models.ClientOptions) *Transmission {
+func NewTransmission(opts *models.ClientOptions, cache api.Cacher) *Transmission {
 	c := &Transmission{
 		retryChan:     make(chan int, 1),
 		retryNum:      1,
 		connected:     false,
 		ClientOptions: opts,
 	}
+	c.seedTimer = timer.NewTimer(&timer.Options{
+		Name:         Name,
+		Cache:        cache,
+		RetryCount:   TimerRetryCount,
+		UpdateSecond: TimerUpdateSecond,
+		WG:           opts.WG,
+	})
 	u, _ := url.Parse(c.Url)
 	c.endpoint, _ = url.Parse(fmt.Sprintf("%s://%s:%s@%s/transmission/rpc",
 		u.Scheme, c.Username, c.Password, u.Host))
@@ -182,6 +192,7 @@ func (c *Transmission) Start() {
 			}
 		}
 	}()
+	c.seedTimer.Start(c.Ctx)
 }
 
 func (c *Transmission) List(opt *models.ListOptions) ([]*models.TorrentItem, error) {
@@ -196,6 +207,34 @@ func (c *Transmission) List(opt *models.ListOptions) ([]*models.TorrentItem, err
 	items := make([]*models.TorrentItem, 0, len(torrents))
 
 	for _, torrent := range torrents {
+		// 下载完成在做种状态
+		if int(*torrent.PercentDone) == 1 && torrent.Status.String() == TorrentStatusSeed &&
+			!c.seedTimer.HasTask(*torrent.HashString) {
+			// 定时任务：达到做种时间，停止做种
+			_, err = c.seedTimer.AddTask(&timer.AddOptions{
+				Name:     *torrent.HashString,
+				Duration: int64(c.SeedingTimeMinute * 60),
+				Func: func() error {
+					err := c.client.TorrentStopHashes(c.Ctx, []string{*torrent.HashString})
+					if err != nil {
+						return err
+					}
+					tStatus, err := c.client.TorrentGet(c.Ctx, []string{"status"}, []int64{*torrent.ID})
+					if err != nil {
+						return err
+					}
+					if len(tStatus) == 1 && tStatus[0].Status.String() != TorrentStatusStopped {
+						// 未暂停成功
+						return exceptions.ErrClient{Client: Name, Message: fmt.Sprintf("%s 暂停失败", *torrent.HashString)}
+					}
+					return nil
+				},
+			})
+			if err != nil {
+				log.Warnf("添加 %s 做种任务 %s 失败，忽略", Name, *torrent.HashString)
+			}
+		}
+
 		if len(opt.Category) > 0 && *torrent.Group != opt.Category {
 			continue
 		}
