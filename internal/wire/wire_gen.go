@@ -11,6 +11,12 @@ import (
 	"github.com/wetor/AnimeGo/internal/animego/anisource/bangumi"
 	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
 	"github.com/wetor/AnimeGo/internal/animego/anisource/themoviedb"
+	"github.com/wetor/AnimeGo/internal/animego/clientnotifier"
+	"github.com/wetor/AnimeGo/internal/animego/database"
+	"github.com/wetor/AnimeGo/internal/animego/downloader"
+	"github.com/wetor/AnimeGo/internal/animego/filter"
+	"github.com/wetor/AnimeGo/internal/animego/parser"
+	"github.com/wetor/AnimeGo/internal/animego/renamer"
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/client"
 	"github.com/wetor/AnimeGo/internal/client/qbittorrent"
@@ -66,4 +72,49 @@ func GetQBittorrent(opts *models.ClientOptions) *qbittorrent.QBittorrent {
 func GetTransmission(opts *models.ClientOptions) *transmission.Transmission {
 	transmissionTransmission := transmission.NewTransmission(opts)
 	return transmissionTransmission
+}
+
+// Injectors from database.go:
+
+func GetDatabase(opts *database.Options, cache api.Cacher) (*database.Database, error) {
+	databaseDatabase, err := database.NewDatabase(opts, cache)
+	if err != nil {
+		return nil, err
+	}
+	return databaseDatabase, nil
+}
+
+// Injectors from downloader.go:
+
+func GetDownloader(opts *downloader.Options, client2 api.Client, notifyOpts *clientnotifier.Options, db *database.Database, rename api.Renamer) *downloader.Manager {
+	notifier := clientnotifier.NewNotifier(notifyOpts, db, rename)
+	manager := downloader.NewManager(opts, client2, notifier)
+	return manager
+}
+
+// Injectors from filter.go:
+
+func GetFilter(opts *filter.Options, manager api.ManagerDownloader, parserOpts *parser.Options, plugin *models.Plugin, mikanOpts *mikan.Options, bgmOpts *bangumi.Options, tmdbOpts *themoviedb.Options) *filter.Manager {
+	parserParser := parser.NewParserPlugin(plugin)
+	mikanMikan := mikan.NewMikan(mikanOpts)
+	bangumiBangumi := bangumi.NewBangumi(bgmOpts)
+	themoviedbThemoviedb := themoviedb.NewThemoviedb(tmdbOpts)
+	anisourceBangumi := anisource.NewBangumiSource(bangumiBangumi, themoviedbThemoviedb)
+	anisourceMikan := anisource.NewMikanSource(mikanMikan, anisourceBangumi)
+	parserManager := parser.NewManager(parserOpts, parserParser, anisourceMikan, anisourceBangumi)
+	filterManager := filter.NewManager(opts, manager, parserManager)
+	return filterManager
+}
+
+// Injectors from renamer.go:
+
+func GetRenamePlugin(plugin *models.Plugin) *renamer.Rename {
+	rename := renamer.NewRenamePlugin(plugin)
+	return rename
+}
+
+func GetRenamer(options *renamer.Options, plugin *models.Plugin) *renamer.Manager {
+	rename := renamer.NewRenamePlugin(plugin)
+	manager := renamer.NewManager(options, rename)
+	return manager
 }

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/wetor/AnimeGo/internal/animego/clientnotifier"
 	"os"
 	"path"
 	"sync"
@@ -11,6 +12,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+
 	"github.com/wetor/AnimeGo/assets"
 	"github.com/wetor/AnimeGo/internal/animego/database"
 	"github.com/wetor/AnimeGo/internal/animego/downloader"
@@ -19,6 +21,7 @@ import (
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin"
+	"github.com/wetor/AnimeGo/internal/wire"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/dirdb"
 	"github.com/wetor/AnimeGo/pkg/log"
@@ -34,7 +37,7 @@ const (
 
 var (
 	qbt          *qbittorrent.ClientMock
-	dbs          *database.Database
+	dbs          *clientnotifier.Notifier
 	mgr          *downloader.Manager
 	rename       *renamer.Manager
 	renamePlugin *renamer.Rename
@@ -118,32 +121,40 @@ func TestMain(m *testing.M) {
 	dirdb.Init(&dirdb.Options{
 		DefaultExt: []string{".a_json", ".s_json", ".e_json"}, // anime, season
 	})
-	database.Init(&database.Options{
-		DownloaderConf: database.DownloaderConf{
-			DownloadPath: DownloadPath,
-			SavePath:     SavePath,
-			Rename:       "link_delete",
-		},
-	})
-	renamer.Init(&renamer.Options{
-		WG:            &wg,
-		RefreshSecond: 1,
-	})
 	renamePlugin = renamer.NewRenamePlugin(&models.Plugin{
 		Enable: true,
 		Type:   "python",
 		File:   "rename/builtin_rename.py",
 	})
-	rename = renamer.NewManager(renamePlugin)
+
+	rename = wire.GetRenamer(
+		&renamer.Options{
+			WG:            &wg,
+			RefreshSecond: 1,
+		},
+		&models.Plugin{
+			Enable: true,
+			Type:   "python",
+			File:   "rename/builtin_rename.py",
+		},
+	)
 	db = cache.NewBolt()
 	db.Open("data/test.db")
 
 	var err error
-	callback := &database.Callback{}
-	dbs, err = database.NewDatabase(db, rename, callback)
+	callback := &clientnotifier.Callback{}
+	dbInst, err := database.NewDatabase(&database.Options{
+		SavePath: SavePath,
+	}, db)
 	if err != nil {
 		panic(err)
 	}
+	dbs = clientnotifier.NewNotifier(&clientnotifier.Options{
+		DownloadPath: DownloadPath,
+		SavePath:     SavePath,
+		Rename:       "link_delete",
+		Callback:     callback,
+	}, dbInst, rename)
 
 	qbt = &qbittorrent.ClientMock{}
 	qbt.MockInit(qbittorrent.ClientMockOptions{
@@ -152,14 +163,13 @@ func TestMain(m *testing.M) {
 		Ctx:          context.Background(),
 	})
 
-	downloader.Init(&downloader.Options{
+	mgr = downloader.NewManager(&downloader.Options{
 		RefreshSecond:          1,
 		Category:               "AnimeGoTest",
 		WG:                     &wg,
 		AllowDuplicateDownload: false,
 		Tag:                    "",
-	})
-	mgr = downloader.NewManager(qbt, dbs, dbs)
+	}, qbt, dbs)
 	callback.Renamed = func(data any) error {
 		return mgr.Delete(data.(string))
 	}
@@ -216,8 +226,8 @@ func initTest(clean bool) (*sync.WaitGroup, func()) {
 		_ = os.RemoveAll("data")
 	}
 	wg := sync.WaitGroup{}
-	downloader.WG = &wg
-	renamer.WG = &wg
+	mgr.WG = &wg
+	rename.WG = &wg
 	ctx, cancel := context.WithCancel(context.Background())
 
 	rename.Init()

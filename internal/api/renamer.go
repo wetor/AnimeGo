@@ -15,7 +15,3 @@ type Renamer interface {
 	GetEpTaskState(key string) (int, error)
 	GetRenameTaskState(keys []string) (int, error)
 }
-
-type RenamerPlugin interface {
-	Rename(anime *models.AnimeEntity, index int, src string) (*models.RenameResult, error)
-}

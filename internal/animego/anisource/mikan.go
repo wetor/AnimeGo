@@ -34,11 +34,16 @@ func NewMikanSource(aniData *mikan.Mikan, bangumiSource *Bangumi) *Mikan {
 
 func (m Mikan) Parse(opts *models.AnimeParseOptions) (anime *models.AnimeEntity, err error) {
 	var mikanEntity = &mikan.Entity{}
+	var mikanUrl string
+	switch input := opts.Input.(type) {
+	case string:
+		mikanUrl = input
+	}
 
 	// ------------------- 获取bangumiID -------------------
 	if opts.AnimeParseOverride == nil || !opts.OverrideMikan() {
-		log.Debugf("[AniSource] 解析Mikan，%s", opts.Input)
-		entity, err := m.aniData.ParseCache(opts.Input)
+		log.Debugf("[AniSource] 解析Mikan，%s", mikanUrl)
+		entity, err := m.aniData.ParseCache(mikanUrl)
 		if err != nil {
 			return nil, err
 		}
@@ -49,7 +54,7 @@ func (m Mikan) Parse(opts *models.AnimeParseOptions) (anime *models.AnimeEntity,
 	}
 	// ------------------- 通过bangumiID获取信息 -------------------
 	return m.bangumiSource.Parse(&models.AnimeParseOptions{
-		Input: models.MikanEntity{
+		Input: &models.MikanEntity{
 			MikanID:   mikanEntity.MikanID,
 			BangumiID: mikanEntity.BangumiID,
 		},

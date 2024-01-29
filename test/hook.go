@@ -46,6 +46,10 @@ func Hook(target interface{}, replace interface{}) {
 	patches.ApplyFunc(target, replace)
 }
 
+func HookMethod(target interface{}, methodName string, double interface{}) {
+	patches.ApplyMethod(target, methodName, double)
+}
+
 func HookSingle(target interface{}, replace interface{}) *gomonkey.Patches {
 	return gomonkey.ApplyFunc(target, replace)
 }

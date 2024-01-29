@@ -18,6 +18,7 @@ import (
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin"
+	"github.com/wetor/AnimeGo/internal/wire"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/utils"
 	"github.com/wetor/AnimeGo/test"
@@ -49,16 +50,18 @@ func TestMain(m *testing.M) {
 		Debug: true,
 	})
 	wg := sync.WaitGroup{}
-	renamer.Init(&renamer.Options{
-		WG:            &wg,
-		RefreshSecond: 1,
-	})
-	p := renamer.NewRenamePlugin(&models.Plugin{
-		Enable: true,
-		Type:   "builtin",
-		File:   "builtin_rename.py",
-	})
-	r = renamer.NewManager(p)
+
+	r = wire.GetRenamer(
+		&renamer.Options{
+			WG:            &wg,
+			RefreshSecond: 1,
+		},
+		&models.Plugin{
+			Enable: true,
+			Type:   "builtin",
+			File:   "builtin_rename.py",
+		},
+	)
 
 	m.Run()
 	_ = log.Close()
@@ -109,7 +112,7 @@ func rename(r *renamer.Manager, mode string, anime *models.AnimeEntity) error {
 
 func initTest() (*sync.WaitGroup, func()) {
 	wg := sync.WaitGroup{}
-	renamer.WG = &wg
+	r.WG = &wg
 	ctx, cancel := context.WithCancel(context.Background())
 	r.Start(ctx)
 	return &wg, cancel

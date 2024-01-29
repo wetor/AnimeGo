@@ -1,8 +1,10 @@
 package renamer
 
 import (
-	"github.com/pkg/errors"
 	"path"
+
+	"github.com/google/wire"
+	"github.com/pkg/errors"
 
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
@@ -13,9 +15,8 @@ import (
 	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
-const (
-	FuncRename = "rename"
-	VarScrape  = "__scrape__"
+var PluginSet = wire.NewSet(
+	NewRenamePlugin,
 )
 
 type Rename struct {

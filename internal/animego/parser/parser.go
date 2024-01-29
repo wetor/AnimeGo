@@ -1,8 +1,10 @@
 package parser
 
 import (
+	"github.com/google/wire"
 	"github.com/pkg/errors"
 
+	"github.com/wetor/AnimeGo/internal/animego/anisource"
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
@@ -11,19 +13,25 @@ import (
 	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
-const DefaultSeason = 1
+var Set = wire.NewSet(
+	NewManager,
+	wire.Bind(new(api.ParserManager), new(*Manager)),
+)
 
 type Manager struct {
-	parser  api.ParserPlugin
+	parser  *Parser
 	mikan   api.AniSource
 	bangumi api.AniSource
+
+	*Options
 }
 
-func NewManager(parser api.ParserPlugin, mikan api.AniSource, bangumi api.AniSource) *Manager {
+func NewManager(opts *Options, parser *Parser, mikan *anisource.Mikan, bangumi *anisource.Bangumi) *Manager {
 	return &Manager{
 		parser:  parser,
 		mikan:   mikan,
 		bangumi: bangumi,
+		Options: opts,
 	}
 }
 
@@ -119,13 +127,13 @@ func (m *Manager) Parse(opts *models.ParseOptions) (entity *models.AnimeEntity, 
 }
 
 func (m *Manager) defaultSeason(season int) (result int) {
-	if !TMDBFailSkip {
-		if TMDBFailUseTitleSeason && season != 0 {
+	if !m.TMDBFailSkip {
+		if m.TMDBFailUseTitleSeason && season != 0 {
 			result = season
 			log.Warnf("使用标题解析季度信息：第%d季", result)
 			return
 		}
-		if TMDBFailUseFirstSeason {
+		if m.TMDBFailUseFirstSeason {
 			result = DefaultSeason
 			log.Warnf("无法获取准确季度信息，默认：第%d季", result)
 			return

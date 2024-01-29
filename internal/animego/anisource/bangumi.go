@@ -41,7 +41,7 @@ func (m Bangumi) Parse(opts *models.AnimeParseOptions) (anime *models.AnimeEntit
 	var tmdbID int
 
 	switch input := opts.Input.(type) {
-	case models.MikanEntity:
+	case *models.MikanEntity:
 		bgmID = input.BangumiID
 		mikanID = input.MikanID
 	case int:

@@ -2,6 +2,7 @@ package parser_test
 
 import (
 	"github.com/pkg/errors"
+	"github.com/wetor/AnimeGo/internal/animego/anisource"
 
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
@@ -9,10 +10,15 @@ import (
 	pkgExceptions "github.com/wetor/AnimeGo/pkg/exceptions"
 )
 
-type AniSourceMock struct {
+func MikanParse(mikan *anisource.Mikan, opt *models.AnimeParseOptions) (*models.AnimeEntity, error) {
+	return parse(opt)
 }
 
-func (m *AniSourceMock) Parse(opt *models.AnimeParseOptions) (*models.AnimeEntity, error) {
+func BangumiParse(bgm *anisource.Bangumi, opt *models.AnimeParseOptions) (*models.AnimeEntity, error) {
+	return parse(opt)
+}
+
+func parse(opt *models.AnimeParseOptions) (*models.AnimeEntity, error) {
 	bangumiID := 0
 	mikanUrl, ok := opt.Input.(string)
 	if !ok {

@@ -2,12 +2,13 @@ package renamer
 
 import (
 	"context"
+	"github.com/wetor/AnimeGo/internal/api"
 	"path"
 	"sync"
 
+	"github.com/google/wire"
 	"github.com/pkg/errors"
 
-	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
@@ -15,60 +16,27 @@ import (
 	"github.com/wetor/AnimeGo/pkg/utils"
 )
 
-const (
-	RenameStateError = iota - 1
-	RenameStateStart
-	RenameStateSeeding
-	RenameStateComplete
-	RenameStateEnd
+var Set = wire.NewSet(
+	NewManager,
+	wire.Bind(new(api.Renamer), new(*Manager)),
 )
-
-const (
-	AllRenameStateError = iota - 1
-	AllRenameStateStart
-	AllRenameStateIncomplete
-	AllRenameStateComplete
-)
-
-const (
-	RenameStateChanCap = 5
-	RenameMaxErrCount  = 3
-)
-
-type RenameTask struct {
-	// 只读
-	Src            string // 原名
-	Dst            string
-	Mode           string
-	StateChan      chan constant.TorrentState
-	RenameCallback models.RenameCallback // 重命名完成后回调
-	Result         *models.RenameResult
-
-	// 读写
-	Enable      bool
-	RenameState int
-	State       constant.TorrentState
-	ErrCount    int
-}
-
-type RenameTaskGroup struct {
-	Keys             []string
-	RenameResult     *models.RenameAllResult
-	CompleteCallback models.CompleteCallback // 完成重命名所有流程后回调
-}
 
 type Manager struct {
-	plugin     api.RenamerPlugin
+	plugin     *Rename
 	tasks      map[string]*RenameTask
 	taskGroups []*RenameTaskGroup
 	sync.Mutex
+
+	*Options
 }
 
-func NewManager(plugin api.RenamerPlugin) *Manager {
+func NewManager(opts *Options, plugin *Rename) *Manager {
 	m := &Manager{
-		plugin: plugin,
+		plugin:     plugin,
+		tasks:      make(map[string]*RenameTask),
+		taskGroups: make([]*RenameTaskGroup, 0),
+		Options:    opts,
 	}
-	m.Init()
 	return m
 }
 
@@ -336,8 +304,6 @@ func (m *Manager) DeleteTask(keys []string) {
 }
 
 func (m *Manager) Update(ctx context.Context) (err error) {
-	ReInitWG.Add(1)
-	defer ReInitWG.Done()
 	m.Lock()
 	defer m.Unlock()
 
@@ -425,14 +391,14 @@ func (m *Manager) Update(ctx context.Context) (err error) {
 }
 
 func (m *Manager) sleep(ctx context.Context) {
-	utils.Sleep(RefreshSecond, ctx)
+	utils.Sleep(m.RefreshSecond, ctx)
 }
 
 func (m *Manager) Start(ctx context.Context) {
-	WG.Add(1)
+	m.WG.Add(1)
 	// 刷新信息、接收下载、接收退出指令协程
 	go func() {
-		defer WG.Done()
+		defer m.WG.Done()
 		for {
 			exit := false
 			func() {

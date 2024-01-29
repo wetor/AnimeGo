@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"github.com/google/wire"
 	"github.com/pkg/errors"
 
 	"github.com/wetor/AnimeGo/internal/api"
@@ -12,8 +13,8 @@ import (
 	"github.com/wetor/AnimeGo/pkg/utils"
 )
 
-const (
-	FuncParse = "parse"
+var PluginSet = wire.NewSet(
+	NewParserPlugin,
 )
 
 type Parser struct {
@@ -22,10 +23,10 @@ type Parser struct {
 	single         bool
 }
 
-func NewParserPlugin(pluginInfo *models.Plugin, single bool) *Parser {
+func NewParserPlugin(pluginInfo *models.Plugin) *Parser {
 	return &Parser{
 		plugin: pluginInfo,
-		single: single,
+		single: true,
 	}
 }
 

@@ -25,13 +25,13 @@ import (
 	"github.com/wetor/AnimeGo/internal/animego/anisource/bangumi"
 	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
 	"github.com/wetor/AnimeGo/internal/animego/anisource/themoviedb"
+	"github.com/wetor/AnimeGo/internal/animego/clientnotifier"
 	"github.com/wetor/AnimeGo/internal/animego/database"
 	"github.com/wetor/AnimeGo/internal/animego/downloader"
 	"github.com/wetor/AnimeGo/internal/animego/feed"
 	"github.com/wetor/AnimeGo/internal/animego/filter"
 	"github.com/wetor/AnimeGo/internal/animego/parser"
 	"github.com/wetor/AnimeGo/internal/animego/renamer"
-	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/logger"
 	"github.com/wetor/AnimeGo/internal/models"
@@ -172,8 +172,6 @@ func Main() {
 		Key:       config.Setting.Key.Themoviedb,
 		Host:      config.Advanced.AniData.Themoviedb.Redirect,
 	}
-	bgmSource := wire.GetBangumi(bgmOpts, tmdbOpts)
-	mikanSource := wire.GetMikan(mikanOpts, bgmOpts, tmdbOpts)
 	// ===============================================================================================================
 	// 初始化插件 gpython
 	plugin.Init(&plugin.Options{
@@ -203,53 +201,48 @@ func Main() {
 	clientSrv.Start()
 
 	// ===============================================================================================================
-	// 初始化renamer配置
-	renamer.Init(&renamer.Options{
-		WG:            &wg,
-		RefreshSecond: config.RefreshSecond,
-	})
 	// 第一个启用的rename插件
-	var rename api.RenamerPlugin
+	var renamePlugin *models.Plugin
 	for _, p := range configs.ConvertPluginInfo(config.Plugin.Rename) {
 		if p.Enable {
-			rename = renamer.NewRenamePlugin(&p)
+			renamePlugin = &p
 			break
 		}
 	}
 	// 初始化rename
-	renameSrv := renamer.NewManager(rename)
+	renameSrv := wire.GetRenamer(&renamer.Options{
+		WG:            &wg,
+		RefreshSecond: config.RefreshSecond,
+	}, renamePlugin)
 	// 启动rename
 	renameSrv.Start(ctx)
 
 	// ===============================================================================================================
 	// 初始化database配置
-	database.Init(&database.Options{
-		DownloaderConf: database.DownloaderConf{
-			RefreshSecond: config.RefreshSecond,
-			DownloadPath:  xpath.P(config.DownloadPath),
-			SavePath:      xpath.P(config.SavePath),
-			Category:      config.Category,
-			Tag:           config.Tag,
-			Rename:        config.Advanced.Download.Rename,
-		},
-	})
-	downloadCallback := &database.Callback{}
-	databaseSrv, err := database.NewDatabase(bolt, renameSrv, downloadCallback)
+	databaseInst, err := wire.GetDatabase(&database.Options{
+		SavePath: xpath.P(config.SavePath),
+	}, bolt)
 	if err != nil {
 		panic(err)
 	}
 
 	// ===============================================================================================================
-	// 初始化downloader配置
-	downloader.Init(&downloader.Options{
+	// 初始化downloader
+
+	downloadCallback := &clientnotifier.Callback{}
+	downloaderSrv := wire.GetDownloader(&downloader.Options{
 		RefreshSecond:          config.RefreshSecond,
 		Category:               config.Category,
 		Tag:                    config.Tag,
 		AllowDuplicateDownload: config.Download.AllowDuplicateDownload,
 		WG:                     &wg,
-	})
-	// 初始化downloader
-	downloaderSrv := downloader.NewManager(clientSrv, databaseSrv, databaseSrv)
+	}, clientSrv, &clientnotifier.Options{
+		DownloadPath: xpath.P(config.DownloadPath),
+		SavePath:     xpath.P(config.SavePath),
+		Rename:       config.Advanced.Download.Rename,
+		Callback:     downloadCallback,
+	}, databaseInst, renameSrv)
+
 	downloadCallback.Renamed = func(data any) error {
 		return downloaderSrv.Delete(data.(string))
 	}
@@ -257,30 +250,23 @@ func Main() {
 	downloaderSrv.Start(ctx)
 
 	// ===============================================================================================================
-	// 初始化parser配置
-	parser.Init(&parser.Options{
-		TMDBFailSkip:           config.Default.TMDBFailSkip,
-		TMDBFailUseTitleSeason: config.Default.TMDBFailUseTitleSeason,
-		TMDBFailUseFirstSeason: config.Default.TMDBFailUseFirstSeason,
-	})
 	// 第一个启用的parser插件
-	var parse api.ParserPlugin
+	var parsePlugin *models.Plugin
 	for _, p := range configs.ConvertPluginInfo(config.Plugin.Parser) {
 		if p.Enable {
-			parse = parser.NewParserPlugin(&p, false)
+			parsePlugin = &p
 			break
 		}
 	}
-	// 初始化parser
-	parserSrv := parser.NewManager(parse, mikanSource, bgmSource)
-
-	// ===============================================================================================================
-	// 初始化filter配置
-	filter.Init(&filter.Options{
-		DelaySecond: config.Advanced.Feed.DelaySecond,
-	})
 	// 初始化filter
-	filterSrv := filter.NewManager(downloaderSrv, parserSrv)
+
+	filterSrv := wire.GetFilter(&filter.Options{
+		DelaySecond: config.Advanced.Feed.DelaySecond,
+	}, downloaderSrv, &parser.Options{
+		TMDBFailSkip:           config.Default.TMDBFailSkip,
+		TMDBFailUseTitleSeason: config.Default.TMDBFailUseTitleSeason,
+		TMDBFailUseFirstSeason: config.Default.TMDBFailUseFirstSeason,
+	}, parsePlugin, mikanOpts, bgmOpts, tmdbOpts)
 	for _, p := range configs.ConvertPluginInfo(config.Plugin.Filter) {
 		filterSrv.Add(&p)
 	}
@@ -305,7 +291,7 @@ func Main() {
 		Name:     "database",
 		StartRun: false,
 		Task: schedule.NewRefreshTask(&schedule.RefreshOptions{
-			Database: databaseSrv,
+			Database: databaseInst,
 			Cron:     config.Advanced.Database.RefreshDatabaseCron,
 		}),
 	})
@@ -335,7 +321,7 @@ func Main() {
 				BangumiCache:         bangumiCache,
 				BangumiCacheLock:     &bangumiCacheMutex,
 				FilterManager:        filterSrv,
-				DatabaseCacheDeleter: databaseSrv,
+				DatabaseCacheDeleter: databaseInst,
 			},
 			WebSocketOptions: &websocket.Options{
 				WG:     &wg,

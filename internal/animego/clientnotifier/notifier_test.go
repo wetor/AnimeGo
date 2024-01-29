@@ -1,9 +1,10 @@
-package database_test
+package clientnotifier_test
 
 import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/wetor/AnimeGo/internal/animego/clientnotifier"
 	"os"
 	"path"
 	"sync"
@@ -11,11 +12,13 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+
 	"github.com/wetor/AnimeGo/assets"
 	"github.com/wetor/AnimeGo/internal/animego/database"
 	"github.com/wetor/AnimeGo/internal/animego/renamer"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin"
+	"github.com/wetor/AnimeGo/internal/wire"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/dirdb"
 	"github.com/wetor/AnimeGo/pkg/log"
@@ -29,12 +32,11 @@ const (
 )
 
 var (
-	rename       *renamer.Manager
-	renamePlugin *renamer.Rename
-	db           *cache.Bolt
-	out          *bytes.Buffer
+	rename *renamer.Manager
+	db     *cache.Bolt
+	out    *bytes.Buffer
 
-	dbManager *database.Database
+	dbManager *clientnotifier.Notifier
 )
 
 type DownloaderMock struct {
@@ -64,32 +66,38 @@ func TestMain(m *testing.M) {
 	dirdb.Init(&dirdb.Options{
 		DefaultExt: []string{".a_json", ".s_json", ".e_json"}, // anime, season
 	})
-	database.Init(&database.Options{
-		DownloaderConf: database.DownloaderConf{
-			DownloadPath: DownloadPath,
-			SavePath:     SavePath,
-			Rename:       "link_delete",
+	rename = wire.GetRenamer(
+		&renamer.Options{
+			WG:            &wg,
+			RefreshSecond: 1,
 		},
-	})
-	renamer.Init(&renamer.Options{
-		WG:            &wg,
-		RefreshSecond: 1,
-	})
-	renamePlugin = renamer.NewRenamePlugin(&models.Plugin{
-		Enable: true,
-		Type:   "python",
-		File:   "rename/builtin_rename.py",
-	})
-	rename = renamer.NewManager(renamePlugin)
+		&models.Plugin{
+			Enable: true,
+			Type:   "python",
+			File:   "rename/builtin_rename.py",
+		},
+	)
 	db = cache.NewBolt()
 	db.Open("data/test.db")
 	var err error
+	databaseSrv, err := database.NewDatabase(&database.Options{
+		SavePath: SavePath,
+	}, db)
+	if err != nil {
+		return
+	}
 	downloader := &DownloaderMock{}
-	dbManager, err = database.NewDatabase(db, rename, &database.Callback{
-		Renamed: func(data any) error {
-			return downloader.Delete(data.(string))
+	dbManager = clientnotifier.NewNotifier(&clientnotifier.Options{
+		DownloadPath: DownloadPath,
+		SavePath:     SavePath,
+		Rename:       "link_delete",
+		Callback: &clientnotifier.Callback{
+			Renamed: func(data any) error {
+				return downloader.Delete(data.(string))
+			},
 		},
-	})
+	}, databaseSrv, rename)
+
 	if err != nil {
 		panic(err)
 	}
@@ -106,7 +114,7 @@ func initTest(clean bool) (*sync.WaitGroup, func()) {
 		_ = os.RemoveAll("data")
 	}
 	wg := sync.WaitGroup{}
-	renamer.WG = &wg
+	rename.WG = &wg
 	ctx, cancel := context.WithCancel(context.Background())
 	rename.Init()
 	rename.Start(ctx)

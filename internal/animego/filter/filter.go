@@ -2,6 +2,7 @@ package filter
 
 import (
 	"context"
+	"github.com/google/wire"
 
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/exceptions"
@@ -10,10 +11,17 @@ import (
 	"github.com/wetor/AnimeGo/pkg/utils"
 )
 
+var Set = wire.NewSet(
+	NewManager,
+	wire.Bind(new(api.FilterManager), new(*Manager)),
+)
+
 type Manager struct {
 	filters []api.FilterPlugin
 	manager api.ManagerDownloader
 	parser  api.ParserManager
+
+	*Options
 }
 
 // NewManager
@@ -21,11 +29,12 @@ type Manager struct {
 //	@Description:
 //	@param feed api.Feed
 //	@return *Manager
-func NewManager(manager api.ManagerDownloader, parser api.ParserManager) *Manager {
+func NewManager(opts *Options, manager api.ManagerDownloader, parser api.ParserManager) *Manager {
 	m := &Manager{
 		filters: make([]api.FilterPlugin, 0),
 		manager: manager,
 		parser:  parser,
+		Options: opts,
 	}
 	return m
 }
@@ -37,8 +46,6 @@ func (m *Manager) Add(pluginInfo *models.Plugin) {
 
 func (m *Manager) Update(ctx context.Context, items []*models.FeedItem,
 	skipFilter, skipDelay bool) (err error) {
-	ReInitWG.Add(1)
-	defer ReInitWG.Done()
 	// 筛选
 	if len(items) == 0 {
 		return nil
@@ -75,7 +82,7 @@ func (m *Manager) Update(ctx context.Context, items []*models.FeedItem,
 			}
 		}
 		if !skipDelay {
-			utils.Sleep(DelaySecond, ctx)
+			utils.Sleep(m.DelaySecond, ctx)
 		}
 	}
 	return nil

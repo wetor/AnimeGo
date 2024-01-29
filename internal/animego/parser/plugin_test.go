@@ -14,7 +14,7 @@ func TestBuiltinParser_Parse(t *testing.T) {
 		Enable: true,
 		Type:   "builtin",
 		File:   "builtin_parser.py",
-	}, true)
+	})
 
 	r, _ := p.Parse("[ANi] 总之就是非常可爱 第二季（仅限港澳台地区） - 01 [1080P][Bilibili][WEB-DL][AAC AVC][CHT CHS][MP4]")
 	t1 := "[ANi] 吸血鬼馬上死 第二季 - 12 [1080P][Baha][WEB-DL][AAC AVC][CHT].mp4"

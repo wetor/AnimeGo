@@ -2,6 +2,8 @@ package downloader
 
 import (
 	"context"
+	"github.com/google/wire"
+	"github.com/wetor/AnimeGo/internal/animego/clientnotifier"
 	"sync"
 
 	"github.com/pkg/errors"
@@ -14,10 +16,13 @@ import (
 	"github.com/wetor/AnimeGo/pkg/utils"
 )
 
+var Set = wire.NewSet(
+	NewManager,
+)
+
 type Manager struct {
 	client   api.Client
-	database api.Database
-	notifier api.ClientNotifier
+	notifier *clientnotifier.Notifier
 
 	cache map[string]*models.AnimeEntity
 	// 保存上一次状态，检查状态是否改变
@@ -27,13 +32,15 @@ type Manager struct {
 	errs     []error
 	errMutex sync.Mutex
 	sync.Mutex
+
+	*Options
 }
 
-func NewManager(client api.Client, notifier api.ClientNotifier, database api.Database) *Manager {
+func NewManager(opts *Options, client api.Client, notifier *clientnotifier.Notifier) *Manager {
 	m := &Manager{
 		client:   client,
 		notifier: notifier,
-		database: database,
+		Options:  opts,
 	}
 	m.Init()
 	return m
@@ -47,7 +54,7 @@ func (m *Manager) Init() {
 }
 
 func (m *Manager) sleep(ctx context.Context) {
-	utils.Sleep(RefreshSecond, ctx)
+	utils.Sleep(m.RefreshSecond, ctx)
 }
 
 func (m *Manager) addError(err error) {
@@ -170,12 +177,10 @@ func (m *Manager) notify(oldNotifyState, newNotifyState NotifyState, event []mod
 }
 
 func (m *Manager) Download(anime *models.AnimeEntity) error {
-	ReInitWG.Add(1)
-	defer ReInitWG.Done()
 	name := anime.FullName()
-	if m.database.IsExist(anime) {
+	if m.notifier.IsExist(anime) {
 		log.Infof("发现已下载「%s」", name)
-		if !AllowDuplicateDownload {
+		if !m.AllowDuplicateDownload {
 			log.Infof("取消下载，不允许重复「%s」", name)
 			return exceptions.ErrDownloadExist{Name: name}
 		}
@@ -185,14 +190,14 @@ func (m *Manager) Download(anime *models.AnimeEntity) error {
 		Url:      anime.Torrent.Url,
 		File:     anime.Torrent.File,
 		SavePath: m.client.Config().DownloadPath,
-		Category: Category,
-		Tag:      utils.Tag(Tag, anime.AirDate, anime.Ep[0].Ep),
+		Category: m.Category,
+		Tag:      utils.Tag(m.Tag, anime.AirDate, anime.Ep[0].Ep),
 		Name:     name,
 	})
 	if err != nil {
 		return errors.Wrap(err, "添加下载项失败")
 	}
-	err = m.database.Add(anime)
+	err = m.notifier.Add(anime)
 	if err != nil {
 		return errors.Wrap(err, "添加下载项失败")
 	}
@@ -201,8 +206,6 @@ func (m *Manager) Download(anime *models.AnimeEntity) error {
 }
 
 func (m *Manager) add(hash string, opt *models.AddOptions) error {
-	ReInitWG.Add(1)
-	defer ReInitWG.Done()
 	m.Lock()
 	defer m.Unlock()
 	name := opt.Name
@@ -258,13 +261,11 @@ func (m *Manager) Delete(hash string) error {
 }
 
 func (m *Manager) updateList() {
-	ReInitWG.Add(1)
-	defer ReInitWG.Done()
 	m.Lock()
 	defer m.Unlock()
 
 	items, err := m.client.List(&models.ListOptions{
-		Category: Category,
+		Category: m.Category,
 	})
 	if err != nil {
 		m.addError(err)
@@ -302,9 +303,9 @@ func (m *Manager) updateList() {
 }
 
 func (m *Manager) Start(ctx context.Context) {
-	WG.Add(1)
+	m.WG.Add(1)
 	go func() {
-		defer WG.Done()
+		defer m.WG.Done()
 		for {
 			exit := false
 			func() {

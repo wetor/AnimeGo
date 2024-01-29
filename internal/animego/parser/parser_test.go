@@ -2,6 +2,7 @@ package parser_test
 
 import (
 	"fmt"
+	"github.com/wetor/AnimeGo/internal/animego/anisource"
 	"net/url"
 	"os"
 	"path"
@@ -65,18 +66,22 @@ func TestMain(m *testing.M) {
 		}),
 	})
 
-	parser.Init(&parser.Options{
-		TMDBFailSkip:           false,
-		TMDBFailUseTitleSeason: true,
-		TMDBFailUseFirstSeason: true,
-	})
-
 	p := parser.NewParserPlugin(&models.Plugin{
 		Enable: true,
 		Type:   "builtin",
 		File:   "builtin_parser.py",
-	}, true)
-	mgr = parser.NewManager(p, &AniSourceMock{}, &AniSourceMock{})
+	})
+	mikanSource := &anisource.Mikan{}
+	bangumiSource := &anisource.Bangumi{}
+
+	test.HookMethod(mikanSource, "Parse", MikanParse)
+	test.HookMethod(bangumiSource, "Parse", BangumiParse)
+
+	mgr = parser.NewManager(&parser.Options{
+		TMDBFailSkip:           false,
+		TMDBFailUseTitleSeason: true,
+		TMDBFailUseFirstSeason: true,
+	}, p, mikanSource, bangumiSource)
 
 	m.Run()
 
@@ -261,7 +266,7 @@ func TestManager_Parse_Failed(t *testing.T) {
 			wantErrStr: "解析季度失败，未设置默认值，结束此流程",
 		},
 	}
-	parser.TMDBFailSkip = true
+	mgr.TMDBFailSkip = true
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			gotEntity, err := mgr.Parse(tt.args.opts)
