@@ -25,13 +25,7 @@ import (
 	"github.com/wetor/AnimeGo/internal/animego/anisource/bangumi"
 	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
 	"github.com/wetor/AnimeGo/internal/animego/anisource/themoviedb"
-	"github.com/wetor/AnimeGo/internal/animego/clientnotifier"
-	"github.com/wetor/AnimeGo/internal/animego/database"
-	"github.com/wetor/AnimeGo/internal/animego/downloader"
 	"github.com/wetor/AnimeGo/internal/animego/feed"
-	"github.com/wetor/AnimeGo/internal/animego/filter"
-	"github.com/wetor/AnimeGo/internal/animego/parser"
-	"github.com/wetor/AnimeGo/internal/animego/renamer"
 	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/logger"
 	"github.com/wetor/AnimeGo/internal/models"
@@ -210,7 +204,7 @@ func Main() {
 		}
 	}
 	// 初始化rename
-	renameSrv := wire.GetRenamer(&renamer.Options{
+	renameSrv := wire.GetRenamer(&models.RenamerOptions{
 		WG:            &wg,
 		RefreshSecond: config.RefreshSecond,
 	}, renamePlugin)
@@ -219,7 +213,7 @@ func Main() {
 
 	// ===============================================================================================================
 	// 初始化database配置
-	databaseInst, err := wire.GetDatabase(&database.Options{
+	databaseInst, err := wire.GetDatabase(&models.DatabaseOptions{
 		SavePath: xpath.P(config.SavePath),
 	}, bolt)
 	if err != nil {
@@ -229,21 +223,21 @@ func Main() {
 	// ===============================================================================================================
 	// 初始化downloader
 
-	downloadCallback := &clientnotifier.Callback{}
-	downloaderSrv := wire.GetDownloader(&downloader.Options{
+	downloadCallback := &models.Callback{}
+	downloaderSrv := wire.GetDownloader(&models.DownloaderOptions{
 		RefreshSecond:          config.RefreshSecond,
 		Category:               config.Category,
 		Tag:                    config.Tag,
 		AllowDuplicateDownload: config.Download.AllowDuplicateDownload,
 		WG:                     &wg,
-	}, clientSrv, &clientnotifier.Options{
+	}, clientSrv, &models.NotifierOptions{
 		DownloadPath: xpath.P(config.DownloadPath),
 		SavePath:     xpath.P(config.SavePath),
 		Rename:       config.Advanced.Download.Rename,
 		Callback:     downloadCallback,
 	}, databaseInst, renameSrv)
 
-	downloadCallback.Renamed = func(data any) error {
+	downloadCallback.Func = func(data any) error {
 		return downloaderSrv.Delete(data.(string))
 	}
 	// 启动downloader
@@ -260,9 +254,9 @@ func Main() {
 	}
 	// 初始化filter
 
-	filterSrv := wire.GetFilter(&filter.Options{
+	filterSrv := wire.GetFilter(&models.FilterOptions{
 		DelaySecond: config.Advanced.Feed.DelaySecond,
-	}, downloaderSrv, &parser.Options{
+	}, downloaderSrv, &models.ParserOptions{
 		TMDBFailSkip:           config.Default.TMDBFailSkip,
 		TMDBFailUseTitleSeason: config.Default.TMDBFailUseTitleSeason,
 		TMDBFailUseFirstSeason: config.Default.TMDBFailUseFirstSeason,
@@ -272,7 +266,7 @@ func Main() {
 	}
 	// ===============================================================================================================
 	// 初始化定时任务
-	scheduleSrv := schedule.NewSchedule(&schedule.Options{
+	scheduleSrv := schedule.NewSchedule(&models.ScheduleOptions{
 		WG: &wg,
 	})
 	// 添加定时任务

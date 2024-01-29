@@ -5,6 +5,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/wetor/AnimeGo/internal/api"
+	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin"
@@ -35,10 +36,10 @@ func (p *Parser) Parse(title string) (*models.TitleParsed, error) {
 	if p.pluginInstance == nil || !p.single {
 		p.pluginInstance, err = plugin.LoadPlugin(&plugin.LoadPluginOptions{
 			Plugin:    p.plugin,
-			EntryFunc: FuncParse,
+			EntryFunc: constant.FuncParse,
 			FuncSchema: []*pkgPlugin.FuncSchemaOptions{
 				{
-					Name:         FuncParse,
+					Name:         constant.FuncParse,
 					ParamsSchema: []string{"title"},
 					ResultSchema: []string{"error", "data"},
 					DefaultArgs:  p.plugin.Args,
@@ -49,7 +50,7 @@ func (p *Parser) Parse(title string) (*models.TitleParsed, error) {
 			return nil, err
 		}
 	}
-	result, err := p.pluginInstance.Run(FuncParse, map[string]any{
+	result, err := p.pluginInstance.Run(constant.FuncParse, map[string]any{
 		"title": title,
 	})
 	if err != nil {

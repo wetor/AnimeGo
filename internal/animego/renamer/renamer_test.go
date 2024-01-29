@@ -52,7 +52,7 @@ func TestMain(m *testing.M) {
 	wg := sync.WaitGroup{}
 
 	r = wire.GetRenamer(
-		&renamer.Options{
+		&models.RenamerOptions{
 			WG:            &wg,
 			RefreshSecond: 1,
 		},

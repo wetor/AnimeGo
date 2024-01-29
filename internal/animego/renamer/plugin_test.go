@@ -1,11 +1,11 @@
 package renamer_test
 
 import (
-	renamerPlugin "github.com/wetor/AnimeGo/internal/animego/renamer"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/wetor/AnimeGo/internal/animego/renamer"
 	"github.com/wetor/AnimeGo/internal/models"
 )
 
@@ -64,7 +64,7 @@ func TestRename_Rename(t *testing.T) {
 			want: &models.RenameResult{Index: 0, Filename: "18692/S02/src_1.mp4", AnimeDir: "18692", SeasonDir: "18692/S02", Scrape: true},
 		},
 	}
-	p := renamerPlugin.NewRenamePlugin(&models.Plugin{
+	p := renamer.NewRenamePlugin(&models.Plugin{
 		Enable: true,
 		Type:   "builtin",
 		File:   "builtin_rename.py",

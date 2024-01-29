@@ -2,12 +2,12 @@ package downloader
 
 import (
 	"context"
-	"github.com/google/wire"
-	"github.com/wetor/AnimeGo/internal/animego/clientnotifier"
 	"sync"
 
+	"github.com/google/wire"
 	"github.com/pkg/errors"
 
+	"github.com/wetor/AnimeGo/internal/animego/clientnotifier"
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/exceptions"
@@ -26,21 +26,21 @@ type Manager struct {
 
 	cache map[string]*models.AnimeEntity
 	// 保存上一次状态，检查状态是否改变
-	hash2stateList map[string]*ItemState
+	hash2stateList map[string]*models.ItemState
 	name2hash      map[string]string
 
 	errs     []error
 	errMutex sync.Mutex
 	sync.Mutex
 
-	*Options
+	*models.DownloaderOptions
 }
 
-func NewManager(opts *Options, client api.Client, notifier *clientnotifier.Notifier) *Manager {
+func NewManager(opts *models.DownloaderOptions, client api.Client, notifier *clientnotifier.Notifier) *Manager {
 	m := &Manager{
-		client:   client,
-		notifier: notifier,
-		Options:  opts,
+		client:            client,
+		notifier:          notifier,
+		DownloaderOptions: opts,
 	}
 	m.Init()
 	return m
@@ -48,7 +48,7 @@ func NewManager(opts *Options, client api.Client, notifier *clientnotifier.Notif
 
 func (m *Manager) Init() {
 	m.cache = make(map[string]*models.AnimeEntity)
-	m.hash2stateList = make(map[string]*ItemState)
+	m.hash2stateList = make(map[string]*models.ItemState)
 	m.name2hash = make(map[string]string)
 	m.errs = make([]error, 0)
 }
@@ -63,32 +63,32 @@ func (m *Manager) addError(err error) {
 	m.errMutex.Unlock()
 }
 
-func (m *Manager) transition(oldTorrentState, newTorrentState constant.TorrentState) (constant.TorrentState, NotifyState) {
+func (m *Manager) transition(oldTorrentState, newTorrentState constant.TorrentState) (constant.TorrentState, constant.NotifyState) {
 	if newTorrentState == constant.StateError {
 		// error
-		return newTorrentState, NotifyOnError
+		return newTorrentState, constant.NotifyOnError
 	}
 
 	state := newTorrentState
-	result := NotifyOnStart
+	result := constant.NotifyOnStart
 	switch oldTorrentState {
 	case constant.StateInit:
 		// init -> start
-		result = NotifyOnStart
+		result = constant.NotifyOnStart
 		state = constant.StateAdding
 	case constant.StateAdding:
 		switch newTorrentState {
 		case constant.StateDownloading:
 			// start -> download
-			result = NotifyOnDownload
+			result = constant.NotifyOnDownload
 		case constant.StateSeeding:
 			// start -> seed
 			// 做种状态下重启后
-			result = NotifyOnSeeding
+			result = constant.NotifyOnSeeding
 		case constant.StateComplete:
 			// start -> complete
 			// 完成状态下重启后，需要先经过seeding
-			result = NotifyOnSeeding
+			result = constant.NotifyOnSeeding
 			state = constant.StateSeeding
 		}
 	case constant.StateDownloading:
@@ -96,79 +96,79 @@ func (m *Manager) transition(oldTorrentState, newTorrentState constant.TorrentSt
 		case constant.StateDownloading:
 			// download -> download
 			// 刷新进度
-			result = NotifyOnDownload
+			result = constant.NotifyOnDownload
 		case constant.StateSeeding:
 			// download -> seed
-			result = NotifyOnSeeding
+			result = constant.NotifyOnSeeding
 		case constant.StateComplete:
 			// download -> complete
 			// 跳过了seeding，需要先经过seeding
-			result = NotifyOnSeeding
+			result = constant.NotifyOnSeeding
 			state = constant.StateSeeding
 		}
 	case constant.StateSeeding:
 		switch newTorrentState {
 		case constant.StateSeeding:
 			// seed -> seed
-			result = NotifyOnSeeding
+			result = constant.NotifyOnSeeding
 		case constant.StateComplete:
 			// seed -> complete
-			result = NotifyOnComplete
+			result = constant.NotifyOnComplete
 		}
 	case constant.StateComplete:
 		// complete
-		result = NotifyOnComplete
+		result = constant.NotifyOnComplete
 	case constant.StateError:
 		switch newTorrentState {
 		case constant.StateDownloading:
 			// error -> download
-			result = NotifyOnDownload
+			result = constant.NotifyOnDownload
 		case constant.StateSeeding:
 			// error -> seed
-			result = NotifyOnSeeding
+			result = constant.NotifyOnSeeding
 		case constant.StateComplete:
 			// error -> complete
-			result = NotifyOnComplete
+			result = constant.NotifyOnComplete
 		}
 	}
 	log.Debugf("torrent %v -> %v", oldTorrentState, state)
 	return state, result
 }
 
-func (m *Manager) notify(oldNotifyState, newNotifyState NotifyState, event []models.ClientEvent) error {
+func (m *Manager) notify(oldNotifyState, newNotifyState constant.NotifyState, event []models.ClientEvent) error {
 	log.Debugf("notify %v -> %v", oldNotifyState, newNotifyState)
-	if newNotifyState == NotifyOnInit {
+	if newNotifyState == constant.NotifyOnInit {
 		return nil
 	}
 	switch newNotifyState {
-	case NotifyOnStart:
-		if oldNotifyState == NotifyOnStart {
+	case constant.NotifyOnStart:
+		if oldNotifyState == constant.NotifyOnStart {
 			break
 		}
 		m.notifier.OnDownloadStart(event)
-	case NotifyOnDownload:
-		if oldNotifyState == NotifyOnDownload {
+	case constant.NotifyOnDownload:
+		if oldNotifyState == constant.NotifyOnDownload {
 			// do something
 			break
 		}
-	case NotifyOnSeeding:
-		if oldNotifyState == NotifyOnComplete {
+	case constant.NotifyOnSeeding:
+		if oldNotifyState == constant.NotifyOnComplete {
 			// do something
 			break
 		}
 		m.notifier.OnDownloadSeeding(event)
-	case NotifyOnComplete:
-		if oldNotifyState == NotifyOnComplete {
+	case constant.NotifyOnComplete:
+		if oldNotifyState == constant.NotifyOnComplete {
 			break
 		}
 		m.notifier.OnDownloadComplete(event)
-	case NotifyOnStop:
-		if oldNotifyState == NotifyOnStop {
+	case constant.NotifyOnStop:
+		if oldNotifyState == constant.NotifyOnStop {
 			break
 		}
 		m.notifier.OnDownloadStop(event)
-	case NotifyOnError:
-		if oldNotifyState == NotifyOnError {
+	case constant.NotifyOnError:
+		if oldNotifyState == constant.NotifyOnError {
 			break
 		}
 		m.notifier.OnDownloadError(event)
@@ -223,9 +223,9 @@ func (m *Manager) add(hash string, opt *models.AddOptions) error {
 		return err
 	}
 
-	m.hash2stateList[hash] = &ItemState{
+	m.hash2stateList[hash] = &models.ItemState{
 		Torrent: constant.StateInit,
-		Notify:  NotifyOnInit,
+		Notify:  constant.NotifyOnInit,
 		Name:    name,
 	}
 	m.name2hash[name] = hash
@@ -277,9 +277,9 @@ func (m *Manager) updateList() {
 		itemState, ok := m.hash2stateList[item.Hash]
 		if !ok {
 			// 没有记录状态，可能重启，从最初状态开始计算
-			itemState = &ItemState{
+			itemState = &models.ItemState{
 				Torrent: constant.StateInit,
-				Notify:  NotifyOnInit,
+				Notify:  constant.NotifyOnInit,
 				Name:    item.Name,
 			}
 		}

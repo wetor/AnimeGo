@@ -2,15 +2,14 @@ package filter_test
 
 import (
 	"fmt"
-	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
-	"github.com/wetor/AnimeGo/internal/wire"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 
 	"github.com/wetor/AnimeGo/assets"
-	mikanRss "github.com/wetor/AnimeGo/internal/animego/feed"
-	filterPlugin "github.com/wetor/AnimeGo/internal/animego/filter"
+	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
+	"github.com/wetor/AnimeGo/internal/animego/feed"
+	"github.com/wetor/AnimeGo/internal/animego/filter"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/pkg/cache"
@@ -18,10 +17,10 @@ import (
 )
 
 func TestPython_Filter(t *testing.T) {
-	rss := mikanRss.NewRss()
+	rss := feed.NewRss()
 	items, _ := rss.ParseFile(test.GetDataPath(testdata, "Mikan.xml"))
 	fmt.Println(len(items))
-	p := filterPlugin.NewFilterPlugin(&models.Plugin{
+	p := filter.NewFilterPlugin(&models.Plugin{
 		Enable: true,
 		Type:   "py",
 		File:   "filter.py",
@@ -48,7 +47,7 @@ func TestPython_Filter2(t *testing.T) {
 			Name: "3333",
 		},
 	}
-	p := filterPlugin.NewFilterPlugin(&models.Plugin{
+	p := filter.NewFilterPlugin(&models.Plugin{
 		Enable: true,
 		Type:   "py",
 		File:   "test_re.py",
@@ -63,12 +62,12 @@ func TestPython_Filter3(t *testing.T) {
 		Path:  assets.TestPluginPath(),
 		Debug: true,
 	})
-	rss := mikanRss.NewRss()
+	rss := feed.NewRss()
 	items, _ := rss.ParseFile(test.GetDataPath(testdata, "Mikan.xml"))
 
 	fmt.Println(len(items))
 	fmt.Println("===========")
-	p := filterPlugin.NewFilterPlugin(&models.Plugin{
+	p := filter.NewFilterPlugin(&models.Plugin{
 		Enable: true,
 		Type:   "py",
 		File:   "filter/pydemo.py",
@@ -99,7 +98,7 @@ func TestPython_Filter4(t *testing.T) {
 			Name: "[梦蓝字幕组]New Doraemon 哆啦A梦新番[716][2022.07.23][AVC][1080P][GB_JP]",
 		},
 	}
-	p := filterPlugin.NewFilterPlugin(&models.Plugin{
+	p := filter.NewFilterPlugin(&models.Plugin{
 		Enable: true,
 		Type:   "py",
 		File:   "filter/default.py",
@@ -118,15 +117,15 @@ func TestPython_Filter5(t *testing.T) {
 	plugin.Init(&plugin.Options{
 		Path:  assets.TestPluginPath(),
 		Debug: true,
-		Mikan: wire.GetMikanData(&mikan.Options{
+		Mikan: mikan.NewMikan(&mikan.Options{
 			Cache: db,
 		}),
 	})
-	rss := mikanRss.NewRss()
+	rss := feed.NewRss()
 	items, _ := rss.ParseFile(test.GetDataPath(testdata, "Mikan.xml"))
 	fmt.Println(len(items))
 	fmt.Println("===========")
-	p := filterPlugin.NewFilterPlugin(&models.Plugin{
+	p := filter.NewFilterPlugin(&models.Plugin{
 		Enable: true,
 		Type:   "py",
 		File:   "filter/mikan_tool.py",

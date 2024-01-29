@@ -2,7 +2,6 @@ package mikan_test
 
 import (
 	"fmt"
-	"github.com/wetor/AnimeGo/internal/wire"
 	"os"
 	"testing"
 
@@ -34,7 +33,7 @@ func TestMain(m *testing.M) {
 	db := cache.NewBolt()
 	db.Open("data/bolt.db")
 
-	mikanInst = wire.GetMikanData(&mikan.Options{
+	mikanInst = mikan.NewMikan(&mikan.Options{
 		Cache: db,
 	})
 	m.Run()

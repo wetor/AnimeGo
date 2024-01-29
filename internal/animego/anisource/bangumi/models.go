@@ -1,9 +1,10 @@
 package bangumi
 
 import (
+	"sync"
+
 	"github.com/wetor/AnimeGo/internal/api"
 	mem "github.com/wetor/AnimeGo/pkg/memorizer"
-	"sync"
 )
 
 type Options struct {

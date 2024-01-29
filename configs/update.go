@@ -10,7 +10,6 @@ import (
 	"github.com/jinzhu/copier"
 	"gopkg.in/yaml.v3"
 
-	"github.com/wetor/AnimeGo/assets"
 	"github.com/wetor/AnimeGo/configs/version/v_110"
 	"github.com/wetor/AnimeGo/configs/version/v_120"
 	"github.com/wetor/AnimeGo/configs/version/v_130"
@@ -22,7 +21,8 @@ import (
 	"github.com/wetor/AnimeGo/configs/version/v_160"
 	"github.com/wetor/AnimeGo/configs/version/v_161"
 	"github.com/wetor/AnimeGo/configs/version/v_162"
-	"github.com/wetor/AnimeGo/internal/animego/database"
+
+	"github.com/wetor/AnimeGo/assets"
 	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/pkg/cache"
@@ -230,7 +230,7 @@ func update_110_120(file string) {
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
 	}
-	err = os.WriteFile(file, content, 0644)
+	err = os.WriteFile(file, content, constant.WriteFilePerm)
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
 	}
@@ -272,7 +272,7 @@ func update_120_130(file string) {
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
 	}
-	err = os.WriteFile(file, content, 0644)
+	err = os.WriteFile(file, content, constant.WriteFilePerm)
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
 	}
@@ -327,7 +327,7 @@ func update_130_140(file string) {
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
 	}
-	err = os.WriteFile(file, content, 0644)
+	err = os.WriteFile(file, content, constant.WriteFilePerm)
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
 	}
@@ -366,7 +366,7 @@ func update_140_141(file string) {
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
 	}
-	err = os.WriteFile(file, content, 0644)
+	err = os.WriteFile(file, content, constant.WriteFilePerm)
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
 	}
@@ -420,7 +420,7 @@ func update_141_150(file string) {
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
 	}
-	err = os.WriteFile(file, content, 0644)
+	err = os.WriteFile(file, content, constant.WriteFilePerm)
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
 	}
@@ -454,7 +454,7 @@ func update_150_151(file string) {
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
 	}
-	err = os.WriteFile(file, content, 0644)
+	err = os.WriteFile(file, content, constant.WriteFilePerm)
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
 	}
@@ -487,7 +487,7 @@ func update_151_152(file string) {
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
 	}
-	err = os.WriteFile(file, content, 0644)
+	err = os.WriteFile(file, content, constant.WriteFilePerm)
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
 	}
@@ -522,7 +522,7 @@ func update_152_160(file string) {
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
 	}
-	err = os.WriteFile(file, content, 0644)
+	err = os.WriteFile(file, content, constant.WriteFilePerm)
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
 	}
@@ -559,14 +559,14 @@ func bolt2dirdb(boltPath, savePath string) {
 		}
 		if len(status.Path) > 0 {
 			animePath := xpath.Root(status.Path[0])
-			_ = write(path.Join(savePath, animePath, database.AnimeDBName), models.AnimeDBEntity{
+			_ = write(path.Join(savePath, animePath, constant.DatabaseAnimeDBName), models.AnimeDBEntity{
 				BaseDBEntity: base,
 			})
 		}
 		for i, f := range status.Path {
 			file := path.Join(savePath, f)
 			if utils.IsExist(file) {
-				filename := fmt.Sprintf(database.EpisodeDBFmt, strings.TrimSuffix(f, path.Ext(f)))
+				filename := fmt.Sprintf(constant.DatabaseEpisodeDBFmt, strings.TrimSuffix(f, path.Ext(f)))
 				_ = write(path.Join(savePath, filename), models.EpisodeDBEntity{
 					BaseDBEntity: base,
 					StateDB: models.StateDB{
@@ -613,7 +613,7 @@ func update_160_161(file string) {
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
 	}
-	err = os.WriteFile(file, content, 0644)
+	err = os.WriteFile(file, content, constant.WriteFilePerm)
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
 	}
@@ -646,7 +646,7 @@ func update_161_162(file string) {
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
 	}
-	err = os.WriteFile(file, content, 0644)
+	err = os.WriteFile(file, content, constant.WriteFilePerm)
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
 	}
@@ -685,7 +685,7 @@ func update_162_170(file string) {
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
 	}
-	err = os.WriteFile(file, content, 0644)
+	err = os.WriteFile(file, content, constant.WriteFilePerm)
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
 	}

@@ -12,7 +12,6 @@ import (
 	"github.com/wetor/AnimeGo/internal/animego/anisource/bangumi"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/pkg/request"
-	"github.com/wetor/AnimeGo/internal/wire"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/utils"
@@ -44,7 +43,7 @@ func TestMain(m *testing.M) {
 
 	bangumiCache := cache.NewBolt(true)
 	bangumiCache.Open(test.GetDataPath("", "bolt_sub.bolt"))
-	bangumiInst = wire.GetBangumiData(&bangumi.Options{
+	bangumiInst = bangumi.NewBangumi(&bangumi.Options{
 		Cache:            db,
 		BangumiCache:     bangumiCache,
 		BangumiCacheLock: &mutex,

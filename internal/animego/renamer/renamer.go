@@ -2,13 +2,13 @@ package renamer
 
 import (
 	"context"
-	"github.com/wetor/AnimeGo/internal/api"
 	"path"
 	"sync"
 
 	"github.com/google/wire"
 	"github.com/pkg/errors"
 
+	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
@@ -23,26 +23,26 @@ var Set = wire.NewSet(
 
 type Manager struct {
 	plugin     *Rename
-	tasks      map[string]*RenameTask
-	taskGroups []*RenameTaskGroup
+	tasks      map[string]*models.RenameTask
+	taskGroups []*models.RenameTaskGroup
 	sync.Mutex
 
-	*Options
+	*models.RenamerOptions
 }
 
-func NewManager(opts *Options, plugin *Rename) *Manager {
+func NewManager(opts *models.RenamerOptions, plugin *Rename) *Manager {
 	m := &Manager{
-		plugin:     plugin,
-		tasks:      make(map[string]*RenameTask),
-		taskGroups: make([]*RenameTaskGroup, 0),
-		Options:    opts,
+		plugin:         plugin,
+		tasks:          make(map[string]*models.RenameTask),
+		taskGroups:     make([]*models.RenameTaskGroup, 0),
+		RenamerOptions: opts,
 	}
 	return m
 }
 
 func (m *Manager) Init() {
-	m.tasks = make(map[string]*RenameTask)
-	m.taskGroups = make([]*RenameTaskGroup, 0)
+	m.tasks = make(map[string]*models.RenameTask)
+	m.taskGroups = make([]*models.RenameTaskGroup, 0)
 }
 
 func (m *Manager) SetDownloadState(keys []string, state constant.TorrentState) error {
@@ -74,10 +74,10 @@ func (m *Manager) GetRenameTaskState(keys []string) (int, error) {
 	for _, key := range keys {
 		t, ok := m.tasks[key]
 		if !ok {
-			return AllRenameStateError, errors.WithStack(exceptions.ErrRename{Src: key, Message: "任务不存在"})
+			return constant.AllRenameStateError, errors.WithStack(exceptions.ErrRename{Src: key, Message: "任务不存在"})
 		}
 		if !t.Enable {
-			return AllRenameStateError, errors.WithStack(exceptions.ErrRename{Src: key, Message: "任务未启用"})
+			return constant.AllRenameStateError, errors.WithStack(exceptions.ErrRename{Src: key, Message: "任务未启用"})
 		}
 	}
 	state, _ := m.isComplete(keys)
@@ -87,18 +87,18 @@ func (m *Manager) GetRenameTaskState(keys []string) (int, error) {
 func (m *Manager) GetEpTaskState(key string) (int, error) {
 	t, ok := m.tasks[key]
 	if !ok {
-		return RenameStateError, errors.WithStack(exceptions.ErrRename{Src: key, Message: "任务不存在"})
+		return constant.RenameStateError, errors.WithStack(exceptions.ErrRename{Src: key, Message: "任务不存在"})
 	}
 	if !t.Enable {
-		return RenameStateError, errors.WithStack(exceptions.ErrRename{Src: key, Message: "任务未启用"})
+		return constant.RenameStateError, errors.WithStack(exceptions.ErrRename{Src: key, Message: "任务未启用"})
 	}
 	return t.RenameState, nil
 }
 
-func (m *Manager) stateSeeding(task *RenameTask) (err error) {
-	if task.ErrCount >= RenameMaxErrCount {
+func (m *Manager) stateSeeding(task *models.RenameTask) (err error) {
+	if task.ErrCount >= constant.RenameMaxErrCount {
 		log.Warnf("[重命名] 失败，跳过流程：「%s」->「%s」", task.Src, task.Dst)
-		task.RenameState = RenameStateEnd
+		task.RenameState = constant.RenameStateEnd
 		return nil
 	}
 	defer func() {
@@ -108,46 +108,46 @@ func (m *Manager) stateSeeding(task *RenameTask) (err error) {
 	}()
 	switch task.Mode {
 	case "wait_move":
-		task.RenameState = RenameStateComplete
+		task.RenameState = constant.RenameStateComplete
 	case "link_delete":
 		log.Infof("[重命名] 链接「%s」->「%s」", task.Src, task.Dst)
 		err = utils.CreateLink(task.Src, task.Dst)
 		if err != nil {
 			log.DebugErr(err)
-			task.RenameState = RenameStateSeeding
+			task.RenameState = constant.RenameStateSeeding
 			return errors.WithStack(exceptions.ErrRenameStep{Src: task.Src, Step: "链接", Message: "创建文件链接失败"})
 		}
-		task.RenameState = RenameStateComplete
+		task.RenameState = constant.RenameStateComplete
 	case "link":
 		log.Infof("[重命名] 链接「%s」->「%s」", task.Src, task.Dst)
 		err = utils.CreateLink(task.Src, task.Dst)
 		if err != nil {
 			log.DebugErr(err)
-			task.RenameState = RenameStateSeeding
+			task.RenameState = constant.RenameStateSeeding
 			return errors.WithStack(exceptions.ErrRenameStep{Src: task.Src, Step: "链接", Message: "创建文件链接失败"})
 		}
-		task.RenameState = RenameStateEnd
+		task.RenameState = constant.RenameStateEnd
 	case "move":
 		log.Infof("[重命名] 移动「%s」->「%s」", task.Src, task.Dst)
 		err = utils.Rename(task.Src, task.Dst)
 		if err != nil {
 			log.DebugErr(err)
-			task.RenameState = RenameStateSeeding
+			task.RenameState = constant.RenameStateSeeding
 			return errors.WithStack(exceptions.ErrRenameStep{Src: task.Src, Step: "移动", Message: "重命名文件失败"})
 		}
-		task.RenameState = RenameStateEnd
+		task.RenameState = constant.RenameStateEnd
 	default:
-		task.RenameState = RenameStateEnd
-		task.ErrCount = RenameMaxErrCount
+		task.RenameState = constant.RenameStateEnd
+		task.ErrCount = constant.RenameMaxErrCount
 		return errors.WithStack(exceptions.ErrRename{Src: task.Src, Message: "不支持的重命名模式 " + task.Mode})
 	}
 	return nil
 }
 
-func (m *Manager) stateComplete(task *RenameTask) (err error) {
-	if task.ErrCount >= RenameMaxErrCount {
+func (m *Manager) stateComplete(task *models.RenameTask) (err error) {
+	if task.ErrCount >= constant.RenameMaxErrCount {
 		log.Warnf("[重命名] 失败，跳过流程:「%s」->「%s」", task.Src, task.Dst)
-		task.RenameState = RenameStateEnd
+		task.RenameState = constant.RenameStateEnd
 		return nil
 	}
 	defer func() {
@@ -161,16 +161,16 @@ func (m *Manager) stateComplete(task *RenameTask) (err error) {
 		err = utils.Rename(task.Src, task.Dst)
 		if err != nil {
 			log.DebugErr(err)
-			task.RenameState = RenameStateComplete
+			task.RenameState = constant.RenameStateComplete
 			return errors.WithStack(exceptions.ErrRenameStep{Src: task.Src, Step: "移动", Message: "重命名文件失败"})
 		}
-		task.RenameState = RenameStateEnd
+		task.RenameState = constant.RenameStateEnd
 	case "link_delete":
 		if !utils.IsExist(task.Dst) {
 			// 确保已经链接
 			err = m.stateSeeding(task)
 			if err != nil {
-				task.RenameState = RenameStateSeeding
+				task.RenameState = constant.RenameStateSeeding
 				return err
 			}
 		}
@@ -178,15 +178,15 @@ func (m *Manager) stateComplete(task *RenameTask) (err error) {
 		err = utils.Remove(task.Src)
 		if err != nil {
 			log.DebugErr(err)
-			task.RenameState = RenameStateComplete
+			task.RenameState = constant.RenameStateComplete
 			return errors.WithStack(exceptions.ErrRenameStep{Src: task.Src, Step: "删除", Message: "删除文件失败"})
 		}
-		task.RenameState = RenameStateEnd
+		task.RenameState = constant.RenameStateEnd
 	case "link":
 	case "move":
 	default:
-		task.RenameState = RenameStateEnd
-		task.ErrCount = RenameMaxErrCount
+		task.RenameState = constant.RenameStateEnd
+		task.ErrCount = constant.RenameMaxErrCount
 		return errors.WithStack(exceptions.ErrRename{Src: task.Src, Message: "不支持的重命名模式 " + task.Mode})
 	}
 	return nil
@@ -227,18 +227,18 @@ func (m *Manager) AddRenameTask(opt *models.RenameOptions) (renameResult *models
 		dst := path.Join(opt.DstDir, result.Filename)
 		result.Index = i
 		renameResult.Results[i] = result
-		m.tasks[keys[i]] = &RenameTask{
+		m.tasks[keys[i]] = &models.RenameTask{
 			Enable:         false,
 			Src:            src,
 			Dst:            dst,
 			Mode:           opt.Mode,
-			StateChan:      make(chan constant.TorrentState, RenameStateChanCap),
+			StateChan:      make(chan constant.TorrentState, constant.RenameStateChanCap),
 			RenameCallback: opt.RenameCallback,
 			Result:         result,
-			RenameState:    RenameStateStart,
+			RenameState:    constant.RenameStateStart,
 		}
 	}
-	m.taskGroups = append(m.taskGroups, &RenameTaskGroup{
+	m.taskGroups = append(m.taskGroups, &models.RenameTaskGroup{
 		Keys:             keys,
 		RenameResult:     renameResult,
 		CompleteCallback: opt.CompleteCallback,
@@ -273,21 +273,21 @@ func (m *Manager) isComplete(keys []string) (int, bool) {
 		if task, ok := m.tasks[key]; ok {
 			if task.Enable {
 				all++
-				if task.RenameState != RenameStateEnd {
+				if task.RenameState != constant.RenameStateEnd {
 					incomplete++
 				}
 			}
 		}
 	}
 	if all == 0 {
-		return AllRenameStateError, false
+		return constant.AllRenameStateError, false
 	}
 	if incomplete == 0 {
-		return AllRenameStateComplete, true
+		return constant.AllRenameStateComplete, true
 	} else if incomplete == all {
-		return AllRenameStateStart, true
+		return constant.AllRenameStateStart, true
 	} else {
-		return AllRenameStateIncomplete, true
+		return constant.AllRenameStateIncomplete, true
 	}
 }
 
@@ -319,7 +319,7 @@ func (m *Manager) Update(ctx context.Context) (err error) {
 		default:
 		}
 		// 初始状态
-		if task.RenameState == RenameStateStart {
+		if task.RenameState == constant.RenameStateStart {
 			if task.State != constant.StateSeeding && task.State != constant.StateComplete {
 				continue
 			}
@@ -329,21 +329,21 @@ func (m *Manager) Update(ctx context.Context) (err error) {
 			case existSrc && existDst:
 				// 待移动文件和目标文件都存在，覆盖
 				log.Warnf("[重命名] 可能已经移动完成，覆盖:「%s」->「%s」", task.Src, task.Dst)
-				task.RenameState = RenameStateSeeding
+				task.RenameState = constant.RenameStateSeeding
 			case existSrc && !existDst:
 				// 待移动文件存在，开始移动流程
-				task.RenameState = RenameStateSeeding
+				task.RenameState = constant.RenameStateSeeding
 			case !existSrc && existDst:
 				// 待移动文件不存在，目标文件存在，结束移动
 				log.Warnf("[重命名] 可能已经移动完成，跳过:「%s」->「%s」", task.Src, task.Dst)
-				task.RenameState = RenameStateEnd
+				task.RenameState = constant.RenameStateEnd
 			default:
 				// 待移动文件和目标文件都不存在，错误，结束移动
 				return errors.WithStack(&exceptions.ErrRename{Src: task.Src, Message: "未找到文件"})
 			}
 		}
 		// 状态一，做种
-		if task.RenameState == RenameStateSeeding {
+		if task.RenameState == constant.RenameStateSeeding {
 			if task.State != constant.StateSeeding && task.State != constant.StateComplete {
 				continue
 			}
@@ -353,7 +353,7 @@ func (m *Manager) Update(ctx context.Context) (err error) {
 			}
 		}
 		// 状态二，完成
-		if task.RenameState == RenameStateComplete {
+		if task.RenameState == constant.RenameStateComplete {
 			if task.State != constant.StateComplete {
 				continue
 			}
@@ -363,8 +363,8 @@ func (m *Manager) Update(ctx context.Context) (err error) {
 			}
 		}
 
-		if task.RenameState == RenameStateEnd {
-			if task.ErrCount <= RenameMaxErrCount {
+		if task.RenameState == constant.RenameStateEnd {
+			if task.ErrCount <= constant.RenameMaxErrCount {
 				task.RenameCallback(task.Result)
 			}
 			continue
@@ -374,7 +374,7 @@ func (m *Manager) Update(ctx context.Context) (err error) {
 	// 自动回收task。当一个taskGroup均已完成或均未启用，将会被删除
 	var deleteIndex []int
 	for i, taskGroup := range m.taskGroups {
-		if state, exist := m.isComplete(taskGroup.Keys); exist && state == AllRenameStateComplete {
+		if state, exist := m.isComplete(taskGroup.Keys); exist && state == constant.AllRenameStateComplete {
 			taskGroup.CompleteCallback(taskGroup.RenameResult)
 			m.deleteTask(taskGroup.Keys)
 			deleteIndex = append(deleteIndex, i)

@@ -14,18 +14,11 @@ import (
 	"golang.org/x/net/html"
 
 	"github.com/wetor/AnimeGo/internal/api"
+	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/pkg/request"
 	"github.com/wetor/AnimeGo/pkg/log"
 	mem "github.com/wetor/AnimeGo/pkg/memorizer"
-)
-
-const (
-	IdXPath         = "//a[@class='mikan-rss']"                                 // Mikan番剧id获取XPath
-	GroupXPath      = "//p[@class='bangumi-info']/a[@class='magnet-link-wrap']" // Mikan番剧信息获取group字幕组id和name
-	BangumiUrlXPath = "//p[@class='bangumi-info']/a[contains(@href, 'bgm.tv')]" // Mikan番剧信息中bangumi id获取XPath
-
-	AuthCookie = ".AspNetCore.Identity.Application"
 )
 
 var (
@@ -33,9 +26,8 @@ var (
 		if len(host) > 0 {
 			return host
 		}
-		return "https://mikanani.me"
+		return constant.MikanDefaultHost
 	}
-	Bucket = "mikan"
 )
 
 var Set = wire.NewSet(
@@ -62,7 +54,7 @@ func (a *Mikan) Name() string {
 
 func (a *Mikan) RegisterCache() {
 	a.cacheInit = true
-	a.cacheParseMikanInfoVar = mem.Memorized(Bucket, a.Cache, func(params *mem.Params, results *mem.Results) error {
+	a.cacheParseMikanInfoVar = mem.Memorized(constant.MikanBucket, a.Cache, func(params *mem.Params, results *mem.Results) error {
 		mikan, err := a.parseMikanInfo(params.Get("mikanUrl").(string))
 		if err != nil {
 			return err
@@ -71,7 +63,7 @@ func (a *Mikan) RegisterCache() {
 		return nil
 	})
 
-	a.cacheParseMikanBangumiIDVar = mem.Memorized(Bucket, a.Cache, func(params *mem.Params, results *mem.Results) error {
+	a.cacheParseMikanBangumiIDVar = mem.Memorized(constant.MikanBucket, a.Cache, func(params *mem.Params, results *mem.Results) error {
 		bangumiID, err := a.parseMikanBangumiID(params.Get("mikanID").(int))
 		if err != nil {
 			return err
@@ -149,8 +141,8 @@ func (a *Mikan) cacheParseMikanBangumiID(mikanID int) (bangumiID int, err error)
 func (a *Mikan) loadHtml(url string) (*html.Node, error) {
 	buf := bytes.NewBuffer(nil)
 	cookie := a.Cookie
-	if !strings.Contains(cookie, AuthCookie+"=") {
-		cookie = AuthCookie + "=" + cookie
+	if !strings.Contains(cookie, constant.MikanAuthCookie+"=") {
+		cookie = constant.MikanAuthCookie + "=" + cookie
 	}
 	err := request.GetWriter(url, buf, map[string]string{
 		"Cookie": cookie,
@@ -178,7 +170,7 @@ func (a *Mikan) parseMikanInfo(mikanUrl string) (mikan *MikanInfo, err error) {
 	if err != nil {
 		return nil, err
 	}
-	miaknLink := htmlquery.FindOne(doc, IdXPath)
+	miaknLink := htmlquery.FindOne(doc, constant.MikanIdXPath)
 	href := htmlquery.SelectAttr(miaknLink, "href")
 	u, err := url.Parse(href)
 	if err != nil {
@@ -206,7 +198,7 @@ func (a *Mikan) parseMikanInfo(mikanUrl string) (mikan *MikanInfo, err error) {
 	}
 
 	// 解析字幕组信息
-	group := htmlquery.FindOne(doc, GroupXPath)
+	group := htmlquery.FindOne(doc, constant.MikanGroupXPath)
 	if group != nil {
 		href = htmlquery.SelectAttr(group, "href")
 		_, groupId := path.Split(href)
@@ -233,7 +225,7 @@ func (a *Mikan) parseMikanBangumiID(mikanID int) (bangumiID int, err error) {
 		return 0, err
 	}
 
-	bangumiUrl := htmlquery.FindOne(doc, BangumiUrlXPath)
+	bangumiUrl := htmlquery.FindOne(doc, constant.MikanBangumiUrlXPath)
 	href := htmlquery.SelectAttr(bangumiUrl, "href")
 
 	hrefSplit := strings.Split(href, "/")

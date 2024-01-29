@@ -3,13 +3,14 @@ package api
 import (
 	"encoding/base64"
 	"fmt"
-	"github.com/wetor/AnimeGo/internal/animego/feed"
 	"os"
 	"path"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/wetor/AnimeGo/internal/animego/feed"
+	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/models"
 	webModels "github.com/wetor/AnimeGo/internal/web/models"
 	"github.com/wetor/AnimeGo/pkg/log"
@@ -95,7 +96,7 @@ func (a *Api) PluginConfigPost(c *gin.Context) {
 	}
 
 	filename := strings.TrimSuffix(file, path.Ext(file)) + ".json"
-	err = os.WriteFile(filename, data, 0666)
+	err = os.WriteFile(filename, data, constant.WriteFilePerm)
 	if err != nil {
 		log.DebugErr(err)
 		c.JSON(webModels.Fail("写入文件失败"))

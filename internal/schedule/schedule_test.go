@@ -45,7 +45,7 @@ func TestMain(m *testing.M) {
 	})
 	_ = utils.CreateMutiDir("data")
 
-	s = schedule.NewSchedule(&schedule.Options{
+	s = schedule.NewSchedule(&models.ScheduleOptions{
 		WG: &wg,
 	})
 	m.Run()

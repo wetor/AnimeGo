@@ -76,7 +76,7 @@ func GetTransmission(opts *models.ClientOptions) *transmission.Transmission {
 
 // Injectors from database.go:
 
-func GetDatabase(opts *database.Options, cache api.Cacher) (*database.Database, error) {
+func GetDatabase(opts *models.DatabaseOptions, cache api.Cacher) (*database.Database, error) {
 	databaseDatabase, err := database.NewDatabase(opts, cache)
 	if err != nil {
 		return nil, err
@@ -86,7 +86,7 @@ func GetDatabase(opts *database.Options, cache api.Cacher) (*database.Database, 
 
 // Injectors from downloader.go:
 
-func GetDownloader(opts *downloader.Options, client2 api.Client, notifyOpts *clientnotifier.Options, db *database.Database, rename api.Renamer) *downloader.Manager {
+func GetDownloader(opts *models.DownloaderOptions, client2 api.Client, notifyOpts *models.NotifierOptions, db *database.Database, rename api.Renamer) *downloader.Manager {
 	notifier := clientnotifier.NewNotifier(notifyOpts, db, rename)
 	manager := downloader.NewManager(opts, client2, notifier)
 	return manager
@@ -94,7 +94,7 @@ func GetDownloader(opts *downloader.Options, client2 api.Client, notifyOpts *cli
 
 // Injectors from filter.go:
 
-func GetFilter(opts *filter.Options, manager api.ManagerDownloader, parserOpts *parser.Options, plugin *models.Plugin, mikanOpts *mikan.Options, bgmOpts *bangumi.Options, tmdbOpts *themoviedb.Options) *filter.Manager {
+func GetFilter(opts *models.FilterOptions, manager api.ManagerDownloader, parserOpts *models.ParserOptions, plugin *models.Plugin, mikanOpts *mikan.Options, bgmOpts *bangumi.Options, tmdbOpts *themoviedb.Options) *filter.Manager {
 	parserParser := parser.NewParserPlugin(plugin)
 	mikanMikan := mikan.NewMikan(mikanOpts)
 	bangumiBangumi := bangumi.NewBangumi(bgmOpts)
@@ -113,7 +113,7 @@ func GetRenamePlugin(plugin *models.Plugin) *renamer.Rename {
 	return rename
 }
 
-func GetRenamer(options *renamer.Options, plugin *models.Plugin) *renamer.Manager {
+func GetRenamer(options *models.RenamerOptions, plugin *models.Plugin) *renamer.Manager {
 	rename := renamer.NewRenamePlugin(plugin)
 	manager := renamer.NewManager(options, rename)
 	return manager

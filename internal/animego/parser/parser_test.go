@@ -2,7 +2,6 @@ package parser_test
 
 import (
 	"fmt"
-	"github.com/wetor/AnimeGo/internal/animego/anisource"
 	"net/url"
 	"os"
 	"path"
@@ -12,13 +11,13 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/wetor/AnimeGo/assets"
+	"github.com/wetor/AnimeGo/internal/animego/anisource"
 	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
 	"github.com/wetor/AnimeGo/internal/animego/parser"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/pkg/torrent"
 	"github.com/wetor/AnimeGo/internal/plugin"
-	"github.com/wetor/AnimeGo/internal/wire"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	pkgExceptions "github.com/wetor/AnimeGo/pkg/exceptions"
 	"github.com/wetor/AnimeGo/pkg/log"
@@ -60,7 +59,7 @@ func TestMain(m *testing.M) {
 	plugin.Init(&plugin.Options{
 		Path:  assets.TestPluginPath(),
 		Debug: true,
-		Mikan: wire.GetMikanData(&mikan.Options{
+		Mikan: mikan.NewMikan(&mikan.Options{
 			Cache:     b,
 			CacheTime: int64(7 * 24 * 60 * 60),
 		}),
@@ -77,7 +76,7 @@ func TestMain(m *testing.M) {
 	test.HookMethod(mikanSource, "Parse", MikanParse)
 	test.HookMethod(bangumiSource, "Parse", BangumiParse)
 
-	mgr = parser.NewManager(&parser.Options{
+	mgr = parser.NewManager(&models.ParserOptions{
 		TMDBFailSkip:           false,
 		TMDBFailUseTitleSeason: true,
 		TMDBFailUseFirstSeason: true,

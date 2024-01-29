@@ -6,6 +6,7 @@ import (
 	"path"
 
 	"github.com/caarlos0/env/v9"
+	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/pkg/utils"
 )
 
@@ -45,11 +46,14 @@ func InitEnvConfig(configFile, saveFile string) {
 		panic(err)
 	}
 	config := Load(configFile)
-	err = Env2Config(envs, config, prefix)
+	rewrite, err := Env2Config(envs, config, prefix)
 	if err != nil {
 		panic(err)
 	}
-
+	if !rewrite {
+		// 不需要写文件
+		return
+	}
 	if envs.ProxyUrl != nil {
 		if len(*envs.ProxyUrl) == 0 {
 			config.Setting.Proxy.Enable = false
@@ -63,7 +67,7 @@ func InitEnvConfig(configFile, saveFile string) {
 		panic(err)
 	}
 
-	err = os.WriteFile(saveFile, data, 0644)
+	err = os.WriteFile(saveFile, data, constant.WriteFilePerm)
 	if err != nil {
 		panic(err)
 	}

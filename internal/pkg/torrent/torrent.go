@@ -11,6 +11,7 @@ import (
 	"github.com/anacrolix/torrent/metainfo"
 	"github.com/pkg/errors"
 
+	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/pkg/request"
 	"github.com/wetor/AnimeGo/pkg/exceptions"
 	"github.com/wetor/AnimeGo/pkg/log"
@@ -160,7 +161,7 @@ load:
 			return nil, err
 		}
 		file = path.Join(TempPath, t.Hash+".torrent")
-		err = os.WriteFile(file, w.Bytes(), 0666)
+		err = os.WriteFile(file, w.Bytes(), constant.WriteFilePerm)
 		if err != nil {
 			log.DebugErr(err)
 			// 继续执行

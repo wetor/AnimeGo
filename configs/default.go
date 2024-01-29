@@ -3,6 +3,7 @@ package configs
 import (
 	"os"
 
+	"github.com/wetor/AnimeGo/internal/constant"
 	encoder "github.com/wetor/AnimeGo/third_party/yaml-encoder"
 )
 
@@ -190,7 +191,7 @@ func DefaultFile(filename string) error {
 		return err
 	}
 	// 所有者可读可写，其他用户只读
-	err = os.WriteFile(filename, data, 0644)
+	err = os.WriteFile(filename, data, constant.WriteFilePerm)
 	if err != nil {
 		return err
 	}

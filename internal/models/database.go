@@ -2,6 +2,11 @@ package models
 
 import "fmt"
 
+type AnimeDir struct {
+	Dir       string
+	SeasonDir map[int]string
+}
+
 type BaseDBEntity struct {
 	Hash     string `json:"hash"`
 	Name     string `json:"name"`

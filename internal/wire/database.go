@@ -7,9 +7,10 @@ import (
 
 	"github.com/wetor/AnimeGo/internal/animego/database"
 	"github.com/wetor/AnimeGo/internal/api"
+	"github.com/wetor/AnimeGo/internal/models"
 )
 
-func GetDatabase(opts *database.Options, cache api.Cacher) (*database.Database, error) {
+func GetDatabase(opts *models.DatabaseOptions, cache api.Cacher) (*database.Database, error) {
 	wire.Build(
 		database.Set,
 	)

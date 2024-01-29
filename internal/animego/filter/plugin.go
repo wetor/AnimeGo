@@ -3,15 +3,12 @@ package filter
 import (
 	"github.com/pkg/errors"
 
+	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/pkg/log"
 	pkgPlugin "github.com/wetor/AnimeGo/pkg/plugin"
-)
-
-const (
-	FuncFilterAll = "filter_all"
 )
 
 type Filter struct {
@@ -34,10 +31,10 @@ func (p *Filter) FilterAll(items []*models.FeedItem) (resultItems []*models.Feed
 	// 入参
 	pluginInstance, err := plugin.LoadPlugin(&plugin.LoadPluginOptions{
 		Plugin:    p.plugin,
-		EntryFunc: FuncFilterAll,
+		EntryFunc: constant.FuncFilterAll,
 		FuncSchema: []*pkgPlugin.FuncSchemaOptions{
 			{
-				Name:         FuncFilterAll,
+				Name:         constant.FuncFilterAll,
 				ParamsSchema: []string{"items"},
 				ResultSchema: []string{"error", "index"},
 				DefaultArgs:  p.plugin.Args,
@@ -47,7 +44,7 @@ func (p *Filter) FilterAll(items []*models.FeedItem) (resultItems []*models.Feed
 	if err != nil {
 		return nil, err
 	}
-	result, err := pluginInstance.Run(FuncFilterAll, map[string]any{
+	result, err := pluginInstance.Run(constant.FuncFilterAll, map[string]any{
 		"items": items,
 	})
 	if err != nil {

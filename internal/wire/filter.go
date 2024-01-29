@@ -14,8 +14,8 @@ import (
 	"github.com/wetor/AnimeGo/internal/models"
 )
 
-func GetFilter(opts *filter.Options, manager api.ManagerDownloader,
-	parserOpts *parser.Options, plugin *models.Plugin,
+func GetFilter(opts *models.FilterOptions, manager api.ManagerDownloader,
+	parserOpts *models.ParserOptions, plugin *models.Plugin,
 	mikanOpts *mikan.Options, bgmOpts *bangumi.Options, tmdbOpts *themoviedb.Options) *filter.Manager {
 	wire.Build(
 		parser.PluginSet,

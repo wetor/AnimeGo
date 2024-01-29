@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"testing"
 
-	parserPlugin "github.com/wetor/AnimeGo/internal/animego/parser"
+	"github.com/wetor/AnimeGo/internal/animego/parser"
 	"github.com/wetor/AnimeGo/internal/models"
 )
 
 func TestBuiltinParser_Parse(t *testing.T) {
-	p := parserPlugin.NewParserPlugin(&models.Plugin{
+	p := parser.NewParserPlugin(&models.Plugin{
 		Enable: true,
 		Type:   "builtin",
 		File:   "builtin_parser.py",

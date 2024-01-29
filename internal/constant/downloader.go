@@ -1,4 +1,4 @@
-package downloader
+package constant
 
 type NotifyState int
 

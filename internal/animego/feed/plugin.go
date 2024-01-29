@@ -2,12 +2,12 @@ package feed
 
 import (
 	"context"
-	"github.com/wetor/AnimeGo/pkg/xpath"
 	"path"
 
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/schedule"
+	"github.com/wetor/AnimeGo/pkg/xpath"
 )
 
 func AddFeedTasks(s *schedule.Schedule, plugins []models.Plugin, filterManager api.FilterManager, ctx context.Context) (err error) {

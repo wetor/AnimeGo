@@ -1,5 +1,3 @@
-// Package rss
-// @Description: 获取并解析rss
 package feed
 
 import (

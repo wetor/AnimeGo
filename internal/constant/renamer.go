@@ -1,4 +1,4 @@
-package renamer
+package constant
 
 const (
 	RenameStateError = iota - 1
@@ -18,9 +18,4 @@ const (
 const (
 	RenameStateChanCap = 5
 	RenameMaxErrCount  = 3
-)
-
-const (
-	FuncRename = "rename"
-	VarScrape  = "__scrape__"
 )

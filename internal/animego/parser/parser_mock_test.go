@@ -2,8 +2,8 @@ package parser_test
 
 import (
 	"github.com/pkg/errors"
-	"github.com/wetor/AnimeGo/internal/animego/anisource"
 
+	"github.com/wetor/AnimeGo/internal/animego/anisource"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/pkg/torrent"

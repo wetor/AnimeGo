@@ -6,6 +6,7 @@ import (
 	"github.com/google/wire"
 	"github.com/pkg/errors"
 
+	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin"
@@ -32,10 +33,10 @@ func NewRenamePlugin(pluginInfo *models.Plugin) *Rename {
 func (p *Rename) Rename(anime *models.AnimeEntity, index int, filename string) (*models.RenameResult, error) {
 	pluginInstance, err := plugin.LoadPlugin(&plugin.LoadPluginOptions{
 		Plugin:    p.plugin,
-		EntryFunc: FuncRename,
+		EntryFunc: constant.FuncRename,
 		FuncSchema: []*pkgPlugin.FuncSchemaOptions{
 			{
-				Name:         FuncRename,
+				Name:         constant.FuncRename,
 				ParamsSchema: []string{"anime", "filename"},
 				ResultSchema: []string{"error", "filename", "dir,optional"},
 				DefaultArgs:  p.plugin.Args,
@@ -43,7 +44,7 @@ func (p *Rename) Rename(anime *models.AnimeEntity, index int, filename string) (
 		},
 		VarSchema: []*pkgPlugin.VarSchemaOptions{
 			{
-				Name:     VarScrape,
+				Name:     constant.VarScrape,
 				Nullable: true,
 			},
 		},
@@ -55,7 +56,7 @@ func (p *Rename) Rename(anime *models.AnimeEntity, index int, filename string) (
 	obj := utils.StructToMap(anime)
 	obj["ep_type"] = anime.Ep[index].Type
 	obj["ep"] = anime.Ep[index].Ep
-	result, err := pluginInstance.Run(FuncRename, map[string]any{
+	result, err := pluginInstance.Run(constant.FuncRename, map[string]any{
 		"anime":    obj,
 		"filename": filename,
 	})
@@ -69,7 +70,7 @@ func (p *Rename) Rename(anime *models.AnimeEntity, index int, filename string) (
 		return nil, err
 	}
 
-	val, err := pluginInstance.Get(VarScrape)
+	val, err := pluginInstance.Get(constant.VarScrape)
 	if err != nil {
 		return nil, err
 	}

@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"sync"
+	"time"
+)
 
 // =========== AnimeEntity ===========
 
@@ -46,4 +49,46 @@ type ParseOptions struct {
 	MikanUrl   string // 和BangumiID二选一
 	BangumiID  int    // 和BangumiID二选一，优先
 	*AnimeParseOverride
+}
+
+type RenamerOptions struct {
+	WG            *sync.WaitGroup
+	RefreshSecond int
+}
+
+type DatabaseOptions struct {
+	SavePath string
+}
+
+type DownloaderOptions struct {
+	RefreshSecond          int
+	Category               string
+	Tag                    string
+	AllowDuplicateDownload bool
+	WG                     *sync.WaitGroup
+}
+
+type Callback struct {
+	Func func(data any) error
+}
+
+type NotifierOptions struct {
+	DownloadPath string
+	SavePath     string
+	Rename       string
+	Callback     *Callback
+}
+
+type FilterOptions struct {
+	DelaySecond int
+}
+
+type ParserOptions struct {
+	TMDBFailSkip           bool
+	TMDBFailUseTitleSeason bool
+	TMDBFailUseFirstSeason bool
+}
+
+type ScheduleOptions struct {
+	WG *sync.WaitGroup
 }

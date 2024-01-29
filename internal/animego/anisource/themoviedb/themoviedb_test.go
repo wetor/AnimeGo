@@ -2,7 +2,6 @@ package themoviedb_test
 
 import (
 	"fmt"
-	"github.com/wetor/AnimeGo/internal/wire"
 	"net/url"
 	"os"
 	"path"
@@ -34,7 +33,7 @@ func TestMain(m *testing.M) {
 	})
 	db := cache.NewBolt()
 	db.Open("data/bolt.db")
-	tmdbInst = wire.GetThemoviedbData(&themoviedb.Options{
+	tmdbInst = themoviedb.NewThemoviedb(&themoviedb.Options{
 		Cache: db,
 	})
 	request.Init(&request.Options{

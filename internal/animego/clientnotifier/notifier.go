@@ -1,15 +1,17 @@
 package clientnotifier
 
 import (
+	"path"
+
 	"github.com/google/wire"
 	"github.com/pkg/errors"
+
 	"github.com/wetor/AnimeGo/internal/animego/database"
 	"github.com/wetor/AnimeGo/internal/api"
 	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/pkg/log"
-	"path"
 )
 
 var Set = wire.NewSet(
@@ -22,15 +24,15 @@ type Notifier struct {
 	hash2filename map[string][]string // hash -> dst filenames
 
 	db *database.Database
-	*Options
+	*models.NotifierOptions
 }
 
-func NewNotifier(opts *Options, db *database.Database, rename api.Renamer) *Notifier {
+func NewNotifier(opts *models.NotifierOptions, db *database.Database, rename api.Renamer) *Notifier {
 	return &Notifier{
-		hash2filename: make(map[string][]string),
-		rename:        rename,
-		db:            db,
-		Options:       opts,
+		hash2filename:   make(map[string][]string),
+		rename:          rename,
+		db:              db,
+		NotifierOptions: opts,
 	}
 }
 
@@ -141,7 +143,7 @@ func (n *Notifier) handleDownloadStart(hash string) error {
 						log.Warnf("刮削失败: %s", _name)
 					}
 				}
-				err = n.Callback.Renamed(_anime.Hash())
+				err = n.Callback.Func(_anime.Hash())
 				if err != nil {
 					log.Warnf("删除下载项失败: %s", _name)
 				}

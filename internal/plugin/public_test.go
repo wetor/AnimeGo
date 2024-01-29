@@ -2,11 +2,11 @@ package plugin_test
 
 import (
 	"fmt"
-	"github.com/wetor/AnimeGo/internal/plugin"
 	"os"
 	"testing"
 
 	"github.com/wetor/AnimeGo/assets"
+	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/pkg/json"
 	"github.com/wetor/AnimeGo/pkg/log"
 )

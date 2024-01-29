@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/wetor/AnimeGo/internal/animego/clientnotifier"
 	"os"
 	"path"
 	"sync"
@@ -14,6 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/wetor/AnimeGo/assets"
+	"github.com/wetor/AnimeGo/internal/animego/clientnotifier"
 	"github.com/wetor/AnimeGo/internal/animego/database"
 	"github.com/wetor/AnimeGo/internal/animego/downloader"
 	"github.com/wetor/AnimeGo/internal/animego/renamer"
@@ -128,7 +128,7 @@ func TestMain(m *testing.M) {
 	})
 
 	rename = wire.GetRenamer(
-		&renamer.Options{
+		&models.RenamerOptions{
 			WG:            &wg,
 			RefreshSecond: 1,
 		},
@@ -142,14 +142,14 @@ func TestMain(m *testing.M) {
 	db.Open("data/test.db")
 
 	var err error
-	callback := &clientnotifier.Callback{}
-	dbInst, err := database.NewDatabase(&database.Options{
+	callback := &models.Callback{}
+	dbInst, err := database.NewDatabase(&models.DatabaseOptions{
 		SavePath: SavePath,
 	}, db)
 	if err != nil {
 		panic(err)
 	}
-	dbs = clientnotifier.NewNotifier(&clientnotifier.Options{
+	dbs = clientnotifier.NewNotifier(&models.NotifierOptions{
 		DownloadPath: DownloadPath,
 		SavePath:     SavePath,
 		Rename:       "link_delete",
@@ -163,19 +163,20 @@ func TestMain(m *testing.M) {
 		Ctx:          context.Background(),
 	})
 
-	mgr = downloader.NewManager(&downloader.Options{
+	mgr = downloader.NewManager(&models.DownloaderOptions{
 		RefreshSecond:          1,
 		Category:               "AnimeGoTest",
 		WG:                     &wg,
 		AllowDuplicateDownload: false,
 		Tag:                    "",
 	}, qbt, dbs)
-	callback.Renamed = func(data any) error {
+	callback.Func = func(data any) error {
 		return mgr.Delete(data.(string))
 	}
 
 	m.Run()
 	_ = log.Close()
+	db.Close()
 	_ = os.RemoveAll("data")
 	fmt.Println("end")
 }

@@ -6,6 +6,7 @@ import (
 
 	"github.com/wetor/AnimeGo/internal/animego/anisource"
 	"github.com/wetor/AnimeGo/internal/api"
+	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/pkg/torrent"
@@ -23,15 +24,15 @@ type Manager struct {
 	mikan   api.AniSource
 	bangumi api.AniSource
 
-	*Options
+	*models.ParserOptions
 }
 
-func NewManager(opts *Options, parser *Parser, mikan *anisource.Mikan, bangumi *anisource.Bangumi) *Manager {
+func NewManager(opts *models.ParserOptions, parser *Parser, mikan *anisource.Mikan, bangumi *anisource.Bangumi) *Manager {
 	return &Manager{
-		parser:  parser,
-		mikan:   mikan,
-		bangumi: bangumi,
-		Options: opts,
+		parser:        parser,
+		mikan:         mikan,
+		bangumi:       bangumi,
+		ParserOptions: opts,
 	}
 }
 
@@ -134,7 +135,7 @@ func (m *Manager) defaultSeason(season int) (result int) {
 			return
 		}
 		if m.TMDBFailUseFirstSeason {
-			result = DefaultSeason
+			result = constant.DefaultSeason
 			log.Warnf("无法获取准确季度信息，默认：第%d季", result)
 			return
 		}

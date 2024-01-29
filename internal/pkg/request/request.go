@@ -5,12 +5,12 @@ import (
 	"net/http"
 	"os"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/parnurzeal/gorequest"
 	"github.com/pkg/errors"
 
+	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/pkg/log"
 )
 
@@ -21,7 +21,6 @@ var (
 	Proxy     string
 	UserAgent string
 	Debug     bool
-	ReInitWG  sync.WaitGroup
 )
 
 type Options struct {
@@ -40,7 +39,9 @@ func (o *Options) Default() {
 	if o.Timeout < 3 {
 		o.Timeout = 3
 	}
-	o.UserAgent = "0.1.0/AnimeGo (https://github.com/wetor/AnimeGo)"
+	if len(o.UserAgent) == 0 {
+		o.UserAgent = constant.DefaultUserAgent
+	}
 }
 
 func Init(opt *Options) {
@@ -52,18 +53,7 @@ func Init(opt *Options) {
 	UserAgent = opt.UserAgent
 }
 
-func ReInit(opt *Options) {
-	ReInitWG.Wait()
-	Retry = opt.Retry
-	RetryWait = opt.RetryWait
-	Timeout = opt.Timeout
-	Proxy = opt.Proxy
-	UserAgent = opt.UserAgent
-}
-
 func request(uri string, method string, body interface{}, header map[string]string) *gorequest.SuperAgent {
-	ReInitWG.Add(1)
-	defer ReInitWG.Done()
 	method = strings.ToUpper(method)
 	log.Infof("HTTP %s %s %+v", method, uri, body)
 	retryWait := time.Duration(RetryWait) * time.Second
@@ -113,8 +103,6 @@ func handleError(resp gorequest.Response, errs []error) (err error) {
 //	uri string 请求地址
 //	args[0] map[string]string 请求头header
 func GetString(uri string, args ...interface{}) (string, error) {
-	ReInitWG.Add(1)
-	defer ReInitWG.Done()
 	var header map[string]string = nil
 	if len(args) > 0 {
 		header = args[0].(map[string]string)
@@ -128,8 +116,6 @@ func GetString(uri string, args ...interface{}) (string, error) {
 }
 
 func Get(uri string, body interface{}, args ...interface{}) error {
-	ReInitWG.Add(1)
-	defer ReInitWG.Done()
 	var header map[string]string = nil
 	if len(args) > 0 {
 		header = args[0].(map[string]string)
@@ -143,8 +129,6 @@ func Get(uri string, body interface{}, args ...interface{}) error {
 }
 
 func Post(uri string, req interface{}, body interface{}, args ...interface{}) error {
-	ReInitWG.Add(1)
-	defer ReInitWG.Done()
 	var header map[string]string = nil
 	if len(args) > 0 {
 		header = args[0].(map[string]string)
@@ -158,8 +142,6 @@ func Post(uri string, req interface{}, body interface{}, args ...interface{}) er
 }
 
 func GetFile(uri string, file string, args ...interface{}) error {
-	ReInitWG.Add(1)
-	defer ReInitWG.Done()
 	var header map[string]string = nil
 	if len(args) > 0 {
 		header = args[0].(map[string]string)
@@ -169,7 +151,7 @@ func GetFile(uri string, file string, args ...interface{}) error {
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile(file, bodyBytes, 0666)
+	err = os.WriteFile(file, bodyBytes, constant.WriteFilePerm)
 	if err != nil {
 		return err
 	}
@@ -177,8 +159,6 @@ func GetFile(uri string, file string, args ...interface{}) error {
 }
 
 func GetWriter(uri string, w io.Writer, args ...interface{}) error {
-	ReInitWG.Add(1)
-	defer ReInitWG.Done()
 	var header map[string]string = nil
 	if len(args) > 0 {
 		header = args[0].(map[string]string)

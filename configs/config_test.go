@@ -7,6 +7,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/wetor/AnimeGo/configs"
+	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/utils"
 	"github.com/wetor/AnimeGo/test"
@@ -40,7 +41,7 @@ func TestUpdateConfig_120(t *testing.T) {
 	configs.ConfigVersion = "1.2.0"
 
 	file, _ := test.GetData(testdata, "animego_110.yaml")
-	_ = os.WriteFile("data/animego.yaml", file, 0666)
+	_ = os.WriteFile("data/animego.yaml", file, constant.WriteFilePerm)
 	configs.UpdateConfig("data/animego.yaml", false)
 
 	EqualFile(t, "data/animego.yaml", test.GetDataPath(testdata, "animego_120.yaml"))
@@ -49,7 +50,7 @@ func TestUpdateConfig_120(t *testing.T) {
 func TestUpdateConfig_130(t *testing.T) {
 	configs.ConfigVersion = "1.3.0"
 	file, _ := test.GetData(testdata, "animego_120.yaml")
-	_ = os.WriteFile("data/animego.yaml", file, 0666)
+	_ = os.WriteFile("data/animego.yaml", file, constant.WriteFilePerm)
 	configs.UpdateConfig("data/animego.yaml", false)
 
 	EqualFile(t, "data/animego.yaml", test.GetDataPath(testdata, "animego_130.yaml"))
@@ -58,7 +59,7 @@ func TestUpdateConfig_130(t *testing.T) {
 func TestUpdateConfig_140(t *testing.T) {
 	configs.ConfigVersion = "1.4.0"
 	file, _ := test.GetData(testdata, "animego_130.yaml")
-	_ = os.WriteFile("data/animego.yaml", file, 0666)
+	_ = os.WriteFile("data/animego.yaml", file, constant.WriteFilePerm)
 	configs.UpdateConfig("data/animego.yaml", false)
 
 	EqualFile(t, "data/animego.yaml", test.GetDataPath(testdata, "animego_140.yaml"))
@@ -67,7 +68,7 @@ func TestUpdateConfig_140(t *testing.T) {
 func TestUpdateConfig_141(t *testing.T) {
 	configs.ConfigVersion = "1.4.1"
 	file, _ := test.GetData(testdata, "animego_140.yaml")
-	_ = os.WriteFile("data/animego.yaml", file, 0666)
+	_ = os.WriteFile("data/animego.yaml", file, constant.WriteFilePerm)
 	configs.UpdateConfig("data/animego.yaml", false)
 
 	EqualFile(t, "data/animego.yaml", test.GetDataPath(testdata, "animego_141.yaml"))
@@ -76,7 +77,7 @@ func TestUpdateConfig_141(t *testing.T) {
 func TestUpdateConfig_150(t *testing.T) {
 	configs.ConfigVersion = "1.5.0"
 	file, _ := test.GetData(testdata, "animego_141.yaml")
-	_ = os.WriteFile("data/animego.yaml", file, 0666)
+	_ = os.WriteFile("data/animego.yaml", file, constant.WriteFilePerm)
 	configs.UpdateConfig("data/animego.yaml", false)
 
 	EqualFile(t, "data/animego.yaml", test.GetDataPath(testdata, "animego_150.yaml"))
@@ -85,7 +86,7 @@ func TestUpdateConfig_150(t *testing.T) {
 func TestUpdateConfig_151(t *testing.T) {
 	configs.ConfigVersion = "1.5.1"
 	file, _ := test.GetData(testdata, "animego_150.yaml")
-	_ = os.WriteFile("data/animego.yaml", file, 0666)
+	_ = os.WriteFile("data/animego.yaml", file, constant.WriteFilePerm)
 	configs.UpdateConfig("data/animego.yaml", false)
 
 	EqualFile(t, "data/animego.yaml", test.GetDataPath(testdata, "animego_151.yaml"))
@@ -94,7 +95,7 @@ func TestUpdateConfig_151(t *testing.T) {
 func TestUpdateConfig_152(t *testing.T) {
 	configs.ConfigVersion = "1.5.2"
 	file, _ := test.GetData(testdata, "animego_151.yaml")
-	_ = os.WriteFile("data/animego.yaml", file, 0666)
+	_ = os.WriteFile("data/animego.yaml", file, constant.WriteFilePerm)
 	configs.UpdateConfig("data/animego.yaml", false)
 
 	EqualFile(t, "data/animego.yaml", test.GetDataPath(testdata, "animego_152.yaml"))
@@ -103,7 +104,7 @@ func TestUpdateConfig_152(t *testing.T) {
 func TestUpdateConfig_160(t *testing.T) {
 	configs.ConfigVersion = "1.6.0"
 	file, _ := test.GetData(testdata, "animego_152.yaml")
-	_ = os.WriteFile("data/animego.yaml", file, 0666)
+	_ = os.WriteFile("data/animego.yaml", file, constant.WriteFilePerm)
 	configs.UpdateConfig("data/animego.yaml", false)
 
 	EqualFile(t, "data/animego.yaml", test.GetDataPath(testdata, "animego_160.yaml"))
@@ -112,7 +113,7 @@ func TestUpdateConfig_160(t *testing.T) {
 func TestUpdateConfig_161(t *testing.T) {
 	configs.ConfigVersion = "1.6.1"
 	file, _ := test.GetData(testdata, "animego_160.yaml")
-	_ = os.WriteFile("data/animego.yaml", file, 0666)
+	_ = os.WriteFile("data/animego.yaml", file, constant.WriteFilePerm)
 	configs.UpdateConfig("data/animego.yaml", false)
 
 	EqualFile(t, "data/animego.yaml", test.GetDataPath(testdata, "animego_161.yaml"))
@@ -121,7 +122,7 @@ func TestUpdateConfig_161(t *testing.T) {
 func TestUpdateConfig_162(t *testing.T) {
 	configs.ConfigVersion = "1.6.2"
 	file, _ := test.GetData(testdata, "animego_161.yaml")
-	_ = os.WriteFile("data/animego.yaml", file, 0666)
+	_ = os.WriteFile("data/animego.yaml", file, constant.WriteFilePerm)
 	configs.UpdateConfig("data/animego.yaml", false)
 
 	EqualFile(t, "data/animego.yaml", test.GetDataPath(testdata, "animego_162.yaml"))
@@ -130,7 +131,7 @@ func TestUpdateConfig_162(t *testing.T) {
 func TestUpdateConfig_170(t *testing.T) {
 	configs.ConfigVersion = "1.7.0"
 	file, _ := test.GetData(testdata, "animego_162.yaml")
-	_ = os.WriteFile("data/animego.yaml", file, 0666)
+	_ = os.WriteFile("data/animego.yaml", file, constant.WriteFilePerm)
 	configs.UpdateConfig("data/animego.yaml", false)
 
 	EqualFile(t, "data/animego.yaml", test.GetDataPath(testdata, "animego_170.yaml"))

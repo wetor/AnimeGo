@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/wetor/AnimeGo/assets"
-	feedPlugin "github.com/wetor/AnimeGo/internal/animego/feed"
+	"github.com/wetor/AnimeGo/internal/animego/feed"
 	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin"
@@ -53,14 +53,14 @@ func BeforePlugin() {
 	plugin.Init(&plugin.Options{
 		Path:  assets.TestPluginPath(),
 		Debug: true,
-		Feed:  feedPlugin.NewRss(),
+		Feed:  feed.NewRss(),
 	})
 
 	gpython.Init()
 	_ = utils.CreateMutiDir("data")
 
 	wg := sync.WaitGroup{}
-	s = schedule.NewSchedule(&schedule.Options{
+	s = schedule.NewSchedule(&models.ScheduleOptions{
 		WG: &wg,
 	})
 }
@@ -76,7 +76,7 @@ func TestNewSchedule3_feed(t *testing.T) {
 	BeforePlugin()
 	defer After()
 
-	_ = feedPlugin.AddFeedTasks(s, []models.Plugin{
+	_ = feed.AddFeedTasks(s, []models.Plugin{
 		{
 			Enable: true,
 			Type:   "builtin",

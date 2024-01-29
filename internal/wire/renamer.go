@@ -16,7 +16,7 @@ func GetRenamePlugin(plugin *models.Plugin) *renamer.Rename {
 	return nil
 }
 
-func GetRenamer(options *renamer.Options, plugin *models.Plugin) *renamer.Manager {
+func GetRenamer(options *models.RenamerOptions, plugin *models.Plugin) *renamer.Manager {
 	wire.Build(
 		renamer.PluginSet,
 		renamer.Set,

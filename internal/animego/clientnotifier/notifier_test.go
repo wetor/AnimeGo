@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"github.com/wetor/AnimeGo/internal/animego/clientnotifier"
 	"os"
 	"path"
 	"sync"
@@ -14,6 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/wetor/AnimeGo/assets"
+	"github.com/wetor/AnimeGo/internal/animego/clientnotifier"
 	"github.com/wetor/AnimeGo/internal/animego/database"
 	"github.com/wetor/AnimeGo/internal/animego/renamer"
 	"github.com/wetor/AnimeGo/internal/models"
@@ -67,7 +67,7 @@ func TestMain(m *testing.M) {
 		DefaultExt: []string{".a_json", ".s_json", ".e_json"}, // anime, season
 	})
 	rename = wire.GetRenamer(
-		&renamer.Options{
+		&models.RenamerOptions{
 			WG:            &wg,
 			RefreshSecond: 1,
 		},
@@ -80,19 +80,19 @@ func TestMain(m *testing.M) {
 	db = cache.NewBolt()
 	db.Open("data/test.db")
 	var err error
-	databaseSrv, err := database.NewDatabase(&database.Options{
+	databaseSrv, err := database.NewDatabase(&models.DatabaseOptions{
 		SavePath: SavePath,
 	}, db)
 	if err != nil {
 		return
 	}
 	downloader := &DownloaderMock{}
-	dbManager = clientnotifier.NewNotifier(&clientnotifier.Options{
+	dbManager = clientnotifier.NewNotifier(&models.NotifierOptions{
 		DownloadPath: DownloadPath,
 		SavePath:     SavePath,
 		Rename:       "link_delete",
-		Callback: &clientnotifier.Callback{
-			Renamed: func(data any) error {
+		Callback: &models.Callback{
+			Func: func(data any) error {
 				return downloader.Delete(data.(string))
 			},
 		},

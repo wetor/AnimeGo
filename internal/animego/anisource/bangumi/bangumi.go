@@ -2,9 +2,12 @@ package bangumi
 
 import (
 	"fmt"
+
 	"github.com/google/wire"
 	"github.com/pkg/errors"
+
 	"github.com/wetor/AnimeGo/internal/api"
+	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/pkg/request"
 	"github.com/wetor/AnimeGo/pkg/log"
@@ -14,19 +17,13 @@ import (
 	"github.com/wetor/AnimeGo/third_party/bangumi/res"
 )
 
-const (
-	SubjectBucket         = "bangumi_sub"
-	MinSimilar    float64 = 0.75
-)
-
 var (
 	Host = func(host string) string {
 		if len(host) > 0 {
 			return host
 		}
-		return "https://api.bgm.tv"
+		return constant.BangumiDefaultHost
 	}
-	Bucket  = "bangumi"
 	infoApi = func(host string, id int) string {
 		return fmt.Sprintf("%s/v0/subjects/%d", Host(host), id)
 	}
@@ -58,7 +55,7 @@ func (a *Bangumi) Name() string {
 
 func (a *Bangumi) RegisterCache() {
 	a.cacheInit = true
-	a.cacheParseAnimeInfo = mem.Memorized(Bucket, a.Cache, func(params *mem.Params, results *mem.Results) error {
+	a.cacheParseAnimeInfo = mem.Memorized(constant.BangumiBucket, a.Cache, func(params *mem.Params, results *mem.Results) error {
 		entity, err := a.parseAnimeInfo(params.Get("bangumiID").(int))
 		if err != nil {
 			return err
@@ -159,7 +156,7 @@ func (a *Bangumi) searchAnimeInfo(name string) (entity *Entity, err error) {
 					temp = result
 				}
 			}
-			if maxSimilar >= MinSimilar {
+			if maxSimilar >= constant.BangumiMinSimilar {
 				return temp, nil
 			}
 			err = errors.WithStack(&exceptions.ErrAniDataSearch{AniData: a})
@@ -218,7 +215,7 @@ func (a *Bangumi) loadAnimeInfo(bangumiID int) (entity *Entity, err error) {
 	entity = &Entity{}
 	a.BangumiCacheLock.Lock()
 	defer a.BangumiCacheLock.Unlock()
-	err = a.BangumiCache.Get(SubjectBucket, bangumiID, entity)
+	err = a.BangumiCache.Get(constant.BangumiSubjectBucket, bangumiID, entity)
 	if err != nil {
 		// log.DebugErr(err)
 		return nil, err

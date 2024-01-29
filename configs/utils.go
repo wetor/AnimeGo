@@ -11,9 +11,10 @@ import (
 
 	"github.com/jinzhu/copier"
 	"github.com/pkg/errors"
-	encoder "github.com/wetor/AnimeGo/third_party/yaml-encoder"
 
+	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/models"
+	encoder "github.com/wetor/AnimeGo/third_party/yaml-encoder"
 )
 
 func ConvertPluginInfo(info []PluginInfo) []models.Plugin {
@@ -43,7 +44,8 @@ func getFieldByTag(value reflect.Value, tag string) reflect.Value {
 	return reflect.Value{}
 }
 
-func Env2Config(env *Environment, conf *Config, prefix string) error {
+func Env2Config(env *Environment, conf *Config, prefix string) (bool, error) {
+	rewrite := false
 	envValue := reflect.ValueOf(env).Elem()
 	confValue := reflect.ValueOf(conf).Elem()
 
@@ -52,7 +54,7 @@ func Env2Config(env *Environment, conf *Config, prefix string) error {
 		confField := getFieldByTag(confValue, envValue.Type().Field(i).Tag.Get("val"))
 
 		if !confField.IsValid() {
-			return errors.New(fmt.Sprintf("Field %s not found in Config", envValue.Type().Field(i).Tag.Get("val")))
+			return rewrite, errors.New(fmt.Sprintf("Field %s not found in Config", envValue.Type().Field(i).Tag.Get("val")))
 		}
 
 		if envField.IsNil() {
@@ -61,17 +63,18 @@ func Env2Config(env *Environment, conf *Config, prefix string) error {
 		envTag := envValue.Type().Field(i).Tag.Get("env")
 		envVar := envField.Elem()
 		log.Printf("发现环境变量 %s%s=%v", prefix, envTag, envVar)
+		rewrite = true
 		switch envField.Elem().Kind() {
 		case reflect.String:
 			confField.SetString(envVar.Interface().(string))
 		case reflect.Int:
 			confField.SetInt(int64(envVar.Interface().(int)))
 		default:
-			return errors.New(fmt.Sprintf("Field %s has an unsupported type", envTag))
+			return rewrite, errors.New(fmt.Sprintf("Field %s has an unsupported type", envTag))
 		}
 	}
 
-	return nil
+	return rewrite, nil
 }
 
 func encodeConfig(conf any) ([]byte, error) {
@@ -99,7 +102,7 @@ func BackupConfig(file string, version string) error {
 		return err
 	}
 	out := path.Join(dir, name)
-	err = os.WriteFile(out, oldFile, 0644)
+	err = os.WriteFile(out, oldFile, constant.WriteFilePerm)
 	if err != nil {
 		return err
 	}

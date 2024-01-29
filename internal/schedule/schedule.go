@@ -45,11 +45,7 @@ type AddTaskOptions struct {
 	Task     api.Task
 }
 
-type Options struct {
-	WG *sync.WaitGroup
-}
-
-func NewSchedule(opts *Options) *Schedule {
+func NewSchedule(opts *models.ScheduleOptions) *Schedule {
 	schedule := &Schedule{
 		wg:      opts.WG,
 		tasks:   make(map[string]*TaskInfo),

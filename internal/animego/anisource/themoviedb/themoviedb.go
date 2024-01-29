@@ -3,7 +3,9 @@ package themoviedb
 import (
 	"github.com/google/wire"
 	"github.com/pkg/errors"
+
 	"github.com/wetor/AnimeGo/internal/api"
+	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/pkg/request"
 	"github.com/wetor/AnimeGo/pkg/log"
@@ -16,11 +18,8 @@ var (
 		if len(host) > 0 {
 			return host
 		}
-		return "https://api.themoviedb.org"
+		return constant.ThemoviedbDefaultHost
 	}
-	Bucket                  = "themoviedb"
-	MatchSeasonDays         = 90
-	MinSimilar      float64 = 0.75
 )
 
 type Themoviedb struct {
@@ -47,7 +46,7 @@ func (a *Themoviedb) Name() string {
 
 func (a *Themoviedb) RegisterCache() {
 	a.cacheInit = true
-	a.cacheParseThemoviedbID = mem.Memorized(Bucket, a.Cache.(mem.Memorizer),
+	a.cacheParseThemoviedbID = mem.Memorized(constant.ThemoviedbBucket, a.Cache.(mem.Memorizer),
 		func(params *mem.Params, results *mem.Results) error {
 			entity, err := a.parseThemoviedbID(params.Get("name").(string))
 			if err != nil {
@@ -57,7 +56,7 @@ func (a *Themoviedb) RegisterCache() {
 			return nil
 		})
 
-	a.cacheParseAnimeSeason = mem.Memorized(Bucket, a.Cache.(mem.Memorizer),
+	a.cacheParseAnimeSeason = mem.Memorized(constant.ThemoviedbBucket, a.Cache.(mem.Memorizer),
 		func(params *mem.Params, results *mem.Results) error {
 			seasonInfo, err := a.parseAnimeSeason(params.Get("tmdbID").(int), params.Get("airDate").(string))
 			if err != nil {
@@ -143,7 +142,7 @@ func (a *Themoviedb) parseThemoviedbID(name string) (entity *Entity, err error) 
 					temp = result
 				}
 			}
-			if maxSimilar >= MinSimilar {
+			if maxSimilar >= constant.ThemoviedbMinSimilar {
 				return temp, nil
 			}
 			err = errors.WithStack(&exceptions.ErrThemoviedbMatchSeason{Message: "番剧名未找到"})
@@ -188,7 +187,7 @@ func (a *Themoviedb) parseAnimeSeason(tmdbID int, airDate string) (seasonInfo *S
 			seasonInfo = r
 		}
 	}
-	if min > MatchSeasonDays {
+	if min > constant.ThemoviedbMatchSeasonDays {
 		err = errors.WithStack(&exceptions.ErrThemoviedbMatchSeason{Message: "此番剧可能未开播"})
 		log.DebugErr(err)
 		return nil, err

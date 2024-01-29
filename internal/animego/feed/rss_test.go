@@ -3,13 +3,13 @@ package feed_test
 import (
 	"bytes"
 	"fmt"
-	"github.com/wetor/AnimeGo/internal/animego/feed"
 	"os"
 	"testing"
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 
+	"github.com/wetor/AnimeGo/internal/animego/feed"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/pkg/json"

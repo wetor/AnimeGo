@@ -77,7 +77,7 @@ func TestMain(m *testing.M) {
 		Debug: true,
 	})
 
-	mgr = filter.NewManager(&filter.Options{
+	mgr = filter.NewManager(&models.FilterOptions{
 		DelaySecond: 1,
 	}, &DownloaderMock{}, &ParserMock{})
 	mgr.Add(&models.Plugin{

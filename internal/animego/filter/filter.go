@@ -2,6 +2,7 @@ package filter
 
 import (
 	"context"
+
 	"github.com/google/wire"
 
 	"github.com/wetor/AnimeGo/internal/api"
@@ -21,7 +22,7 @@ type Manager struct {
 	manager api.ManagerDownloader
 	parser  api.ParserManager
 
-	*Options
+	*models.FilterOptions
 }
 
 // NewManager
@@ -29,12 +30,12 @@ type Manager struct {
 //	@Description:
 //	@param feed api.Feed
 //	@return *Manager
-func NewManager(opts *Options, manager api.ManagerDownloader, parser api.ParserManager) *Manager {
+func NewManager(opts *models.FilterOptions, manager api.ManagerDownloader, parser api.ParserManager) *Manager {
 	m := &Manager{
-		filters: make([]api.FilterPlugin, 0),
-		manager: manager,
-		parser:  parser,
-		Options: opts,
+		filters:       make([]api.FilterPlugin, 0),
+		manager:       manager,
+		parser:        parser,
+		FilterOptions: opts,
 	}
 	return m
 }

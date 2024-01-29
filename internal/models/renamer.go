@@ -1,5 +1,29 @@
 package models
 
+import "github.com/wetor/AnimeGo/internal/constant"
+
+type RenameTask struct {
+	// 只读
+	Src            string // 原名
+	Dst            string
+	Mode           string
+	StateChan      chan constant.TorrentState
+	RenameCallback RenameCallback // 重命名完成后回调
+	Result         *RenameResult
+
+	// 读写
+	Enable      bool
+	RenameState int
+	State       constant.TorrentState
+	ErrCount    int
+}
+
+type RenameTaskGroup struct {
+	Keys             []string
+	RenameResult     *RenameAllResult
+	CompleteCallback CompleteCallback // 完成重命名所有流程后回调
+}
+
 type RenameResult struct {
 	Index     int    `json:"index"`
 	Scrape    bool   `json:"scrape"` // 是否进行刮削

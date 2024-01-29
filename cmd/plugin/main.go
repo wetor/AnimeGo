@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/wetor/AnimeGo/cmd/common"
-	feedPlugin "github.com/wetor/AnimeGo/internal/animego/feed"
-	filterPlugin "github.com/wetor/AnimeGo/internal/animego/filter"
-	renamerPlugin "github.com/wetor/AnimeGo/internal/animego/renamer"
+	"github.com/wetor/AnimeGo/internal/animego/feed"
+	"github.com/wetor/AnimeGo/internal/animego/filter"
+	"github.com/wetor/AnimeGo/internal/animego/renamer"
 	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/plugin"
@@ -78,14 +78,14 @@ func pluginPython(entryFunc string, info *models.Plugin) map[string]any {
 }
 
 func pluginFilter(items []*models.FeedItem, info *models.Plugin) []*models.FeedItem {
-	f := filterPlugin.NewFilterPlugin(info)
+	f := filter.NewFilterPlugin(info)
 	res, _ := f.FilterAll(items)
 	return res
 }
 
 func pluginRename(anime *models.AnimeEntity, info *models.Plugin) []*models.RenameResult {
 	result := make([]*models.RenameResult, len(anime.Ep))
-	r := renamerPlugin.NewRenamePlugin(info)
+	r := renamer.NewRenamePlugin(info)
 	var err error
 	for i, ep := range anime.Ep {
 		result[i], err = r.Rename(anime, i, ep.Src)
@@ -134,7 +134,7 @@ func Main() {
 	plugin.Init(&plugin.Options{
 		Path:  dir,
 		Debug: pDebug,
-		Feed:  feedPlugin.NewRss(),
+		Feed:  feed.NewRss(),
 	})
 
 	pluginInfo := &models.Plugin{
@@ -193,7 +193,7 @@ func Main() {
 			log.Infof("[%d] filter结果: %v", i, string(jsonData))
 		}
 	case constant.PluginTemplateSchedule, constant.PluginTemplateFeed:
-		s := schedule.NewSchedule(&schedule.Options{
+		s := schedule.NewSchedule(&models.ScheduleOptions{
 			WG: &wg,
 		})
 		if pPlugin == constant.PluginTemplateSchedule {

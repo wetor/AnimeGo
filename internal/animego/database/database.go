@@ -2,15 +2,17 @@ package database
 
 import (
 	"fmt"
-	"github.com/google/wire"
-	"github.com/wetor/AnimeGo/internal/api"
 	"os"
 	"path"
 	"regexp"
 	"strings"
 	"sync"
 
+	"github.com/google/wire"
 	"github.com/pkg/errors"
+
+	"github.com/wetor/AnimeGo/internal/api"
+	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/pkg/dirdb"
@@ -24,8 +26,8 @@ var Set = wire.NewSet(
 
 type Database struct {
 	cache    api.Cacher
-	name2dir map[string]*AnimeDir // anime name -> anime dir&season dir
-	dir2name map[string]string    // anime dir/season dir -> anime name
+	name2dir map[string]*models.AnimeDir // anime name -> anime dir&season dir
+	dir2name map[string]string           // anime dir/season dir -> anime name
 
 	cacheAnimeDBEntity  map[string]*models.AnimeDBEntity
 	cacheSeasonDBEntity map[string]map[int]*models.SeasonDBEntity
@@ -34,19 +36,20 @@ type Database struct {
 	sync.Mutex
 	dirMutex sync.Mutex // 事务控制
 
-	*Options
+	*models.DatabaseOptions
 }
 
-func NewDatabase(opts *Options, cache api.Cacher) (*Database, error) {
+func NewDatabase(opts *models.DatabaseOptions, cache api.Cacher) (*Database, error) {
 	dirdb.Init(&dirdb.Options{
-		DefaultExt: []string{path.Ext(AnimeDBName), path.Ext(SeasonDBName), path.Ext(EpisodeDBFmt)}, // anime, season
+		DefaultExt: []string{path.Ext(constant.DatabaseAnimeDBName),
+			path.Ext(constant.DatabaseSeasonDBName), path.Ext(constant.DatabaseEpisodeDBFmt)}, // anime, season
 	})
 	m := &Database{
-		cache:   cache,
-		Options: opts,
+		cache:           cache,
+		DatabaseOptions: opts,
 	}
-	m.cache.Add(Hash2EntityBucket)
-	m.cache.Add(Name2HashBucket)
+	m.cache.Add(constant.DatabaseHash2EntityBucket)
+	m.cache.Add(constant.DatabaseName2HashBucket)
 	m.Init()
 	err := m.Scan()
 	if err != nil {
@@ -61,7 +64,7 @@ func (m *Database) Init() {
 	m.dirMutex.Lock()
 	defer m.dirMutex.Unlock()
 
-	m.name2dir = make(map[string]*AnimeDir)
+	m.name2dir = make(map[string]*models.AnimeDir)
 	m.dir2name = make(map[string]string)
 
 	m.cacheAnimeDBEntity = make(map[string]*models.AnimeDBEntity)
@@ -95,7 +98,7 @@ func (m *Database) Scan() error {
 			continue
 		}
 		switch file.Ext {
-		case path.Ext(AnimeDBName):
+		case path.Ext(constant.DatabaseAnimeDBName):
 			anime := &models.AnimeDBEntity{}
 			err = file.DB.Unmarshal(anime)
 			if err != nil {
@@ -104,7 +107,7 @@ func (m *Database) Scan() error {
 				break
 			}
 			m.SetAnimeCache(file.Dir, anime)
-		case path.Ext(SeasonDBName):
+		case path.Ext(constant.DatabaseSeasonDBName):
 			season := &models.SeasonDBEntity{}
 			err = file.DB.Unmarshal(season)
 			if err != nil {
@@ -113,7 +116,7 @@ func (m *Database) Scan() error {
 				break
 			}
 			m.SetSeasonCache(file.Dir, season)
-		case path.Ext(EpisodeDBFmt):
+		case path.Ext(constant.DatabaseEpisodeDBFmt):
 			ep := &models.EpisodeDBEntity{}
 			err = file.DB.Unmarshal(ep)
 			if err != nil {
@@ -176,7 +179,7 @@ func (m *Database) read(file string, data any) error {
 func (m *Database) SetAnimeCache(dir string, anime *models.AnimeDBEntity) {
 	m.dir2name[dir] = anime.Name
 	if _, ok := m.name2dir[anime.Name]; !ok {
-		m.name2dir[anime.Name] = &AnimeDir{
+		m.name2dir[anime.Name] = &models.AnimeDir{
 			Dir:       dir,
 			SeasonDir: make(map[int]string),
 		}
@@ -191,7 +194,7 @@ func (m *Database) SetAnimeCache(dir string, anime *models.AnimeDBEntity) {
 func (m *Database) SetSeasonCache(dir string, season *models.SeasonDBEntity) {
 	m.dir2name[dir] = season.Name
 	if _, ok := m.name2dir[season.Name]; !ok {
-		m.name2dir[season.Name] = &AnimeDir{
+		m.name2dir[season.Name] = &models.AnimeDir{
 			Dir:       path.Dir(dir),
 			SeasonDir: make(map[int]string),
 		}
@@ -209,7 +212,7 @@ func (m *Database) SetSeasonCache(dir string, season *models.SeasonDBEntity) {
 func (m *Database) setEpisodeCache(dir string, ep *models.EpisodeDBEntity) {
 	m.dir2name[dir] = ep.Name
 	if _, ok := m.name2dir[ep.Name]; !ok {
-		m.name2dir[ep.Name] = &AnimeDir{
+		m.name2dir[ep.Name] = &models.AnimeDir{
 			Dir:       path.Dir(dir), // 上层文件夹
 			SeasonDir: make(map[int]string),
 		}
@@ -236,8 +239,8 @@ func (m *Database) Add(data any) error {
 	case *models.AnimeEntity:
 		name := value.FullName()
 		hash := value.Hash()
-		m.cache.Put(Name2HashBucket, name, hash, 0)
-		m.cache.Put(Hash2EntityBucket, hash, value, 0)
+		m.cache.Put(constant.DatabaseName2HashBucket, name, hash, 0)
+		m.cache.Put(constant.DatabaseHash2EntityBucket, hash, value, 0)
 	}
 	return nil
 }
@@ -251,11 +254,11 @@ func (m *Database) Delete(data any) error {
 
 	switch value := data.(type) {
 	case string:
-		err := m.cache.Delete(Name2HashBucket, value)
+		err := m.cache.Delete(constant.DatabaseName2HashBucket, value)
 		if err != nil {
 			return err
 		}
-		err = m.cache.Delete(Hash2EntityBucket, value)
+		err = m.cache.Delete(constant.DatabaseHash2EntityBucket, value)
 		if err != nil {
 			return err
 		}
@@ -269,7 +272,7 @@ func (m *Database) Delete(data any) error {
 //	从bolt中获取
 func (m *Database) GetAnimeEntity(hash string) (*models.AnimeEntity, error) {
 	anime := &models.AnimeEntity{}
-	err := m.cache.Get(Hash2EntityBucket, hash, anime)
+	err := m.cache.Get(constant.DatabaseHash2EntityBucket, hash, anime)
 	if err != nil {
 		return nil, err
 	}
@@ -282,7 +285,7 @@ func (m *Database) GetAnimeEntity(hash string) (*models.AnimeEntity, error) {
 //	从bolt中获取
 func (m *Database) GetAnimeEntityByName(name string) (*models.AnimeEntity, error) {
 	var hash string
-	err := m.cache.Get(Name2HashBucket, name, &hash)
+	err := m.cache.Get(constant.DatabaseName2HashBucket, name, &hash)
 	if err != nil {
 		return nil, err
 	}
@@ -327,7 +330,7 @@ func (m *Database) setAnimeDBEntity(dir string, a *models.AnimeDBEntity) error {
 	if err != nil {
 		return err
 	}
-	file := path.Join(dir, AnimeDBName)
+	file := path.Join(dir, constant.DatabaseAnimeDBName)
 	err = m.write(file, a)
 	if err != nil {
 		return err
@@ -377,7 +380,7 @@ func (m *Database) setSeasonDBEntity(dir string, s *models.SeasonDBEntity) error
 	if err != nil {
 		return err
 	}
-	file := path.Join(dir, SeasonDBName)
+	file := path.Join(dir, constant.DatabaseSeasonDBName)
 	err = m.write(file, s)
 	if err != nil {
 		return err
@@ -432,7 +435,7 @@ func (m *Database) setEpisodeDBEntity(filename string, ep *models.EpisodeDBEntit
 	if err != nil {
 		return err
 	}
-	file := fmt.Sprintf(EpisodeDBFmt, strings.TrimSuffix(filename, path.Ext(filename)))
+	file := fmt.Sprintf(constant.DatabaseEpisodeDBFmt, strings.TrimSuffix(filename, path.Ext(filename)))
 	err = m.write(file, ep)
 	if err != nil {
 		return err

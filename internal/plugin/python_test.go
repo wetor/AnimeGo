@@ -7,9 +7,8 @@ import (
 
 	"github.com/wetor/AnimeGo/assets"
 	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
-	mikanRss "github.com/wetor/AnimeGo/internal/animego/feed"
+	"github.com/wetor/AnimeGo/internal/animego/feed"
 	"github.com/wetor/AnimeGo/internal/plugin"
-	"github.com/wetor/AnimeGo/internal/wire"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/log"
 	pkgPlugin "github.com/wetor/AnimeGo/pkg/plugin"
@@ -30,7 +29,7 @@ func TestMain(m *testing.M) {
 
 	db := cache.NewBolt()
 	db.Open("data/bolt.db")
-	mikanInst = wire.GetMikanData(&mikan.Options{
+	mikanInst = mikan.NewMikan(&mikan.Options{
 		Cache: db,
 	})
 	m.Run()
@@ -222,7 +221,7 @@ func TestPythonMikanTool(t *testing.T) {
 	})
 	os.Setenv("ANIMEGO_VERSION", "0.6.8")
 
-	rss := mikanRss.NewRss()
+	rss := feed.NewRss()
 	items, _ := rss.ParseFile("testdata/Mikan.xml")
 	fmt.Println(len(items))
 	fmt.Println("===========")
