@@ -18,17 +18,11 @@ import (
 )
 
 var (
-	Host = func(host string) string {
-		if len(host) > 0 {
-			return host
-		}
-		return constant.BangumiDefaultHost
+	infoApi = func(id int) string {
+		return fmt.Sprintf("%s/v0/subjects/%d", constant.BangumiHost, id)
 	}
-	infoApi = func(host string, id int) string {
-		return fmt.Sprintf("%s/v0/subjects/%d", Host(host), id)
-	}
-	searchApi = func(host string, limit, offset int) string {
-		return fmt.Sprintf("%s/v0/search/subjects?limit=%d&offset=%d", Host(host), limit, offset)
+	searchApi = func(limit, offset int) string {
+		return fmt.Sprintf("%s/v0/search/subjects?limit=%d&offset=%d", constant.BangumiHost, limit, offset)
 	}
 )
 
@@ -114,7 +108,7 @@ func (a *Bangumi) SearchCache(name string, filters any) (int, error) {
 }
 
 func (a *Bangumi) searchAnimeInfo(name string) (entity *Entity, err error) {
-	uri := searchApi(a.Host, 10, 0)
+	uri := searchApi(10, 0)
 	resp := res.SearchPaged{}
 	result, err := utils.RemoveNameSuffix(name, func(innerName string) (any, error) {
 		req := res.Req{
@@ -187,7 +181,7 @@ func (a *Bangumi) searchAnimeInfo(name string) (entity *Entity, err error) {
 //	@param bangumiID int
 //	@return entity *Entity
 func (a *Bangumi) parseAnimeInfo(bangumiID int) (entity *Entity, err error) {
-	uri := infoApi(a.Host, bangumiID)
+	uri := infoApi(bangumiID)
 	resp := res.SubjectV0{}
 	err = request.Get(uri, &resp)
 	if err != nil {

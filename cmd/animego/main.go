@@ -133,6 +133,23 @@ func Main() {
 		Retry:     config.Advanced.Request.RetryNum,
 		RetryWait: config.Advanced.Request.RetryWaitSecond,
 		Debug:     debug,
+		Host: map[string]*request.HostOptions{
+			constant.BangumiHost: {
+				Redirect: config.Advanced.Source.Bangumi.Redirect,
+			},
+			constant.MikanHost: {
+				Redirect: config.Advanced.Source.Mikan.Redirect,
+				Header: map[string]string{
+					constant.MikanAuthCookie: config.Advanced.Source.Mikan.Cookie,
+				},
+			},
+			constant.ThemoviedbHost: {
+				Redirect: config.Advanced.Source.Themoviedb.Redirect,
+				Params: map[string]string{
+					constant.ThemoviedbApiKey: config.Advanced.Source.Themoviedb.ApiKey,
+				},
+			},
+		},
 	})
 	// 初始化torrent
 	torrent.Init(&torrent.Options{
@@ -152,19 +169,14 @@ func Main() {
 		CacheTime:        int64(config.Advanced.Cache.BangumiCacheHour * 60 * 60),
 		BangumiCache:     bangumiCache,
 		BangumiCacheLock: &bangumiCacheMutex,
-		Host:             config.Advanced.AniData.Bangumi.Redirect,
 	}
 	mikanOpts := &mikan.Options{
 		Cache:     bolt,
 		CacheTime: int64(config.Advanced.Cache.MikanCacheHour * 60 * 60),
-		Cookie:    config.Advanced.AniData.Mikan.Cookie,
-		Host:      config.Advanced.AniData.Mikan.Redirect,
 	}
 	tmdbOpts := &themoviedb.Options{
 		Cache:     bolt,
 		CacheTime: int64(config.Advanced.Cache.ThemoviedbCacheHour * 60 * 60),
-		Key:       config.Setting.Key.Themoviedb,
-		Host:      config.Advanced.AniData.Themoviedb.Redirect,
 	}
 	// ===============================================================================================================
 	// 初始化插件 gpython

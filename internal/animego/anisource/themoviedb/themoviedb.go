@@ -13,15 +13,6 @@ import (
 	"github.com/wetor/AnimeGo/pkg/utils"
 )
 
-var (
-	Host = func(host string) string {
-		if len(host) > 0 {
-			return host
-		}
-		return constant.ThemoviedbDefaultHost
-	}
-)
-
 type Themoviedb struct {
 	cacheInit              bool
 	cacheParseThemoviedbID mem.Func
@@ -116,7 +107,7 @@ func (a *Themoviedb) GetCache(id int, filters any) (any, error) {
 func (a *Themoviedb) parseThemoviedbID(name string) (entity *Entity, err error) {
 	resp := FindResponse{}
 	result, err := utils.RemoveNameSuffix(name, func(innerName string) (any, error) {
-		err := request.Get(idApi(a.Host, a.Key, innerName, false), &resp)
+		err := request.Get(idApi(innerName, false), &resp)
 		if err != nil {
 			log.DebugErr(err)
 			//return 0, errors.WithStack(&exceptions.ErrRequest{Name: a.Name()})
@@ -165,7 +156,7 @@ func (a *Themoviedb) parseThemoviedbID(name string) (entity *Entity, err error) 
 
 func (a *Themoviedb) parseAnimeSeason(tmdbID int, airDate string) (seasonInfo *SeasonInfo, err error) {
 	resp := InfoResponse{}
-	err = request.Get(infoApi(a.Host, a.Key, tmdbID, false), &resp)
+	err = request.Get(infoApi(tmdbID, false), &resp)
 	if err != nil {
 		log.DebugErr(err)
 		return nil, errors.WithStack(&exceptions.ErrRequest{Name: a.Name()})

@@ -21,6 +21,7 @@ import (
 	"github.com/wetor/AnimeGo/configs/version/v_160"
 	"github.com/wetor/AnimeGo/configs/version/v_161"
 	"github.com/wetor/AnimeGo/configs/version/v_162"
+	"github.com/wetor/AnimeGo/configs/version/v_170"
 
 	"github.com/wetor/AnimeGo/assets"
 	"github.com/wetor/AnimeGo/internal/constant"
@@ -38,87 +39,77 @@ type ConfigOnlyVersion struct {
 type Version struct {
 	Name       string
 	Desc       string
-	UpdateFunc func(string) // 从上个版本升级到当前版本的升级函数
+	UpdateFunc func(string, string) // 从上个版本升级到当前版本的升级函数
 }
 
 var (
-	versions = []string{
-		"1.1.0",
-		"1.2.0",
-		"1.3.0",
-		"1.4.0",
-		"1.4.1",
-		"1.5.0",
-		"1.5.1",
-		"1.5.2",
-		"1.6.0",
-		"1.6.1",
-		"1.6.2",
-		"1.7.0",
-	}
-	ConfigVersion = versions[len(versions)-1] // 当前配置文件版本
-
 	versionList = []Version{
 		{
-			Name:       versions[0],
-			UpdateFunc: func(s string) {},
+			Name:       "1.1.0",
+			UpdateFunc: func(f, v string) {},
 		},
 		{
-			Name:       versions[1],
+			Name:       "1.2.0",
 			Desc:       "插件配置结构变更；移除了自定义缓存文件、日志文件和临时文件功能",
-			UpdateFunc: update_110_120,
+			UpdateFunc: update(&v_110.Config{}, &v_120.Config{}, update_110_120),
 		},
 		{
-			Name:       versions[2],
+			Name:       "1.3.0",
 			Desc:       "插件配置结构变更；移除了js插件支持，增加了定时任务插件支持",
-			UpdateFunc: update_120_130,
+			UpdateFunc: update(&v_120.Config{}, &v_130.Config{}, update_120_130),
 		},
 		{
-			Name:       versions[3],
+			Name:       "1.4.0",
 			Desc:       "插件配置结构变更，支持设置参数",
-			UpdateFunc: update_130_140,
+			UpdateFunc: update(&v_130.Config{}, &v_140.Config{}, update_130_140),
 		},
 		{
-			Name:       versions[4],
+			Name:       "1.4.1",
 			Desc:       "新增重命名插件",
-			UpdateFunc: update_140_141,
+			UpdateFunc: update(&v_140.Config{}, &v_141.Config{}, update_140_141),
 		},
 		{
-			Name:       versions[5],
+			Name:       "1.5.0",
 			Desc:       "新增标题解析插件",
-			UpdateFunc: update_141_150,
+			UpdateFunc: update(&v_141.Config{}, &v_150.Config{}, update_141_150),
 		},
 		{
-			Name:       versions[6],
+			Name:       "1.5.1",
 			Desc:       "新增域名重定向设置",
-			UpdateFunc: update_150_151,
+			UpdateFunc: update(&v_150.Config{}, &v_151.Config{}, update_150_151),
 		},
 		{
-			Name:       versions[7],
+			Name:       "1.5.2",
 			Desc:       "新增下载器独立下载路径设置",
-			UpdateFunc: update_151_152,
+			UpdateFunc: update(&v_151.Config{}, &v_152.Config{}, update_151_152),
 		},
 		{
-			Name:       versions[8],
+			Name:       "1.6.0",
 			Desc:       "更改字段名，数据库迁移",
-			UpdateFunc: update_152_160,
+			UpdateFunc: update(&v_152.Config{}, &v_160.Config{}, update_152_160),
 		},
 		{
-			Name:       versions[9],
+			Name:       "1.6.1",
 			Desc:       "更改域名重定向设置，支持设置Mikan的Cookie",
-			UpdateFunc: update_160_161,
+			UpdateFunc: update(&v_160.Config{}, &v_161.Config{}, update_160_161),
 		},
 		{
-			Name:       versions[10],
+			Name:       "1.6.2",
 			Desc:       "新增Database设置",
-			UpdateFunc: update_161_162,
+			UpdateFunc: update(&v_161.Config{}, &v_162.Config{}, update_161_162),
 		},
 		{
-			Name:       versions[11],
+			Name:       "1.7.0",
 			Desc:       "更改下载器配置，新增Transmission客户端支持",
-			UpdateFunc: update_162_170,
+			UpdateFunc: update(&v_162.Config{}, &v_170.Config{}, update_162_170),
+		},
+		{
+			Name:       "1.7.1",
+			Desc:       "更改Themoviedb的ApiKey字段",
+			UpdateFunc: update(&v_170.Config{}, DefaultConfig(), update_170_171),
 		},
 	}
+	ConfigVersion = "1.7.1" // 当前配置文件版本
 )
 
 func UpdateConfig(oldFile string, backup bool) (restart bool) {
@@ -137,8 +128,8 @@ func UpdateConfig(oldFile string, backup bool) (restart bool) {
 	oldVer := configOnlyVersion.Version
 	// 版本号转换升级函数index
 	oldIndex := -1
-	for i, v := range versions {
-		if oldVer == v {
+	for i, v := range versionList {
+		if oldVer == v.Name {
 			oldIndex = i
 			break
 		}
@@ -149,8 +140,8 @@ func UpdateConfig(oldFile string, backup bool) (restart bool) {
 
 	newVer := ConfigVersion
 	newIndex := -1
-	for i, v := range versions {
-		if newVer == v {
+	for i, v := range versionList {
+		if newVer == v.Name {
 			newIndex = i
 			break
 		}
@@ -174,12 +165,15 @@ func UpdateConfig(oldFile string, backup bool) (restart bool) {
 	log.Println("===========升级子流程===========")
 	// 执行升级函数
 	for i := oldIndex + 1; i <= newIndex; i++ {
-		log.Printf("======= %s => %s =======\n", versions[i-1], versions[i])
-		versionList[i].UpdateFunc(oldFile)
-		if len(versionList[i].Desc) > 0 {
+		ver := versionList[i]
+		log.Printf("======= %s => %s =======\n", versionList[i-1].Name, ver.Name)
+		if len(ver.Desc) > 0 {
 			log.Println("------------升级说明------------")
-			log.Println(versionList[i].Desc)
+			log.Println(ver.Desc)
+			log.Println("--------------------------------")
 		}
+		ver.UpdateFunc(oldFile, ver.Name)
+
 	}
 	log.Println("===========子流程结束===========")
 	log.Printf("配置文件升级完成：%s => %s\n", oldVer, newVer)
@@ -187,23 +181,46 @@ func UpdateConfig(oldFile string, backup bool) (restart bool) {
 	return true
 }
 
-func update_110_120(file string) {
+func update(oldConfig, newConfig any, f func(any, any, string)) func(string, string) {
+	return func(file, version string) {
+		updateBefore(file, oldConfig, newConfig)
+		f(oldConfig, newConfig, version)
+		updateAfter(file, newConfig)
+	}
+}
+
+func updateBefore(file string, oldConfig, newConfig any) {
 	data, err := os.ReadFile(file)
 	if err != nil {
 		log.Fatal("配置文件加载错误：", err)
 	}
-	oldConfig := &v_110.Config{}
 	err = yaml.Unmarshal(data, oldConfig)
 	if err != nil {
 		log.Fatal("配置文件加载错误：", err)
 	}
 
-	newConfig := &v_120.Config{}
 	err = copier.Copy(newConfig, oldConfig)
 	if err != nil {
 		log.Fatal("配置文件升级失败：", err)
 	}
-	newConfig.Version = "1.2.0"
+}
+
+func updateAfter(file string, newConfig any) {
+	content, err := encodeConfig(newConfig)
+	if err != nil {
+		log.Fatal("配置文件升级失败：", err)
+	}
+	err = os.WriteFile(file, content, constant.WriteFilePerm)
+	if err != nil {
+		log.Fatal("配置文件升级失败：", err)
+	}
+}
+
+func update_110_120(old, new any, version string) {
+	oldConfig := old.(*v_110.Config)
+	newConfig := new.(*v_120.Config)
+
+	newConfig.Version = version
 	log.Printf("[变动] 配置项(setting.filter.javascript) 变更为 setting.filter.plugin\n")
 	if len(oldConfig.Filter.JavaScript) > 0 {
 		newConfig.Filter.Plugin = make([]v_120.PluginInfo, len(oldConfig.Filter.JavaScript))
@@ -225,34 +242,13 @@ func update_110_120(file string) {
 	_ = utils.CreateMutiDir(constant.LogPath)
 	_ = os.Rename(path.Join(oldConfig.DataPath, oldConfig.Advanced.Path.LogFile), constant.LogFile)
 	log.Printf("[移除] 配置项(setting.advanced.xpath.temp_path)\n")
-
-	content, err := encodeConfig(newConfig)
-	if err != nil {
-		log.Fatal("配置文件升级失败：", err)
-	}
-	err = os.WriteFile(file, content, constant.WriteFilePerm)
-	if err != nil {
-		log.Fatal("配置文件升级失败：", err)
-	}
 }
 
-func update_120_130(file string) {
-	data, err := os.ReadFile(file)
-	if err != nil {
-		log.Fatal("配置文件加载错误：", err)
-	}
-	oldConfig := &v_120.Config{}
-	err = yaml.Unmarshal(data, oldConfig)
-	if err != nil {
-		log.Fatal("配置文件加载错误：", err)
-	}
+func update_120_130(old, new any, version string) {
+	oldConfig := old.(*v_120.Config)
+	newConfig := new.(*v_130.Config)
 
-	newConfig := &v_130.Config{}
-	err = copier.Copy(newConfig, oldConfig)
-	if err != nil {
-		log.Fatal("配置文件升级失败：", err)
-	}
-	newConfig.Version = "1.3.0"
+	newConfig.Version = version
 	log.Printf("[变动] 配置项(setting.filter.javascript) 变更为 plugin.filter\n")
 	if len(oldConfig.Filter.Plugin) > 0 {
 		newConfig.Plugin.Filter = make([]v_130.PluginInfo, 0, len(oldConfig.Filter.Plugin))
@@ -268,35 +264,14 @@ func update_120_130(file string) {
 			}
 		}
 	}
-	content, err := encodeConfig(newConfig)
-	if err != nil {
-		log.Fatal("配置文件升级失败：", err)
-	}
-	err = os.WriteFile(file, content, constant.WriteFilePerm)
-	if err != nil {
-		log.Fatal("配置文件升级失败：", err)
-	}
 	// 强制写入
 	assets.WritePlugins(assets.Dir, path.Join(newConfig.DataPath, assets.Dir), false)
 }
 
-func update_130_140(file string) {
-	data, err := os.ReadFile(file)
-	if err != nil {
-		log.Fatal("配置文件加载错误：", err)
-	}
-	oldConfig := &v_130.Config{}
-	err = yaml.Unmarshal(data, oldConfig)
-	if err != nil {
-		log.Fatal("配置文件加载错误：", err)
-	}
-
-	newConfig := &v_140.Config{}
-	err = copier.Copy(newConfig, oldConfig)
-	if err != nil {
-		log.Fatal("配置文件升级失败：", err)
-	}
-	newConfig.Version = "1.4.0"
+func update_130_140(old, new any, version string) {
+	oldConfig := old.(*v_130.Config)
+	newConfig := new.(*v_140.Config)
+	newConfig.Version = version
 
 	log.Printf("[变动] 配置项(setting.feed.mikan) 变更为 plugin.feed 中的一个插件:\n")
 	log.Printf("\t__name__: %s\n", oldConfig.Setting.Feed.Mikan.Name)
@@ -323,35 +298,14 @@ func update_130_140(file string) {
 	newConfig.Plugin.Schedule = make([]v_140.PluginInfo, len(oldConfig.Plugin.Schedule))
 	_ = copier.Copy(&newConfig.Plugin.Schedule, &oldConfig.Plugin.Schedule)
 
-	content, err := encodeConfig(newConfig)
-	if err != nil {
-		log.Fatal("配置文件升级失败：", err)
-	}
-	err = os.WriteFile(file, content, constant.WriteFilePerm)
-	if err != nil {
-		log.Fatal("配置文件升级失败：", err)
-	}
 	// 强制写入
 	assets.WritePlugins(assets.Dir, path.Join(newConfig.DataPath, assets.Dir), false)
 }
 
-func update_140_141(file string) {
-	data, err := os.ReadFile(file)
-	if err != nil {
-		log.Fatal("配置文件加载错误：", err)
-	}
-	oldConfig := &v_140.Config{}
-	err = yaml.Unmarshal(data, oldConfig)
-	if err != nil {
-		log.Fatal("配置文件加载错误：", err)
-	}
-
-	newConfig := &v_141.Config{}
-	err = copier.Copy(newConfig, oldConfig)
-	if err != nil {
-		log.Fatal("配置文件升级失败：", err)
-	}
-	newConfig.Version = "1.4.1"
+func update_140_141(old, new any, version string) {
+	// oldConfig := old.(*v_140.Config)
+	newConfig := new.(*v_141.Config)
+	newConfig.Version = version
 
 	log.Println("[移除] 配置项(advanced.feed.multi_goroutine)")
 	log.Println("[新增] 配置项(plugin.rename)")
@@ -362,35 +316,14 @@ func update_140_141(file string) {
 			File:   "builtin_rename.py",
 		},
 	}
-	content, err := encodeConfig(newConfig)
-	if err != nil {
-		log.Fatal("配置文件升级失败：", err)
-	}
-	err = os.WriteFile(file, content, constant.WriteFilePerm)
-	if err != nil {
-		log.Fatal("配置文件升级失败：", err)
-	}
 	// 强制写入
 	assets.WritePlugins(assets.Dir, path.Join(newConfig.DataPath, assets.Dir), false)
 }
 
-func update_141_150(file string) {
-	data, err := os.ReadFile(file)
-	if err != nil {
-		log.Fatal("配置文件加载错误：", err)
-	}
-	oldConfig := &v_141.Config{}
-	err = yaml.Unmarshal(data, oldConfig)
-	if err != nil {
-		log.Fatal("配置文件加载错误：", err)
-	}
-
-	newConfig := &v_150.Config{}
-	err = copier.Copy(newConfig, oldConfig)
-	if err != nil {
-		log.Fatal("配置文件升级失败：", err)
-	}
-	newConfig.Version = "1.5.0"
+func update_141_150(old, new any, version string) {
+	oldConfig := old.(*v_141.Config)
+	newConfig := new.(*v_150.Config)
+	newConfig.Version = version
 
 	log.Println("[移除] 配置项(advanced.download.ignore_size_max_kb)")
 	log.Println("[新增] 配置项(plugin.parser)")
@@ -402,7 +335,6 @@ func update_141_150(file string) {
 		},
 	}
 	for i, p := range newConfig.Plugin.Feed {
-		fmt.Println(p)
 		for key, val := range p.Vars {
 			oldKey := key
 			key = strings.TrimPrefix(key, "__")
@@ -416,116 +348,46 @@ func update_141_150(file string) {
 	}
 	log.Println("[清理] 清理缓存(data/cache/bolt.db)")
 	_ = os.Remove(path.Join(oldConfig.DataPath, "cache", "bolt.db"))
-	content, err := encodeConfig(newConfig)
-	if err != nil {
-		log.Fatal("配置文件升级失败：", err)
-	}
-	err = os.WriteFile(file, content, constant.WriteFilePerm)
-	if err != nil {
-		log.Fatal("配置文件升级失败：", err)
-	}
+
 	// 强制写入
 	assets.WritePlugins(assets.Dir, path.Join(newConfig.DataPath, assets.Dir), false)
 }
 
-func update_150_151(file string) {
-	data, err := os.ReadFile(file)
-	if err != nil {
-		log.Fatal("配置文件加载错误：", err)
-	}
-	oldConfig := &v_150.Config{}
-	err = yaml.Unmarshal(data, oldConfig)
-	if err != nil {
-		log.Fatal("配置文件加载错误：", err)
-	}
-
-	newConfig := &v_151.Config{}
-	err = copier.Copy(newConfig, oldConfig)
-	if err != nil {
-		log.Fatal("配置文件升级失败：", err)
-	}
-	newConfig.Version = "1.5.1"
+func update_150_151(old, new any, version string) {
+	// oldConfig := old.(*v_150.Config)
+	newConfig := new.(*v_151.Config)
+	newConfig.Version = version
 
 	log.Println("[新增] 配置项(advanced.redirect.mikan)")
 	log.Println("[新增] 配置项(advanced.redirect.bangumi)")
 	log.Println("[新增] 配置项(advanced.redirect.themoviedb)")
 
-	content, err := encodeConfig(newConfig)
-	if err != nil {
-		log.Fatal("配置文件升级失败：", err)
-	}
-	err = os.WriteFile(file, content, constant.WriteFilePerm)
-	if err != nil {
-		log.Fatal("配置文件升级失败：", err)
-	}
 	// 强制写入
 	assets.WritePlugins(assets.Dir, path.Join(newConfig.DataPath, assets.Dir), false)
 }
 
-func update_151_152(file string) {
-	data, err := os.ReadFile(file)
-	if err != nil {
-		log.Fatal("配置文件加载错误：", err)
-	}
-	oldConfig := &v_151.Config{}
-	err = yaml.Unmarshal(data, oldConfig)
-	if err != nil {
-		log.Fatal("配置文件加载错误：", err)
-	}
-
-	newConfig := &v_152.Config{}
-	err = copier.Copy(newConfig, oldConfig)
-	if err != nil {
-		log.Fatal("配置文件升级失败：", err)
-	}
-	newConfig.Version = "1.5.2"
+func update_151_152(old, new any, version string) {
+	oldConfig := old.(*v_151.Config)
+	newConfig := new.(*v_152.Config)
+	newConfig.Version = version
 
 	log.Println("[新增] 配置项(setting.client.qbittorrent.download_path)")
 	newConfig.Setting.Client.QBittorrent.DownloadPath = oldConfig.Setting.DownloadPath
 
-	content, err := encodeConfig(newConfig)
-	if err != nil {
-		log.Fatal("配置文件升级失败：", err)
-	}
-	err = os.WriteFile(file, content, constant.WriteFilePerm)
-	if err != nil {
-		log.Fatal("配置文件升级失败：", err)
-	}
 	// 强制写入
 	assets.WritePlugins(assets.Dir, path.Join(newConfig.DataPath, assets.Dir), false)
 }
 
-func update_152_160(file string) {
-	data, err := os.ReadFile(file)
-	if err != nil {
-		log.Fatal("配置文件加载错误：", err)
-	}
-	oldConfig := &v_152.Config{}
-	err = yaml.Unmarshal(data, oldConfig)
-	if err != nil {
-		log.Fatal("配置文件加载错误：", err)
-	}
-
-	newConfig := &v_160.Config{}
-	err = copier.Copy(newConfig, oldConfig)
-	if err != nil {
-		log.Fatal("配置文件升级失败：", err)
-	}
-	newConfig.Version = "1.6.0"
+func update_152_160(old, new any, version string) {
+	oldConfig := old.(*v_152.Config)
+	newConfig := new.(*v_160.Config)
+	newConfig.Version = version
 	constant.Init(&constant.Options{
 		DataPath: newConfig.DataPath,
 	})
 	log.Println("[变动] 配置项(advanced.update_delay_second) 变更为 advanced.refresh_second")
 	newConfig.Advanced.RefreshSecond = oldConfig.Advanced.UpdateDelaySecond
 
-	content, err := encodeConfig(newConfig)
-	if err != nil {
-		log.Fatal("配置文件升级失败：", err)
-	}
-	err = os.WriteFile(file, content, constant.WriteFilePerm)
-	if err != nil {
-		log.Fatal("配置文件升级失败：", err)
-	}
 	// 强制写入
 	assets.WritePlugins(assets.Dir, path.Join(newConfig.DataPath, assets.Dir), false)
 
@@ -533,6 +395,7 @@ func update_152_160(file string) {
 	log.Println("[数据迁移] 数据库部分迁移到文件标记")
 
 	bolt2dirdb(constant.CacheFile, xpath.P(newConfig.Setting.SavePath))
+	log.Println("--------------------------------")
 }
 
 func bolt2dirdb(boltPath, savePath string) {
@@ -584,115 +447,6 @@ func bolt2dirdb(boltPath, savePath string) {
 	}
 }
 
-func update_160_161(file string) {
-	data, err := os.ReadFile(file)
-	if err != nil {
-		log.Fatal("配置文件加载错误：", err)
-	}
-	oldConfig := &v_160.Config{}
-	err = yaml.Unmarshal(data, oldConfig)
-	if err != nil {
-		log.Fatal("配置文件加载错误：", err)
-	}
-
-	newConfig := &v_161.Config{}
-	err = copier.Copy(newConfig, oldConfig)
-	if err != nil {
-		log.Fatal("配置文件升级失败：", err)
-	}
-	newConfig.Version = "1.6.1"
-	log.Println("[新增] 配置项(advanced.anidata.mikan.cookie)")
-	log.Println("[变动] 配置项(advanced.redirect.mikan) 变更为 advanced.anidata.mikan.redirect")
-	newConfig.Advanced.AniData.Mikan.Redirect = oldConfig.Advanced.Redirect.Mikan
-	log.Println("[变动] 配置项(advanced.redirect.bangumi) 变更为 advanced.anidata.bangumi.redirect")
-	newConfig.Advanced.AniData.Bangumi.Redirect = oldConfig.Advanced.Redirect.Bangumi
-	log.Println("[变动] 配置项(advanced.redirect.themoviedb) 变更为 advanced.anidata.themoviedb.redirect")
-	newConfig.Advanced.AniData.Themoviedb.Redirect = oldConfig.Advanced.Redirect.Themoviedb
-
-	content, err := encodeConfig(newConfig)
-	if err != nil {
-		log.Fatal("配置文件升级失败：", err)
-	}
-	err = os.WriteFile(file, content, constant.WriteFilePerm)
-	if err != nil {
-		log.Fatal("配置文件升级失败：", err)
-	}
-	// 强制写入
-	assets.WritePlugins(assets.Dir, path.Join(newConfig.DataPath, assets.Dir), false)
-}
-
-func update_161_162(file string) {
-	data, err := os.ReadFile(file)
-	if err != nil {
-		log.Fatal("配置文件加载错误：", err)
-	}
-	oldConfig := &v_161.Config{}
-	err = yaml.Unmarshal(data, oldConfig)
-	if err != nil {
-		log.Fatal("配置文件加载错误：", err)
-	}
-
-	newConfig := &v_162.Config{}
-	err = copier.Copy(newConfig, oldConfig)
-	if err != nil {
-		log.Fatal("配置文件升级失败：", err)
-	}
-	newConfig.Version = "1.6.2"
-
-	log.Println("[新增] 配置项(advanced.database.refresh_database_cron)")
-	newConfig.Advanced.Database.RefreshDatabaseCron = "0 0 6 * * *"
-
-	content, err := encodeConfig(newConfig)
-	if err != nil {
-		log.Fatal("配置文件升级失败：", err)
-	}
-	err = os.WriteFile(file, content, constant.WriteFilePerm)
-	if err != nil {
-		log.Fatal("配置文件升级失败：", err)
-	}
-	// 强制写入
-	assets.WritePlugins(assets.Dir, path.Join(newConfig.DataPath, assets.Dir), false)
-}
-
-func update_162_170(file string) {
-	data, err := os.ReadFile(file)
-	if err != nil {
-		log.Fatal("配置文件加载错误：", err)
-	}
-	oldConfig := &v_162.Config{}
-	err = yaml.Unmarshal(data, oldConfig)
-	if err != nil {
-		log.Fatal("配置文件加载错误：", err)
-	}
-
-	newConfig := DefaultConfig()
-	err = copier.Copy(newConfig, oldConfig)
-	if err != nil {
-		log.Fatal("配置文件升级失败：", err)
-	}
-	newConfig.Version = "1.7.0"
-
-	log.Println("[新增] 配置项(setting.client.client)")
-	log.Println("[变动] 配置项(setting.client.qbittorrent) 变更为 setting.client")
-	newConfig.Setting.Client.Client = "QBittorrent"
-	newConfig.Setting.Client.Username = oldConfig.Setting.Client.QBittorrent.Username
-	newConfig.Setting.Client.Password = oldConfig.Setting.Client.QBittorrent.Password
-	newConfig.Setting.Client.Url = oldConfig.Setting.Client.QBittorrent.Url
-	log.Println("[变动] 配置项(advanced.download.seeding_time_minute) 变更为 advanced.client.seeding_time_minute")
-	newConfig.Advanced.Client.SeedingTimeMinute = oldConfig.Advanced.Download.SeedingTimeMinute
-
-	content, err := encodeConfig(newConfig)
-	if err != nil {
-		log.Fatal("配置文件升级失败：", err)
-	}
-	err = os.WriteFile(file, content, constant.WriteFilePerm)
-	if err != nil {
-		log.Fatal("配置文件升级失败：", err)
-	}
-	// 强制写入
-	assets.WritePlugins(assets.Dir, path.Join(newConfig.DataPath, assets.Dir), false)
-}
-
 func write(file string, data any) error {
 	f := dirdb.NewFile(file)
 	err := f.Open()
@@ -706,4 +460,67 @@ func write(file string, data any) error {
 	}
 	log.Printf("write %s: %+v\n", file, data)
 	return nil
+}
+
+func update_160_161(old, new any, version string) {
+	oldConfig := old.(*v_160.Config)
+	newConfig := new.(*v_161.Config)
+	newConfig.Version = version
+	log.Println("[新增] 配置项(advanced.anidata.mikan.cookie)")
+	log.Println("[变动] 配置项(advanced.redirect.mikan) 变更为 advanced.anidata.mikan.redirect")
+	newConfig.Advanced.AniData.Mikan.Redirect = oldConfig.Advanced.Redirect.Mikan
+	log.Println("[变动] 配置项(advanced.redirect.bangumi) 变更为 advanced.anidata.bangumi.redirect")
+	newConfig.Advanced.AniData.Bangumi.Redirect = oldConfig.Advanced.Redirect.Bangumi
+	log.Println("[变动] 配置项(advanced.redirect.themoviedb) 变更为 advanced.anidata.themoviedb.redirect")
+	newConfig.Advanced.AniData.Themoviedb.Redirect = oldConfig.Advanced.Redirect.Themoviedb
+
+	// 强制写入
+	assets.WritePlugins(assets.Dir, path.Join(newConfig.DataPath, assets.Dir), false)
+}
+
+func update_161_162(old, new any, version string) {
+	// oldConfig := old.(*v_161.Config)
+	newConfig := new.(*v_162.Config)
+	newConfig.Version = version
+
+	log.Println("[新增] 配置项(advanced.database.refresh_database_cron)")
+	newConfig.Advanced.Database.RefreshDatabaseCron = "0 0 6 * * *"
+
+	// 强制写入
+	assets.WritePlugins(assets.Dir, path.Join(newConfig.DataPath, assets.Dir), false)
+}
+
+func update_162_170(old, new any, version string) {
+	oldConfig := old.(*v_162.Config)
+	newConfig := new.(*v_170.Config)
+	newConfig.Version = version
+
+	log.Println("[新增] 配置项(setting.client.client)")
+	log.Println("[变动] 配置项(setting.client.qbittorrent) 变更为 setting.client")
+	newConfig.Setting.Client.Client = "QBittorrent"
+	newConfig.Setting.Client.Username = oldConfig.Setting.Client.QBittorrent.Username
+	newConfig.Setting.Client.Password = oldConfig.Setting.Client.QBittorrent.Password
+	newConfig.Setting.Client.Url = oldConfig.Setting.Client.QBittorrent.Url
+	log.Println("[变动] 配置项(advanced.download.seeding_time_minute) 变更为 advanced.client.seeding_time_minute")
+	newConfig.Advanced.Client.SeedingTimeMinute = oldConfig.Advanced.Download.SeedingTimeMinute
+
+	// 强制写入
+	assets.WritePlugins(assets.Dir, path.Join(newConfig.DataPath, assets.Dir), false)
+}
+
+func update_170_171(old, new any, version string) {
+	oldConfig := old.(*v_170.Config)
+	newConfig := new.(*Config)
+	newConfig.Version = version
+
+	log.Println("[变动] 配置项(advanced.anidata) 变更为 advanced.source")
+	newConfig.Advanced.Source.Mikan.Redirect = oldConfig.Advanced.AniData.Mikan.Redirect
+	newConfig.Advanced.Source.Mikan.Cookie = oldConfig.Advanced.AniData.Mikan.Cookie
+	newConfig.Advanced.Source.Bangumi.Redirect = oldConfig.Advanced.AniData.Bangumi.Redirect
+	newConfig.Advanced.Source.Themoviedb.Redirect = oldConfig.Advanced.AniData.Themoviedb.Redirect
+	log.Println("[变动] 配置项(setting.key.themoviedb) 变更为 advanced.source.themoviedb.api_key")
+	newConfig.Advanced.Source.Themoviedb.ApiKey = oldConfig.Setting.Key.Themoviedb
+
+	// 强制写入
+	assets.WritePlugins(assets.Dir, path.Join(newConfig.DataPath, assets.Dir), false)
 }

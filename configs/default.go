@@ -30,6 +30,8 @@ func defaultSettingComment() {
   QBittorrent: 0不做种，-1无限做种，其他值为做种分钟限制
   Transmission: 0为使用客户端设置，-1无限做种，其他值为做种空闲分钟限制`
 
+	configComment["download_path_key"] = "AnimeGo可访问的下载客户端的下载文件夹，与 client.download_path 实际为同一个文件夹"
+
 }
 
 func defaultSetting() {
@@ -52,8 +54,6 @@ func defaultSetting() {
 
 	defaultConfig.Setting.Proxy.Enable = false
 	defaultConfig.Setting.Proxy.Url = "http://127.0.0.1:7890"
-
-	defaultConfig.Setting.Key.Themoviedb = "d3d8430aefee6c19520d0f7da145daf5"
 }
 
 func defaultPluginComment() {
@@ -115,6 +115,8 @@ func defaultAdvancedComment() {
 
 func defaultAdvanced() {
 	defaultConfig.Advanced.RefreshSecond = 10
+
+	defaultConfig.Advanced.Source.Themoviedb.ApiKey = "d3d8430aefee6c19520d0f7da145daf5"
 
 	defaultConfig.Advanced.Request.TimeoutSecond = 5
 	defaultConfig.Advanced.Request.RetryNum = 3

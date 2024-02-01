@@ -12,8 +12,6 @@ type Options struct {
 	CacheTime        int64
 	BangumiCache     api.CacheGetter
 	BangumiCacheLock *sync.Mutex
-
-	Host string
 }
 
 type Entity struct {

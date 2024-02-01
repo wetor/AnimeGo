@@ -29,9 +29,9 @@ type Setting struct {
 		Url          string `yaml:"url" json:"url" attr:"地址" comment:"环境变量ANIMEGO_CLIENT_URL"`
 		Username     string `yaml:"username" json:"username" attr:"用户名" comment:"环境变量ANIMEGO_CLIENT_USERNAME"`
 		Password     string `yaml:"password" json:"password" attr:"密码" comment:"环境变量ANIMEGO_CLIENT_PASSWORD"`
-		DownloadPath string `yaml:"download_path" json:"download_path" attr:"下载文件夹" comment:"环境变量ANIMEGO_CLIENT_DOWNLOAD_PATH"`
+		DownloadPath string `yaml:"download_path" json:"download_path" attr:"下载文件夹" comment:"环境变量ANIMEGO_CLIENT_DOWNLOAD_PATH. 下载客户端可访问的文件夹"`
 	} `yaml:"client" json:"client" attr:"下载客户端设置"`
-	DownloadPath string `yaml:"download_path" json:"download_path" attr:"下载文件夹" comment:"环境变量ANIMEGO_DOWNLOAD_PATH. 下载器的下载文件夹"`
+	DownloadPath string `yaml:"download_path" json:"download_path" attr:"下载文件夹" comment:"环境变量ANIMEGO_DOWNLOAD_PATH" comment_key:"download_path_key"`
 	SavePath     string `yaml:"save_path" json:"save_path" attr:"保存文件夹" comment:"环境变量ANIMEGO_SAVE_PATH. 下载完成后，重命名并移动到的文件夹"`
 	DataPath     string `yaml:"data_path" json:"data_path" attr:"数据文件夹" comment:"环境变量ANIMEGO_DATA_PATH. 用于保存数据库、插件等数据"`
 	Category     string `yaml:"category" json:"category" attr:"分类名" comment:"环境变量ANIMEGO_CATEGORY"`
@@ -45,15 +45,12 @@ type Setting struct {
 		Enable bool   `yaml:"enable" json:"enable" attr:"启用" comment:"环境变量ANIMEGO_PROXY_URL不为空则启用，否则禁用"`
 		Url    string `yaml:"url" json:"url" attr:"代理链接" comment:"环境变量ANIMEGO_PROXY_URL"`
 	} `yaml:"proxy" json:"proxy" attr:"代理设置" comment:"开启后AnimeGo所有的网络请求都会使用代理"`
-	Key struct {
-		Themoviedb string `yaml:"themoviedb" json:"themoviedb" attr:"TheMovieDB的APIkey" comment:"环境变量ANIMEGO_THEMOVIEDB_KEY" comment_key:"themoviedb_key"`
-	} `yaml:"key" json:"key" attr:"秘钥设置"`
 }
 
 type Advanced struct {
 	RefreshSecond int `yaml:"refresh_second" json:"refresh_second" attr:"刷新间隔时间" comment_key:"refresh_second_help"`
 
-	AniData struct {
+	Source struct {
 		Mikan struct {
 			Redirect string `yaml:"redirect" json:"redirect" attr:"默认mikanani.me"`
 			Cookie   string `yaml:"cookie" json:"cookie" attr:"mikan的Cookie" comment:"使用登录后的Cookie可以正常下载mikan的被隐藏番剧. 登录状态的Cookie名为'.AspNetCore.Identity.Application'"`
@@ -63,8 +60,9 @@ type Advanced struct {
 		} `yaml:"bangumi" json:"bangumi"`
 		Themoviedb struct {
 			Redirect string `yaml:"redirect" json:"redirect" attr:"默认api.themoviedb.org"`
+			ApiKey   string `yaml:"api_key" json:"api_key" attr:"TheMovieDB的APIkey" comment:"环境变量ANIMEGO_THEMOVIEDB_KEY" comment_key:"themoviedb_key"`
 		} `yaml:"themoviedb" json:"themoviedb"`
-	} `yaml:"anidata" json:"anidata" attr:"资源网站设置"`
+	} `yaml:"source" json:"source" attr:"资源网站设置"`
 
 	Request struct {
 		TimeoutSecond   int `yaml:"timeout_second" json:"timeout_second" attr:"请求超时时间"`
@@ -124,5 +122,5 @@ type Environment struct {
 
 	ProxyUrl *string `env:"PROXY_URL" val:"Setting.Proxy.Url"`
 
-	ThemoviedbKey *string `env:"THEMOVIEDB_KEY" val:"Setting.Key.Themoviedb"`
+	ThemoviedbKey *string `env:"THEMOVIEDB_KEY" val:"Advanced.Source.Themoviedb.ApiKey"`
 }

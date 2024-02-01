@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"path"
-	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -105,7 +104,7 @@ func WritePlugins(src, dst string, skip bool) {
 		if writeFile {
 			// Hash不一致则替换
 			if utils.MD5File(dstPath) != utils.MD5(fileContent) {
-				log.Printf("文件 [%s] 改变，重新写入。", filepath.Base(dstPath))
+				log.Printf("文件 [%s] 改变，重新写入。", dstPath)
 				if err := os.WriteFile(dstPath, fileContent, os.ModePerm); err != nil {
 					panic(err)
 				}

@@ -21,15 +21,6 @@ import (
 	mem "github.com/wetor/AnimeGo/pkg/memorizer"
 )
 
-var (
-	Host = func(host string) string {
-		if len(host) > 0 {
-			return host
-		}
-		return constant.MikanDefaultHost
-	}
-)
-
 var Set = wire.NewSet(
 	NewMikan,
 )
@@ -140,13 +131,7 @@ func (a *Mikan) cacheParseMikanBangumiID(mikanID int) (bangumiID int, err error)
 
 func (a *Mikan) loadHtml(url string) (*html.Node, error) {
 	buf := bytes.NewBuffer(nil)
-	cookie := a.Cookie
-	if !strings.Contains(cookie, constant.MikanAuthCookie+"=") {
-		cookie = constant.MikanAuthCookie + "=" + cookie
-	}
-	err := request.GetWriter(url, buf, map[string]string{
-		"Cookie": cookie,
-	})
+	err := request.GetWriter(url, buf)
 	if err != nil {
 		log.DebugErr(err)
 		return nil, errors.WithStack(&exceptions.ErrRequest{Name: a.Name()})
@@ -219,7 +204,7 @@ func (a *Mikan) parseMikanInfo(mikanUrl string) (mikan *MikanInfo, err error) {
 //	@paraa *MikanID int
 //	@return bangumiID int
 func (a *Mikan) parseMikanBangumiID(mikanID int) (bangumiID int, err error) {
-	url_ := fmt.Sprintf("%s/Home/bangumi/%d", Host(a.Host), mikanID)
+	url_ := fmt.Sprintf("%s/Home/bangumi/%d", constant.MikanHost, mikanID)
 	doc, err := a.loadHtml(url_)
 	if err != nil {
 		return 0, err

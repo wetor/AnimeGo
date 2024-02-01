@@ -15,22 +15,8 @@ import (
 )
 
 var (
-	Retry     int
-	RetryWait int
-	Timeout   int
-	Proxy     string
-	UserAgent string
-	Debug     bool
+	conf = &Options{}
 )
-
-type Options struct {
-	UserAgent string
-	Proxy     string // 使用代理
-	Retry     int    // 额外重试次数，默认为不做重试
-	RetryWait int    // 重试等待时间，最小3秒
-	Timeout   int    // 超时时间，最小3秒
-	Debug     bool
-}
 
 func (o *Options) Default() {
 	if o.RetryWait < 3 {
@@ -46,19 +32,26 @@ func (o *Options) Default() {
 
 func Init(opt *Options) {
 	opt.Default()
-	Retry = opt.Retry
-	RetryWait = opt.RetryWait
-	Timeout = opt.Timeout
-	Proxy = opt.Proxy
-	UserAgent = opt.UserAgent
+	conf = opt
 }
 
 func request(uri string, method string, body interface{}, header map[string]string) *gorequest.SuperAgent {
+	hostOpt := &HostOptions{}
+	if conf.Host != nil {
+		for host, opt := range conf.Host {
+			if strings.HasPrefix(uri, host) {
+				uri = strings.Replace(uri, host, opt.Redirect, 1)
+				hostOpt = opt
+				break
+			}
+		}
+	}
+
 	method = strings.ToUpper(method)
 	log.Infof("HTTP %s %s %+v", method, uri, body)
-	retryWait := time.Duration(RetryWait) * time.Second
-	timeout := time.Duration(Timeout) * time.Second
-	allTimeout := timeout + (timeout+retryWait)*time.Duration(Retry) // 最长等待时间
+	retryWait := time.Duration(conf.RetryWait) * time.Second
+	timeout := time.Duration(conf.Timeout) * time.Second
+	allTimeout := timeout + (timeout+retryWait)*time.Duration(conf.Retry) // 最长等待时间
 
 	var m *gorequest.SuperAgent
 	switch method {
@@ -69,9 +62,9 @@ func request(uri string, method string, body interface{}, header map[string]stri
 	}
 	agent := m.Send(body).
 		Timeout(allTimeout).
-		Proxy(Proxy).
-		SetDebug(Debug).
-		Retry(Retry, retryWait,
+		Proxy(conf.Proxy).
+		SetDebug(conf.Debug).
+		Retry(conf.Retry, retryWait,
 			http.StatusBadRequest,
 			http.StatusNotFound,
 			http.StatusInternalServerError,
@@ -79,12 +72,28 @@ func request(uri string, method string, body interface{}, header map[string]stri
 			http.StatusServiceUnavailable,
 			http.StatusGatewayTimeout)
 
-	if header != nil {
+	if hostOpt.Params != nil {
+		agent.Query(hostOpt.Params)
+	}
+	if header != nil || hostOpt.Header != nil {
 		for k, v := range header {
 			agent.Set(strings.ToLower(k), v)
 		}
+		for k, v := range hostOpt.Header {
+			agent.Set(strings.ToLower(k), v)
+		}
 	}
-	agent.Set("user-agent", UserAgent)
+	if hostOpt.Cookie != nil {
+		for k, v := range hostOpt.Cookie {
+			v = strings.TrimPrefix(v, k+"=")
+			agent.AddCookie(&http.Cookie{
+				Name:  k,
+				Value: v,
+			})
+		}
+	}
+
+	agent.Set("user-agent", conf.UserAgent)
 	return agent
 }
 

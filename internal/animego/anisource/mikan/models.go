@@ -7,9 +7,6 @@ import (
 type Options struct {
 	Cache     mem.Memorizer
 	CacheTime int64
-
-	Host   string
-	Cookie string
 }
 
 type Entity struct {

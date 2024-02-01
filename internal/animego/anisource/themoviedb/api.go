@@ -2,17 +2,17 @@ package themoviedb
 
 import (
 	"fmt"
+	"github.com/wetor/AnimeGo/internal/constant"
 	"net/url"
 )
 
-var idApi = func(host string, key string, query string, isMovie bool) string {
+var idApi = func(query string, isMovie bool) string {
 	uri := "/3/discover/tv"
 	if isMovie {
 		uri = "/3/discover/movie"
 	}
-	url_, _ := url.Parse(Host(host) + uri)
+	url_, _ := url.Parse(constant.ThemoviedbHost + uri)
 	q := url_.Query()
-	q.Set("api_key", key)
 	q.Set("sort_by", "first_air_date.desc")
 	q.Set("language", "zh-CN")
 	q.Set("timezone", "Asia/Shanghai")
@@ -21,10 +21,10 @@ var idApi = func(host string, key string, query string, isMovie bool) string {
 	return url_.String() + "?" + q.Encode()
 }
 
-var infoApi = func(host string, key string, id int, isMovie bool) string {
+var infoApi = func(id int, isMovie bool) string {
 	uri := "/3/tv"
 	if isMovie {
 		uri = "/3/movie"
 	}
-	return fmt.Sprintf("%s/%d?api_key=%s", Host(host)+uri, id, key)
+	return fmt.Sprintf("%s/%d", constant.ThemoviedbHost+uri, id)
 }
