@@ -10,10 +10,10 @@ import (
 	"strings"
 )
 
-func format(format string, p map[string]any) string {
+func replacer(format string, p map[string]any) string {
 	args, i := make([]string, len(p)*2), 0
 	for k, v := range p {
-		args[i] = "{" + k + "}"
+		args[i] = k
 		args[i+1] = fmt.Sprint(v)
 		i += 2
 	}
@@ -23,16 +23,23 @@ func format(format string, p map[string]any) string {
 var filenameMap = map[string]any{
 	`/`: "",
 	`\`: "",
+	`:`: "-",
+	`*`: "·",
+	`?`: "？",
+	`"`: "`",
+	`<`: "(",
+	`>`: ")",
+	`|`: "-",
+
 	`[`: "(",
 	`]`: ")",
-	`:`: "-",
 	`;`: "-",
 	`=`: "-",
 	`,`: "-",
 }
 
 func FileName(filename string) string {
-	return format(filename, filenameMap)
+	return replacer(filename, filenameMap)
 }
 
 func Md5Str(str string) string {
@@ -72,9 +79,9 @@ func ToMetaData(tmdbID, bangumiID int) string {
 		nfoTemplate += "  <tmdbid>{tmdbid}</tmdbid>\n"
 	}
 	nfoTemplate += "  <bangumiid>{bangumiid}</bangumiid>\n</tvshow>"
-	return format(nfoTemplate, map[string]any{
-		"tmdbid":    tmdbID,
-		"bangumiid": bangumiID,
+	return replacer(nfoTemplate, map[string]any{
+		"{tmdbid}":    tmdbID,
+		"{bangumiid}": bangumiID,
 	})
 }
 

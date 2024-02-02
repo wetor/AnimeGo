@@ -1,10 +1,9 @@
 package parser_test
 
 import (
+	"context"
 	"fmt"
-	"net/url"
 	"os"
-	"path"
 	"testing"
 
 	"github.com/pkg/errors"
@@ -14,20 +13,24 @@ import (
 	"github.com/wetor/AnimeGo/internal/animego/anisource"
 	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
 	"github.com/wetor/AnimeGo/internal/animego/parser"
+	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
+	"github.com/wetor/AnimeGo/internal/pkg/request"
 	"github.com/wetor/AnimeGo/internal/pkg/torrent"
 	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	pkgExceptions "github.com/wetor/AnimeGo/pkg/exceptions"
 	"github.com/wetor/AnimeGo/pkg/log"
-	"github.com/wetor/AnimeGo/pkg/xpath"
 	"github.com/wetor/AnimeGo/test"
 )
 
 const testdata = "parser"
 
-var mgr *parser.Manager
+var (
+	mgr         *parser.Manager
+	ctx, cancel = context.WithCancel(context.Background())
+)
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
@@ -39,17 +42,17 @@ func TestMain(m *testing.M) {
 	torrent.Init(&torrent.Options{
 		TempPath: "data",
 	})
-	test.HookGetWriter(testdata, nil)
-	test.HookGet(testdata, func(uri string) string {
-		u, err := url.Parse(uri)
-		if err != nil {
-			return ""
-		}
-		id := u.Query().Get("with_text_query")
-		if len(id) == 0 {
-			id = path.Base(xpath.P(u.Path))
-		}
-		return id
+	host := test.MockThemoviedbStart(ctx)
+	request.Init(&request.Options{
+		Host: map[string]*request.HostOptions{
+			constant.ThemoviedbHost: {
+				Redirect: host,
+				Params: map[string]string{
+					constant.ThemoviedbApiKey: "123456",
+					"testdata":                testdata,
+				},
+			},
+		},
 	})
 	test.Hook(torrent.LoadUri, HookLoadUri)
 	defer test.UnHook()
@@ -84,6 +87,7 @@ func TestMain(m *testing.M) {
 
 	m.Run()
 
+	cancel()
 	b.Close()
 	_ = log.Close()
 	_ = os.RemoveAll("data")

@@ -40,7 +40,9 @@ func request(uri string, method string, body interface{}, header map[string]stri
 	if conf.Host != nil {
 		for host, opt := range conf.Host {
 			if strings.HasPrefix(uri, host) {
-				uri = strings.Replace(uri, host, opt.Redirect, 1)
+				if len(opt.Redirect) > 0 {
+					uri = strings.Replace(uri, host, opt.Redirect, 1)
+				}
 				hostOpt = opt
 				break
 			}
@@ -63,7 +65,7 @@ func request(uri string, method string, body interface{}, header map[string]stri
 	agent := m.Send(body).
 		Timeout(allTimeout).
 		Proxy(conf.Proxy).
-		SetDebug(conf.Debug).
+		// SetDebug(conf.Debug).
 		Retry(conf.Retry, retryWait,
 			http.StatusBadRequest,
 			http.StatusNotFound,

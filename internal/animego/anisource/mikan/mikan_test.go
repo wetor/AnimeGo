@@ -1,6 +1,7 @@
 package mikan_test
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"testing"
@@ -9,16 +10,17 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
+	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/exceptions"
+	"github.com/wetor/AnimeGo/internal/pkg/request"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/test"
 )
 
-const testdata = "mikan"
-
 var (
-	mikanInst *mikan.Mikan
+	mikanInst   *mikan.Mikan
+	ctx, cancel = context.WithCancel(context.Background())
 )
 
 func TestMain(m *testing.M) {
@@ -27,8 +29,18 @@ func TestMain(m *testing.M) {
 		File:  "data/test.log",
 		Debug: true,
 	})
-	test.HookAll(testdata, nil)
-	defer test.UnHook()
+
+	host := test.MockMikanStart(ctx)
+	request.Init(&request.Options{
+		Host: map[string]*request.HostOptions{
+			constant.MikanHost: {
+				Redirect: host,
+				Cookie: map[string]string{
+					constant.MikanAuthCookie: "MikanAuthCookie",
+				},
+			},
+		},
+	})
 
 	db := cache.NewBolt()
 	db.Open("data/bolt.db")
@@ -38,6 +50,7 @@ func TestMain(m *testing.M) {
 	})
 	m.Run()
 
+	cancel()
 	db.Close()
 	_ = log.Close()
 	_ = os.RemoveAll("data")

@@ -1,6 +1,7 @@
 package bangumi_test
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"sync"
@@ -10,6 +11,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/wetor/AnimeGo/internal/animego/anisource/bangumi"
+	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/pkg/request"
 	"github.com/wetor/AnimeGo/pkg/cache"
@@ -18,10 +20,9 @@ import (
 	"github.com/wetor/AnimeGo/test"
 )
 
-const testdata = "bangumi"
-
 var (
 	bangumiInst *bangumi.Bangumi
+	ctx, cancel = context.WithCancel(context.Background())
 )
 
 func TestMain(m *testing.M) {
@@ -31,11 +32,14 @@ func TestMain(m *testing.M) {
 		File:  "data/log.log",
 		Debug: true,
 	})
+	host := test.MockBangumiStart(ctx)
 	request.Init(&request.Options{
-		Debug: true,
+		Host: map[string]*request.HostOptions{
+			constant.BangumiHost: {
+				Redirect: host,
+			},
+		},
 	})
-	test.HookAll(testdata, nil)
-	defer test.UnHook()
 	mutex := sync.Mutex{}
 
 	db := cache.NewBolt()
@@ -50,6 +54,7 @@ func TestMain(m *testing.M) {
 	})
 	m.Run()
 
+	cancel()
 	db.Close()
 	bangumiCache.Close()
 	_ = log.Close()

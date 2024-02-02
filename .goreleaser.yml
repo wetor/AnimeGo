@@ -81,7 +81,7 @@ dockers:
 
 archives:
   - name_template: >-
-      {{- .Binary }}_
+      {{- .ProjectName }}_
       {{- .Tag }}_
       {{- title .Os }}_
       {{- if eq .Arch "amd64" }}x86_64

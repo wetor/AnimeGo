@@ -18,9 +18,6 @@ const (
 )
 
 var (
-	testdataAll string // 目录名
-	filenameAll func(string) string
-
 	testdata map[string]string              // 目录名
 	filename map[string]func(string) string // 文件名函数
 
@@ -30,12 +27,6 @@ var (
 func init() {
 	testdata = make(map[string]string)
 	filename = make(map[string]func(string) string)
-}
-
-func HookAll(testdataDir string, filenameFunc func(string) string) {
-	HookGetWriter(testdataDir, filenameFunc)
-	HookGet(testdataDir, filenameFunc)
-	HookGetString(testdataDir, filenameFunc)
 }
 
 func UnHook() {

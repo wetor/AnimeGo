@@ -1,11 +1,9 @@
 package anisource_test
 
 import (
+	"context"
 	"fmt"
-	"io"
-	"net/url"
 	"os"
-	"path"
 	"sync"
 	"testing"
 
@@ -17,60 +15,22 @@ import (
 	"github.com/wetor/AnimeGo/internal/animego/anisource/mikan"
 	"github.com/wetor/AnimeGo/internal/animego/anisource/themoviedb"
 	"github.com/wetor/AnimeGo/internal/api"
+	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/models"
 	"github.com/wetor/AnimeGo/internal/pkg/request"
 	"github.com/wetor/AnimeGo/internal/plugin"
 	"github.com/wetor/AnimeGo/internal/wire"
 	"github.com/wetor/AnimeGo/pkg/cache"
-	"github.com/wetor/AnimeGo/pkg/json"
 	"github.com/wetor/AnimeGo/pkg/log"
 	"github.com/wetor/AnimeGo/pkg/utils"
-	"github.com/wetor/AnimeGo/pkg/xpath"
 	"github.com/wetor/AnimeGo/test"
 )
 
 var (
 	mikanSource api.AniSource
+	ctx, cancel = context.WithCancel(context.Background())
 )
-
-func HookGetWriter(uri string, w io.Writer) error {
-	log.Infof("Mock HTTP GET %s", uri)
-	id := path.Base(xpath.P(uri))
-	jsonData, err := test.GetData("mikan", id)
-	if err != nil {
-		return err
-	}
-	_, err = w.Write(jsonData)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
-func HookGet(uri string, body interface{}) error {
-	log.Infof("Mock HTTP GET %s", uri)
-	u, err := url.Parse(uri)
-	if err != nil {
-		return err
-	}
-	id := u.Query().Get("with_text_query")
-	if len(id) == 0 {
-		id = path.Base(xpath.P(u.Path))
-	}
-
-	p := test.GetDataPath("themoviedb", id)
-	if !utils.IsExist(p) {
-		p = test.GetDataPath("bangumi", id)
-	}
-
-	jsonData, err := os.ReadFile(p)
-	if err != nil {
-		return err
-	}
-	_ = json.Unmarshal(jsonData, body)
-	return nil
-}
 
 func TestMain(m *testing.M) {
 	fmt.Println("begin")
@@ -104,7 +64,33 @@ func TestMain(m *testing.M) {
 		Cache:     b,
 		CacheTime: int64(7 * 24 * 60 * 60),
 	})
+
+	bangumiHost := test.MockBangumiStart(ctx)
+	mikanHost := test.MockMikanStart(ctx)
+	themoviedbHost := test.MockThemoviedbStart(ctx)
+	request.Init(&request.Options{
+		Host: map[string]*request.HostOptions{
+			constant.BangumiHost: {
+				Redirect: bangumiHost,
+			},
+			constant.MikanHost: {
+				Redirect: mikanHost,
+				Cookie: map[string]string{
+					constant.MikanAuthCookie: "MikanAuthCookie",
+				},
+			},
+			constant.ThemoviedbHost: {
+				Redirect: themoviedbHost,
+				Params: map[string]string{
+					constant.ThemoviedbApiKey: "123456",
+				},
+			},
+		},
+	})
+
 	m.Run()
+
+	cancel()
 	b.Close()
 	bangumiCache.Close()
 	_ = log.Close()
@@ -177,9 +163,6 @@ func TestMikan_Parse(t *testing.T) {
 		},
 	}
 
-	test.Hook(request.GetWriter, HookGetWriter)
-	test.Hook(request.Get, HookGet)
-	defer test.UnHook()
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			gotAnime, err := mikanSource.Parse(tt.args.opts)

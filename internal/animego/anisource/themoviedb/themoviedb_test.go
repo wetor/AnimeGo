@@ -1,28 +1,26 @@
 package themoviedb_test
 
 import (
+	"context"
 	"fmt"
-	"net/url"
 	"os"
-	"path"
 	"testing"
 
 	"github.com/pkg/errors"
 	"github.com/stretchr/testify/assert"
 
 	"github.com/wetor/AnimeGo/internal/animego/anisource/themoviedb"
+	"github.com/wetor/AnimeGo/internal/constant"
 	"github.com/wetor/AnimeGo/internal/exceptions"
 	"github.com/wetor/AnimeGo/internal/pkg/request"
 	"github.com/wetor/AnimeGo/pkg/cache"
 	"github.com/wetor/AnimeGo/pkg/log"
-	"github.com/wetor/AnimeGo/pkg/xpath"
 	"github.com/wetor/AnimeGo/test"
 )
 
-const testdata = "themoviedb"
-
 var (
-	tmdbInst *themoviedb.Themoviedb
+	tmdbInst    *themoviedb.Themoviedb
+	ctx, cancel = context.WithCancel(context.Background())
 )
 
 func TestMain(m *testing.M) {
@@ -36,23 +34,20 @@ func TestMain(m *testing.M) {
 	tmdbInst = themoviedb.NewThemoviedb(&themoviedb.Options{
 		Cache: db,
 	})
+	host := test.MockThemoviedbStart(ctx)
 	request.Init(&request.Options{
-		Debug: true,
+		Host: map[string]*request.HostOptions{
+			constant.ThemoviedbHost: {
+				Redirect: host,
+				Params: map[string]string{
+					constant.ThemoviedbApiKey: "123456",
+				},
+			},
+		},
 	})
-	test.HookGet(testdata, func(uri string) string {
-		u, err := url.Parse(uri)
-		if err != nil {
-			return ""
-		}
-		id := u.Query().Get("with_text_query")
-		if len(id) == 0 {
-			id = path.Base(xpath.P(u.Path))
-		}
-		return id
-	})
-	defer test.UnHook()
 	m.Run()
 
+	cancel()
 	db.Close()
 	_ = log.Close()
 	_ = os.RemoveAll("data")
