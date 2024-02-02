@@ -107,6 +107,24 @@ func TestManager_Parse(t *testing.T) {
 	}{
 		// TODO: Add test cases.
 		{
+			name: "success2",
+			args: args{
+				opts: &models.ParseOptions{
+					Title:      "[GJ.Y] 药师少女的独语 / Kusuriya no Hitorigoto - 08 (CR 1920x1080 AVC AAC MKV) ",
+					TorrentUrl: test.GetDataPath(testdata, "5edee903bc59fb0acf8b26ecf71a1dbe50ccdfc3.torrent"),
+					MikanUrl:   "success",
+				},
+			},
+			wantEntity: &models.AnimeEntity{ID: 366165, ThemoviedbID: 155942, MikanID: 2922, Name: "便利屋斎藤さん、異世界に行く", NameCN: "万事屋斋藤、到异世界", Season: 1, Eps: 12, AirDate: "2023-01-08",
+				Ep: []*models.AnimeEpEntity{
+					{Type: models.AnimeEpNormal, Ep: 8, Src: "[GJ.Y] Kusuriya no Hitorigoto - 08 (CR 1920x1080 AVC AAC MKV) [009E6B11].mkv"},
+				},
+				Torrent: &models.AnimeTorrent{
+					Hash: "5edee903bc59fb0acf8b26ecf71a1dbe50ccdfc3",
+				},
+			},
+		},
+		{
 			name: "success",
 			args: args{
 				opts: &models.ParseOptions{

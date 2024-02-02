@@ -72,6 +72,12 @@ func (m *Manager) Parse(opts *models.ParseOptions) (entity *models.AnimeEntity, 
 	} else {
 		entity.Torrent.Url = torrentInfo.Url
 	}
+
+	singleEp := 0
+	if len(torrentInfo.Files) == 1 {
+		singleEp = ParseEp(opts.Title)
+	}
+
 	for _, t := range torrentInfo.Files {
 		// TODO: 筛选文件
 		epEntity := &models.AnimeEpEntity{
@@ -80,14 +86,20 @@ func (m *Manager) Parse(opts *models.ParseOptions) (entity *models.AnimeEntity, 
 		if isSp, sp := ParseSp(t.Name); isSp {
 			epEntity.Type = models.AnimeEpSpecial
 			epEntity.Ep = sp
-		} else if ep := ParseEp(t.Name); ep > 0 {
-			epEntity.Type = models.AnimeEpNormal
-			epEntity.Ep = ep
 		} else {
-			epEntity.Type = models.AnimeEpUnknown
-			entity.Flag |= models.AnimeFlagEpParseFailed
-			log.Warnf("解析「%s」集数失败，不进行重命名", t.Name)
-			// continue
+			ep := ParseEp(t.Name)
+			if singleEp > 0 && ep != singleEp {
+				ep = singleEp
+			}
+			if ep > 0 {
+				epEntity.Type = models.AnimeEpNormal
+				epEntity.Ep = ep
+			} else {
+				epEntity.Type = models.AnimeEpUnknown
+				entity.Flag |= models.AnimeFlagEpParseFailed
+				log.Warnf("解析「%s」集数失败，不进行重命名", t.Name)
+				// continue
+			}
 		}
 		entity.Ep = append(entity.Ep, epEntity)
 	}

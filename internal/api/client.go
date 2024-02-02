@@ -13,5 +13,6 @@ type Client interface {
 	List(opt *models.ListOptions) ([]*models.TorrentItem, error)
 	Add(opt *models.AddOptions) error
 	Delete(opt *models.DeleteOptions) error
+	Pause(opt *models.PauseOptions) error
 	State(state string) constant.TorrentState
 }

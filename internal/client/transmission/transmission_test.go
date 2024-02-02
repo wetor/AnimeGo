@@ -22,8 +22,8 @@ var (
 )
 
 func TestMain(m *testing.M) {
-	fmt.Println("跳过Qbittorrent测试")
-	os.Exit(0)
+	//fmt.Println("跳过Transmission测试")
+	//os.Exit(0)
 	fmt.Println("begin")
 	log.Init(&log.Options{
 		File:  "data/test.log",
@@ -32,7 +32,7 @@ func TestMain(m *testing.M) {
 	wg = sync.WaitGroup{}
 
 	tbt = transmission.NewTransmission(&models.ClientOptions{
-		Url:      "http://127.0.0.1:9091",
+		Url:      "http://10.10.10.108:9091",
 		Username: "admin",
 		Password: "adminadmin",
 
@@ -107,10 +107,33 @@ func TestTransmission_AddFile(t *testing.T) {
 	}
 }
 
+func TestTransmission_AddFile2(t *testing.T) {
+	err := tbt.Add(&models.AddOptions{
+		File:     test.GetDataPath(testdata, "25a0ee3f251d052507df7a552673711bb79279c6.torrent"),
+		SavePath: "C:\\Users\\winserver\\Downloads\\115download",
+		Category: "test3",
+		Tag:      "test_tag3",
+		Name:     "测试[1][2]",
+	})
+	if err != nil {
+		panic(err)
+	}
+	list, err := tbt.List(&models.ListOptions{
+		Category: "test3",
+	})
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println(len(list))
+	for _, i := range list {
+		fmt.Println(i.Name, i.Hash, i.State)
+	}
+}
+
 func TestTransmission_AddUrl(t *testing.T) {
 	err := tbt.Add(&models.AddOptions{
 		Url:      "magnet:?xt=urn:btih:f690ffb1419152efc81b332dafb3456f9ece1744&tr=http%3a%2f%2ft.nyaatracker.com%2fannounce&tr=http%3a%2f%2ftracker.kamigami.org%3a2710%2fannounce&tr=http%3a%2f%2fshare.camoe.cn%3a8080%2fannounce&tr=http%3a%2f%2fopentracker.acgnx.se%2fannounce&tr=http%3a%2f%2fanidex.moe%3a6969%2fannounce&tr=http%3a%2f%2ft.acg.rip%3a6699%2fannounce&tr=https%3a%2f%2ftr.bangumi.moe%3a9696%2fannounce&tr=udp%3a%2f%2ftr.bangumi.moe%3a6969%2fannounce&tr=http%3a%2f%2fopen.acgtracker.com%3a1096%2fannounce&tr=udp%3a%2f%2ftracker.opentrackr.org%3a1337%2fannounce",
-		SavePath: "C:/Users/wetor/GolandProjects/AnimeGo/download/incomplete",
+		SavePath: "C:\\Users\\winserver\\Downloads\\115download",
 		Category: "test3",
 		Tag:      "test_tag3",
 	})

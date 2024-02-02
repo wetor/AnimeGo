@@ -13,7 +13,14 @@ import (
 )
 
 func TestHost(t *testing.T) {
+	reqCount := 0
 	http.HandleFunc("/hello", func(w http.ResponseWriter, r *http.Request) {
+		if reqCount >= 1 && reqCount < 3 {
+			w.WriteHeader(http.StatusInternalServerError)
+			reqCount++
+			return
+		}
+
 		assert.Equal(t, "TestHeaderValue", r.Header.Get("TestHeaderKey"))
 		assert.Equal(t, "TestHeaderValue2", r.Header.Get("TestHeaderKey2"))
 		assert.Equal(t, "TestParamsValue", r.FormValue(strings.ToLower("TestParamsKey")))
@@ -22,6 +29,8 @@ func TestHost(t *testing.T) {
 		assert.Nil(t, err)
 		assert.Equal(t, "TestCookieValue", c.Value)
 		_, _ = w.Write([]byte("world"))
+		// 第2, 3次请求固定失败
+		reqCount++
 	})
 
 	log.Println("Starting server...")
@@ -48,9 +57,20 @@ func TestHost(t *testing.T) {
 				},
 			},
 		},
+		Retry:     3,
+		RetryWait: 2,
+		Debug:     true,
 	})
 
 	res, err := request.GetString("http://192.168.1.1:8080/hello?data=255", map[string]string{
+		"TestHeaderKey2": "TestHeaderValue2",
+	})
+	if err != nil {
+		log.Fatal(err)
+	}
+	assert.Equal(t, "world", res)
+
+	res, err = request.GetString("http://192.168.1.1:8080/hello?data=255", map[string]string{
 		"TestHeaderKey2": "TestHeaderValue2",
 	})
 	if err != nil {

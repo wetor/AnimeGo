@@ -1,6 +1,8 @@
 package parser_test
 
 import (
+	"os"
+
 	"github.com/pkg/errors"
 
 	"github.com/wetor/AnimeGo/internal/animego/anisource"
@@ -147,6 +149,10 @@ func HookLoadUri(uri string) (t *torrent.Torrent, err error) {
 				},
 			},
 		}, nil
+	default:
+		s, _ := os.Open(uri)
+		ts, err := torrent.LoadTorrent(s)
+		_ = s.Close()
+		return ts, err
 	}
-	return nil, nil
 }

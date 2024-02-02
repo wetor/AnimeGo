@@ -207,6 +207,10 @@ func (m *ClientMock) Add(opt *models.AddOptions) error {
 	return nil
 }
 
+func (m *ClientMock) Pause(opt *models.PauseOptions) error {
+	return nil
+}
+
 func (m *ClientMock) Delete(opt *models.DeleteOptions) error {
 	m.Lock()
 	defer m.Unlock()

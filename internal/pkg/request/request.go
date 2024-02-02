@@ -55,7 +55,7 @@ func request(uri string, method string, body interface{}, header map[string]stri
 	timeout := time.Duration(conf.Timeout) * time.Second
 	allTimeout := timeout + (timeout+retryWait)*time.Duration(conf.Retry) // 最长等待时间
 
-	var m *gorequest.SuperAgent
+	m := gorequest.New()
 	switch method {
 	case "GET":
 		m = gorequest.New().Get(uri)
@@ -68,6 +68,8 @@ func request(uri string, method string, body interface{}, header map[string]stri
 		// SetDebug(conf.Debug).
 		Retry(conf.Retry, retryWait,
 			http.StatusBadRequest,
+			http.StatusUnauthorized,
+			http.StatusForbidden,
 			http.StatusNotFound,
 			http.StatusInternalServerError,
 			http.StatusBadGateway,
@@ -103,8 +105,9 @@ func handleError(resp gorequest.Response, errs []error) (err error) {
 	if len(errs) != 0 {
 		return errs[0]
 	}
-	if resp.StatusCode != http.StatusOK {
-		return errors.Errorf("HTTP 请求失败, %s", resp.Status)
+
+	if resp.StatusCode == 300 || (400 <= resp.StatusCode && resp.StatusCode < 600) {
+		return errors.Errorf("HTTP 请求失败, 重试 %s 次, %s", resp.Header.Get("Retry-Count"), resp.Status)
 	}
 	return nil
 }

@@ -241,6 +241,22 @@ func (c *Transmission) Add(opt *models.AddOptions) error {
 		log.DebugErr(err)
 		return errors.WithStack(&exceptions.ErrClient{Client: Name, Message: "添加下载项失败"})
 	}
+	handleError := func(err error) error {
+		log.DebugErr(err)
+		// 设置状态失败，删除下载
+		_ = c.client.TorrentRemove(c.Ctx, transmissionrpc.TorrentRemovePayload{
+			IDs:             []int64{*torrent.ID},
+			DeleteLocalData: true,
+		})
+		return errors.WithStack(&exceptions.ErrClient{Client: Name, Message: "添加下载项失败"})
+	}
+
+	//if len(opt.Name) > 0 {
+	//	err = c.client.TorrentRenamePath(c.Ctx, *torrent.ID, *torrent.Name, opt.Name)
+	//	if err != nil {
+	//		return handleError(err)
+	//	}
+	//}
 	mode := IdleModeGlobal
 	if c.SeedingTimeMinute > 0 {
 		mode = IdleModeSingle // 空闲指定时间后停止做种
@@ -256,13 +272,28 @@ func (c *Transmission) Add(opt *models.AddOptions) error {
 		SeedIdleLimit: &seedTime,
 	})
 	if err != nil {
-		log.DebugErr(err)
-		// 设置状态失败，删除下载
-		_ = c.client.TorrentRemove(c.Ctx, transmissionrpc.TorrentRemovePayload{
-			IDs:             []int64{*torrent.ID},
-			DeleteLocalData: true,
-		})
-		return errors.WithStack(&exceptions.ErrClient{Client: Name, Message: "添加下载项失败"})
+		return handleError(err)
+	}
+	return nil
+}
+
+func (c *Transmission) Pause(opt *models.PauseOptions) error {
+	if !c.connected {
+		return errors.WithStack(&exceptions.ErrClientNoConnected{Client: Name})
+	}
+	var err error
+	if opt.Pause {
+		err = c.client.TorrentStopHashes(c.Ctx, opt.Hash)
+		if err != nil {
+			log.DebugErr(err)
+			return errors.WithStack(&exceptions.ErrClient{Client: Name, Message: "暂停下载项失败"})
+		}
+	} else {
+		err = c.client.TorrentStartHashes(c.Ctx, opt.Hash)
+		if err != nil {
+			log.DebugErr(err)
+			return errors.WithStack(&exceptions.ErrClient{Client: Name, Message: "恢复下载项失败"})
+		}
 	}
 	return nil
 }

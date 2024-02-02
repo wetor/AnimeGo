@@ -40,6 +40,11 @@ type DeleteOptions struct {
 	DeleteFile bool
 }
 
+type PauseOptions struct {
+	Pause bool
+	Hash  []string
+}
+
 type TorrentItem struct {
 	Hash  string `json:"hash"`
 	State string `json:"state"`

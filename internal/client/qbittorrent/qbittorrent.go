@@ -1,7 +1,6 @@
 package qbittorrent
 
 import (
-	"context"
 	"time"
 
 	"github.com/google/wire"
@@ -118,7 +117,7 @@ func (c *QBittorrent) Connected() bool {
 }
 
 func (c *QBittorrent) clientVersion() string {
-	clientResp, err := c.client.GetApplicationVersion(context.Background(), &qbapi.GetApplicationVersionReq{})
+	clientResp, err := c.client.GetApplicationVersion(c.Ctx, &qbapi.GetApplicationVersionReq{})
 	if err != nil {
 		return ""
 	}
@@ -198,7 +197,7 @@ func (c *QBittorrent) List(opt *models.ListOptions) ([]*models.TorrentItem, erro
 		req.Tag = &opt.Tag
 	}
 
-	listResp, err := c.client.GetTorrentList(context.Background(), req)
+	listResp, err := c.client.GetTorrentList(c.Ctx, req)
 	if err != nil {
 		log.DebugErr(err)
 		return nil, errors.WithStack(&exceptions.ErrClient{Client: Name, Message: "获取列表失败"})
@@ -225,12 +224,12 @@ func (c *QBittorrent) Add(opt *models.AddOptions) error {
 		Rename:           &opt.Name,
 	}
 	if len(opt.File) > 0 {
-		_, err = c.client.AddNewTorrent(context.Background(), &qbapi.AddNewTorrentReq{
+		_, err = c.client.AddNewTorrent(c.Ctx, &qbapi.AddNewTorrentReq{
 			File: []string{opt.File},
 			Meta: meta,
 		})
 	} else {
-		_, err = c.client.AddNewLink(context.Background(), &qbapi.AddNewLinkReq{
+		_, err = c.client.AddNewLink(c.Ctx, &qbapi.AddNewLinkReq{
 			Url:  []string{opt.Url},
 			Meta: meta,
 		})
@@ -242,11 +241,37 @@ func (c *QBittorrent) Add(opt *models.AddOptions) error {
 	return nil
 }
 
+func (c *QBittorrent) Pause(opt *models.PauseOptions) error {
+	if !c.connected {
+		return errors.WithStack(&exceptions.ErrClientNoConnected{Client: Name})
+	}
+	var err error
+	if opt.Pause {
+		_, err = c.client.PauseTorrents(c.Ctx, &qbapi.PauseTorrentsReq{
+			Hash: opt.Hash,
+		})
+		if err != nil {
+			log.DebugErr(err)
+			return errors.WithStack(&exceptions.ErrClient{Client: Name, Message: "暂停下载项失败"})
+		}
+	} else {
+		_, err = c.client.ResumeTorrents(c.Ctx, &qbapi.ResumeTorrentsReq{
+			Hash: opt.Hash,
+		})
+		if err != nil {
+			log.DebugErr(err)
+			return errors.WithStack(&exceptions.ErrClient{Client: Name, Message: "恢复下载项失败"})
+		}
+	}
+	return nil
+}
+
 func (c *QBittorrent) Delete(opt *models.DeleteOptions) error {
 	if !c.connected {
 		return errors.WithStack(&exceptions.ErrClientNoConnected{Client: Name})
 	}
-	_, err := c.client.DeleteTorrents(context.Background(), &qbapi.DeleteTorrentsReq{
+	var err error
+	_, err = c.client.DeleteTorrents(c.Ctx, &qbapi.DeleteTorrentsReq{
 		IsDeleteFile: opt.DeleteFile,
 		Hash:         opt.Hash,
 	})

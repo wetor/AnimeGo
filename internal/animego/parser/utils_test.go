@@ -31,6 +31,7 @@ func TestParse(t *testing.T) {
 			},
 			want: 11,
 		},
+		// TODO: 识别失败
 		//{
 		//	name: "3",
 		//	args: args{
@@ -38,6 +39,14 @@ func TestParse(t *testing.T) {
 		//	},
 		//	want: 6,
 		//},
+		{
+			name: "4",
+			args: args{
+				// name: "[GJ.Y] Kusuriya no Hitorigoto - 08 (CR 1920x1080 AVC AAC MKV) [009E6B11].mkv",
+				name: "[GJ.Y] 药师少女的独语 / Kusuriya no Hitorigoto - 08 (CR 1920x1080 AVC AAC MKV) ",
+			},
+			want: 8,
+		},
 		{
 			name: "5",
 			args: args{
